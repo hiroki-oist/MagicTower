@@ -1,0 +1,13 @@
+Fonts
+Images
+.vscode/
+TextMesh Pro
+Sprites
+Library
+Logs
+obj
+ProjectSettings
+Temp
+UserSettings
+*.meta
+*.sln
