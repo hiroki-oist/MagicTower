@@ -7,19 +7,17 @@ public class GameController : MonoBehaviour
     [SerializeField] PlayerController player;
     [SerializeField] BattleSystem battleSystem;
     [SerializeField] Battler playerBattler;
-
-    [SerializeField] Battler enemyBattler;
     public CanvasGroup endBattleUI;
 
 
-    public Battler EnemyBattler { get => enemyBattler; }
+    // public Battler EnemyBattler { get => enemyBattler; }
     public Battler PlayerBattler { get => playerBattler; }
 
     private void Start(){
         player.OnEncounts += StartBattle;
         battleSystem.OnBattleOver += EndBattle;
     }
-    public void StartBattle(){
+    public void StartBattle(Battler enemyBattler){
         // playerBattler.Init();
         enemyBattler.Init();
   

@@ -2,6 +2,7 @@ using UnityEngine;
 using System.Collections;
 using System.Runtime.CompilerServices;
 using UnityEngine.Events;
+using System.Reflection;
 public class PlayerController: MonoBehaviour {
     public float speed = 60.0f;
     private Animator animator;
@@ -13,59 +14,58 @@ public class PlayerController: MonoBehaviour {
     private Vector2 targetPosition;
     private bool isMoving = false;
     private Rigidbody2D rb;
-    public GameObject battleUI;
-    // [SerializeField] GameController gameController;
-    public UnityAction OnEncounts; // Encountしたときに実行したい関数を登録
-     [SerializeField] BattleUnit playerStats;
-    // [SerializeField] Battler battler;
-    // [SerializeField] Battler enemyBattler;
+    // public GameObject battleUI;
+    // デリゲートの定義
+    public delegate void EncountsHandler(Battler enemyBattler);
 
-    // public Battler Battler {get => battler;}
-    // public Battler EnemyBattler {get => enemyBattler;}
+    // イベントの定義
+    public event EncountsHandler OnEncounts;
+     [SerializeField] BattleUnit playerStats;
+    public ItemManager itemManager;
 
     public GameController gameController;
     
 
     void Start () {
         gameController.PlayerBattler.Init();
-        Debug.Log("Initialised playbattler");
         playerStats.Setup(gameController.PlayerBattler);
         playerStats.UpdateUI();
         playerStats.UpdateCoinUI();
+        itemManager.UpdateKeyValue();
         
         Application.targetFrameRate = 30;
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
-        // battler.Init();
-        Debug.Log("Initialise EnemyBattler");
-        // enemyBattler.Init();
-
-        // battleUIが見つかったか確認
-        if (battleUI == null)
-        {
-            Debug.LogError("BattleUI object is not found!");
-            return;
-        }
-        Debug.Log("Start done");
-        
     }
 
     // Update is called once per frame
     void Update () {
+        // Debug.Log("Update is moving");
         if (isMoving) {
-            int layerMask = ~LayerMask.GetMask("Player", "Enemy");
+            int layerMask = ~LayerMask.GetMask("Player", "Enemy", "Item");
             RaycastHit2D hit = Physics2D.Raycast(rb.position, targetPosition - rb.position, Vector3.Distance(rb.position, targetPosition), layerMask);
-            
-            if (hit.collider != null) {
+            Debug.Log("Hit collider is: " + hit.collider);
+            if (hit.collider != null && hit.collider.CompareTag("Wall")) {
                 int hitLayer = hit.collider.gameObject.layer;
                 string layerName = LayerMask.LayerToName(hitLayer);
                 isMoving = false;
                 ResetMovementFlags();
-            }
+            } else if (hit.collider != null && hit.collider.tag.StartsWith("Lock_")){
+                isMoving = false;
+                ResetMovementFlags();
+                HandleCollision(hit.collider);
+            
+            // }
                 
-            if (hit.collider != null && hit.collider.CompareTag("Wall")) {
-                ResetMovementFlags();  // 移動フラグをリセット
-                isMoving = false;  // 移動を停止
+            // if (hit.collider != null && hit.collider.CompareTag("Wall")) {
+            //     // Debug.Log("Collided wall!");
+            //     ResetMovementFlags();  // 移動フラグをリセット
+            //     isMoving = false;  // 移動を停止
+                // Debug.Log("hit.collider.tag" + hit.collider.tag);
+            // } else if (hit.collider.tag.StartsWith("Lock_")){
+                // Debug.Log("Yes I have entered here");
+                // isMoving = false;
+                // HandleOpenLock(hit.collider);
             } else {
                 MoveToTarget();
             }
@@ -73,6 +73,18 @@ public class PlayerController: MonoBehaviour {
             CheckForNewMove();
         }
         UpdateAnimation();
+    }
+
+    void HandleOpenLock(Collider2D hitCollider){
+        if (hitCollider.tag == "Lock_Yellow"){
+            int currentYellowKey = itemManager.GetYellowKey();
+            if (currentYellowKey >= 1){
+                itemManager.SetYellowKey(currentYellowKey - 1);
+                hitCollider.gameObject.SetActive(false);
+            } else {
+                Debug.Log("You dont have a key!");
+            }
+        }
     }
 
     void CheckForNewMove() {
@@ -98,53 +110,70 @@ public class PlayerController: MonoBehaviour {
             isMoving = true;
         }
     }
-    private void WhenCollidedEnemy(Collider2D collision)
+    public Battler CreateBattler(string tag)
     {
-        if (collision.tag.StartsWith("Enemy_"))
+        // ResourcesフォルダからBattlerBaseをロードする
+        BattlerBase battlerBase = Resources.Load<BattlerBase>("Battlers/" + tag);
+
+        if (battlerBase == null)
         {
-            LoadBattler(collision.tag);
+            Debug.LogError("BattlerBase not found for tag: " + tag);
+            return null;
         }
-    }
-    void LoadBattler(string tag)
-    {
-        BattlerBase battler = Resources.Load<BattlerBase>("Battlers/" + tag);
-        if (battler != null)
-        {
-            Debug.Log("Loaded Battler: " + battler.Name);
-            // ここでbattlerのデータを使用して何かを行う
-        }
-        else
-        {
-            Debug.LogError("Battler not found for tag: " + tag);
-        }
+
+        // 新しいBattlerインスタンスを作成
+        Battler newBattler = new Battler();
+        
+        // リフレクションを使用してプライベートフィールドにアクセスし、BattlerBaseを設定
+        FieldInfo baseField = typeof(Battler).GetField("_base", BindingFlags.NonPublic | BindingFlags.Instance);
+        baseField.SetValue(newBattler, battlerBase);
+
+        // Battlerを初期化
+        newBattler.Init();
+
+        return newBattler;
     }
 
     void MoveToTarget() {
         Vector3 newPosition = Vector3.MoveTowards(rb.position, targetPosition, speed * Time.deltaTime);
         rb.MovePosition(newPosition);
         if (Vector3.Distance(newPosition, targetPosition) < 0.01f) {  // 目標に十分近づいたかチェック
-                isMoving = false;  // 移動を停止
-                // StartCoroutine(WaitTwoSecond());
-                int layerMask = ~LayerMask.GetMask("Player");
-                Collider2D[] hitColliders = Physics2D.OverlapCircleAll(newPosition, 0.1f, layerMask);
-                foreach (var hitCollider in hitColliders) {
-                    Debug.Log(hitCollider);
-                    if (hitCollider.tag.StartsWith("Enemy_")) {
-                        // 敵との接触が確認された場合、戦闘UIを起動
-                        hitCollider.gameObject.SetActive(false);
-                        LoadBattler(hitCollider.tag);
-                        OnEncounts?.Invoke();
-                        break;
-                    }
-                }
+            isMoving = false;  // 移動を停止
+            int layerMask = ~LayerMask.GetMask("Player");
+            Collider2D[] hitColliders = Physics2D.OverlapCircleAll(newPosition, 0.1f, layerMask);
+            foreach (var hitCollider in hitColliders) {
+                // Debug.Log("Hit Collider: " + hitCollider);
+                HandleCollision(hitCollider);
             }
         }
-
-    void TriggerCombatUI(GameObject enemy) {
-        // 戦闘UIをアクティブにする
-        // 敵情報をUIに渡すなど、必要な処理をここで行う
-        battleUI.SetActive(true);
     }
+
+    void HandleCollision(Collider2D hitCollider){
+        if (hitCollider.tag.StartsWith("Enemy_")) {
+            HandleCollisionEnemy(hitCollider);
+        } else if (hitCollider.tag.StartsWith("Key_")){
+            HandleGetKey(hitCollider);
+        } else if (hitCollider.tag.StartsWith("Lock_")){
+            HandleOpenLock(hitCollider);
+        }
+    }
+
+    void HandleCollisionEnemy(Collider2D hitCollider){
+        // 敵との接触が確認された場合、戦闘UIを起動
+        hitCollider.gameObject.SetActive(false);
+        Battler battler = CreateBattler(hitCollider.tag);
+        OnEncounts?.Invoke(battler);
+    }
+
+    void HandleGetKey(Collider2D hitCollider){
+        if (hitCollider.tag == "Key_Yellow"){
+            int currentYellowKey = itemManager.GetYellowKey();
+            itemManager.SetYellowKey(currentYellowKey + 1);
+            hitCollider.gameObject.SetActive(false);
+        }
+    }
+
+
 
     void ResetMovementFlags() {
         forwardmove = backmove = rightmove = leftmove = isMoving = false;

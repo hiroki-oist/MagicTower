@@ -22,15 +22,6 @@ public class PlayerStats : BattleUnit
             AttackText.text = $"ATK:{battler.Attack}";
             DefenseText.text = $"DEF:{battler.Defense}";
         }
-
-    // public override void UpdateUI()
-    // {
-    //     HPText.text = $"HP:{Battler.HP}";
-    //     HPTextHeader.text = $"{Battler.HP}";
-    //     AttackTextHeader.text = $"{Battler.Attack}";
-    //     DefenseText.text = $"DEF:{Battler.Defense}";
-    //     DefenseTextHeader.text = $"{Battler.Defense}";
-    // }
     public override void UpdateUI()
     {
     if (HPText != null && Battler != null) {

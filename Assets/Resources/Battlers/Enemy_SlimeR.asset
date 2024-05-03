@@ -16,4 +16,5 @@ MonoBehaviour:
   maxHP: 30
   attack: 10
   defense: 5
-  sptire: {fileID: 808898688, guid: 7c5b5c5fb1a0349118c8ed56152ee7fc, type: 3}
+  coin: 10
+  sprite: {fileID: 808898688, guid: 7c5b5c5fb1a0349118c8ed56152ee7fc, type: 3}

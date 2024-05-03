@@ -97,6 +97,7 @@
     <Compile Include="Assets/Scripts/PlayerController.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark03.cs" />
     <Compile Include="Assets/Scripts/Battle/EndBattleUIController.cs" />
+    <Compile Include="Assets/Scripts/Keys/ItemManager.cs" />
     <Compile Include="Assets/Scripts/Battle/Battlers/BattlerBase.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextInfoDebugTool.cs" />
   </ItemGroup>

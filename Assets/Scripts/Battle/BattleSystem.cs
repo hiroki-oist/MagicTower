@@ -25,11 +25,8 @@ public class BattleSystem : MonoBehaviour
 
     public void BattleStart(Battler player, Battler enemy){
         state = State.Start;
-        Debug.Log("バトル開始！");
         SetupBattle(player, enemy);
         state = State.RunTurns;
-        StartCoroutine(WaitOneSecond());
-
     }
     private void SetupBattle(Battler player, Battler enemy){
         playerStats.Setup(player);
@@ -42,11 +39,7 @@ public class BattleSystem : MonoBehaviour
     }
 
     public void RunTurn(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit){
-
         enemyTargetUnit.Battler.TakeDamage(playerBattleUnit.Battler);
-        // Debug.Log("Attacker attack is " + playerBattleUnit.Battler.Attack);
-        // Debug.Log("EnemyTargetUnit attack is " + enemyTargetUnit.Battler.Attack);
-        // Debug.Log("Enemy coin: " + enemyTargetUnit.Battler.Coin);
         enemyTargetUnit.UpdateUI();
 
         if (enemyTargetUnit.Battler.HP <= 0){
@@ -60,28 +53,14 @@ public class BattleSystem : MonoBehaviour
             Debug.Log("あなたはやられてしまった。。");
             state = State.BattleOver;
         }
-
-
     }
-
     private void HandlePlayerWin(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit){
-        Debug.Log("敵を倒した！");
         playerBattleUnit.Battler.EarnCoin(enemyTargetUnit.Battler);
-        Debug.Log("敵のステータスは、HP: " + enemyTargetUnit.Battler.HP + "\nCoin: " + enemyTargetUnit.Battler.Coin);
-        Debug.Log(enemyTargetUnit.Battler.Coin + "ゴールドを得た！");
         playerBattleUnit.UpdateCoinUI();
         state = State.BattleOver;
 
         earnedCoinDialogue.text = $"{enemyTargetUnit.Battler.Coin}ゴールド獲得";
     }
-
-    IEnumerator WaitOneSecond()
-    {
-        Debug.Log("Wait started at " + Time.time);
-        yield return new WaitForSeconds(1); // 1秒間待機
-        Debug.Log("Wait ended at " + Time.time);
-    }
-
     // Start is called before the first frame update
     void Start()
     {
