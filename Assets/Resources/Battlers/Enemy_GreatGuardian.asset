@@ -1,0 +1,20 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
+  m_Name: Enemy_GreatGuardian
+  m_EditorClassIdentifier: 
+  name: "\u4E0A\u7D1A\u5B88\u8B77\u5175"
+  maxHP: 100
+  attack: 180
+  defense: 110
+  coin: 50
+  sprite: {fileID: 808898688, guid: 7c5b5c5fb1a0349118c8ed56152ee7fc, type: 3}

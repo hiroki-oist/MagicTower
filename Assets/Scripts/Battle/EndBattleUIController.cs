@@ -11,21 +11,20 @@ public class EndBattleUIController : MonoBehaviour
     private float waitTime = 0.5f;
     private float fadeOutTime = 0.5f;
 
-    void Start()
+    void OnEnable()
     {
         StartCoroutine(FadeCanvasGroupInOut(endBattleUI, fadeInTime, waitTime, fadeOutTime));
     }
 
+    void Update(){
+    }
+
     public IEnumerator FadeCanvasGroupInOut(CanvasGroup cg, float fadeInTime, float waitTime, float fadeOutTime)
     {
-        // フェードイン処理
         yield return StartCoroutine(FadeAlpha(cg, 0, 1, fadeInTime));
-
-        // 指定秒数待機
         yield return new WaitForSeconds(waitTime);
-
-        // フェードアウト処理
         yield return StartCoroutine(FadeAlpha(cg, 1, 0, fadeOutTime));
+        gameObject.SetActive(false);
     }
 
     public IEnumerator FadeAlpha(CanvasGroup cg, float start, float end, float lerpTime)
@@ -46,11 +45,5 @@ public class EndBattleUIController : MonoBehaviour
 
             yield return new WaitForEndOfFrame();
         }
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 }

@@ -18,7 +18,7 @@ public class PlayerStats : BattleUnit
             base.Setup(battler);
 
             nameText.text = battler.Base.Name;
-            HPText.text = $"HP:{battler.MaxHP}";
+            HPText.text = $"HP:{battler.HP}";
             AttackText.text = $"ATK:{battler.Attack}";
             DefenseText.text = $"DEF:{battler.Defense}";
         }

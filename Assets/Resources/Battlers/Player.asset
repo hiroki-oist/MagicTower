@@ -13,8 +13,8 @@ MonoBehaviour:
   m_Name: Player
   m_EditorClassIdentifier: 
   name: "\u52C7\u8005"
-  maxHP: 1000
-  attack: 50
-  defense: 10
-  coin: 10
+  maxHP: 999999
+  attack: 110
+  defense: 110
+  coin: 0
   sprite: {fileID: 0}

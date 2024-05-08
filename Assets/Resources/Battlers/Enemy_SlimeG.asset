@@ -12,9 +12,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
   m_Name: Enemy_SlimeG
   m_EditorClassIdentifier: 
-  name: "\u30B9\u30E9\u30A4\u30E0G"
-  maxHP: 500
-  attack: 30
-  defense: 10
-  coin: 3
+  name: "\u7DD1\u30B9\u30E9\u30A4\u30E0"
+  maxHP: 35
+  attack: 18
+  defense: 1
+  coin: 1
   sprite: {fileID: 1034845622, guid: 7c5b5c5fb1a0349118c8ed56152ee7fc, type: 3}

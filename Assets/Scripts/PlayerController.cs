@@ -3,31 +3,48 @@ using System.Collections;
 using System.Runtime.CompilerServices;
 using UnityEngine.Events;
 using System.Reflection;
+using System;
+using TMPro;
+using UnityEngine.UI;
+using System.Security.Cryptography;
 public class PlayerController: MonoBehaviour {
+    public static PlayerController Instance { get; private set; }
     public float speed = 60.0f;
     private Animator animator;
     bool forwardmove;
     bool backmove;
     bool rightmove;
     bool leftmove;
-    // Use this for initialization
     private Vector2 targetPosition;
     private bool isMoving = false;
     private Rigidbody2D rb;
-    // public GameObject battleUI;
-    // デリゲートの定義
     public delegate void EncountsHandler(Battler enemyBattler);
 
     // イベントの定義
     public event EncountsHandler OnEncounts;
      [SerializeField] BattleUnit playerStats;
     public ItemManager itemManager;
+    public FloorManager floorManager;
 
     public GameController gameController;
-    
+    [SerializeField] TextMeshProUGUI swordName;
+    [SerializeField] TextMeshProUGUI shieldName;
+    public GameObject shieldObject;
+    public GameObject swordObject;
+
+    // インスタンスが一つであることを確認
+    void Awake() {
+        if (Instance == null) {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        } else if (Instance != this) {
+            Destroy(gameObject);
+        }
+    }
 
     void Start () {
         gameController.PlayerBattler.Init();
+        gameController.PlayerBattler.HP = 1000;
         playerStats.Setup(gameController.PlayerBattler);
         playerStats.UpdateUI();
         playerStats.UpdateCoinUI();
@@ -36,36 +53,26 @@ public class PlayerController: MonoBehaviour {
         Application.targetFrameRate = 30;
         animator = GetComponent<Animator>();
         rb = GetComponent<Rigidbody2D>();
+        DontDestroyOnLoad(gameObject);
     }
 
     // Update is called once per frame
     void Update () {
-        // Debug.Log("Update is moving");
+        // Debug.Log("My Position is: " + rb.position);
         if (isMoving) {
             int layerMask = ~LayerMask.GetMask("Player", "Enemy", "Item");
             RaycastHit2D hit = Physics2D.Raycast(rb.position, targetPosition - rb.position, Vector3.Distance(rb.position, targetPosition), layerMask);
-            Debug.Log("Hit collider is: " + hit.collider);
-            if (hit.collider != null && hit.collider.CompareTag("Wall")) {
-                int hitLayer = hit.collider.gameObject.layer;
-                string layerName = LayerMask.LayerToName(hitLayer);
+            // Debug.Log("Hit: " + hit.collider);
+            if (hit.collider != null && hit.collider.tag.StartsWith("Wall_")) {
+                if (hit.collider.tag == "Wall_Secret"){
+                    gameController.DestroyObject(hit.collider);
+                }
                 isMoving = false;
                 ResetMovementFlags();
             } else if (hit.collider != null && hit.collider.tag.StartsWith("Lock_")){
                 isMoving = false;
                 ResetMovementFlags();
-                HandleCollision(hit.collider);
-            
-            // }
-                
-            // if (hit.collider != null && hit.collider.CompareTag("Wall")) {
-            //     // Debug.Log("Collided wall!");
-            //     ResetMovementFlags();  // 移動フラグをリセット
-            //     isMoving = false;  // 移動を停止
-                // Debug.Log("hit.collider.tag" + hit.collider.tag);
-            // } else if (hit.collider.tag.StartsWith("Lock_")){
-                // Debug.Log("Yes I have entered here");
-                // isMoving = false;
-                // HandleOpenLock(hit.collider);
+                HandleOpenLock(hit.collider);
             } else {
                 MoveToTarget();
             }
@@ -76,13 +83,24 @@ public class PlayerController: MonoBehaviour {
     }
 
     void HandleOpenLock(Collider2D hitCollider){
+        gameController.DestroyObject(hitCollider);
         if (hitCollider.tag == "Lock_Yellow"){
             int currentYellowKey = itemManager.GetYellowKey();
             if (currentYellowKey >= 1){
                 itemManager.SetYellowKey(currentYellowKey - 1);
-                hitCollider.gameObject.SetActive(false);
-            } else {
-                Debug.Log("You dont have a key!");
+                // hitCollider.gameObject.SetActive(false);
+            } 
+        } else if (hitCollider.tag == "Lock_Blue"){
+            int currentBlueKey = itemManager.GetBlueKey();
+            if (currentBlueKey >= 1){
+                itemManager.SetBlueKey(currentBlueKey - 1);
+                // hitCollider.gameObject.SetActive(false);
+            }
+        } else if (hitCollider.tag == "Lock_Red"){
+            int currentRedKey = itemManager.GetRedKey();
+            if (currentRedKey >= 1){
+                itemManager.SetRedKey(currentRedKey - 1);
+                // hitCollider.gameObject.SetActive(false);
             }
         }
     }
@@ -103,7 +121,7 @@ public class PlayerController: MonoBehaviour {
     }
 
     void StartMove(Vector3 direction) {
-        if (!isMoving) { // すでに移動中でなければ
+        if (!isMoving) { 
             targetPosition = transform.position + direction;
             targetPosition.x = Mathf.Round(targetPosition.x);
             targetPosition.y = Mathf.Round(targetPosition.y);
@@ -112,7 +130,6 @@ public class PlayerController: MonoBehaviour {
     }
     public Battler CreateBattler(string tag)
     {
-        // ResourcesフォルダからBattlerBaseをロードする
         BattlerBase battlerBase = Resources.Load<BattlerBase>("Battlers/" + tag);
 
         if (battlerBase == null)
@@ -121,14 +138,11 @@ public class PlayerController: MonoBehaviour {
             return null;
         }
 
-        // 新しいBattlerインスタンスを作成
         Battler newBattler = new Battler();
         
-        // リフレクションを使用してプライベートフィールドにアクセスし、BattlerBaseを設定
         FieldInfo baseField = typeof(Battler).GetField("_base", BindingFlags.NonPublic | BindingFlags.Instance);
         baseField.SetValue(newBattler, battlerBase);
 
-        // Battlerを初期化
         newBattler.Init();
 
         return newBattler;
@@ -137,45 +151,160 @@ public class PlayerController: MonoBehaviour {
     void MoveToTarget() {
         Vector3 newPosition = Vector3.MoveTowards(rb.position, targetPosition, speed * Time.deltaTime);
         rb.MovePosition(newPosition);
-        if (Vector3.Distance(newPosition, targetPosition) < 0.01f) {  // 目標に十分近づいたかチェック
+        if (Vector3.Distance(newPosition, targetPosition) < 0.01f) {  
             isMoving = false;  // 移動を停止
             int layerMask = ~LayerMask.GetMask("Player");
             Collider2D[] hitColliders = Physics2D.OverlapCircleAll(newPosition, 0.1f, layerMask);
             foreach (var hitCollider in hitColliders) {
-                // Debug.Log("Hit Collider: " + hitCollider);
-                HandleCollision(hitCollider);
+                HandleCollision(hitCollider, newPosition, targetPosition);
             }
         }
     }
 
-    void HandleCollision(Collider2D hitCollider){
+    void HandleCollision(Collider2D hitCollider, Vector3 newPosition, Vector3 targetPosition){
         if (hitCollider.tag.StartsWith("Enemy_")) {
+            ResetMovementFlags();
             HandleCollisionEnemy(hitCollider);
         } else if (hitCollider.tag.StartsWith("Key_")){
             HandleGetKey(hitCollider);
         } else if (hitCollider.tag.StartsWith("Lock_")){
+            ResetMovementFlags();
             HandleOpenLock(hitCollider);
+        } else if (hitCollider.tag.StartsWith("Potion_")){
+            HandleGetPotion(hitCollider);
+        } else if (hitCollider.tag.StartsWith("Gem_")){
+            HandleGetGem(hitCollider);
+        } else if (hitCollider.tag.StartsWith("Stairs_")){
+            ResetMovementFlags();
+            HandleStairs(hitCollider);
+        } else if (hitCollider.tag.StartsWith("Sword")){
+            HandleGetSword(hitCollider);
+        } else if (hitCollider.tag.StartsWith("Shield")){
+            HandleGetShield(hitCollider);
+        }
+    }
+
+    void HandleStairs(Collider2D hitCollider){
+        int currentFloor = floorManager.GetFloorNumber();
+        if (hitCollider.tag == "Stairs_Up"){
+            floorManager.SetFloorNumber(currentFloor + 1);
+        } else if (hitCollider.tag == "Stairs_Down"){
+            floorManager.SetFloorNumber(currentFloor - 1);
+        }
+    }
+
+    void HandleGetSword(Collider2D hitCollider){
+        Sprite swordSprite = Resources.Load<Sprite>("Weapons/" + hitCollider.gameObject.name);
+        SpriteRenderer spriteRenderer = swordObject.GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = swordSprite;
+        // hitCollider.gameObject.SetActive(false);
+        gameController.DestroyObject(hitCollider);
+        if (hitCollider.gameObject.name == "Sword_1"){
+            gameController.PlayerBattler.Attack += 10;
+            swordName.text = "鉄の剣";
+            playerStats.UpdateUI();
+        } else if (hitCollider.gameObject.name == "Sword_2"){
+            gameController.PlayerBattler.Attack += 20;
+            swordName.text = "鋼の剣";
+            playerStats.UpdateUI();
+        } else if (hitCollider.gameObject.name == "Sword_3"){
+            gameController.PlayerBattler.Attack += 30;
+            swordName.text = "騎士の剣";
+            playerStats.UpdateUI();
+        } else if (hitCollider.gameObject.name == "Sword_4"){
+            gameController.PlayerBattler.Attack += 50;
+            swordName.text = "聖なる剣";
+            playerStats.UpdateUI();
+        } else if (hitCollider.gameObject.name == "Sword_5"){
+            gameController.PlayerBattler.Attack += 100;
+            swordName.text = "神剣";
+            playerStats.UpdateUI();
+        }
+    }
+
+    void HandleGetShield(Collider2D hitCollider){
+        Sprite shieldSprite = Resources.Load<Sprite>("Weapons/" + hitCollider.gameObject.name);
+        SpriteRenderer spriteRenderer = shieldObject.GetComponent<SpriteRenderer>();
+        spriteRenderer.sprite = shieldSprite;
+        // hitCollider.gameObject.SetActive(false);
+        Destroy(hitCollider.gameObject);
+        if (hitCollider.gameObject.name == "Shield_1"){
+            gameController.PlayerBattler.Defense += 10;
+            shieldName.text = "鉄の盾";
+            playerStats.UpdateUI();
+        } else if (hitCollider.gameObject.name == "Shield_2"){
+            gameController.PlayerBattler.Defense += 20;
+            shieldName.text = "鋼の剣";
+            playerStats.UpdateUI();
+        } else if (hitCollider.gameObject.name == "Shield_3"){
+            gameController.PlayerBattler.Defense += 30;
+            shieldName.text = "騎士の盾";
+            playerStats.UpdateUI();
+        } else if (hitCollider.gameObject.name == "Shield_4"){
+            gameController.PlayerBattler.Defense += 50;
+            shieldName.text = "聖なる盾";
+            playerStats.UpdateUI();
+        } else if (hitCollider.gameObject.name == "Shield_5"){
+            gameController.PlayerBattler.Defense += 100;
+            shieldName.text = "神盾";
+            playerStats.UpdateUI();
+        }
+    }
+
+    void HandleGetPotion(Collider2D hitCollider){
+        // hitCollider.gameObject.SetActive(false);
+        gameController.DestroyObject(hitCollider);
+        if (hitCollider.tag == "Potion_Red"){
+            gameController.PlayerBattler.HP += 200;
+            playerStats.UpdateUI();
+        } else if (hitCollider.tag == "Potion_Blue"){
+            gameController.PlayerBattler.HP += 400;
+            playerStats.UpdateUI();
+        }
+    }
+
+    void HandleGetGem(Collider2D hitCollider){
+        // hitCollider.gameObject.SetActive(false);
+        gameController.DestroyObject(hitCollider);
+        if (hitCollider.tag == "Gem_Attack"){
+            gameController.PlayerBattler.Attack += 2;
+            playerStats.UpdateUI();
+        } else if (hitCollider.tag == "Gem_Defense"){
+            gameController.PlayerBattler.Defense += 4;
+            playerStats.UpdateUI();
         }
     }
 
     void HandleCollisionEnemy(Collider2D hitCollider){
         // 敵との接触が確認された場合、戦闘UIを起動
-        hitCollider.gameObject.SetActive(false);
+        Debug.Log("敵との接触を確認");
+        // hitCollider.gameObject.SetActive(false);
+        gameController.DestroyObject(hitCollider);
+        Debug.Log("敵をDestory");
         Battler battler = CreateBattler(hitCollider.tag);
         OnEncounts?.Invoke(battler);
     }
 
     void HandleGetKey(Collider2D hitCollider){
+        gameController.DestroyObject(hitCollider);
         if (hitCollider.tag == "Key_Yellow"){
             int currentYellowKey = itemManager.GetYellowKey();
             itemManager.SetYellowKey(currentYellowKey + 1);
-            hitCollider.gameObject.SetActive(false);
+            // hitCollider.gameObject.SetActive(false);
+        } else if (hitCollider.tag == "Key_Blue"){
+            int currentBlueKey = itemManager.GetBlueKey();
+            itemManager.SetBlueKey(currentBlueKey + 1);
+            // hitCollider.gameObject.SetActive(false);
+        } else if (hitCollider.tag == "Key_Red"){
+            int currentRedKey = itemManager.GetRedKey();
+            itemManager.SetRedKey(currentRedKey + 1);
+            // hitCollider.gameObject.SetActive(false);
         }
     }
 
 
 
-    void ResetMovementFlags() {
+    public void ResetMovementFlags() {
         forwardmove = backmove = rightmove = leftmove = isMoving = false;
     }
 

@@ -24,7 +24,7 @@ public class BattleSystem : MonoBehaviour
     public float fadeInTime = 1.0f;
 
     public void BattleStart(Battler player, Battler enemy){
-        state = State.Start;
+        // state = State.Start;
         SetupBattle(player, enemy);
         state = State.RunTurns;
     }
@@ -38,20 +38,44 @@ public class BattleSystem : MonoBehaviour
         OnBattleOver?.Invoke();
     }
 
-    public void RunTurn(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit){
+    // public void RunTurn(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit){
+    //     enemyTargetUnit.Battler.TakeDamage(playerBattleUnit.Battler);
+    //     enemyTargetUnit.UpdateUI();
+
+    //     if (enemyTargetUnit.Battler.HP <= 0){
+    //         HandlePlayerWin(playerBattleUnit, enemyTargetUnit);
+    //     } else {
+    //         playerBattleUnit.Battler.TakeDamage(enemyTargetUnit.Battler);
+    //         playerBattleUnit.UpdateUI();
+
+    //         if (playerBattleUnit.Battler.HP <= 0){
+    //             Debug.Log("あなたはやられてしまった。。");
+    //             state = State.BattleOver;
+    //         }
+    //     }
+    // }
+
+    public IEnumerator RunTurn(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit)
+    {
         enemyTargetUnit.Battler.TakeDamage(playerBattleUnit.Battler);
+        yield return new WaitForSeconds(0.2f); // 最初のアクション後に0.2秒待機
         enemyTargetUnit.UpdateUI();
 
-        if (enemyTargetUnit.Battler.HP <= 0){
+        if (enemyTargetUnit.Battler.HP <= 0)
+        {
             HandlePlayerWin(playerBattleUnit, enemyTargetUnit);
         }
-        
-        playerBattleUnit.Battler.TakeDamage(enemyTargetUnit.Battler);
-        playerBattleUnit.UpdateUI();
+        else
+        {
+            yield return new WaitForSeconds(0.2f); // 二つ目のアクション前に0.2秒待機
+            playerBattleUnit.Battler.TakeDamage(enemyTargetUnit.Battler);
+            playerBattleUnit.UpdateUI();
 
-        if (playerBattleUnit.Battler.HP <= 0){
-            Debug.Log("あなたはやられてしまった。。");
-            state = State.BattleOver;
+            if (playerBattleUnit.Battler.HP <= 0)
+            {
+                Debug.Log("あなたはやられてしまった。。");
+                state = State.BattleOver;
+            }
         }
     }
     private void HandlePlayerWin(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit){
@@ -75,7 +99,7 @@ public class BattleSystem : MonoBehaviour
                 state = State.RunTurns;
                 break;
             case State.RunTurns:
-                RunTurn(playerStats, enemyStats);
+                StartCoroutine(RunTurn(playerStats, enemyStats));
                 break;
             case State.BattleOver:
                 BattleOver();
