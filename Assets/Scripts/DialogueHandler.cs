@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using Unity.VisualScripting;
 public class DialogueHandler : MonoBehaviour
 {
     [SerializeField] private GameObject dialogue;
     [SerializeField] private TextMeshProUGUI dialogueText;
     [SerializeField] private Button nextDialogueButton;
+    private bool dialogueFinished = false;
 
     private List<string> dialogueList = new List<string>(); // ダイアログのリスト
     private int currentDialogueIndex = 0; // 現在のダイアログのインデックス
@@ -22,7 +24,10 @@ public class DialogueHandler : MonoBehaviour
     public void ShowDialogue(List<string> newDialogueList)
     {
         nextDialogueButton.gameObject.SetActive(true);
+        // nextDialogueButton.onClick.RemoveListener(HandleNextDialogue);
+        // nextDialogueButton.onClick.AddListener(HandleNextDialogue);
         dialogueList = newDialogueList; // 新しいダイアログリストを設定
+        dialogueFinished = false;
         currentDialogueIndex = 0; // インデックスをリセット
         ShowCurrentDialogue(); // 最初のダイアログを表示
     }
@@ -65,18 +70,26 @@ public class DialogueHandler : MonoBehaviour
         }
     }
 
+    public bool IsDialogueFinished()
+    {
+        // Debug.Log("Checking if dialogue is finished: " + dialogueFinished);
+        return dialogueFinished;
+    }
+
     public void HandleNextDialogue()
     {
-        Debug.Log("HandleNextDialogue had run");
+        // Debug.Log("Handling next dialogue, current index: " + currentDialogueIndex);
         if (currentDialogueIndex < dialogueList.Count - 1)
         {
             currentDialogueIndex++;
-            Debug.Log("CurrentDialogueIndex: " + currentDialogueIndex);
             ShowCurrentDialogue();
         }
         else
         {
             dialogue.SetActive(false);
+            nextDialogueButton.gameObject.SetActive(false);
+            dialogueFinished = true;
+            // Debug.Log("Done with showing dialogue. DialogueFinished: " + dialogueFinished);
         }
     }
 

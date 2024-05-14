@@ -10,7 +10,8 @@ public class BattleSystem : MonoBehaviour
 {
     enum State{
         Start,
-        RunTurns,
+        StartTurns,
+        RunningTurns,
         BattleOver
     }
 
@@ -26,7 +27,7 @@ public class BattleSystem : MonoBehaviour
     public void BattleStart(Battler player, Battler enemy){
         // state = State.Start;
         SetupBattle(player, enemy);
-        state = State.RunTurns;
+        state = State.StartTurns;
     }
     private void SetupBattle(Battler player, Battler enemy){
         playerStats.Setup(player);
@@ -38,25 +39,10 @@ public class BattleSystem : MonoBehaviour
         OnBattleOver?.Invoke();
     }
 
-    // public void RunTurn(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit){
-    //     enemyTargetUnit.Battler.TakeDamage(playerBattleUnit.Battler);
-    //     enemyTargetUnit.UpdateUI();
-
-    //     if (enemyTargetUnit.Battler.HP <= 0){
-    //         HandlePlayerWin(playerBattleUnit, enemyTargetUnit);
-    //     } else {
-    //         playerBattleUnit.Battler.TakeDamage(enemyTargetUnit.Battler);
-    //         playerBattleUnit.UpdateUI();
-
-    //         if (playerBattleUnit.Battler.HP <= 0){
-    //             Debug.Log("あなたはやられてしまった。。");
-    //             state = State.BattleOver;
-    //         }
-    //     }
-    // }
-
     public IEnumerator RunTurn(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit)
     {
+        state = State.RunningTurns;
+        Debug.Log("Attacking enemyUnit");
         enemyTargetUnit.Battler.TakeDamage(playerBattleUnit.Battler);
         yield return new WaitForSeconds(0.2f); // 最初のアクション後に0.2秒待機
         enemyTargetUnit.UpdateUI();
@@ -68,6 +54,7 @@ public class BattleSystem : MonoBehaviour
         else
         {
             yield return new WaitForSeconds(0.2f); // 二つ目のアクション前に0.2秒待機
+            Debug.Log("EnemyUnit Attacking");
             playerBattleUnit.Battler.TakeDamage(enemyTargetUnit.Battler);
             playerBattleUnit.UpdateUI();
 
@@ -75,8 +62,11 @@ public class BattleSystem : MonoBehaviour
             {
                 Debug.Log("あなたはやられてしまった。。");
                 state = State.BattleOver;
+            } else {
+                state = State.StartTurns;
             }
         }
+        
     }
     private void HandlePlayerWin(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit){
         playerBattleUnit.Battler.EarnCoin(enemyTargetUnit.Battler);
@@ -96,10 +86,12 @@ public class BattleSystem : MonoBehaviour
     {
         switch (state){
             case State.Start:
-                state = State.RunTurns;
+                state = State.StartTurns;
                 break;
-            case State.RunTurns:
+            case State.StartTurns:
                 StartCoroutine(RunTurn(playerStats, enemyStats));
+                break;
+            case State.RunningTurns:
                 break;
             case State.BattleOver:
                 BattleOver();

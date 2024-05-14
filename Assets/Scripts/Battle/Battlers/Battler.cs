@@ -29,6 +29,8 @@ public class Battler
     public void TakeDamage(Battler attacker){
         int damage = attacker.Attack - Defense;
         HP = Mathf.Clamp(HP - damage, 0, MaxHP);
+        Debug.Log($"Attack: {attacker.Attack}");
+        Debug.Log($"Defense: {Defense}");
     }
 
     public void EarnCoin(Battler enemy){

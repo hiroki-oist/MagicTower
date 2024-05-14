@@ -31,6 +31,7 @@ public class PlayerController: MonoBehaviour {
     [SerializeField] TextMeshProUGUI shieldName;
     public GameObject shieldObject;
     public GameObject swordObject;
+    [SerializeField] TextMeshProUGUI floorNumber;
 
     // インスタンスが一つであることを確認
     void Awake() {
@@ -65,7 +66,7 @@ public class PlayerController: MonoBehaviour {
             // Debug.Log("Hit: " + hit.collider);
             if (hit.collider != null && hit.collider.tag.StartsWith("Wall_")) {
                 if (hit.collider.tag == "Wall_Secret"){
-                    gameController.DestroyObject(hit.collider);
+                    gameController.DestroyObject(hit.collider.gameObject);
                 }
                 isMoving = false;
                 ResetMovementFlags();
@@ -83,7 +84,7 @@ public class PlayerController: MonoBehaviour {
     }
 
     void HandleOpenLock(Collider2D hitCollider){
-        gameController.DestroyObject(hitCollider);
+        gameController.DestroyObject(hitCollider.gameObject);
         if (hitCollider.tag == "Lock_Yellow"){
             int currentYellowKey = itemManager.GetYellowKey();
             if (currentYellowKey >= 1){
@@ -188,8 +189,10 @@ public class PlayerController: MonoBehaviour {
         int currentFloor = floorManager.GetFloorNumber();
         if (hitCollider.tag == "Stairs_Up"){
             floorManager.SetFloorNumber(currentFloor + 1);
+            floorNumber.text = $"{currentFloor + 1} 階";
         } else if (hitCollider.tag == "Stairs_Down"){
             floorManager.SetFloorNumber(currentFloor - 1);
+            floorNumber.text = $"{currentFloor - 1} 階";
         }
     }
 
@@ -198,7 +201,7 @@ public class PlayerController: MonoBehaviour {
         SpriteRenderer spriteRenderer = swordObject.GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = swordSprite;
         // hitCollider.gameObject.SetActive(false);
-        gameController.DestroyObject(hitCollider);
+        gameController.DestroyObject(hitCollider.gameObject);
         if (hitCollider.gameObject.name == "Sword_1"){
             gameController.PlayerBattler.Attack += 10;
             swordName.text = "鉄の剣";
@@ -226,8 +229,7 @@ public class PlayerController: MonoBehaviour {
         Sprite shieldSprite = Resources.Load<Sprite>("Weapons/" + hitCollider.gameObject.name);
         SpriteRenderer spriteRenderer = shieldObject.GetComponent<SpriteRenderer>();
         spriteRenderer.sprite = shieldSprite;
-        // hitCollider.gameObject.SetActive(false);
-        Destroy(hitCollider.gameObject);
+        gameController.DestroyObject(hitCollider.gameObject);
         if (hitCollider.gameObject.name == "Shield_1"){
             gameController.PlayerBattler.Defense += 10;
             shieldName.text = "鉄の盾";
@@ -253,7 +255,7 @@ public class PlayerController: MonoBehaviour {
 
     void HandleGetPotion(Collider2D hitCollider){
         // hitCollider.gameObject.SetActive(false);
-        gameController.DestroyObject(hitCollider);
+        gameController.DestroyObject(hitCollider.gameObject);
         if (hitCollider.tag == "Potion_Red"){
             gameController.PlayerBattler.HP += 200;
             playerStats.UpdateUI();
@@ -265,7 +267,7 @@ public class PlayerController: MonoBehaviour {
 
     void HandleGetGem(Collider2D hitCollider){
         // hitCollider.gameObject.SetActive(false);
-        gameController.DestroyObject(hitCollider);
+        gameController.DestroyObject(hitCollider.gameObject);
         if (hitCollider.tag == "Gem_Attack"){
             gameController.PlayerBattler.Attack += 2;
             playerStats.UpdateUI();
@@ -277,16 +279,15 @@ public class PlayerController: MonoBehaviour {
 
     void HandleCollisionEnemy(Collider2D hitCollider){
         // 敵との接触が確認された場合、戦闘UIを起動
-        Debug.Log("敵との接触を確認");
         // hitCollider.gameObject.SetActive(false);
-        gameController.DestroyObject(hitCollider);
-        Debug.Log("敵をDestory");
+        Debug.Log($"Player Stats\tHP: {gameController.PlayerBattler.HP}\tAttack: {gameController.PlayerBattler.Attack}\tDefense: {gameController.PlayerBattler.Defense}");
+        gameController.DestroyObject(hitCollider.gameObject);
         Battler battler = CreateBattler(hitCollider.tag);
         OnEncounts?.Invoke(battler);
     }
 
     void HandleGetKey(Collider2D hitCollider){
-        gameController.DestroyObject(hitCollider);
+        gameController.DestroyObject(hitCollider.gameObject);
         if (hitCollider.tag == "Key_Yellow"){
             int currentYellowKey = itemManager.GetYellowKey();
             itemManager.SetYellowKey(currentYellowKey + 1);

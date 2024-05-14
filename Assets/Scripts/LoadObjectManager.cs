@@ -11,16 +11,19 @@ public class LoadObjectManager : MonoBehaviour
         GameObject[] allObjects = FindObjectsOfType<GameObject>();
         string sceneName = SceneManager.GetActiveScene().name;
 
+
         foreach (GameObject eachObject in allObjects)
         {
             // オブジェクトの名前を基にキーを生成
             string objectKey = sceneName + "_" + eachObject.name;
-            // Debug.Log("Checking ID: " + objectKey);
+            Debug.Log($"Checking ID: {objectKey} with stored value: {PlayerPrefs.GetInt(objectKey, 0)}");
             // シーンロード時に状態をチェック
             if (PlayerPrefs.GetInt(objectKey, 0) == 1)
             {
-                // Debug.Log($"Enemy ID {objectKey} is resistered as defeated. Deactivating object...");
+                Debug.Log($"Enemy ID {objectKey} is resistered as defeated. Deactivating object...");
                 eachObject.SetActive(false); // 状態に基づいて非アクティブ化
+            } else {
+                Debug.Log($"GetInt: {PlayerPrefs.GetInt(objectKey, 0)}\tEnemy ID: {objectKey}");
             }
         }
     }

@@ -56,12 +56,12 @@ public class GameController : MonoBehaviour
         battleSystem.gameObject.SetActive(false);
         endBattleUI.gameObject.SetActive(true);
     }
-    public void DestroyObject(Collider2D hitCollider)
+    public void DestroyObject(GameObject gameObject)
     {
-        objectKey = SceneManager.GetActiveScene().name + "_" + hitCollider.gameObject.name;
-        Destroy(hitCollider.gameObject);
+        objectKey = SceneManager.GetActiveScene().name + "_" + gameObject.name;
+        Destroy(gameObject);
         PlayerPrefs.SetInt(objectKey, 1); 
         PlayerPrefs.Save(); 
-        Debug.Log($"Added {objectKey} to PlayerPrefs");
+        Debug.Log($"Added {objectKey} to PlayerPrefs with value {PlayerPrefs.GetInt(objectKey)}");
     }
 }
