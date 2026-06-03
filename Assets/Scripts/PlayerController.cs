@@ -7,6 +7,7 @@ using System;
 using TMPro;
 using UnityEngine.UI;
 using System.Security.Cryptography;
+using Unity.VisualScripting;
 public class PlayerController: MonoBehaviour {
     public static PlayerController Instance { get; private set; }
     public float speed = 60.0f;
@@ -75,7 +76,15 @@ public class PlayerController: MonoBehaviour {
                 ResetMovementFlags();
                 HandleOpenLock(hit.collider);
             } else {
-                MoveToTarget();
+                if (hit.collider != null){
+                    int hitLayer = hit.collider.gameObject.layer;
+                    string layerName = LayerMask.LayerToName(hitLayer);
+                    if (layerName == "People"){
+                        ResetMovementFlags();
+                    }
+                } else {
+                    MoveToTarget();
+                }
             }
         } else {
             CheckForNewMove();
@@ -281,9 +290,10 @@ public class PlayerController: MonoBehaviour {
         // 敵との接触が確認された場合、戦闘UIを起動
         // hitCollider.gameObject.SetActive(false);
         Debug.Log($"Player Stats\tHP: {gameController.PlayerBattler.HP}\tAttack: {gameController.PlayerBattler.Attack}\tDefense: {gameController.PlayerBattler.Defense}");
-        gameController.DestroyObject(hitCollider.gameObject);
         Battler battler = CreateBattler(hitCollider.tag);
         OnEncounts?.Invoke(battler);
+        gameController.DestroyObject(hitCollider.gameObject);
+        // OnEncountsComplete(hitCollider.gameObject);
     }
 
     void HandleGetKey(Collider2D hitCollider){

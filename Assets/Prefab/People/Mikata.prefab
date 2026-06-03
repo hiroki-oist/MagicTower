@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 6310486419312954907}
   - component: {fileID: 6549225546528055262}
   - component: {fileID: 1658589091698134882}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Mikata
   m_TagString: Untagged
   m_Icon: {fileID: 0}

@@ -130,6 +130,7 @@ MonoBehaviour:
   shieldName: {fileID: 0}
   shieldObject: {fileID: 0}
   swordObject: {fileID: 0}
+  floorNumber: {fileID: 0}
 --- !u!50 &4024629088112967251
 Rigidbody2D:
   serializedVersion: 4

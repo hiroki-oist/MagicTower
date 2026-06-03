@@ -15,9 +15,9 @@ public class ItemManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI red_key_value;
     
     void Awake() {
-        yellowKey = 0;
-        blueKey = 0;
-        redKey = 0;
+        yellowKey = 10;
+        blueKey = 10;
+        redKey = 10;
     }
 
     public void UpdateKeyValue(){

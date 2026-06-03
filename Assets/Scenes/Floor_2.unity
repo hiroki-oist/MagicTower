@@ -2321,6 +2321,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Mikata_second
       objectReference: {fileID: 0}
+    - target: {fileID: 8305752889916259024, guid: 20dd52aef4e694022aa918a3664be255, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []

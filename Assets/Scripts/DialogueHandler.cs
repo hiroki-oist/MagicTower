@@ -24,8 +24,8 @@ public class DialogueHandler : MonoBehaviour
     public void ShowDialogue(List<string> newDialogueList)
     {
         nextDialogueButton.gameObject.SetActive(true);
-        // nextDialogueButton.onClick.RemoveListener(HandleNextDialogue);
-        // nextDialogueButton.onClick.AddListener(HandleNextDialogue);
+        nextDialogueButton.onClick.RemoveListener(HandleNextDialogue);
+        nextDialogueButton.onClick.AddListener(HandleNextDialogue);
         dialogueList = newDialogueList; // 新しいダイアログリストを設定
         dialogueFinished = false;
         currentDialogueIndex = 0; // インデックスをリセット

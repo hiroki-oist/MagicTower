@@ -17,4 +17,4 @@ MonoBehaviour:
   attack: 52
   defense: 12
   coin: 8
-  sprite: {fileID: 808898688, guid: 7c5b5c5fb1a0349118c8ed56152ee7fc, type: 3}
+  sprite: {fileID: 1958614920, guid: 7c5b5c5fb1a0349118c8ed56152ee7fc, type: 3}

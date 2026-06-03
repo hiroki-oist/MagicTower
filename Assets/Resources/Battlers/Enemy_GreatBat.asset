@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
-  m_Name: Enemy_SlimeR 7
+  m_Name: Enemy_GreatBat
   m_EditorClassIdentifier: 
-  name: "\u30B9\u30E9\u30A4\u30E0R"
-  maxHP: 51
-  attack: 50
-  defense: 0
-  coin: 40
-  sprite: {fileID: 808898688, guid: 7c5b5c5fb1a0349118c8ed56152ee7fc, type: 3}
+  name: "\u5927\u578B\u8759\u8760"
+  maxHP: 60
+  attack: 100
+  defense: 8
+  coin: 12
+  sprite: {fileID: -1474139589, guid: a674d07f857bf4e0b800b586a167702b, type: 3}

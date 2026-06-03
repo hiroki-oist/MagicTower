@@ -44,7 +44,7 @@ public class BattleSystem : MonoBehaviour
         state = State.RunningTurns;
         Debug.Log("Attacking enemyUnit");
         enemyTargetUnit.Battler.TakeDamage(playerBattleUnit.Battler);
-        yield return new WaitForSeconds(0.2f); // 最初のアクション後に0.2秒待機
+        yield return new WaitForSeconds(0.1f); // 最初のアクション後に0.2秒待機
         enemyTargetUnit.UpdateUI();
 
         if (enemyTargetUnit.Battler.HP <= 0)
@@ -53,7 +53,7 @@ public class BattleSystem : MonoBehaviour
         }
         else
         {
-            yield return new WaitForSeconds(0.2f); // 二つ目のアクション前に0.2秒待機
+            yield return new WaitForSeconds(0.1f); // 二つ目のアクション前に0.2秒待機
             Debug.Log("EnemyUnit Attacking");
             playerBattleUnit.Battler.TakeDamage(enemyTargetUnit.Battler);
             playerBattleUnit.UpdateUI();
