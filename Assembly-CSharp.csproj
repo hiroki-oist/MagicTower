@@ -184,6 +184,7 @@
     <None Include="Assets/Resources/Floors/Floor_3.txt" />
     <None Include="Assets/Resources/Floors/Floor_36.txt" />
     <None Include="Assets/TextMesh Pro/Examples &amp; Extras/Fonts/Anton OFL.txt" />
+    <None Include="Assets/Resources/FloorDrawOrder.txt" />
     <None Include="Assets/Resources/Floors/Floor_32.txt" />
     <None Include="Assets/TextMesh Pro/Shaders/TMPro_Mobile.cginc" />
     <None Include="Assets/Resources/Floors/Floor_34.txt" />

@@ -778,6 +778,19 @@ chk("if (sliding) return;" in _tc and "IEnumerator Slide(" in _tc,
     "1マスの移動を滑らかに出し、その間は入力を止める")
 chk("MonsterAnimation.FastTicksPerStep : MonsterAnimation.TicksPerStep" in _tc,
     "コマ数は高速モードで半分になる")
+# 階に入ったときの描き方（0xafa6）。121マスを渦巻きの順に描き、3マスごとに縦帰線を待つ。
+_do=[]
+for _l in open("Assets/Resources/FloorDrawOrder.txt",encoding="utf-8"):
+    _m=re.match(r"\s*(\d+) \| ([+-]\d) \| ([+-]\d)",_l)
+    if _m: _do.append((int(_m.group(2)),int(_m.group(3))))
+chk(len(_do)==121 and len(set(_do))==121,"描く順番は121マスを1度ずつ",str(len(_do)))
+chk(_do[0]==(-5,5) and _do[-1]==(0,0),"左上から始まり中央で終わる（渦巻き）",
+    f"{_do[0]} → {_do[-1]}")
+chk(all(abs(_do[_i][0]-_do[_i+1][0])+abs(_do[_i][1]-_do[_i+1][1])==1 for _i in range(120)),
+    "描く順番は隣のマスへ1つずつ進む")
+chk(_dis.count("mov     cx, 0xa")>=1 and "div     cx" in _dis,
+    "3マス（高速なら10マス）ごとに待つ割り算がある")
+
 # 窓が開く様子（0x94ba / 0x9412）。1きざみごとに縦帰線を1回待つ（高速モードは待たない）
 chk(_dis.count("lcall   0xf5f, 0x3d9")>=2,"窓の塗り広げは縦帰線を待つ")
 _dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
@@ -1553,7 +1566,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=580
+MIN_CHECKS=584
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
