@@ -654,6 +654,25 @@ chk("PanelKind" in open("Assets/Scripts/Items/SpecialItems.cs",encoding="utf-8")
     "欄の番号と持ち物が結び付いている")
 chk("Orb_Hero | 36" in open("Assets/Resources/ObjectIds.txt",encoding="utf-8").read(),
     "勇者のオーブ(ID36)が登録してある（盤面には出ないが欄の1つ目）")
+# 動画を枠の絵と見比べて「描き替わる所」を洗う道具（docs/cmp_video_hud.py）。
+# その道具が知っている欄と ScreenLayout が食い違わないようにしておく。
+_hud=open("docs/cmp_video_hud.py",encoding="utf-8").read()
+_known=re.findall(r"\((\d+), (\d+), (\d+), (\d+), \"(.+?)\"\)",_hud)
+chk(len(_known)==12,"見比べの道具が知っている欄は12個",str(len(_known)))
+for _k in _known:
+    _r=(int(_k[0]),int(_k[1]),int(_k[2]),int(_k[3]))
+    if _k[4]=="持ち物":
+        # (16,192) から 32ドットおき3列×5行
+        _ok=_r==(16,192,96,160)
+    elif _k[4]=="鍵":
+        # (528,144) から 16ドットおき6列×4行
+        _ok=_r==(528,144,96,64)
+    else:
+        _ok=_r in _slset
+    if not _ok:
+        chk(False,f"見比べの道具の欄 {_k[4]} が ScreenLayout に無い",str(_r)); break
+else:
+    chk(True,"見比べの道具の欄はどれも ScreenLayout の欄と同じ")
 
 # 戦闘中の相手の欄（0x9626）。戦闘 0x6082 の中から1か所だけ呼ばれる。
 chk(_dis.count("mov     cx, 0x110")>=1 and _dis.count("mov     cx, 0x128")>=1,
@@ -1668,7 +1687,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=605
+MIN_CHECKS=607
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
