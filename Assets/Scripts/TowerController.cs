@@ -67,8 +67,19 @@ public class TowerController : MonoBehaviour
         else
         {
             var dir = ReadInput();
-            acted = dir != Vector2Int.zero;
-            if (acted) Game.TryStep(dir);
+            // 壁にぶつかったら、その向きは**キーを離すまで**もう試さない。
+            // 押しっぱなしのまま毎コマ叩き続けると、音も判定も鳴りっぱなしになる。
+            if (dir == Vector2Int.zero) blockedDir = Vector2Int.zero;
+            acted = dir != Vector2Int.zero && dir != blockedDir;
+            if (acted)
+            {
+                var before = Game.Player.Position;
+                Game.TryStep(dir);
+                if (Game.Player.Position == before && !Game.IsShowingPage && !Game.IsMenuOpen)
+                    blockedDir = dir;      // 動けなかった
+                else
+                    blockedDir = Vector2Int.zero;
+            }
         }
 
         if (!acted) return;
@@ -80,7 +91,7 @@ public class TowerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Escape)) { Game.MenuBack(); return true; }
 
-        var move = ReadInput();
+        var move = ReadInputOnce();
         if (move.y != 0)
         {
             // 段によって上下の意味が変わる。
@@ -122,6 +133,9 @@ public class TowerController : MonoBehaviour
     bool sliding;
 
     Coroutine slidingRoutine, drawingRoutine;
+
+    /// <summary>進めなかった向き。キーを離すまで同じ向きは試さない。</summary>
+    Vector2Int blockedDir;
 
     /// <summary>出している演出を止めて、見た目を整った形に戻す。</summary>
     void StopShows()
@@ -200,7 +214,7 @@ public class TowerController : MonoBehaviour
         {
             playerView.position = Vector3.Lerp(a, b, i / (float)n);
             if (monsters != null) monsters.TickOnce();
-            yield return new WaitForSeconds(MonsterAnimation.FrameSeconds);
+            yield return new WaitForSeconds(MonsterAnimation.SlideFrameSeconds);
         }
         PlacePlayerView();
         sliding = false;
@@ -220,7 +234,22 @@ public class TowerController : MonoBehaviour
             || Input.GetKeyDown(KeyCode.Space);
     }
 
+    /// <summary>
+    /// 進みたい向き。**押しっぱなしで進み続ける**。
+    /// 原典は1歩ごとにキーを読み直す作りだが、そのぶん移動の演出（16コマ）が
+    /// 区切りになっていて押しっぱなしでも歩き続ける。ここも同じ感じにする。
+    /// </summary>
     static Vector2Int ReadInput()
+    {
+        if (Input.GetKey(KeyCode.UpArrow)    || Input.GetKey(KeyCode.W)) return new Vector2Int(0, 1);
+        if (Input.GetKey(KeyCode.DownArrow)  || Input.GetKey(KeyCode.S)) return new Vector2Int(0, -1);
+        if (Input.GetKey(KeyCode.LeftArrow)  || Input.GetKey(KeyCode.A)) return new Vector2Int(-1, 0);
+        if (Input.GetKey(KeyCode.RightArrow) || Input.GetKey(KeyCode.D)) return new Vector2Int(1, 0);
+        return Vector2Int.zero;
+    }
+
+    /// <summary>メニューの中は1回ずつ。押しっぱなしで飛ばないようにする。</summary>
+    static Vector2Int ReadInputOnce()
     {
         if (Input.GetKeyDown(KeyCode.UpArrow)    || Input.GetKeyDown(KeyCode.W)) return new Vector2Int(0, 1);
         if (Input.GetKeyDown(KeyCode.DownArrow)  || Input.GetKeyDown(KeyCode.S)) return new Vector2Int(0, -1);

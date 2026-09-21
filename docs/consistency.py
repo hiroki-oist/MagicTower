@@ -1300,7 +1300,7 @@ def _rgba(path):
         out.append(bytes(line)); prev=line
     return w,h,ct,out
 _tiles=sorted(q for q in glob.glob("Assets/Sprites/Tiles/*.png") if not q.endswith("_b.png"))
-chk(len(_tiles)==103,"タイルは103枚（1コマ目）",str(len(_tiles)))
+chk(len(_tiles)==105,"タイルは105枚（1コマ目）",str(len(_tiles)))
 # 敵と人の絵は必ず背景が抜けている。抜く色は種別で決まる（0xabe6 の 0x11 / 0x88 ＝ 索引1 / 8）。
 # 左上の1点で背景を決めていたころ、そこに絵が来ている赤スライム(ID63)だけ
 # 透過が付かず灰色の四角が残っていた。
@@ -1339,6 +1339,25 @@ for _pf in glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
         if _m2 and _m2.group(1) not in _guids:
             _dangling.append(os.path.basename(_pf))
 chk(not _dangling,"プレハブの絵の参照先が全部ある",str(_dangling))
+# 盤面に出るプレハブは**原典から書き出したタイル**を指していること。
+# 昔の絵（Assets/Images/MagicTower/MTower.gif の切り出し）を指したままだと、
+# 別の絵が出たり何も出なかったりする（2階の檻・魔導師がそれだった）。
+_gifguid=None
+for _l in open("Assets/Images/MagicTower/MTower.gif.meta",encoding="utf-8"):
+    if _l.startswith("guid: "): _gifguid=_l.split()[1]; break
+_reg=open("Assets/Resources/FloorPrefabRegistry.asset",encoding="utf-8").read()
+_regguids=set(re.findall(r"prefab: \{fileID: -?\d+, guid: ([0-9a-f]{32})",_reg))
+_oldart=[]
+for _pf in glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
+    _mt=_pf+".meta"
+    if not os.path.exists(_mt): continue
+    _pg=None
+    for _l in open(_mt,encoding="utf-8"):
+        if _l.startswith("guid: "): _pg=_l.split()[1]; break
+    if _pg not in _regguids: continue          # 登録簿に無い古いプレハブは見ない
+    if _gifguid and _gifguid in open(_pf,encoding="utf-8").read():
+        _oldart.append(os.path.basename(_pf))
+chk(not _oldart,"盤面に出るプレハブは原典のタイルを指している",str(_oldart))
 chk(len(_second)==36,"2コマ目36枚も Assets に置く（原典 0x92a4 が実際に描く）")
 # 2の冪でない絵は nPOTScale を 0 にしないと Sprite として取り込めない（3x3のボスが消えていた）
 for _m in ("900_Boss_Dragon","901_Boss_GiantOctopus","902_Shop_Altar",
@@ -1708,7 +1727,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=615
+MIN_CHECKS=616
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
