@@ -605,6 +605,9 @@ chk(_dis.count("cmp     word ptr [bp - 2], 6")>=1,"折り返しは6桁（0x9de0�
 chk(_dis.count("cmp     word ptr [0x17ea], 0x79")==1,"マスの番号は121で0に戻す")
 chk(_dis.count("mov     word ptr [bp - 6], 5")>=1,"1回で5マスぶん塗り直す")
 _ma=open("Assets/Scripts/Floor/MonsterAnimation.cs",encoding="utf-8").read()
+# 絵を置き場に詰める側（0xabe6）は表を頭から1件1枠で埋める＝枠の番号＝表の並び順
+chk(_dis.count("mov     word ptr [bp - 0xe], 0x80a")==1,"置き場を埋める側も同じ表を使う")
+chk(_dis.count("add     ax, word ptr es:[0x2aa]")>=2,"どの枠も先に床の絵を敷く")
 chk("Cells = 121" in _ma and "CellsPerTick = 5" in _ma and "TicksPerStep = 16" in _ma
     and "FastTicksPerStep = 8" in _ma,"2コマの動きの数が原典どおり")
 # 移動の演出（0xa276）のコマ数。ふつうは向きによらず16、高速モードは8
@@ -1573,7 +1576,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=587
+MIN_CHECKS=589
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

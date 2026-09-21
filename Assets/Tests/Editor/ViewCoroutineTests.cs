@@ -147,3 +147,120 @@ public class ViewCoroutineTests
         }
     }
 }
+
+/// <summary>
+/// あとから足した3つの演出（1マスの移動・階の描き出し・窓の塗り広げ）も
+/// 同じように手で最後まで回しておく。
+/// </summary>
+public class NewViewCoroutineTests
+{
+    static readonly BindingFlags Any =
+        BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
+
+    static object Call(object target, string name, params object[] args)
+    {
+        var m = target.GetType().GetMethod(name, Any);
+        Assert.IsNotNull(m, $"{target.GetType().Name}.{name} が見つからない");
+        return m.Invoke(target, args);
+    }
+
+    static int Drain(object routine, int limit = 5000)
+    {
+        var it = routine as IEnumerator;
+        Assert.IsNotNull(it, "コルーチンではない");
+        int steps = 0;
+        while (steps < limit && it.MoveNext()) steps++;
+        Assert.Less(steps, limit, "終わらない");
+        return steps;
+    }
+
+    static GameObject MakeController(out TowerController c, bool fast = false)
+    {
+        var go = new GameObject("ControllerTest");
+        c = go.AddComponent<TowerController>();
+        var loader = go.AddComponent<FloorLoader>();
+        var reg = Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
+        var container = new GameObject("Floor").transform;
+        container.SetParent(go.transform, false);
+        loader.Configure(reg, container);
+        var so = new UnityEditor.SerializedObject(c);
+        so.FindProperty("loader").objectReferenceValue = loader;
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        var p = new PlayerState
+        {
+            Hp = 5000, Attack = 500, Defense = 500,
+            Floor = 1, HighestFloor = 50, Position = new Vector2Int(0, 0),
+        };
+        p.FastMode = fast;
+        typeof(TowerController).GetProperty("Game").SetValue(c, new TowerGame(p));
+        return go;
+    }
+
+    [Test]
+    public void 一マスの移動を最後まで流せる()
+    {
+        TowerController c;
+        var go = MakeController(out c);
+        try
+        {
+            int n = Drain(Call(c, "Slide", new Vector2Int(0, 0), new Vector2Int(0, 1)));
+            Assert.AreEqual(MonsterAnimation.TicksPerStep, n, "16コマぶん止まる");
+        }
+        finally { Object.DestroyImmediate(go); }
+    }
+
+    [Test]
+    public void 高速モードでは移動が半分のコマ数で終わる()
+    {
+        TowerController c;
+        var go = MakeController(out c, fast: true);
+        try
+        {
+            int n = Drain(Call(c, "Slide", new Vector2Int(0, 0), new Vector2Int(1, 0)));
+            Assert.AreEqual(MonsterAnimation.FastTicksPerStep, n);
+        }
+        finally { Object.DestroyImmediate(go); }
+    }
+
+    [Test]
+    public void 階の描き出しを最後まで流せる()
+    {
+        TowerController c;
+        var go = MakeController(out c);
+        try
+        {
+            c.RebuildView();                       // 中で DrawFloor を始める（EditMode では走らない）
+            int n = Drain(Call(c, "DrawFloor"));
+            Assert.AreEqual(121 / FloorDrawOrder.CellsPerWait, n, "3マスごとに1回止まる");
+            // 終わったら全部の絵が出ている
+            foreach (Transform child in c.GetComponentInChildren<FloorLoader>().Container)
+            {
+                var sr = child.GetComponent<SpriteRenderer>();
+                if (sr != null) Assert.IsTrue(sr.enabled, $"{child.name} が消えたまま");
+            }
+        }
+        finally { Object.DestroyImmediate(go); }
+    }
+
+    [Test]
+    public void 窓の塗り広げを最後まで流せる()
+    {
+        var go = new GameObject("WindowTest");
+        try
+        {
+            var view = go.AddComponent<DialogueWindowView>();
+            var panelGo = new GameObject("Panel", typeof(RectTransform));
+            panelGo.transform.SetParent(go.transform, false);
+            var so = new UnityEditor.SerializedObject(view);
+            so.FindProperty("panel").objectReferenceValue = panelGo.GetComponent<RectTransform>();
+            so.ApplyModifiedPropertiesWithoutUndo();
+
+            var page = "あいうえお";
+            int lines = DialogueBox.WindowLines(page);
+            int n = Drain(Call(view, "Open", page));
+            Assert.AreEqual(0x14 * lines / DialogueWindow.RowStep + 1, n, "きざみの数だけ止まる");
+        }
+        finally { Object.DestroyImmediate(go); }
+    }
+}
