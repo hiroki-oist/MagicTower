@@ -1187,7 +1187,8 @@ chk(len(_cs)==9,"場面は9つ（七つ＋物語の終わりの2つ）",str(len(
 _cs_steps=[n.strip() for r in _cs for n in r[2].split(";")]
 _cs_say=[n for n in _cs_steps
          if n not in ("題名","奪われる","牢が開く","最後の画面","駆け上がる","閃光",
-                      "斬りかかる","序章の絵","塔の絵","終わりの言葉")
+                      "斬りかかる","序章の絵","塔の絵","終わりの言葉",
+                      "ボスが現れる")
          and not n.startswith("地図 ")]
 chk(all(int(n) in _dlg for n in _cs_say),
     "場面のセリフ番号が Dialogue.txt に実在する（「題名」「奪われる」は別仕立て）")
@@ -1490,6 +1491,14 @@ chk("SealedTailFrames = 0x14" in _da,"門の後ろの間は 0x9288(0x14)＝20コ
 _bossfr=sorted(glob.glob("Assets/Sprites/Effects/BossAppear_*.png"))
 chk(len(_bossfr)==10,"20階のボスが現れる動きは10コマ（LCG #6 を 96x96 で横5x縦2）",
     str(len(_bossfr)))
+_ba=open("Assets/Scripts/Floor/BossAppear.cs",encoding="utf-8").read()
+chk("Frames = 10" in _ba and "FrameWait = 0x19" in _ba,
+    "ボス登場は10コマ・1コマ 0x19 待ち（原典 0x3119〜0x3194）")
+chk("ConsumeBossAppears" in _tg3,"ボス登場も本線が積み、描くのは見た目の層")
+_cs3=[l for l in open("Assets/Resources/Cutscenes.txt",encoding="utf-8")
+      if l.startswith("ボス登場")][0]
+chk(_cs3.index("=門")<_cs3.index("ボスが現れる")<_cs3.index("(-1,+1)"),
+    "順番は 退路の門 → ボスが現れる → 三つ組（原典 0x30b1 → 0x3119 → 0x3199）")
 
 # 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
 # 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
@@ -1914,7 +1923,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=649
+MIN_CHECKS=652
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

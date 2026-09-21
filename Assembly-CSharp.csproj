@@ -67,6 +67,7 @@
     <Compile Include="Assets/Scripts/Battle/TowerBattle.cs" />
     <Compile Include="Assets/Scripts/UI/DialogueWindow.cs" />
     <Compile Include="Assets/Scripts/MainCamera.cs" />
+    <Compile Include="Assets/Scripts/UI/BossAppearView.cs" />
     <Compile Include="Assets/Scripts/Floor/ObjectIds.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextEventHandler.cs" />
     <Compile Include="Assets/Scripts/Items/SpecialItemEffects.cs" />
@@ -115,6 +116,7 @@
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TextConsoleSimulator.cs" />
     <Compile Include="Assets/Scripts/Items/ItemPowerTable.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TeleType.cs" />
+    <Compile Include="Assets/Scripts/Floor/BossAppear.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextEventCheck.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_UiFrameRateCounter.cs" />
     <Compile Include="Assets/Scripts/Floor/ArrivalEvents.cs" />

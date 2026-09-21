@@ -62,6 +62,12 @@ public class Cutscenes
     /// </summary>
     public const string ClimbStep = "駆け上がる";
 
+    /// <summary>
+    /// 20階のボスが現れる段（原典 0x03044 の 0x3119〜0x3194）。
+    /// 規則は <see cref="BossAppear"/>。退路の門を置いたあと、地図の三つ組より前に入る。
+    /// </summary>
+    public const string BossAppearStep = "ボスが現れる";
+
     /// <summary>終幕の1枚絵を表す行（原典 0xd45c）。</summary>
     public const string FinalScreenStep = "最後の画面";
 

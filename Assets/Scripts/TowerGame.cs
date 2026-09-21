@@ -167,6 +167,11 @@ public class TowerGame
             {
                 LastKnightCharge = KnightCharge.Instance.Trace();
             }
+            else if (e.Effect == Cutscenes.BossAppearStep)
+            {
+                // 原典 0x3119〜0x3194。3x3の中心に10コマを貼る。描くのは見た目の層。
+                bossAppears.Add(BossAppear.Center);
+            }
             else if (e.Effect == Cutscenes.FlashStep)
             {
                 // 原典は音7のあと、自分のマスに当たりの絵を貼る。
@@ -212,7 +217,7 @@ public class TowerGame
         {
             if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
                 || step == Cutscenes.ClimbStep || step == Cutscenes.FlashStep
-                || step == Cutscenes.ChargeStep)
+                || step == Cutscenes.ChargeStep || step == Cutscenes.BossAppearStep)
             {
                 pages.Enqueue(withMap(new Page
                 {
@@ -354,6 +359,20 @@ public class TowerGame
     /// 音や閃光と同じで、ここは積むだけにして描くのは見た目の層に任せる。
     /// </summary>
     readonly List<DoorOpen> doorOpens = new List<DoorOpen>();
+
+    /// <summary>
+    /// ボスが現れる場所。原典（0x3044）は3x3の中心に10コマの動きを貼る。
+    /// 音や閃光と同じで、ここは積むだけにして描くのは見た目の層に任せる。
+    /// </summary>
+    readonly List<Vector2Int> bossAppears = new List<Vector2Int>();
+
+    /// <summary>積んだボス登場を取り出して空にする。</summary>
+    public List<Vector2Int> ConsumeBossAppears()
+    {
+        var copy = new List<Vector2Int>(bossAppears);
+        bossAppears.Clear();
+        return copy;
+    }
 
     /// <summary>積んだ扉を取り出して空にする。</summary>
     public List<DoorOpen> ConsumeDoorOpens()

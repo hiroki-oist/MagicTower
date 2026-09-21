@@ -107,3 +107,59 @@ public class DoorAnimationTests
         Assert.AreEqual(DoorAnimation.Sound, SoundCues.Instance.Number(SoundCues.OpenDoor));
     }
 }
+
+/// <summary>
+/// 20階のボスが現れる10コマ。原典 PC98版 MTE.EXE の `0x03044`（0x3119〜0x3194）。
+/// </summary>
+public class BossAppearTests
+{
+    [Test]
+    public void 原典の回数と待ちと大きさ()
+    {
+        // di: 0 → 0x1e00（縦2段）、si: 0,0xc,0x18,0x24,0x30（横5列）= 10コマ
+        int n = 0;
+        for (int di = 0; di < 0x3c00; di += 0x1e00)
+            for (int si = 0; si < 0x3c; si += 0xc) n++;
+        Assert.AreEqual(10, n);
+        Assert.AreEqual(10, BossAppear.Frames);
+        Assert.AreEqual(0x19, BossAppear.FrameWait, "1コマ 0x19 待つ");
+        Assert.AreEqual(25f / 60f, BossAppear.FrameSeconds, 1e-5f);
+        Assert.AreEqual(250f / 60f, BossAppear.Duration, 1e-4f);
+        Assert.AreEqual(96, BossAppear.Size, "3x3マスぶん");
+    }
+
+    [Test]
+    public void 貼る場所は盤面の中心()
+    {
+        // 原典の貼り先 0x2fa2 = y*80 + xバイト → y=152, x=34バイト=272ドット
+        int vram = 0x2fa2;
+        int y = vram / 80, xByte = vram % 80;
+        Assert.AreEqual(152, y);
+        Assert.AreEqual(34, xByte);
+        // 盤面の式（x*32+144 / y*32+24）で解くと左上のマスは (-1,+1)
+        int cellX = (xByte * 8 - 144) / 32, cellY = (y - 24) / 32;
+        Assert.AreEqual(-1, cellX - 5);
+        Assert.AreEqual(1, 5 - cellY);
+        // その3x3の中心は (0,0)
+        Assert.AreEqual(new Vector2Int(0, 0), BossAppear.Center);
+    }
+
+    [Test]
+    public void 場面の表で門のあと三つ組の前に入る()
+    {
+        var steps = new System.Collections.Generic.List<string>(
+            Cutscenes.Instance.Steps("ボス登場"));
+        int i = steps.IndexOf(Cutscenes.BossAppearStep);
+        Assert.Greater(i, 0, "ボスが現れる段が無い");
+        StringAssert.Contains("=門", steps[i - 1], "退路の門を置いたあと");
+        StringAssert.StartsWith(Cutscenes.MapStepPrefix, steps[i + 1], "三つ組の前");
+    }
+
+    [Test]
+    public void 本線は場所を積むだけで描かない()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerGame.cs");
+        StringAssert.Contains("ConsumeBossAppears", src);
+        StringAssert.Contains("bossAppears.Add(BossAppear.Center)", src);
+    }
+}

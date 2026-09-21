@@ -325,6 +325,22 @@ public static class TowerSceneBuilder
         Fill(dso.FindProperty("frames"), doorFrames);
         dso.ApplyModifiedPropertiesWithoutUndo();
 
+        // 20階のボスが現れる10コマ（原典 0x3044）。絵は LCG.P58 の #6。
+        var bossGo = new GameObject("BossAppearView");
+        bossGo.transform.SetParent(controller.transform, false);
+        var bossView = bossGo.AddComponent<BossAppearView>();
+        var boso = new SerializedObject(bossView);
+        boso.FindProperty("controller").objectReferenceValue = controller;
+        var bossFrames = new List<Sprite>();
+        for (int f = 0; f < BossAppear.Frames; f++)
+        {
+            var sp = AssetDatabase.LoadAssetAtPath<Sprite>(BossAppear.SpritePath(f));
+            if (sp == null) Debug.LogWarning($"TowerSceneBuilder: ボス登場の絵が無い {f}");
+            bossFrames.Add(sp);
+        }
+        Fill(boso.FindProperty("frames"), bossFrames);
+        boso.ApplyModifiedPropertiesWithoutUndo();
+
         // 場面でものが現れるときの点滅（原典 0x6ae0）。会話の窓はこれが終わってから出す。
         var blinkGo = new GameObject("BlinkView");
         blinkGo.transform.SetParent(controller.transform, false);
@@ -335,7 +351,7 @@ public static class TowerSceneBuilder
             controller.GetComponent<FloorLoader>();
         blso.ApplyModifiedPropertiesWithoutUndo();
 
-        BuildDialogueWindow(screen, font, controller, blinkView);
+        BuildDialogueWindow(screen, font, controller, blinkView, bossView);
         BuildMenuWindow(screen, font, controller);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
                         // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
@@ -433,7 +449,8 @@ public static class TowerSceneBuilder
 
     /// <summary>会話ウィンドウ。位置と大きさは原典（MTE.EXE 0x94ba）由来。</summary>
     static void BuildDialogueWindow(RectTransform screen, TMP_FontAsset font,
-                                    TowerController controller, BlinkView blink)
+                                    TowerController controller, BlinkView blink,
+                                    BossAppearView boss)
     {
         var panelGo = new GameObject("DialogueWindow", typeof(RectTransform),
                                      typeof(UnityEngine.UI.Image));
@@ -465,6 +482,7 @@ public static class TowerSceneBuilder
         wso.FindProperty("background").objectReferenceValue = img;
         wso.FindProperty("body").objectReferenceValue = tmp;
         wso.FindProperty("blink").objectReferenceValue = blink;
+        wso.FindProperty("boss").objectReferenceValue = boss;
         wso.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);

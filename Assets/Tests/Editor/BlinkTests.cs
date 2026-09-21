@@ -79,6 +79,7 @@ public class BlinkTests
         StringAssert.Contains("MonsterAnimation.FrameSeconds", view);
         // 会話の窓は点滅が終わってから出す（原典も点滅→待ち→0x94ba）
         var dw = System.IO.File.ReadAllText("Assets/Scripts/UI/DialogueWindowView.cs");
-        StringAssert.Contains("while (blink.IsPlaying)", dw);
+        StringAssert.Contains("blink.IsPlaying", dw);
+        StringAssert.Contains("while (Waiting()) yield return null;", dw);
     }
 }

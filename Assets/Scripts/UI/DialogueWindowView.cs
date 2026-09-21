@@ -16,6 +16,7 @@ public class DialogueWindowView : MonoBehaviour
     [SerializeField] Image background;
     [SerializeField] TextMeshProUGUI body;
     [SerializeField] BlinkView blink;
+    [SerializeField] BossAppearView boss;
 
     /// <summary>原典のパレットの色（DS:0x908）。内側は索引0、文字は索引15。</summary>
     public static readonly Color Fill = new Color32(0x44, 0x44, 0x44, 0xff);
@@ -82,10 +83,10 @@ public class DialogueWindowView : MonoBehaviour
 
         if (body != null) body.enabled = false;
         // 原典は**点滅が終わってから**窓を出す（0x6ae0 は点滅→0x1e待ち→0x94ba）。
-        if (blink != null && blink.IsPlaying)
+        if (Waiting())
         {
             panel.sizeDelta = new Vector2(r.width * DialogueWindow.CanvasScale, 0f);
-            while (blink.IsPlaying) yield return null;
+            while (Waiting()) yield return null;
         }
         for (int i = 0; i <= times - 1; i++)
         {
@@ -104,6 +105,15 @@ public class DialogueWindowView : MonoBehaviour
         panel.sizeDelta = DialogueWindow.SizeOnCanvas(r);
         if (body != null) body.enabled = true;
         opening = null;
+    }
+
+    /// <summary>
+    /// 盤面の演出が終わるのを待っているか。原典は**動きが終わってから**窓を出す
+    /// （3階の 0x6ae0 は点滅→待ち→0x94ba、20階の 0x3044 は10コマ→待ち→セリフ121）。
+    /// </summary>
+    bool Waiting()
+    {
+        return (blink != null && blink.IsPlaying) || (boss != null && boss.IsPlaying);
     }
 
     /// <summary>開いている途中か（テストから見る）。</summary>
