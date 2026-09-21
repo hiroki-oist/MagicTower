@@ -1201,6 +1201,27 @@ def _rgba(path):
     return w,h,ct,out
 _tiles=sorted(q for q in glob.glob("Assets/Sprites/Tiles/*.png") if not q.endswith("_b.png"))
 chk(len(_tiles)==96,"タイルは96枚（1コマ目）",str(len(_tiles)))
+# 敵と人の絵は必ず背景が抜けている。抜く色は種別で決まる（0xabe6 の 0x11 / 0x88 ＝ 索引1 / 8）。
+# 左上の1点で背景を決めていたころ、そこに絵が来ている赤スライム(ID63)だけ
+# 透過が付かず灰色の四角が残っていた。
+# 「絵の全部が中身」という絵もある（ボスの真ん中や祭壇）ので、
+# **縁に背景の色が残って不透明のまま**になっていないかを見る。
+_PAL={1:(119,68,34),8:(170,204,170)}
+_opaque=[]
+for _t in _tiles:
+    _oid=int(os.path.basename(_t)[:3])
+    _k=_kind.get(_oid)
+    _bgi=1 if _k in (8,9) else (8 if _k in (7,10,11) else None)
+    if _bgi is None: continue
+    _rgb=_PAL[_bgi]
+    _w,_h,_ct,_rows=_rgba(_t)
+    _edge=[(0,_x) for _x in range(_w)]+[(_h-1,_x) for _x in range(_w)] \
+         +[(_y,0) for _y in range(_h)]+[(_y,_w-1) for _y in range(_h)]
+    if any(_rows[_y][_x*4+3]!=0 and
+           (_rows[_y][_x*4],_rows[_y][_x*4+1],_rows[_y][_x*4+2])==_rgb
+           for _y,_x in _edge):
+        _opaque.append(os.path.basename(_t))
+chk(not _opaque,"敵と人の絵の縁に背景色が残っていない",str(_opaque))
 # 参照が外れていると何も言わずに消えるので、プレハブの絵の参照先を全部確かめる
 _guids=set()
 for _m in glob.glob("Assets/**/*.meta",recursive=True):
@@ -1576,7 +1597,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=589
+MIN_CHECKS=590
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

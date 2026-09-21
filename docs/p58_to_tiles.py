@@ -60,15 +60,50 @@ def kinds():
     return out
 
 
-def transparent_border(px):
-    """縁からつながっている背景（索引1か8）を透過にする。"""
+def transparent_index(kind):
+    """その種別の絵で「背景」として抜かれる色。
+
+    絵を置き場に詰める側（原典 0xabe6）が重ね方として渡している値そのもの:
+    種別 8/9（ふつうの敵）は `0x11`、種別 7（人や物）と 0xa/0xb（隣に届く敵）は `0x88`。
+    上下の桁が同じなので色の索引 **1** と **8** を表していて、
+    実際に全部の絵の縁を数えるとその通りになっている。
+    """
+    if kind in (8, 9):
+        return 1
+    if kind in (7, 10, 11):
+        return 8
+    return None
+
+
+def transparent_border(px, bg=None):
+    """縁からつながっている背景を透過にする。
+
+    背景の色は種別から決まる（<see cref="transparent_index"/>）。
+    分からないときだけ、**縁でいちばん多い色**を背景とみなす
+    （左上の1点で決めると、そこに絵の一部が来ている絵で外してしまう。
+      実際、赤スライム(ID63)は縁126点が索引1なのに左上だけ索引13で、
+      そのせいで透過が付かず灰色の四角が残っていた）。
+    """
     h, w = len(px), len(px[0])
-    bg = px[0][0]
+    known = bg is not None
+    if bg is None:
+        edge = {}
+        for x in range(w):
+            for y in (0, h - 1):
+                edge[px[y][x]] = edge.get(px[y][x], 0) + 1
+        for y in range(h):
+            for x in (0, w - 1):
+                edge[px[y][x]] = edge.get(px[y][x], 0) + 1
+        bg = max(edge, key=edge.get)
     if bg not in (1, 8):
         return None
-    n = sum(1 for r in px for v in r if v == bg)
-    if n < h * w * 0.2:
-        return None
+    # 背景の色が当てずっぽうのときだけ、「少なすぎるなら背景ではない」で守る。
+    # 種別から分かっているときは、絵が大きくて背景が少なくてもそのまま抜く
+    # （3x3のボスの内側のマスや祭壇の真ん中は、縁にしか背景が無い）。
+    if not known:
+        n = sum(1 for r in px for v in r if v == bg)
+        if n < h * w * 0.2:
+            return None
     seen = [[False] * w for _ in range(h)]
     stack = [(0, x) for x in range(w)] + [(h - 1, x) for x in range(w)] \
           + [(y, 0) for y in range(h)] + [(y, w - 1) for y in range(h)]
@@ -120,6 +155,7 @@ def composite(sp, base, cols, rows):
 
 def main():
     sp = sprites()
+    ks_all = kinds()
     done = skipped = 0
     for p in sorted(glob.glob(f"{ROOT}/Assets/Sprites/Tiles/*.png")):
         name = os.path.basename(p)[:-4]
@@ -127,12 +163,13 @@ def main():
         if oid in COMPOSITE:
             base, cols, rows = COMPOSITE[oid]
             px = composite(sp, base, cols, rows)
+            ks_all[oid] = ks_all.get(base)
         elif oid in sp:
             px = sp[oid]
         else:
             skipped += 1
             continue
-        write_rgba(p, px, transparent_border(px))
+        write_rgba(p, px, transparent_border(px, transparent_index(ks_all.get(oid))))
         done += 1
     # 2コマ目（敵と人の次のID）。**原典はこれを実際に描く** — 0x92a4 が盤面を
     # 5マスずつなめて、種別 7/8/10 のマスに「表 DS:0x80a の並びで次の絵」を貼り、
