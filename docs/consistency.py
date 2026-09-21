@@ -1323,6 +1323,20 @@ _listed={f'{int(l.split("|")[0]):03d}_{l.split("|")[1].strip()}' for l in _tl}
 chk(_onfile==_listed,"一覧と実物が一致する",
     str(sorted(_onfile ^ _listed)[:4]))
 chk(os.path.exists("docs/rebuild_assets.sh"),"原典から一式を作り直す手順がある")
+# シーンが要る1枚絵は、どれも作り直す手順の中に生成器がある
+_need=sorted(set(re.findall(r'Assets/Sprites/Screens/[A-Za-z0-9_]+\.png',
+                            open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read())))
+chk(len(_need)==12,"シーンが使う1枚絵は12枚",str(len(_need)))
+chk(all(os.path.exists(_q) for _q in _need),"その12枚が揃っている",
+    str([_q for _q in _need if not os.path.exists(_q)]))
+_rb=open("docs/rebuild_assets.sh",encoding="utf-8").read()
+for _g in ("decode_pc98.py","p58_to_tiles.py","p58_to_direct.py","lcg_to_doors.py",
+           "make_screens.py","make_prologue.py","make_ending.py",
+           "make_prefabs.py","fix_board_prefabs.py","make_registry.py"):
+    if _g not in _rb: chk(False,f"作り直しの手順に {_g} が入っている"); break
+else:
+    chk(True,"作り直しの手順に生成器が10本とも入っている")
+chk("Dialogue.png" in _rb,"作り直せないもの（作者の枠の絵）を手順に明記してある")
 # 敵と人の絵は必ず背景が抜けている。抜く色は種別で決まる（0xabe6 の 0x11 / 0x88 ＝ 索引1 / 8）。
 # 左上の1点で背景を決めていたころ、そこに絵が来ている赤スライム(ID63)だけ
 # 透過が付かず灰色の四角が残っていた。
@@ -1976,7 +1990,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=670
+MIN_CHECKS=674
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
