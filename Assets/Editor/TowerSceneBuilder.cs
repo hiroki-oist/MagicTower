@@ -89,6 +89,11 @@ public static class TowerSceneBuilder
 
         // 盤面の敵と人は2コマで動く（原典 0x92a4）。
         BuildMonsterAnimator(tower, controller, loader);
+        // 移動の演出はコマごとにその動きを進めるので、入力の側から参照を持たせる
+        var mso = new SerializedObject(controller);
+        mso.FindProperty("monsters").objectReferenceValue =
+            tower.GetComponent<MonsterAnimator>();
+        mso.ApplyModifiedPropertiesWithoutUndo();
 
         System.IO.Directory.CreateDirectory("Assets/Scenes");
         EditorSceneManager.SaveScene(scene, ScenePath);

@@ -38,6 +38,20 @@ public class MonsterAnimation
     /// <summary>高速モードのときの1歩ぶんの回数。</summary>
     public const int FastTicksPerStep = 8;
 
+    /// <summary>
+    /// 1コマの長さ（秒）。**原典からは出せないのでリメイクの決め**。
+    /// 原典の移動の演出（0xa276）は待ちを入れておらず、VRAM の転送そのものが
+    /// 時間を作っているので、実時間は機械の速さで決まってしまう。
+    /// ここでは他の演出と揃えて1コマ＝1/60秒とする（16コマで約0.27秒）。
+    /// </summary>
+    public const float FrameSeconds = 1f / 60f;
+
+    /// <summary>その回数ぶんの長さ（秒）。</summary>
+    public static float StepSeconds(bool fast)
+    {
+        return (fast ? FastTicksPerStep : TicksPerStep) * FrameSeconds;
+    }
+
     /// <summary>次に塗り直すマスの番号（原典 [0x17ea]）。</summary>
     public int Cursor { get; private set; }
 

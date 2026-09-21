@@ -52,10 +52,25 @@ public class MonsterAnimator : MonoBehaviour
             return;
         }
 
-        if (p.Position == lastPos) return;      // 動いたときだけ
+        // ふだんは動きの主が1コマずつ <see cref="TickOnce"/> を呼ぶ（移動の演出と歩調を合わせる）。
+        // 滑らかな移動を通らずに座標が変わったとき（戦闘の踏み込み・階移動など）は
+        // ここで1歩ぶんまとめて進める。
+        if (p.Position == lastPos) return;
         lastPos = p.Position;
         anim.Step(p.FastMode);
-        // 盤面は戦闘や解錠で入れ替わるので拾い直してから、マスごとのコマを貼る。
+        Collect();
+        RepaintAll();
+    }
+
+    /// <summary>
+    /// 1コマぶん進める。移動の演出（原典 0xa276）はコマごとに 0x92a4 を1回呼ぶので、
+    /// 滑らかな移動を出している側がこれを毎コマ叩く。
+    /// </summary>
+    public void TickOnce()
+    {
+        if (controller == null || controller.Game == null || loader == null) return;
+        lastPos = controller.Game.Player.Position;   // まとめ進みの二重取りを防ぐ
+        anim.Tick();
         Collect();
         RepaintAll();
     }

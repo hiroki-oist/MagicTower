@@ -771,8 +771,16 @@ for _n in ("戦闘の演出を最後まで流せる","金騎士の突撃を最�
 
 # 手で遊んで見つかった3件（配置のずれ・絵の大きさ・画面が付いてこない）
 _tc=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
-chk("AfterAction" in _tc and _tc.count("AfterAction(floorBefore)")>=1,
+chk("AfterAction" in _tc and _tc.count("AfterAction(floorBefore, posBefore)")==1,
     "一手ぶんの後始末が1か所にまとまっている（会話やメニューでも階が変わる）")
+# 1マスぶんの滑らかな移動（0xa276）。滑らせている間は入力を受けない
+chk("if (sliding) return;" in _tc and "IEnumerator Slide(" in _tc,
+    "1マスの移動を滑らかに出し、その間は入力を止める")
+chk("MonsterAnimation.FastTicksPerStep : MonsterAnimation.TicksPerStep" in _tc,
+    "コマ数は高速モードで半分になる")
+chk("TickOnce" in open("Assets/Scripts/Floor/MonsterAnimator.cs",encoding="utf-8").read()
+    and "monsters.TickOnce()" in _tc,
+    "コマごとに敵と人の絵も1回ずつ動かす（原典は移動の演出の中から 0x92a4 を呼ぶ）")
 chk("new FloorState(data)" in _tc,
     "階を作り直すとき、済んだこと（開けた扉・倒した敵）を盤面から反映する")
 _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
@@ -1539,7 +1547,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=574
+MIN_CHECKS=577
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

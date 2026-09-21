@@ -61,6 +61,8 @@ public class TowerSceneTests
         var c = Object.FindObjectOfType<TowerController>();
         var so = new UnityEditor.SerializedObject(c);
         Assert.IsNotNull(so.FindProperty("loader").objectReferenceValue, "FloorLoader が未設定");
+        Assert.IsNotNull(so.FindProperty("monsters").objectReferenceValue,
+                         "MonsterAnimator が未設定");
         Assert.IsNotNull(so.FindProperty("playerSprite").objectReferenceValue,
                          "プレーヤーのスプライトが未設定");
     }

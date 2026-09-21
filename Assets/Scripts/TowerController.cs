@@ -11,6 +11,7 @@ public class TowerController : MonoBehaviour
 {
     [SerializeField] FloorLoader loader;
     [SerializeField] Sprite playerSprite;
+    [SerializeField] MonsterAnimator monsters;
     [SerializeField] SoundPlayer sound;
 
     public TowerGame Game { get; private set; }
@@ -33,8 +34,10 @@ public class TowerController : MonoBehaviour
     void Update()
     {
         if (Game == null) return;
+        if (sliding) return;              // 移動の演出の最中は入力を受けない（原典も同じ）
 
         int floorBefore = Game.Player.Floor;
+        var posBefore = Game.Player.Position;
         bool acted;
 
         if (Game.IsShowingPage)
@@ -69,7 +72,7 @@ public class TowerController : MonoBehaviour
         }
 
         if (!acted) return;
-        AfterAction(floorBefore);
+        AfterAction(floorBefore, posBefore);
     }
 
     /// <summary>メニューの中の一手。何かしたら true。</summary>
@@ -99,12 +102,46 @@ public class TowerController : MonoBehaviour
     /// 会話を送っただけ・メニューを触っただけでも階が変わることがある
     /// （序章のゼノ、飛翔のオーブ、終幕の駆け上がり）ので、入口はここ1つにまとめてある。
     /// </summary>
-    void AfterAction(int floorBefore)
+    void AfterAction(int floorBefore, Vector2Int posBefore)
     {
         if (Game.Player.Floor != floorBefore) RebuildView();
         else SyncChangedCells();
-        PlacePlayerView();
+        // 隣のマスへ1歩動いたときだけ滑らせる（原典 0xa276。階が変わる・
+        // 戦闘の踏み込み・階段や門で飛ぶときは、原典もこの演出を通らない）
+        var now = Game.Player.Position;
+        var d = now - posBefore;
+        bool oneStep = Game.Player.Floor == floorBefore
+                       && (Mathf.Abs(d.x) + Mathf.Abs(d.y)) == 1;
+        if (oneStep && isActiveAndEnabled) StartCoroutine(Slide(posBefore, now));
+        else PlacePlayerView();
+
         if (sound != null) sound.Flush(Game);      // 本線が積んだ音を鳴らす
+    }
+
+    /// <summary>移動の演出の最中か。</summary>
+    bool sliding;
+
+    /// <summary>
+    /// 1マスぶん主人公を滑らせる。原典（0xa276）は**どの向きも16コマ**、
+    /// 高速モード（旗31）なら8コマで、**1コマごとに敵と人の絵を1回動かす**（0x92a4）。
+    /// 1コマの長さは原典からは出せないので <see cref="MonsterAnimation.FrameSeconds"/> に置く。
+    /// </summary>
+    System.Collections.IEnumerator Slide(Vector2Int from, Vector2Int to)
+    {
+        sliding = true;
+        bool fast = Game.Player.FastMode;
+        int n = fast ? MonsterAnimation.FastTicksPerStep : MonsterAnimation.TicksPerStep;
+        var a = new Vector3(from.x, from.y, -1f);
+        var b = new Vector3(to.x, to.y, -1f);
+        PlacePlayerView();
+        for (int i = 1; i <= n; i++)
+        {
+            playerView.position = Vector3.Lerp(a, b, i / (float)n);
+            if (monsters != null) monsters.TickOnce();
+            yield return new WaitForSeconds(MonsterAnimation.FrameSeconds);
+        }
+        PlacePlayerView();
+        sliding = false;
     }
 
     /// <summary>メニューの開け閉めに使う鍵（原典 0x1c / 0x34）。</summary>

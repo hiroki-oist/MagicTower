@@ -195,3 +195,39 @@ public class Floor0Tests
         Assert.AreEqual(1, GameStart.Prologue.Floor);
     }
 }
+
+/// <summary>
+/// 1マスぶんの滑らかな移動（原典 0xa276）。
+/// </summary>
+public class SlideTests
+{
+    [Test]
+    public void コマ数と長さが原典の数から出ている()
+    {
+        Assert.AreEqual(16, MonsterAnimation.TicksPerStep);
+        Assert.AreEqual(8, MonsterAnimation.FastTicksPerStep);
+        Assert.AreEqual(16 * MonsterAnimation.FrameSeconds,
+                        MonsterAnimation.StepSeconds(false), 1e-6f);
+        Assert.AreEqual(8 * MonsterAnimation.FrameSeconds,
+                        MonsterAnimation.StepSeconds(true), 1e-6f);
+        Assert.Less(MonsterAnimation.StepSeconds(true), MonsterAnimation.StepSeconds(false),
+                    "高速モードのほうが短い");
+    }
+
+    [Test]
+    public void 滑らせるのは隣のマスへ一歩動いたときだけ()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
+        // 階が変わったとき・2マス以上飛んだときは通さない
+        StringAssert.Contains("Game.Player.Floor == floorBefore", src);
+        StringAssert.Contains("== 1", src);
+        StringAssert.Contains("sliding", src);
+    }
+
+    [Test]
+    public void 滑らせている間は入力を受けない()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
+        StringAssert.Contains("if (sliding) return;", src);
+    }
+}

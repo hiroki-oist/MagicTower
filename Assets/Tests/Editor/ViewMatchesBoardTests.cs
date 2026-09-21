@@ -44,11 +44,14 @@ public class ViewMatchesBoardTests
         typeof(TowerController).GetProperty("Game").SetValue(controller, g);
     }
 
-    /// <summary>`TowerController` が一手ごとにやる後始末。入力の代わりに直に呼ぶ。</summary>
+    /// <summary>
+    /// `TowerController` が一手ごとにやる後始末。入力の代わりに直に呼ぶ。
+    /// 動く前の座標は「今と同じ」を渡すので、滑らかな移動は始まらず即座に置き直される。
+    /// </summary>
     void AfterAction(int floorBefore)
     {
         typeof(TowerController).GetMethod("AfterAction", Any)
-            .Invoke(controller, new object[] { floorBefore });
+            .Invoke(controller, new object[] { floorBefore, controller.Game.Player.Position });
     }
 
     /// <summary>画面に出ている物の名前（マスごと）。床の下地は数えない。</summary>
