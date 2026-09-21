@@ -11,7 +11,8 @@ public class MonsterAnimationTests
     {
         Assert.AreEqual(121, MonsterAnimation.Cells, "11×11、原典は 0x79 で戻す");
         Assert.AreEqual(5, MonsterAnimation.CellsPerTick, "1回で5マス（[bp-6]=5）");
-        Assert.AreEqual(6, MonsterAnimation.TicksPerStep, "1歩で6回（0xa276 の中に6か所）");
+        Assert.AreEqual(16, MonsterAnimation.TicksPerStep, "1歩で16コマ（0xa276 は1コマごとに1回呼ぶ）");
+        Assert.AreEqual(8, MonsterAnimation.FastTicksPerStep, "高速モードなら8コマ");
     }
 
     [Test]
@@ -47,12 +48,21 @@ public class MonsterAnimationTests
     }
 
     [Test]
-    public void およそ四歩に一度入れ替わる()
+    public void 二歩に一度くらい入れ替わる()
     {
         var a = new MonsterAnimation();
         int steps = 0;
         while (a.FirstFrame && steps < 20) { a.Step(); steps++; }
-        Assert.AreEqual(5, steps, "1歩30マスなので5歩目で121を越える");
+        Assert.AreEqual(2, steps, "1歩で16×5＝80マスなので2歩目で121を越える");
+    }
+
+    [Test]
+    public void 高速モードでは半分しか進まない()
+    {
+        var a = new MonsterAnimation();
+        a.Step(true);
+        Assert.AreEqual(MonsterAnimation.FastTicksPerStep * MonsterAnimation.CellsPerTick,
+                        a.Cursor, "8回ぶんだけ進む");
     }
 
     [Test]

@@ -605,8 +605,14 @@ chk(_dis.count("cmp     word ptr [bp - 2], 6")>=1,"折り返しは6桁（0x9de0�
 chk(_dis.count("cmp     word ptr [0x17ea], 0x79")==1,"マスの番号は121で0に戻す")
 chk(_dis.count("mov     word ptr [bp - 6], 5")>=1,"1回で5マスぶん塗り直す")
 _ma=open("Assets/Scripts/Floor/MonsterAnimation.cs",encoding="utf-8").read()
-chk("Cells = 121" in _ma and "CellsPerTick = 5" in _ma and "TicksPerStep = 6" in _ma,
-    "2コマの動きの数が原典どおり")
+chk("Cells = 121" in _ma and "CellsPerTick = 5" in _ma and "TicksPerStep = 16" in _ma
+    and "FastTicksPerStep = 8" in _ma,"2コマの動きの数が原典どおり")
+# 移動の演出（0xa276）のコマ数。ふつうは向きによらず16、高速モードは8
+_mv=re.search(r"===== 関数 0x0a276 =====(.*?)\n===== ",_dis,re.S)
+_cnt=[int(m,16) if m.startswith("0x") else int(m)
+      for m in re.findall(r"cmp\s+word ptr \[bp - 0xa\], (0x[0-9a-f]+|\d+)",
+                          _mv.group(1) if _mv else "")]
+chk(_cnt==[7,9,8,8,16,16,3,5,4,4,8,8],"移動の演出のコマ数（ふつう16／高速8）",str(_cnt))
 # 表 DS:0x80a は「並べた順」。敵は 種別8/9 と 10/11 が隣り合う対になっている
 _t=[_st.unpack("<H",_exe[_dgb+0x80a+2*_i:_dgb+0x80a+2*_i+2])[0] for _i in range(150)]
 chk(_t[:4]==[61,62,63,64],"並べた表の頭は 61,62,63,64",str(_t[:4]))
@@ -1533,7 +1539,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=573
+MIN_CHECKS=574
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

@@ -27,8 +27,16 @@ public class MonsterAnimation
     /// <summary>1回のひと押しで進むマス数（原典 [bp-6] = 5）。</summary>
     public const int CellsPerTick = 5;
 
-    /// <summary>1歩ぶんのひと押しの回数（移動の演出 0xa276 の中に6か所）。</summary>
-    public const int TicksPerStep = 6;
+    /// <summary>
+    /// 1歩ぶんのひと押しの回数。移動の演出（0xa276）は**1コマごとに1回**呼ぶので、
+    /// コマ数がそのまま回数になる。原典のコマ数は向きによらず **16**:
+    ///   右 7+9 / 左 8+8 / 上 16 / 下 16（置き場の行 0x100/0x120/0x140 に分けて並べてある）
+    /// 高速モード（旗31）のときは同じ動きを **8コマ**で済ませる（0xa49c 以降）。
+    /// </summary>
+    public const int TicksPerStep = 16;
+
+    /// <summary>高速モードのときの1歩ぶんの回数。</summary>
+    public const int FastTicksPerStep = 8;
 
     /// <summary>次に塗り直すマスの番号（原典 [0x17ea]）。</summary>
     public int Cursor { get; private set; }
@@ -86,11 +94,12 @@ public class MonsterAnimation
         return touched;
     }
 
-    /// <summary>1歩ぶん（6回）まとめて進める。</summary>
-    public System.Collections.Generic.List<Vector2Int> Step()
+    /// <summary>1歩ぶん（16回、高速モードなら8回）まとめて進める。</summary>
+    public System.Collections.Generic.List<Vector2Int> Step(bool fast = false)
     {
         var all = new System.Collections.Generic.List<Vector2Int>();
-        for (int i = 0; i < TicksPerStep; i++) all.AddRange(Tick());
+        int n = fast ? FastTicksPerStep : TicksPerStep;
+        for (int i = 0; i < n; i++) all.AddRange(Tick());
         return all;
     }
 

@@ -54,7 +54,7 @@ public class MonsterAnimator : MonoBehaviour
 
         if (p.Position == lastPos) return;      // 動いたときだけ
         lastPos = p.Position;
-        anim.Step();
+        anim.Step(p.FastMode);
         // 盤面は戦闘や解錠で入れ替わるので拾い直してから、マスごとのコマを貼る。
         Collect();
         RepaintAll();
