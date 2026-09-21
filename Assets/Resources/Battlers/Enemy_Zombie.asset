@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Enemy_Zombie
   m_EditorClassIdentifier: 
   name: "\u30BE\u30F3\u30D3"
-  maxHP: 265
+  maxHP: 260
   attack: 85
   defense: 5
   coin: 18

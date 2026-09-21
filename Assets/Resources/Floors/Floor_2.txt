@@ -1,0 +1,31 @@
+# Floor 2
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 323 / meta=[3, 111, 119]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | <.b........
+  +4 | ..##.O.O.##
+  +3 | .#####.####
+  +2 | .#OO#...#.O
+  +1 | .#O.x...x..
+  +0 | .####...###
+  -1 | .#O.#...#.O
+  -2 | .#..x...x..
+  -3 | .####...###
+  -4 | .#OO#...#..
+  -5 | >#O.x...x..
+
+objects:  (x, y, prefab, note)
+  +0 +4  Enemy_GreatGuardian        ID75
+  +2 +4  Enemy_GreatGuardian        ID75
+  -3 +2  Key_Yellow                 ID29
+  -2 +2  Key_Yellow                 ID29
+  +5 +2  Merchant                   ID19
+  -3 +1  Key_Yellow                 ID29
+  -3 -1  Mikata                     ID21
+  +5 -1  Master                     ID25
+  -3 -4  Potion_Blue                ID33
+  -2 -4  Potion_Blue                ID33
+  -3 -5  Potion_Blue                ID33

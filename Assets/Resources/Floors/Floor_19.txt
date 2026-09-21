@@ -1,0 +1,49 @@
+# Floor 19
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 2431 / meta=[20, 104, 16]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | <.#O.O.O#OO
+  +4 | ..#..#..#O.
+  +3 | y##O#%#O#y#
+  +2 | O.#..%..#..
+  +1 | ..#O.#.O#OO
+  +0 | y##.O.O.#..
+  -1 | O.###b####y
+  -2 | ..O....O..O
+  -3 | y####O##OO.
+  -4 | .#.yO.O###O
+  -5 | O.O#.>.y.O.
+
+objects:  (x, y, prefab, note)
+  -2 +5  Potion_Red                 ID32
+  +0 +5  Enemy_Magician             ID71
+  +2 +5  Key_Blue                   ID31
+  +4 +5  Key_Yellow                 ID29
+  +5 +5  Gem_Attack                 ID34
+  +4 +4  Enemy_GreatBat             ID83
+  -2 +3  Enemy_ZombieWorrior        ID87
+  +0 +3  Marker_ID10                隠し壁と見た目が同じ「何かが隠れている」マス
+  +2 +3  Enemy_ZombieWorrior        ID87
+  -5 +2  Enemy_Bat                  ID67
+  -2 +1  Key_Yellow                 ID29
+  +2 +1  Key_Yellow                 ID29
+  +4 +1  Enemy_SlimeB               ID65
+  +5 +1  Enemy_SlimeB               ID65
+  -1 +0  Enemy_Rock                 ID89
+  +1 +0  Enemy_Rock                 ID89
+  -5 -1  Enemy_GreatBat             ID83
+  -3 -2  Enemy_SlimeB               ID65
+  +2 -2  Enemy_ZombieWorrior        ID87
+  +5 -2  Enemy_Zombie               ID85
+  +0 -3  Enemy_ZombieWorrior        ID87
+  +3 -3  Potion_Red                 ID32
+  +4 -3  Key_Yellow                 ID29
+  -1 -4  Key_Yellow                 ID29
+  +1 -4  Key_Yellow                 ID29
+  +5 -4  Enemy_GreatBat             ID83
+  -5 -5  Enemy_SlimeB               ID65
+  -3 -5  Enemy_GreatBat             ID83
+  +4 -5  Enemy_Bat                  ID67

@@ -1,0 +1,50 @@
+# Floor 31
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 3919 / meta=[32, 104, 9]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | ..OO#<#..OO
+  +4 | O.OO#.#O...
+  +3 | .O###.#y#OO
+  +2 | ..yO#.#O#..
+  +1 | y####.####y
+  +0 | .O.......O.
+  -1 | y####.####y
+  -2 | ..#O#O#Oy..
+  -3 | OO#y#O###O.
+  -4 | ...O#.#OO.O
+  -5 | OO..#>#OO..
+
+objects:  (x, y, prefab, note)
+  -3 +5  Key_Yellow                 ID29
+  -2 +5  Key_Yellow                 ID29
+  +4 +5  Potion_Red                 ID32
+  +5 +5  Master                     ID25
+  -5 +4  Enemy_Samurai              ID137
+  -3 +4  Key_Yellow                 ID29
+  -2 +4  Key_Yellow                 ID29
+  +2 +4  Enemy_GreatZombieSoldier   ID139
+  -4 +3  Enemy_GreatZombieSoldier   ID139
+  +4 +3  Enemy_GreatZombie          ID141
+  +5 +3  Enemy_GreatZombie          ID141
+  -2 +2  Key_Blue                   ID31
+  +2 +2  Gem_Attack                 ID34
+  -4 +0  Enemy_GreatZombie          ID141
+  +4 +0  Enemy_GreatZombie          ID141
+  -2 -2  Gem_Defense                ID35
+  +0 -2  Enemy_ZombieWorrior        ID87
+  +2 -2  Potion_Blue                ID33
+  -5 -3  Enemy_GreatZombie          ID141
+  -4 -3  Enemy_GreatZombie          ID141
+  +0 -3  Enemy_ZombieWorrior        ID87
+  +4 -3  Enemy_MozaikuMan           ID143
+  -2 -4  Enemy_GreatWorrior         ID135
+  +2 -4  Key_Yellow                 ID29
+  +3 -4  Key_Yellow                 ID29
+  +5 -4  Enemy_MozaikuMan           ID143
+  -5 -5  Merchant                   ID19
+  -4 -5  Potion_Red                 ID32
+  +2 -5  Key_Yellow                 ID29
+  +3 -5  Key_Yellow                 ID29

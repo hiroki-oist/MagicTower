@@ -1,0 +1,875 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+/// <summary>
+/// ゲームの一手をまとめる。原典 PC98版の進行をそのまま写す。
+///
+/// <code>
+///   1. 行きたい方向へ1マス（壁・門なら動けない。鍵の扉は鍵を使って開く）
+///   2. そのマスに物があれば拾う／敵がいれば戦う
+///   3. 動いたなら、隣接マスの魔法攻撃を受ける
+///   4. 解錠条件をまとめて判定する
+/// </code>
+///
+/// 3と4は原典の判定関数（0x1ab0 の魔法攻撃、0x4762 の解錠）に対応する。
+/// 戦闘に勝つと**そのマスを床にしてから**解錠を判定するのも原典どおり。
+/// </summary>
+public class TowerGame
+{
+    public PlayerState Player { get; private set; }
+    public FloorState Floor { get; private set; }
+
+    readonly ItemPowerTable power;
+    readonly List<string> log = new List<string>();
+    readonly List<int> sounds = new List<int>();
+
+    /// <summary>直前の一手で出たメッセージ。原典の右下の欄は履歴が積み上がる。</summary>
+    public IReadOnlyList<string> Log { get { return log; } }
+
+    public TowerGame(PlayerState player, ItemPowerTable powerTable = null)
+    {
+        Player = player ?? PlayerState.NewGame();
+        power = powerTable ?? ItemPowerTable.Instance;
+        EnterFloor(Player.Floor, Player.Position);
+    }
+
+    /// <summary>
+    /// 一度入った階の盤面はそのまま取っておく。
+    /// 原典は50階ぶんを1本の可変な配列で持っていて、倒した敵も開けた抜け穴もそのまま残る。
+    /// </summary>
+    readonly Dictionary<int, FloorState> floors = new Dictionary<int, FloorState>();
+
+    /// <summary>その階の盤面を取り出す（まだ入っていない階も組み立てる）。</summary>
+    public FloorState FloorAt(int floor)
+    {
+        FloorState st;
+        if (floors.TryGetValue(floor, out st)) return st;
+        var data = FloorData.Load(floor);
+        if (data == null) return null;
+        st = new FloorState(data);
+        floors[floor] = st;
+        return st;
+    }
+
+    public void EnterFloor(int floor, Vector2Int at)
+    {
+        var st = FloorAt(floor);
+        if (st == null) { Say($"F{floor} のデータが読めない"); return; }
+        Floor = st;
+        Player.Floor = floor;
+        Player.Position = at;
+        Player.MarkVisited(floor);
+        Evaluate();
+    }
+
+    /// <summary>出すものの種類。</summary>
+    public enum PageKind { Dialogue, Title, Effect, FinalScreen }
+
+    /// <summary>出すもの1つぶん。</summary>
+    public struct Page
+    {
+        public PageKind Kind;
+        public string Text;
+        /// <summary>もとのセリフ番号。題名など番号が無いものは -1。</summary>
+        public int Record;
+        /// <summary>起こすできごとの名前（Kind が Effect のときだけ）。</summary>
+        public string Effect;
+    }
+
+    readonly Queue<Page> pages = new Queue<Page>();
+
+    /// <summary>
+    /// これから出すページ。原典は1つ出すたびにキー入力を待つ
+    /// （セリフ表示のあとに必ず `lcall 0x107e, 0x4fa` が入っている）。
+    /// </summary>
+    public int PendingPages { get { return pages.Count; } }
+
+    /// <summary>今出すべき本文。無ければ null。</summary>
+    public string CurrentPage { get { return pages.Count > 0 ? pages.Peek().Text : null; } }
+
+    /// <summary>今出すべきものの中身。無ければ null。</summary>
+    public Page? Current { get { return pages.Count > 0 ? pages.Peek() : (Page?)null; } }
+
+    /// <summary>今出すべきものの種類。何も無ければ null。</summary>
+    public PageKind? CurrentKind
+    {
+        get { return pages.Count > 0 ? pages.Peek().Kind : (PageKind?)null; }
+    }
+
+    /// <summary>今のページを読み終えた。まだ続きがあれば true。</summary>
+    public bool NextPage()
+    {
+        if (pages.Count > 0) pages.Dequeue();
+        ResolveEffects();
+        return pages.Count > 0;
+    }
+
+    /// <summary>
+    /// 先頭ができごとなら、その場で起こして次へ進める。
+    /// 原典も画面を出す合間に状態を書き換えている（題名のあとに 0x06f1b が走る）。
+    /// </summary>
+    void ResolveEffects()
+    {
+        while (pages.Count > 0 && pages.Peek().Kind == PageKind.Effect)
+        {
+            var e = pages.Dequeue();
+            if (e.Effect == Cutscenes.ZenoTakesStep)
+            {
+                Player.ApplyZenoEvent();
+                EnterFloor(Player.Floor, Player.Position);
+            }
+            else if (e.Effect == Cutscenes.FlashStep)
+            {
+                // 原典は音7のあと、自分のマスに当たりの絵を貼る。
+                PlaySound(SoundCues.SceneBeat);
+                PlayEffect(Player.Position);
+            }
+            else if (e.Effect == Cutscenes.ClimbStep)
+            {
+                LastClimb = new List<int>(Ending.ClimbFloors());
+                // 原典 0x2386〜0x23cd は現在階を1つずつ50まで上げて見せ、
+                // 最後に X=5, Y=6（盤面の (0,-1)）へ立たせる。
+                Player.HighestFloor = Mathf.Max(Player.HighestFloor, Ending.LastFloor);
+                EnterFloor(Ending.LastFloor, Ending.LastPosition);
+            }
+            else if (e.Effect == Cutscenes.PrisonOpensStep)
+            {
+                // 原典 0x070c8〜0x070d7。盗賊が去って牢の壁が開く
+                var f2 = FloorAt(Prologue.PrisonFloor);
+                if (f2 != null)
+                    foreach (var c in Prologue.PrisonOpens) f2.Clear(c);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 場面を頭から流す。並びは Resources/Cutscenes.txt（原典の関数から書き起こしたもの）。
+    /// 「題名」の行は題名画面になる。
+    /// </summary>
+    public bool PlayScene(string name)
+    {
+        var steps = Cutscenes.Instance.Steps(name);
+        if (steps == null) return false;
+        foreach (var step in steps)
+        {
+            if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
+                || step == Cutscenes.ClimbStep || step == Cutscenes.FlashStep)
+            {
+                pages.Enqueue(new Page
+                {
+                    Kind = PageKind.Effect, Text = null, Record = -1, Effect = step
+                });
+                continue;
+            }
+            if (step == Cutscenes.FinalScreenStep)
+            {
+                pages.Enqueue(new Page
+                {
+                    Kind = PageKind.FinalScreen,
+                    Text = Ending.TitleLine + "\n" + Ending.AnyKeyLine,
+                    Record = -1
+                });
+                continue;
+            }
+            if (step == Cutscenes.TitleStep)
+            {
+                pages.Enqueue(new Page
+                {
+                    Kind = PageKind.Title,
+                    Text = TitleScreen.Title + "\n" + TitleScreen.Copyright,
+                    Record = -1
+                });
+                continue;
+            }
+            Vector2Int mapAt; string mapKind;
+            if (Cutscenes.TryParseMap(step, out mapAt, out mapKind))
+            {
+                // 場面の中の地図の書き換え。原典も場面の関数の中で直に書いている。
+                if (Floor != null) Floor.Put(mapAt, FloorState.SymbolOfKind(mapKind));
+                continue;
+            }
+            int id;
+            if (!int.TryParse(step, out id)) continue;
+            var line = GameText.Instance.Dialogue(id);
+            if (!line.HasValue) continue;
+            log.Add(line.Value.Body);
+            foreach (var t in DialogueBox.Paginate(line.Value.Body))
+                pages.Enqueue(new Page { Kind = PageKind.Dialogue, Text = t, Record = id });
+        }
+        ResolveEffects();
+        return true;
+    }
+
+    /// <summary>会話を出す。原典の改行位置のまま、必要ならページに分ける。</summary>
+    public void Speak(string text) { Say(text); }
+
+    /// <summary>
+    /// 鳴らした音の番号。原典は `lcall 0x10da, 0x20b` に番号を渡すだけなので、
+    /// ここも**番号を積むだけ**にして、実際に鳴らすのは外側（見た目の層）に任せる。
+    /// こうすると音の出どころを単体テストで確かめられる。
+    /// </summary>
+    public IReadOnlyList<int> Sounds { get { return sounds; } }
+
+    /// <summary>
+    /// 直前の戦闘の演出のひとこま。見た目の層がこれを順に再生する。
+    /// 中身は <see cref="BattlePresentation.Steps"/>（原典 0x6082 の流れ）そのもの。
+    /// </summary>
+    public List<BattlePresentation.Step> LastBattle { get; private set; }
+
+    /// <summary>
+    /// 出すべき閃光の場所。原典は戦闘・魔法攻撃・場面の節目の**7か所すべてで
+    /// 同じ絵**（GROUND.P58 の11枚目、buffer 変位 0x87a）を貼る。
+    /// 音と同じで、ここは**場所を積むだけ**にして描くのは見た目の層に任せる。
+    /// </summary>
+    readonly List<Vector2Int> effects = new List<Vector2Int>();
+
+    /// <summary>
+    /// 駆け上がりで数字が出る順。見た目の層がこれを流す。無ければ null。
+    /// 原典は地図を変えず**階の数字だけ**を 24→50 と上げていく。
+    /// </summary>
+    public List<int> LastClimb { get; private set; }
+
+    /// <summary>閃光を出す場所を積む。</summary>
+    public void PlayEffect(Vector2Int at) { effects.Add(at); }
+
+    /// <summary>積んだ閃光を取り出して空にする。</summary>
+    public List<Vector2Int> ConsumeEffects()
+    {
+        var copy = new List<Vector2Int>(effects);
+        effects.Clear();
+        return copy;
+    }
+
+    /// <summary>鳴らした音を取り出して空にする。見た目の層が毎手これを引く。</summary>
+    public List<int> ConsumeSounds()
+    {
+        var copy = new List<int>(sounds);
+        sounds.Clear();
+        return copy;
+    }
+
+    /// <summary>合図の名前で音を鳴らす。番号は Resources/SoundCues.txt が持つ。</summary>
+    public void PlaySound(string cue)
+    {
+        int n = SoundCues.Instance.Number(cue);
+        if (n > 0) sounds.Add(n);
+    }
+
+    void Say(string s)
+    {
+        if (string.IsNullOrEmpty(s)) return;
+        log.Add(s);
+        foreach (var t in DialogueBox.Paginate(s))
+            pages.Enqueue(new Page { Kind = PageKind.Dialogue, Text = t, Record = -1 });
+    }
+
+    /// <summary>メニューが開いているか。</summary>
+    public bool IsMenuOpen { get; private set; }
+
+    /// <summary>今どの項目を選んでいるか。</summary>
+    public int MenuIndex { get; private set; }
+
+    /// <summary>今出ている項目の一覧。</summary>
+    public List<TowerMenu.Entry> MenuEntries { get { return TowerMenu.Entries(Player); } }
+
+    /// <summary>メニューを開く。会話が出ている間は開けない（原典も同じ）。</summary>
+    public bool OpenMenu()
+    {
+        if (pages.Count > 0) return false;
+        IsMenuOpen = true;
+        MenuIndex = 0;
+        Stage = MenuStage.Root;
+        SlotIndex = 0;
+        return true;
+    }
+
+    /// <summary>メニューを閉じる。</summary>
+    public void CloseMenu() { IsMenuOpen = false; Stage = MenuStage.Root; }
+
+    /// <summary>選ぶ場所を動かす。端では止まる。</summary>
+    public void MenuMove(int delta)
+    {
+        if (!IsMenuOpen) return;
+        int n = MenuEntries.Count;
+        if (n == 0) return;
+        MenuIndex = Mathf.Clamp(MenuIndex + delta, 0, n - 1);
+    }
+
+    /// <summary>今選んでいる項目。</summary>
+    public TowerMenu.Entry MenuCurrent
+    {
+        get
+        {
+            var e = MenuEntries;
+            return e[Mathf.Clamp(MenuIndex, 0, e.Count - 1)];
+        }
+    }
+
+    /// <summary>メニューのどの段にいるか。</summary>
+    public enum MenuStage { Root, LoadSlots, SaveSlots, FlightFloors }
+
+    /// <summary>今の段。</summary>
+    public MenuStage Stage { get; private set; }
+
+    /// <summary>スロットの数。原典も8つ（選ぶ処理に 8 を渡している）。</summary>
+    public const int SlotCount = TowerSave.SlotCount;
+
+    /// <summary>
+    /// 今選んでいるスロット（0〜7）。8 は「やっぱりやめる」。
+    /// 原典も選ぶ処理に 8 を渡し、返りが 8 なら取りやめとして扱う（0x0d99 / 0x0e03）。
+    /// </summary>
+    public int SlotIndex { get; private set; }
+
+    /// <summary>「やっぱりやめる」の位置。</summary>
+    public const int SlotCancelIndex = SlotCount;
+
+    /// <summary>
+    /// スロットを選ぶ画面に出すセリフ。原典はロードが50、セーブが51で、
+    /// どちらも10行の窓・上端50（MTE.EXE 0x0d64 / 0x0dcb）。
+    /// </summary>
+    public const int LoadRecord = 50, SaveRecord = 51;
+    public const int SlotWindowLines = 10, SlotWindowTop = 50;
+
+    /// <summary>今の段で出す文章。</summary>
+    public string MenuStageText
+    {
+        get
+        {
+            if (Stage == MenuStage.Root) return MenuText;
+            var rec = Stage == MenuStage.LoadSlots ? LoadRecord : SaveRecord;
+            var line = GameText.Instance.Dialogue(rec);
+            return line.HasValue ? line.Value.Body : "";
+        }
+    }
+
+    /// <summary>選んだ項目を決める。まだ中身の無いものは何も起きない。</summary>
+    public TowerMenu.Entry MenuConfirm()
+    {
+        if (Stage == MenuStage.FlightFloors) { ConfirmFlight(); return TowerMenu.Entry.FlightOrb; }
+        if (Stage != MenuStage.Root) { ConfirmSlot(); return TowerMenu.Entry.Resume; }
+
+        var e = MenuCurrent;
+        switch (e)
+        {
+            case TowerMenu.Entry.Resume: CloseMenu(); break;
+            case TowerMenu.Entry.FlightOrb:
+            {
+                // 原典（0x8fda）は上下左右のどれかが階段(11/12)でなければ断る。
+                if (!TowerMenu.NextToStairs(Floor, Player.Position))
+                {
+                    Say(TowerMenu.FlightBlockedMessage());
+                    break;
+                }
+                Stage = MenuStage.FlightFloors;
+                FlightFloor = Player.Floor;
+                Say(TowerMenu.FlightPrompt());
+                break;
+            }
+            case TowerMenu.Entry.WisdomOrb:
+            {
+                // 原典（0x8a46）は持ち物の能力と、聞いた情報の番号を並べる。
+                var text = WisdomOrb.Text(Player);
+                if (!string.IsNullOrEmpty(text)) Say(text);
+                break;
+            }
+            case TowerMenu.Entry.HeroOrb:
+            {
+                // 原典（0x8c2a）はセーブと「その階の相手の能力＋予想ダメージ」の両方。
+                var text = HeroOrb.Text(Floor, Player);
+                if (!string.IsNullOrEmpty(text)) Say(text);
+                break;
+            }
+            case TowerMenu.Entry.Load: Stage = MenuStage.LoadSlots; SlotIndex = 0; break;
+            case TowerMenu.Entry.Save: Stage = MenuStage.SaveSlots; SlotIndex = 0; break;
+        }
+        return e;
+    }
+
+    /// <summary>飛翔のオーブで今選んでいる階。</summary>
+    public int FlightFloor { get; private set; }
+
+    /// <summary>
+    /// 飛翔のオーブの階選び。原典（0x91b4〜0x921d）は
+    /// **1階から到達最高階まで**を上下し、**44階（幻の階）は飛ばす**。
+    /// </summary>
+    public void FlightMove(int delta)
+    {
+        if (Stage != MenuStage.FlightFloors || delta == 0) return;
+        int step = delta > 0 ? 1 : -1;
+        int f = FlightFloor + step;
+        if (f == FloorTransition.PhantomFloor) f += step;     // 44階は飛ばす
+        if (f < 1 || f > Player.HighestFloor) return;         // 端では止まる
+        FlightFloor = f;
+    }
+
+    /// <summary>
+    /// 選んだ階へ飛ぶ。着地は階段の隣（原典は地図の後ろに控えてある着地位置を読む）。
+    /// 上の階へ行くなら下から上がってきたときの位置、下の階なら上から降りてきたときの位置。
+    /// </summary>
+    public bool ConfirmFlight()
+    {
+        if (Stage != MenuStage.FlightFloors) return false;
+        int to = FlightFloor;
+        Stage = MenuStage.Root;
+        if (to == Player.Floor) { CloseMenu(); return false; }
+
+        var info = FloorConnections.Instance.Get(to);
+        var at = to > Player.Floor ? info.ArriveFromBelow : info.ArriveFromAbove;
+        if (at == null) at = info.ArriveFromBelow ?? info.ArriveFromAbove;
+        if (at == null) return false;
+
+        EnterFloor(to, at.Value);
+        CloseMenu();
+        return true;
+    }
+
+    /// <summary>スロットを選ぶ段で上下に動かす。</summary>
+    public void SlotMove(int delta)
+    {
+        if (Stage == MenuStage.Root) return;
+        SlotIndex = Mathf.Clamp(SlotIndex + delta, 0, SlotCancelIndex);
+    }
+
+    /// <summary>スロットを決める。読み込めたら true。</summary>
+    public bool ConfirmSlot()
+    {
+        if (SlotIndex == SlotCancelIndex) { Stage = MenuStage.Root; return false; }
+        int slot = SlotIndex + 1;               // 原典もスロットは1から
+        if (Stage == MenuStage.SaveSlots)
+        {
+            TowerSave.Save(slot, Player);
+            Stage = MenuStage.Root;
+            return true;
+        }
+        if (Stage == MenuStage.LoadSlots)
+        {
+            var loaded = TowerSave.Load(slot);
+            Stage = MenuStage.Root;
+            if (loaded == null) return false;
+            Player = loaded;
+            EnterFloor(Player.Floor, Player.Position);
+            CloseMenu();
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>スロットを選ぶのをやめて1つ前の段へ戻る。</summary>
+    public void MenuBack()
+    {
+        if (Stage != MenuStage.Root) Stage = MenuStage.Root;
+        else CloseMenu();
+    }
+
+    /// <summary>メニューに出す文章。原典と同じ連結の仕方で作る。</summary>
+    public string MenuText { get { return TowerMenu.Text(Player); } }
+
+    /// <summary>
+    /// 会話や演出が出ている間は動けない。原典も1つ出すごとにキー入力を待っていて、
+    /// その間は移動の処理に戻らない（`lcall 0x107e, 0x4fa`）。
+    /// </summary>
+    public bool IsShowingPage { get { return pages.Count > 0; } }
+
+    /// <summary>
+    /// 出ているものがあれば送るだけ、無ければ一手進める。入力はこれを通す。
+    /// </summary>
+    public TowerPlayer.Outcome TryStep(Vector2Int dir)
+    {
+        if (IsMenuOpen) return TowerPlayer.Outcome.Blocked;
+        if (IsShowingPage)
+        {
+            NextPage();
+            return TowerPlayer.Outcome.Blocked;
+        }
+        return Step(dir);
+    }
+
+    /// <summary>一手進める。</summary>    /// <summary>一手進める。</summary>
+    public TowerPlayer.Outcome Step(Vector2Int dir)
+    {
+        if (Floor == null) return TowerPlayer.Outcome.Blocked;
+
+        var before = Player.Position;
+        var r = TowerPlayer.Step(Floor, Player, dir);
+
+        // 隠し壁と見た目が同じマスを壊すと、そこに隠れていた者が現れる（原典 0x02c6）。
+        // プレーヤーは手前に立ったままなので、そこから話しかける形になる。
+        if (r.Outcome == TowerPlayer.Outcome.Blocked && r.What == "Marker_ID10")
+            Reveal(r.Target);
+        CheckMagicSeal();
+        CheckPositionEvent();
+
+        switch (r.Outcome)
+        {
+            case TowerPlayer.Outcome.OpenedDoor:
+                PlaySound(SoundCues.OpenDoor);
+                break;
+
+            case TowerPlayer.Outcome.Talk:
+            {
+                Talk(r.What, r.Target);
+                break;
+            }
+            case TowerPlayer.Outcome.TookItem:
+            {
+                var got = ItemPickup.Apply(Player, r.What, power);
+                if (got.Taken)
+                {
+                    PlaySound(SoundCues.TakeItem);
+                    Floor.Clear(r.Target);
+                    Say(GameText.Instance.Message(got.MessageKey, got.Value));
+                }
+                break;
+            }
+            case TowerPlayer.Outcome.Encounter:
+            {
+                var before2 = Player.Position;
+                var b = TowerBattle.Resolve(Player, r.What);
+                LastBattle = BattlePresentation.Steps(before2, r.Target, b.Hits);
+                // 原典は一撃ごとに音9（自分の攻撃）、相手が生きていれば音10（反撃）。
+                // 回数は BattlePresentation.Steps の並びと同じ。
+                for (int i = 0; i < b.Hits; i++)
+                {
+                    PlaySound(SoundCues.Slash);
+                    if (i < b.Hits - 1) PlaySound(SoundCues.Hit);
+                }
+                if (!b.Won)
+                {
+                    Say(GameText.Instance.Message(b.MessageKey));
+                    break;
+                }
+                // 敵だけは**進む**。移動処理（0x00a6fb）は座標を変えないが、
+                // 戦闘処理そのもの（0x61ef〜0x6232）が踏み込みの一歩として
+                // プレーヤーの X か Y を敵の方へ1つ動かし、勝つと相手のマスを
+                // 床(6)にする（0x631f）ので、戦いが終わると相手のマスに立っている。
+                Floor.Clear(r.Target);
+                Player.Position = r.Target;
+                break;
+            }
+            case TowerPlayer.Outcome.Stairs:
+            {
+                PlaySound(SoundCues.Stairs);
+                bool down = r.What == "<";
+                var t = down ? FloorTransition.GoDown(Player.Floor)
+                             : FloorTransition.GoUp(Player.Floor);
+                if (t.Ok)
+                {
+                    EnterFloor(t.Floor, t.Arrive);
+                    ApplyArrival(t.Floor, down);
+                }
+                return r.Outcome;
+            }
+        }
+
+        if (Player.Position != before) ApplyMagicAttack();
+        Evaluate();
+        return r.Outcome;
+    }
+
+    /// <summary>隣接マスの魔術士・魔導師から魔法攻撃を受ける。神盾があれば無効。</summary>
+    void ApplyMagicAttack()
+    {
+        var ids = ObjectIds.Instance;
+        var n = Floor.NeighborsOf(Player.Position, ids.Of);
+        string key;
+        int after = MagicAttack.Apply(Player.Hp, Player.ShieldRank, n, out key);
+        if (key == null) return;
+        Player.Hp = after;
+        // 原典（0x1b75〜0x1ba7）は**自分の立っているマス**に閃光を出す。
+        PlayEffect(Player.Position);
+        PlaySound(SoundCues.Magic);
+        Say(GameText.Instance.Message(key));
+    }
+
+    /// <summary>解錠条件を判定して、満たしたものを盤面に反映する。</summary>
+    void Evaluate()
+    {
+        Player.ClampStats();       // 原典は描き直すたびに上限で頭を押さえる
+        if (Floor == null) return;
+        var fired = Floor.ApplyUnlocks(f => Player.EventFlags.Contains(f));
+        foreach (var u in fired)
+            PlaySound(u.Floor == 2 ? SoundCues.BigUnlock : SoundCues.Unlock);
+    }
+
+    /// <summary>
+    /// 特殊アイテムを使う。原典のメニューの並びは
+    /// エリクサー / マトック / 破壊の玉 / 空間転移の秘宝 / 昇華の翼 / 降臨の翼 /
+    /// 魔法の鍵 / スーパーマトック / やっぱりやめる。
+    /// </summary>
+    /// <returns>使えたか。</returns>
+    /// <summary>
+    /// 26階の中央にある人形に触れる。原典（MTE.EXE 0x2a44、物体ID27）は
+    /// セリフ160 を出したあと **24階の中央(0,0) に門を置く**。これが「時空の門」。
+    /// </summary>
+    public string TouchDoll()
+    {
+        var line = GameText.Instance.Dialogue(DollRecord);
+        var text = line.HasValue ? line.Value.Body : "";
+
+        var gate = FloorAt(SpacetimeGate.GateFloor);
+        if (gate != null) gate.Put(SpacetimeGate.GatePos, "s");
+
+        Say(text);
+        return text;
+    }
+
+    /// <summary>人形のセリフ（MT.GTX のレコード番号）。原典 0x2a61 の即値 0xa0。</summary>
+    public const int DollRecord = 160;
+
+    /// <summary>直前に発火した場面の名前。演出はこれを見て流す。</summary>
+    public string PendingScene { get; private set; }
+
+    /// <summary>
+    /// 今いるマスで起きることを判定する（原典 0x1588、物体ディスパッチャから毎手）。
+    /// </summary>
+    public bool CheckPositionEvent()
+    {
+        var hit = PositionEvents.Instance.At(Player.Floor, Player.Position,
+                                             Player.EventFlags, Floor.IsCleared,
+                                             p => Floor.At(p) == "s");
+        if (!hit.HasValue) return false;
+        var ev = hit.Value;
+
+        Player.EventFlags.Add(ev.FlagId);
+        PlaySound(SoundCues.Position);
+        foreach (var c in ev.Changes)
+        {
+            var st = FloorAt(c.Floor);
+            if (st == null) continue;
+            if (c.Kind == "床") st.Clear(c.Pos);
+            else st.Put(c.Pos, FloorState.SymbolOfKind(c.Kind));
+        }
+        if (ev.Record >= 0)
+        {
+            var line = GameText.Instance.Dialogue(ev.Record);
+            if (line.HasValue) Say(line.Value.Body);
+        }
+        PendingScene = ev.Scene;
+        if (!string.IsNullOrEmpty(ev.Scene)) PlayScene(ev.Scene);
+        return true;
+    }
+
+
+
+    /// <summary>
+    /// 階段で着いたときのできごと（原典 0x2982）。29階の抜け穴がこれで開く。
+    /// </summary>
+    public bool ApplyArrival(int floor, bool descending)
+    {
+        var hit = ArrivalEvents.Instance.At(floor, descending, Player.EventFlags);
+        if (!hit.HasValue) return false;
+        var e = hit.Value;
+        Player.EventFlags.Add(e.FlagId);
+        foreach (var c in e.Changes)
+        {
+            var st = FloorAt(c.Floor);
+            if (st == null) continue;
+            st.Put(c.Pos, FloorState.SymbolOfKind(c.What));
+        }
+        return true;
+    }
+
+    /// <summary>
+    /// 階段のできごとを全部起こす。通しの確認で「先の階まで見る」ときだけ使う。
+    /// </summary>
+    public void ApplyAllArrivals()
+    {
+        foreach (var e in ArrivalEvents.Instance.All)
+            ApplyArrival(e.Floor, e.Descending);
+    }
+
+    /// <summary>
+    /// サイコロの５の目ができていれば魔を封じる    /// <summary>
+    /// サイコロの５の目ができていれば魔を封じる（原典 0x5cdb）。移動のたびに見る。
+    /// </summary>
+    public bool CheckMagicSeal()
+    {
+        if (Player.Floor != MagicSeal.Floor) return false;
+        if (Player.EventFlags.Contains(MagicSeal.FlagId)) return false;
+        if (Player.Position != MagicSeal.Center) return false;
+        if (!MagicSeal.IsFormed(Floor)) return false;
+
+        Player.EventFlags.Add(MagicSeal.FlagId);
+        var line = GameText.Instance.Dialogue(MagicSeal.Record);
+        if (line.HasValue) Say(line.Value.Body);
+        return true;
+    }
+
+    /// <summary>今いる場所から話せる商人の品揃え。X は原典と同じ 0〜10 で渡す。</summary>
+    public IEnumerable<Shop.Offer> MerchantOffersHere()
+    {
+        return Shop.Instance.ForFloor(Player.Floor, Player.Position.x + 5);
+    }
+
+    /// <summary>
+    /// 人や物に触れたときの振り分け。    /// <summary>
+    /// 人や物に触れたときの振り分け。原典の物体ディスパッチャ（0x23ee）と同じ割り当て:
+    /// ID25=仙人 / ID19=商人 / ID21=盗賊 / ID27=人形 / ID16,17=祭壇。
+    /// </summary>
+    void Talk(string what, Vector2Int at)
+    {
+        if (TowerNpc.IsMaster(what))
+        {
+            PlaySound(SoundCues.TalkMaster);
+            Speak(TowerNpc.TalkToMaster(Player)); return;
+        }
+        if (TowerNpc.IsThief(what))  { TalkToThief(); return; }
+        if (TowerNpc.IsDoll(what))   { TouchDoll(); return; }
+        if (TowerNpc.IsMerchant(what))
+        {
+            PlaySound(SoundCues.TalkShop);
+            foreach (var o in Shop.Instance.ForFloor(Player.Floor, Player.Position.x + 5))
+            {
+                Speak(TowerNpc.TalkToMerchant(Player, o).Text);
+                return;
+            }
+            return;
+        }
+        if (TowerNpc.IsAltar(what)) { Speak(TowerNpc.AltarMenu(Player)); return; }
+        if (TowerNpc.IsFairy(what)) { Speak(FairyText()); return; }
+    }
+
+    /// <summary>
+    /// 妖精の採点を原典の文面の順に組み立てる。
+    /// 「評価すると・・・」→「○点です。」→ 評価。称号がもらえるならそのあとに称号と締め。
+    /// </summary>
+    string FairyText()
+    {
+        var t = GameText.Instance;
+        var r = TowerNpc.AskFairy(Player);
+        if (!r.Valid) return t.Message("fairy_here");
+        var body = t.Message("fairy_ask") + t.Message("fairy_score", r.Score)
+                 + t.Message(r.EvaluationKey);
+        if (r.Rank == null) return body;
+        // 称号つきの文面は『 で切れているので、称号と締めをつなぐ
+        return body + r.Rank
+             + t.Message(Player.Floor >= 49 ? "fairy_end_fin" : "fairy_end_go");
+    }
+
+    /// <summary>隠れていた者を盤面に出す。条件を満たしていなければ何も起きない。</summary>
+    void Reveal(Vector2Int at)
+    {
+        var hit = HiddenOccupants.Instance.At(Player.Floor, at);
+        if (!hit.HasValue) return;
+        var h = hit.Value;
+        if (h.RequiresCleared.HasValue && !Floor.IsCleared(h.RequiresCleared.Value)) return;
+        PlaySound(SoundCues.Reveal);
+        Floor.Put(at, h.What);
+    }
+
+    /// <summary>
+    /// 盗賊に話しかける。原典（MTE.EXE 0x03e0）の分岐表を上から見て最初に合った1件を実行する。
+    /// 書き換えは別の階にも及ぶ（2階の盗賊が35階の抜け穴を開ける）。
+    /// </summary>
+    public string TalkToThief()
+    {
+        var hit = ThiefEvents.Instance.For(Player.Floor, Player.Position.y, Player.EventFlags);
+        if (!hit.HasValue) return null;
+        var e = hit.Value;
+
+        if (e.SetsFlag >= 0) Player.EventFlags.Add(e.SetsFlag);
+        foreach (var c in e.Changes)
+        {
+            var st = FloorAt(c.Floor);
+            if (st != null) st.Clear(c.Pos);
+        }
+
+        var line = GameText.Instance.Dialogue(e.Record);
+        var text = line.HasValue ? line.Value.Body : "";
+        Say(text);
+        return text;
+    }
+
+    public bool UseItem(SpecialItems.Kind kind)
+    {
+        if (Floor == null || !Player.Has(kind)) return false;
+        PlaySound(SoundCues.UseSpecial);
+        var ids = ObjectIds.Instance;
+        System.Func<Vector2Int, int> cellId = p => ids.Of(Floor.At(p));
+
+        switch (kind)
+        {
+            case SpecialItems.Kind.Elixir:
+            {
+                int heal = SpecialItemEffects.ElixirHeal(Player.Attack, Player.Defense);
+                Player.Heal(heal);
+                Say(GameText.Instance.Message("elixir_use", heal));
+                break;
+            }
+            case SpecialItems.Kind.Matock:
+                if (!BreakWalls(SpecialItemEffects.MatockTargets(Player.Position, WallId))) return false;
+                Say(GameText.Instance.Message("matock_use"));
+                break;
+
+            case SpecialItems.Kind.SuperMatock:
+                BreakWalls(SpecialItemEffects.SuperMatockTargets(WallId));
+                Say(GameText.Instance.Message("super_matock_use"));
+                break;
+
+            case SpecialItems.Kind.MagicKey:
+                foreach (var p in SpecialItemEffects.MagicKeyTargets(YellowDoorId)) Floor.Clear(p);
+                Say(GameText.Instance.Message("magic_key_use"));
+                break;
+
+            case SpecialItems.Kind.DestructionOrb:
+            {
+                // 原典は属性表の種別が8か10（モンスター）のマスを対象にする。
+                // ここでは物体IDが61以上ならモンスターとみなす（表と同じ範囲）。
+                var t = SpecialItemEffects.DestructionTargets(Player.Position, cellId, IsMonsterId);
+                foreach (var p in t) Floor.Clear(p);
+                Say(GameText.Instance.Message("destruction_use"));
+                break;
+            }
+            case SpecialItems.Kind.WingUp:   return UseWing(true);
+            case SpecialItems.Kind.WingDown: return UseWing(false);
+
+            case SpecialItems.Kind.TeleportRelic:
+                Player.Hp -= SpecialItemEffects.TeleportHpCost;
+                Say(GameText.Instance.Message("teleport_use"));
+                break;
+
+            default:
+                return false;   // オーブ・十字架・幸運の金貨などは「使う」ものではない
+        }
+
+        if (SpecialItemEffects.IsConsumedOnUse(kind)) Player.Consume(kind);
+        Evaluate();
+        return true;
+    }
+
+    /// <summary>壁のマスを床にする。1つも無ければ使わない（原典も空振りしない）。</summary>
+    bool BreakWalls(System.Collections.Generic.List<Vector2Int> targets)
+    {
+        if (targets == null || targets.Count == 0) return false;
+        foreach (var p in targets) Floor.Clear(p);
+        return true;
+    }
+
+    int WallId(Vector2Int p)
+    {
+        return Floor.At(p) == "#" ? SpecialItemEffects.CellWall : 0;
+    }
+
+    int YellowDoorId(Vector2Int p)
+    {
+        return Floor.At(p) == "y" ? SpecialItemEffects.CellLockYellow : 0;
+    }
+
+    /// <summary>モンスターの物体IDか。原典の表はID61から始まる。</summary>
+    static bool IsMonsterId(int id) { return id >= 61; }
+
+    /// <summary>翼で階を移る。階段と違い44階を飛ばさない。</summary>
+    public bool UseWing(bool up)
+    {
+        var kind = up ? SpecialItems.Kind.WingUp : SpecialItems.Kind.WingDown;
+        if (!Player.Has(kind)) return false;
+
+        int to = SpecialItemEffects.WingFloor(Player.Floor, up);
+        if (to < FloorConnections.MinFloor || to > FloorConnections.MaxFloor) return false;
+
+        Player.Consume(kind);
+        Say(GameText.Instance.Message(up ? "wing_up_use" : "wing_down_use"));
+        EnterFloor(to, Player.Position);
+        return true;
+    }
+}

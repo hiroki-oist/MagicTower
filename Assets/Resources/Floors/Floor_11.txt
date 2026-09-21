@@ -1,0 +1,47 @@
+# Floor 11
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 1439 / meta=[12, 119, 111]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | ...#O.y.#OO
+  +4 | .O.#.O#O#..
+  +3 | ...#y##.y..
+  +2 | #s##.O####O
+  +1 | O.O#O.yO.#.
+  +0 | ...####.O#.
+  -1 | O..O..yO.#.
+  -2 | #b########O
+  -3 | .O.Oy....O.
+  -4 | O...#.##y#.
+  -5 | OOOO#<#OO#>
+
+objects:  (x, y, prefab, note)
+  -1 +5  Gem_Attack                 ID34
+  +4 +5  Potion_Red                 ID32
+  +5 +5  Key_Yellow                 ID29
+  -4 +4  Shield_2                   ID57
+  +0 +4  Enemy_Bat                  ID67
+  +2 +4  Enemy_Zombie               ID85
+  +0 +2  Enemy_GreatBat             ID83
+  +5 +2  Enemy_SlimeB               ID65
+  -5 +1  Enemy_Magician             ID71
+  -3 +1  Enemy_Magician             ID71
+  -1 +1  Enemy_Zombie               ID85
+  +2 +1  Enemy_Magician             ID71
+  +3 +0  Potion_Red                 ID32
+  -5 -1  Potion_Blue                ID33
+  -2 -1  Enemy_GreatBat             ID83
+  +2 -1  Enemy_SlimeB               ID65
+  +5 -2  Enemy_GreatBat             ID83
+  -4 -3  Enemy_GreatBat             ID83
+  -2 -3  Enemy_SlimeB               ID65
+  +4 -3  Enemy_Bat                  ID67
+  -5 -4  Key_Yellow                 ID29
+  -5 -5  Key_Yellow                 ID29
+  -4 -5  Key_Yellow                 ID29
+  -3 -5  Key_Yellow                 ID29
+  -2 -5  Key_Yellow                 ID29
+  +2 -5  Potion_Blue                ID33
+  +3 -5  Enemy_GreatBat             ID83

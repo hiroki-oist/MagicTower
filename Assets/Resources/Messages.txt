@@ -1,0 +1,165 @@
+# アイテム取得などのメッセージ（原典 = PC98版 MTE.EXE 内の文字列そのまま）
+#
+# 出典と取り出し方: docs/extract_exe_messages.py
+#   MT.GTX（会話）と違い、実行ファイル内の文言は素の Shift-JIS で 0x00 終端。
+#   数値を挟む文は前後2本に分かれて格納されているので {0} に畳んである。
+#
+# 【表記の規則・全体に適用】
+#   ・数字は全角で描画される（動画の左パネルもメッセージ欄も全角）。
+#     {0} は GameText が全角数字に変換してから埋める。
+#   ・「ＵＰ！」は全角。区切りの空白も全角（原典どおり）。
+#   ・ディフェンスクリスタルだけ「！」の後に空白が無い。原典のままにしてある。
+#
+# 形式: キー | 本文    （{0} は数値に置換）
+
+# --- アイテム取得 ---
+potion        | 回復薬を手に入れた！　生命力　{0}ポイントＵＰ！
+crystal_atk   | パワークリスタルを手に入れた！　攻撃力　{0}ポイントＵＰ！
+crystal_def   | ディフェンスクリスタルを手に入れた！防御力　{0}ポイントＵＰ！
+key_yellow    | 鍵を手に入れた！
+key_red       | 赤い鍵を手に入れた！
+key_purple    | 紫の鍵を手に入れた！
+sword_1       | 長剣を手に入れた！
+sword_2       | 銀の剣を手に入れた！
+sword_3       | 騎士の剣を手に入れた！
+sword_4       | 聖剣を手に入れた！
+sword_5       | 神剣を手に入れた！
+shield_1      | 鉄の盾を手に入れた！
+shield_2      | 銀の盾を手に入れた！
+shield_3      | 騎士の盾を手に入れた！
+shield_4      | 聖盾を手に入れた！
+shield_5      | 神盾を手に入れた！
+orb_hero      | 勇者のオーブを手に入れた！
+orb_wisdom    | 知恵のオーブを手に入れた！
+orb_flight    | 飛翔のオーブを手に入れた！
+cross         | 十字架を手に入れた！
+matock        | マトックを手に入れた！
+teleport      | 空間転移の秘宝を手に入れた！
+destruction   | 破壊の玉を手に入れた！
+wing_up       | 昇華の翼を手に入れた！
+wing_down     | 降臨の翼を手に入れた！
+dragon_slayer | ドラゴンスレイヤーを手に入れた！
+snow_crystal  | 雪の結晶を手に入れた！
+magic_key     | 魔法の鍵を手に入れた！
+super_matock  | スーパーマトックを手に入れた！
+lucky_coin    | 幸運の金貨を手に入れた！
+
+# --- 使用・戦闘 ---
+snow_use      | 雪の結晶を使った！
+mage_halve    | 魔導師の魔法攻撃だ！　生命力半減！
+wizard_200    | 魔術士の魔法攻撃だ！　２００ポイントダメージ！
+wizard_100    | 魔術士の魔法攻撃だ！　１００ポイントダメージ！
+cannot_attack | 相手の防御力が高すぎて攻撃できない。
+
+# --- 商店 ---
+shop_thanks   | まいどーっ！
+shop_no_money | お金がたりないよ！
+shop_no_key   | 鍵を持ってないよ！
+shop_done     | もう、話す事はないよ。
+shop_use_well | 有効につかってね。
+shop_key_any  | 「うちの店は鍵をいくらでも売るよ。\n１つ{0}ＧＯＬＤだが買うかい？」\n　　◎はい\n　　◎いいえ
+
+# --- 祭壇（寄進）---
+altar_here    | 祭壇がある。
+altar_offer   | 「この祭壇に{0}ＧＯＬＤ寄進すれ\n　ば望みをかなえてやろう。　寄進する\n　か？」\n　　◎はい \n　　◎いいえ
+altar_which   | 「どの望みをかなえて欲しいのだ？」
+altar_hp      | 　　生命力を{0}ポイント回復
+altar_atk     | 　　攻撃力を{0}ポイントアップ
+altar_def     | 　　防御力を{0}ポイントアップ
+altar_cancel  | 　　やっぱりやめる
+altar_poor    | 金が足らん！
+
+# --- 仙人 ---
+master_done   | もう、話は終わりじゃ。
+
+# --- メニュー（MTE.EXE の文字列。動画の表示とも一致）---
+# 選択カーソルは小さな剣のアイコンが選択行の左に付く
+menu_title    | メニューの選択をしてください。
+menu_orb_hero | 　　勇者のオーブを使う
+menu_orb_fly  | 　　飛翔のオーブを使う
+menu_orb_wis  | 　　知恵のオーブを使う
+menu_special  | 　　スペシャル・アイテムを使う
+menu_load     | 　　データ・ロード
+menu_save     | 　　データ・セーブ
+menu_return   | 　　ゲームに戻る
+menu_quit     | 　　ゲーム終了
+teleport_menu | ↑↓で移動する階を選択して、リターンで決定してください。
+
+# --- 妖精（10/20/30/40階の採点）---
+# 称号は4段階。採点式は原典マニュアル（docs/original/MTE_manual_utf8.txt）参照
+fairy_here    | 妖精がいる。
+fairy_ask     | 「この階までのあなたの生命力、防御力\n攻撃力、鍵の個数からあなたの実力を評\n価すると・・・
+fairy_score   | {0}点です。
+fairy_eval1   | うーん、この点数だとこれから先へ進む\nのは、かなり無理があるでしょう。」
+fairy_eval2   | いまひとつですね。　これから先はかな\nり苦戦するでしょう。」
+fairy_eval3   | まあまあですね。　この点数ならこれか\nら先もなんとかなるでしょう。」
+fairy_eval4   | なかなかのものです。　もう少し頑張れ\nば称号を差し上げましょう。」
+fairy_title   | よくがんばりましたね。　あなたには、\n　　　　　　『
+fairy_perfect | おめでとう！　満点です。　あなたには\n　　　　　　『
+fairy_end_go  | 』\nの称号を差し上げましょう。　これから\n先もこの調子でね。」
+fairy_end_fin | 』\nの称号を差し上げましょう。　ここまで\nおつかれさまでした。」
+fairy_bye     | ここまで、おつかれさまでした。
+rank_1        | 勇者
+rank_2        | 英雄
+rank_3        | 剣帝
+rank_4        | 闘神
+
+# --- スペシャルアイテムのメニュー（原典の並び順そのまま）---
+special_ask   | どのアイテムを使いますか？
+special_1     | 　　エリクサー
+special_2     | 　　マトック
+special_3     | 　　破壊の玉
+special_4     | 　　空間転移の秘宝
+special_5     | 　　昇華の翼
+special_6     | 　　降臨の翼
+special_7     | 　　魔法の鍵
+special_8     | 　　スーパーマトック
+special_9     | 　　やっぱりやめる
+
+# --- スペシャルアイテムの使用 ---
+elixir_use    | 生命力　{0}ポイント回復した！
+matock_use    | マトックを使って四方の壁を崩した！
+destruction_use | 四方の敵を粉砕した！
+teleport_use  | 空間転移した！
+teleport_fail | 障害物があって空間転移できない！
+wing_up_use   | 昇華の翼を使った！
+wing_up_fail  | 上の階に障害物があって転移ができない。
+wing_down_use | 降臨の翼を使った！
+wing_down_fail | 下の階に障害物があって転移ができない。
+super_matock_use | スーパーマトックを使った！
+magic_key_use | 魔法の鍵を使った！
+
+# --- 勇者のオーブの表示（右下の枠）---
+orb_info_no   | 　情報番号：
+orb_label_hp  | 命
+orb_label_atk | 攻
+orb_label_def | 防
+orb_damage    | 予想ダメージ
+orb_no_attack | 　　　　　攻撃不可能
+
+# --- 飛翔のオーブ ---
+fly_need_stair | 階段の隣でなければ使えません。
+
+# --- システム ---
+game_over     | ＧＡＭＥ　ＯＶＥＲ
+no_save_data  | セーブデータがありません。
+mode_normal   | 標準モードに切り替えます
+mode_fast     | 高速モードに切り替えます
+floor_label   | 塔　{0}階
+title_1       | 迷宮ＲＰＧ『魔法の塔』
+title_2       | Ｔｏｗｅｒ　ｏｆ　ｔｈｅ　Ｓｏｒｃｅｒｅｒ
+title_3       | 　　　　　　　　　　（Ｃ）１９９６　Ｎ．Ｗ
+title_push    | ＰＵＳＨ　ＲＥＴ　ＫＥＹ\n　　ＴＯ　ＳＴＡＲＴ
+title_anykey  | Ｈｉｔ　ａｎｙ　ｋｅｙ！
+
+# --- 装備の欄に出す短縮名（原典は6文字幅に全角空白で右寄せ）---
+panel_sword_1 | 　長剣
+panel_sword_2 | 　銀の剣
+panel_sword_3 | 騎士の剣
+panel_sword_4 | 　聖剣
+panel_sword_5 | 　神剣
+panel_shield_1 | 　鉄の盾
+panel_shield_2 | 　銀の盾
+panel_shield_3 | 騎士の盾
+panel_shield_4 | 　聖盾
+panel_shield_5 | 　神盾

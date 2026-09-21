@@ -1,0 +1,1450 @@
+popup
+Ljava/awt/PopupMenu;
+submenu1
+Ljava/awt/Menu;
+submenu2
+submenu3
+submenu4
+submenu5
+submenu6
+subfont1
+subfont2
+subfont3
+menuitem4
+Ljava/awt/MenuItem;
+menuitem5
+subload1
+subload2
+subload3
+subload4
+subload5
+subload6
+subload7
+subload8
+subsave1
+subsave2
+subsave3
+subsave4
+subsave5
+subsave6
+subsave7
+subsave8
+subsound1
+subsound2
+subsound3
+subBGM1
+subBGM2
+subBGM3
+LangENG
+LangJPN
+subfont11
+subfont12
+subfont13
+subfont14
+subfont21
+subfont22
+subfont23
+subfont31
+subfont32
+d1
+LZAboutMT;
+d2
+LZOkCanDialog;
+d3
+LZscoreMTDialog;
+d4
+LZLabelDialog;
+charaX
+I
+charaY
+mapX
+mapY
+flag3F
+sai
+sai2
+oldsai
+monsflag
+VerX
+VerY
+xp
+yp
+itemFlag
+itemNUM
+ATR_0
+ConstantValue
+ATR_CROP1
+ATR_CROP2
+ATR_TYPE
+ATR_MODE
+ATR_STRING
+ATR_X
+ATR_Y
+ATR_X2
+ATR_Y2
+ATR_ENERGY
+ATR_STRENGTH
+ATR_DEFENCE
+ATR_GOLD
+ATR_ITEM
+ATR_NUMBER
+ATR_JUMP_X
+ATR_JUMP_Y
+ATR_SOUND
+MAP_STREET
+MAP_WALL
+MAP_LOCALGATE
+OBJECT_NORMAL
+OBJECT_MESSAGE
+OBJECT_STATUS
+OBJECT_ITEM
+OBJECT_DOOR
+OBJECT_MONSTER
+OBJECT_SAIDAN
+OBJECT_SCORE
+OBJECT_SELL
+OBJECT_BUY
+OBJECT_KEY
+CONFIG_HI_COUNT
+LOADING_ALL
+YESNO_NONE
+YESNO_YES
+YESNO_NO
+YESNO_WWAH
+YESNO_RESTART
+YESNO_SELL
+YESNO_BUY
+YESNO_SAIDAN
+CROP_YES
+CROP_NO
+CROP_YES2
+CROP_NO2
+CROP_ENERGY
+CROP_STRENGTH
+CROP_DEFENCE
+CROP_GOLD
+CROP_BOM
+CROP_WAKU1
+CROP_WAKU2
+Screenwidth
+Screenheight
+charaXold
+charaYold
+movePlus
+getcoin
+strMessage
+[[Ljava/lang/String;
+strNumber
+yesnoNumber
+yesnoJudge
+yesnoX
+yesnoY
+yesnoFlag
+Z
+messageFlag
+messageFlag2
+messageFlag3
+loadingFlag
+configFlag
+scoreFlag
+saveFlag
+popupFlag
+yusyaFlag
+openningFlag
+saidanFlag
+menuFlag
+itemKeyFlag
+focusFlag
+yanime
+endFlag
+dialogFlag
+FileNo
+FileName
+Ljava/lang/String;
+FontName
+codeurl
+Ljava/net/URL;
+UpKey
+DownKey
+LeftKey
+RightKey
+currentKey
+inputKey
+timer
+Ljava/lang/Thread;
+animaFlag
+DFlag
+LZdata;
+TimerCount
+countAnimation
+countRepaint
+waitCounter
+waitCounterFlag
+tracker
+Ljava/awt/MediaTracker;
+imgMap
+Ljava/awt/Image;
+imgCrop
+[Ljava/awt/Image;
+cropID
+cropIDchara
+imgBuff
+imgBuffMap
+imgBuffStatus
+imgBuffStatus2
+imgBuffCharaX
+imgBuffCharaY
+imgBuffyusya
+imgBuff2
+imgBuff3
+imgBuffopen
+gBuff
+Ljava/awt/Graphics;
+gBuffMap
+gBuffStatus
+gBuffStatus2
+gBuffCharaX
+gBuffCharaY
+gBuffyusya
+gBuff2
+gBuff3
+gBuffopen
+mdata
+mdataBuff
+XpBuff
+YpBuff
+mapFlag
+[[Z
+mapFlagAll
+mapFlagErase
+flagDisplayStatus
+movingSkip
+paintSkip
+repaintSkip
+map
+[[C
+mapObject
+objectAttribute
+[[I
+mapAttribute
+mapFrame
+itemBox
+[I
+chieOrb
+chieNum
+itemStrength
+itemDefence
+score
+score2
+Name
+monsterEnergy
+monsterStrength
+monsterDefence
+monsterGold
+attackXp
+attackYp
+attackDouble
+attackFlag
+attackFlagTurn
+audio
+[Ljava/applet/AudioClip;
+simage
+oldMapData
+oldMapX
+oldMapY
+pixels1
+pixels2
+pixels3
+pixels4
+pixels5
+pixels6
+<init>
+()V
+Code
+LineNumberTable
+init
+start
+stop
+run
+paint
+(Ljava/awt/Graphics;)V
+ichicheck
+(III)V
+update
+mazyutushi
+(Ljava/awt/Graphics;I)V
+ichicheck2
+(Ljava/awt/Graphics;II)V
+eventMT
+saidan
+(Ljava/awt/Graphics;)Z
+paintMapAll
+BGMset
+paintMap
+setMapFlag
+keyDown
+(Ljava/awt/Event;I)Z
+keyUp
+mouseDown
+(Ljava/awt/Event;II)Z
+mouseMove
+mouseUp
+gotFocus
+(Ljava/awt/Event;Ljava/lang/Object;)Z
+itemKey
+action
+AudioStop
+(I)V
+AudioPlay
+menulang
+directCheck
+(Ljava/awt/Graphics;II)Z
+monsStatus
+rankSearch
+rankUpdate
+pointCheck
+moveCharacter
+drawJapanese
+(Ljava/awt/Graphics;Ljava/lang/String;III)V
+drawJapaneseFrame
+(Ljava/awt/Graphics;Ljava/lang/String;II)V
+twait
+loadMapData
+loadMapData2
+graphicLoading
+displayConfigWindow
+(Ljava/awt/Graphics;ZZZZ)V
+attackMonster
+attackMonsterSub1
+attackMonsterSub2
+(Ljava/awt/Graphics;IIZ)V
+displayCharacter
+displayDoor
+(Ljava/awt/Graphics;III)V
+moveChara
+(Ljava/awt/Graphics;IIII)V
+banpaia
+ending
+charaZeno
+Zeno
+Zeno2
+Madoushi
+Madoushi2
+OpenningZeno
+Openning
+ItemExe
+Savedata
+dosave
+Loaddata
+scoreInit
+SourceFile
+MTower.java
+Zdata
+java/awt/MediaTracker
+java/awt/Image
+java/applet/AudioClip
+java/awt/PopupMenu
+Menu
+java/awt/Menu
+Load
+java/awt/MenuShortcut
+java/awt/MenuItem
+Data 1
+Data 2
+Data 3
+Data 4
+Data 5
+Data 6
+Data 7
+Data 8
+Save
+Sound
+Wav On
+Au On
+Off
+BGM
+Midi On
+Language
+English
+Japanese
+About Magic Tower
+Ranking
+Font
+Style
+Size
+TimesRoman
+Dialog
+Helvetica
+Courier
+Normal
+Bold
+Italic
+Large
+Small
+ZAboutMT
+java/awt/Frame
+ZOkCanDialog
+ZscoreMTDialog
+ZLabelDialog
+Input Name
+image/title.gif
+java/lang/InterruptedException
+java/lang/Thread
+Thread Exception !!!
+Now Loading Map data .....
+Now Loading Map data ..... Done.
+Now Loading Sound data .....
+au/1.au
+au/2.au
+au/4.au
+au/7.au
+au/8.au
+au/9.au
+au/10.au
+au/11.au
+Now Loading Sound data ..... Done.
+java/net/URL
+savedat/data1.dat
+java/io/FileNotFoundException
+java/io/IOException
+savedat/data2.dat
+savedat/data3.dat
+savedat/data4.dat
+savedat/data5.dat
+savedat/data6.dat
+savedat/data7.dat
+savedat/data8.dat
+
+ 
+java/lang/StringBuffer
+ＷＷＡのホームページへジャンプします。　よろしいですか？
+http://wwajp.com/index.html
+new
+java/net/MalformedURLException
+URL Error!
+ワールドの初めからスタートしなおしますか？
+wav/20f.wav
+wav/3f.wav
+wav/Get.wav
+wav/Kai.wav
+wav/Kai2.wav
+wav/Open.wav
+wav/Taisen.wav
+wav/Zeno.wav
+midi/A_005xgw.mid
+midi/A_007xgw.mid
+midi/A_008xgw.mid
+midi/A_019xgw.mid
+midi/A_023xgw.mid
+midi/A_027xgw.mid
+midi/A_032xgw.mid
+midi/A_046xgw.mid
+midi/A_050xgw.mid
+midi/A_085xgw.mid
+midi/A_118xgw.mid
+midi/B_014xgw.mid
+midi/B_018xgw.mid
+midi/B_058xgw.mid
+midi/B_067xgw.mid
+midi/B_110xgw.mid
+midi/B_117xgw.mid
+au/5.au
+au/6.au
+au/12.au
+au/13.au
+au/14.au
+au/15.au
+au/16.au
+au/17.au
+au/18.au
+au/19.au
+au/20.au
+au/21.au
+au/22.au
+au/23.au
+au/24.au
+au/25.au
+au/26.au
+au/27.au
+au/28.au
+au/29.au
+ロード
+データ 1
+データ 2
+データ 3
+データ 4
+データ 5
+データ 6
+データ 7
+データ 8
+セーブ
+サウンド
+WAVオン
+Auオン
+オフ
+Midiオン
+言語
+英語
+日本語
+バージョン情報
+ランキング
+フォント
+名前
+スタイル
+サイズ
+普通
+太字
+斜体
+大きい
+小さい
+WavOn
+AuOn
+MidiOn
+image/right2.gif
+java/awt/Font
+score/score
+1.dat
+2.dat
+3.dat
+4.dat
+5.dat
+java/io/DataInputStream
+java/lang/Exception
+Error: 
+java/io/FileOutputStream
+java/io/DataOutputStream
+java/lang/String
+：
+image/yusya.gif
+「・・・・・おい・・・」
+"------ Hey!"
+「・・・・・おいっ！起きろ！」
+"------ Hey! Wake up!"
+盗賊「おお無事か！おまえ、ここの魔導師に捕まってこの牢屋に入れられてたんだよ。で、今まで気を失っていた訳だ。にしても、おまえ運がいいぜ。ちょうど抜け穴が完成したときに来るんだからな。そういう訳で俺は今から脱走するところだ。おまえもついてこい。」
+The thief says "What a relief you're okay!
+You were caught and thrown into this prison by the Magic Sergeant.
+You were unconscious when you got here.
+Nevertheless, you are so lucky that you just woke up.
+I've finished the escape tunnel. Let's break out."
+盗賊「よし、じゃあ俺は先に行かせてもらうぜ。ああ、それからおまえの剣と盾、あいつらに取り上げられちまったみたいだな。この塔の中を丸腰で歩き回るのはやめた方がいい。確か５階に剣、９階に盾があったはずだから、まずそれを手に入れることを考えるんだな。じゃあ、またなっ！」
+The thief says "O.K. Well, excuse my going first. Your weapon and shield were stolen by the guards. It's not wise to wander about without them. I heard that there is a sword on the 5th floor and a shield on the 9th. You had better get them. See you!"
+盗賊「ようっ！また会ったな。ここの門番を倒してくれて助かったぜ、ドジってまた捕まっちまってな。今度は、こんな奥の牢に閉じ込められちまった。まあ、それはそれとして、３５階にいるドラゴンの手前まで抜け穴を掘っといたんだ。開通させとくから先に行っててくれ。」
+The thief says "Ah, we meet again! Thank you. You beat the Gate-Keeper of this area. I was defeated and imprisoned again. Such a small prison this time. I'm making a secret tunnel in front of the Dragon. Go up to 35th floor and wait for me, while I complete the tunnel."
+盗賊「後でちゃんと行くから３５階まで先に行っておいてくれ。」
+The thief says "Don't worry, I'll be there."
+魔導師ゼノ「ようこそ、『魔法の塔』へ。おまえがちょうど１００人目の侵入者だ。本来なら手下共に相手をさせるところだが、特別にこの私が自ら相手になってやろう。己の不運を呪うのだな。」
+The Magic Serg. Zeno says "Welcome to 'The Magic Tower'. You are the hundredth man who dared to enter my tower. You will now face my guards. Should you happen to survive, I will fight with you in person specially. You should accept your fate."
+勇者「なんだっ！？　うわ～っ！？」
+The brave man says "What? Oh!"
+スケルトンＡ「ふふふ、よくここまできたな。かくなる上はこの俺様がじきじき相手になってやる・・・といいたいところだが、まずは貴様の力を見せてもらうぞ！出会え！スケルトン兵士たちよ！」
+Skeleton A "Ha ha ha, You are lucky to have gotten so far. Since it has come to this, I shall fight with you personally, but first I must test your strength. Go and fight! Skeleton Soldiers!"
+スケルトンＡ「ほほう、なかなか・・・。だが、ここから先へは行かせん！ここで葬ってくれるわっ！さあ、こいっ！！！」
+Skeleton A "How considerably you do. But I will never let you pass. Here, you will die. Fight me!"
+スケルトンＡ「ううう・・・よくぞこの俺様を倒せたものだ・・・。しかし、これから先の階はこれまでとは比べものにならんほど強力な敵とワナが待っているぞ、せいぜい気を付けることだな・・・」
+Skeleton A "No, It's not possible! You may have defeated me, but beyond this point you must meet some enemies and snares that are powerful beyond anything you've seen. If careless, you will die!"
+盗賊「よっ！またあったな。すげえじゃねえか。ここのブロックのボスを倒すとはよ。俺もこれ以上、先の階へ行けなくて困ってたんだ。ああ、あと聞いた話だが、１１階に盾、１７階に剣があるそうだ。盾よりも剣の方を先に取りに行った方がいいそうだから、うまく敵をかわして剣を先に取りに行くんだな。じゃ、お先に！」
+The thief says "Hey! We meet again! How greatly you beat the boss of this area. It troubled me that I couldn't go upstairs any more. After I heard that there is a shield on the 11th floor and a sword on the 17th. You had better get a sword first and then a shield. Please excuse my going first!"
+盗賊「よおっ！無事だったか？ここの大ダコが道をふさいでいて困っていたんだが今ようやく抜け穴が完成したんだ。おまえも、ここの大ダコを倒すのは後回しにした方がいいぜ。じゃあ、またなっ！」
+The thief says "Ah! Are you all right? The Big Octopus which lives in here was blocking my progress. Now a loophole has completed at last. You had better put off beating him. See you later!"
+「お金が足りないよ！」
+"You don't have enough money."
+バンパイア「ほほう、貴様か、スケルトンを倒して侵入してきた勇者というのは・・・だがこの私をスケルトン共のようなザコと一緒にするなよ。不死に等しいこの私の力を見せてやろう。さあ、こいっ！」
+Vampire "Well, You beat the skeletons and invaded. Never regard me as small like a skeleton. I will show you that I am as immortal as god. Hey, come on!"
+バンパイア「ううう・・・よもや、この私までもが敗れるとは・・・どうやら貴様の力は本物のようだな・・・だが、その程度では大魔導師様には絶対にかなわんぞ、せいぜい束の間勝利に酔いしれているがいい・・・」
+Vampire "Good god! I've never dreamed I'd be defeated. There is no doubt of your strength. But you will never win against the Great Magic Master as weak as you are. You shall only celebrate fleeting victory at most."
+大魔導師「・・・ジ・・・ユウシャ・・・・・コロス・・・」
+Great Magic Master "-K-I-L-L- -A-N- -I-N-V-A-D-E-R- "
+「・・・ジ・・・トキハキタレリ・・・エラバレシモノヨ、シヲオソレヌナラバジクウノモンヲクグリテ、ワガモトヘクルガヨイ・・・」
+"Now is the time. You were chosen. If you aren't afraid of Death, you should go through the gate of Time and Space, and come to me."
+勇者「これはっ……！人形だっ！」
+The brave man says "Oh! What? This is a doll!"
+盗賊「あっ！まだ抜け穴、完成してなかったのに・・・もう少し待ってればアイテムを使わずにすんだはずだぞ。予定が狂っちまうな・・・いや、気にしないでくれ。」
+The thief says "The tunnel has not been completed yet. You should have waited a little longer, and you should not have used items. I had a bug in the program. There! Don't worry!"
+盗賊「ああ、やっと抜け穴が完成した。あれ？またお前か。いいタイミングできたな。また抜け穴作っといたぜ。自由に使ってくれ。」
+The thief says "Oh, I have finished the tunnel. What? It's you again. You came at a good time. I have openned a tunnel, and you may use it freely."
+盗賊「このブロックに最後のボスと捕まったプリンセスがいるはずだが、今はまだ戦うのは早すぎるだろうな。」
+The thief says "The last boss and the captured princess must be in this area. Hmm, I wonder if we should wait before fighting him."
+金騎士「貴様だな、第１、第２ブロックのボスを倒し登ってきた勇者というのは。だがそれも、ここで終わりだ！ここのブロックのボスである私が自ら貴様の首を上げてやるわっ！覚悟しろっ！」
+The Golden Knight says "You are a brave man beating the bosses of the first and second areas, and ascending the tower. But the game is over now. Here and Now, I will beat you for myself! Give up!"
+金騎士「ううう……今回はこのぐらいにしておいてやる……４０階まで登ってこれたら今度は本気で相手をしてやるからなっ！覚えておけっ！」"
+The Golden Knight says "You think you're pretty strong, huh? If you can make it to the 40th floor, I shall fight with you again. There, you will die!
+盗賊「おお、来たか。ちゃんと、抜け穴を開通させておいたぜ、この抜け穴を通ればドラゴンの後ろに出られるから、そこから上の階に行くんだな。」
+The thief says "There you are. I have just finished the tunnel. As you go through it, you will get to the Dragon. And then you should go up."
+盗賊「このブロックのボスの金騎士は弱いくせに態度だけはでかいから、この塔の副将格の魔導師ゼノには嫌われているらしい。」
+The thief says "The Golden Knight (who is the boss of this area) has a strong attitude in spite of being weak. It is for this reason that he is disliked by the Magic Serg. Zeno, who is the sub commander of this tower."
+金騎士「よくきたな。今度はさっきの様な訳にはいかんぞ！この屈辱は１０倍にして返してくれるわっ！死霊兵士突撃！」
+The Golden Knight says "I wonder how you were able to come so far. I will make sure you go no further. I will humiliate you 10 times as much as you've disgraced this tower. Ghost Soldiers, charge!"
+金騎士「ふふん、こんなのは小手調べだっ！兵士突撃！」
+The Golden Knight says "Humph, that was nothing! Soldiers, charge!"
+金騎士「まだまだ、これからっ！剣士突撃！」
+The Golden Knight says "We are only beginning. Let's fight from now on. Swordsmen, charge!"
+金騎士「うぬぬ……だが、これはどうだっ！騎士突撃！」
+The Golden Knight says "Heck! How about this attack? Knights, charge!"
+金騎士「うう……私の部下達を……許さんっ！許さんぞ！今度は手加減はしてやらんっ！覚悟しろ！」
+The Golden Knight says "How dare you defeat my followers? Never shall I forgive you! Now I won't use discretion. Give up!"
+金騎士「ごほっ……今回はこのへんで……はあはあ……許しておいてやる……。だが次にやる時は今度こそ本当に本気で相手をしてやるからなっ！覚悟しておけっ！」
+The Golden Knight says "I will unwillingly forgive you this time. But we shall quarrel seriously when we meet again. You had better give up!"
+金騎士「あっ……！ゼノ様……。あと一歩という所で、勇者を取り逃がしてしまいました。どうか、お許しを……。」
+The Golden Knight says "Oh! Sir Magic Serg. Zeno. I was not able to catch the brave man. Please forgive me."
+魔導師ゼノ「取り逃がしただと……？逃げてきたのは貴様の方ではないかっ！この恥知らずめがっ！貴様のような臆病者はこの塔には不要だっ！ここで、死ねっ！」
+The Magic Serg. Zeno replies "You weren't? I dare you to say that again. You come running up here like a coward and tell me you couldn't do your job. What shame! This tower has no need for the likes of you! You've failed me for the last time. You shall now die."
+金騎士「ああ、どうか、お許し……ぎゃあ～～～っ！！！」
+The Golden Knight says "Oh God, please forgive me! Ah!"
+魔導師ゼノ「お見苦しいところをお見せしたな……。だが、安心してもらおう。私はこのようなゴミとはわけが違う。もし、お前が上まで登ってこれたなら今度は、私が直々にお相手しよう。待っているぞ……。」
+The Magic Serg. Zeno says "I behaved unbecomingly. But don't worry. I quite different from such a fellow. If you should come up to me, I would fight with you directly. I'm waiting for you."
+魔導師ゼノ「よくぞ、ここまで、たどりついたものだ。誉めてやろう。約束どおり、この私が直々に相手をしよう。さあ、来るがいい。」
+The Magic Serg. Zeno "It's amazing that you found your way here at last. I compliment you. Now, as promised, I'll fight with you, man to man!"
+魔導師ゼノ「うっ……この陣形は……まずいっ！」
+The Magic Serg. Zeno "Alas..."
+勇者「おまえはっ……！どうしてこんな所に！」
+The brave man says "Who? It's you! Why are you in such a place ?"
+盗賊「ふふふ……ここにいるという事は、答えは１つしかあるまい。こういう事だっ！」
+The thief says "Humph. There is only one reason why I'm here. And this is it!"
+勇者「あっ！おまえはゼノッ！生きていたのか！？」
+The brave man says "Huh? Hey! You're Zeno! Were you still alive ?"
+魔導師ゼノ「あんなことで倒されるものか。あれは、おまえの戦士としての知性を試したにすぎん。」
+The Magic Serg. Zeno says "I will never die. I merely tested your intelligence as a soldier."
+勇者「なにっ！？……どういうことだっ！どうして、こんな事を……！？」
+The brave man says "Huh? What do you mean? Why did you do such a thing ?"
+魔導師ゼノ「おまえの持つ神剣ウェポナー、そして私の持つ全能の杖インテリオン。この２つの力が合わさる時、偉大なる知恵を手に入れる事ができるという……。しかし、それには、その剣の力を十分に発揮できる能力を持った戦士が必要となるのだ。」
+The Magic Serg. Zeno says "The Sacred Sword 'Weaponer' which you have and The Omniscient Staff 'Intellion' which I have, Legend says that whoever unites the two will recieve great wisdom. But to this end, it must be assured that the soldier who does so can handle the the power of that sword."
+勇者「その戦士が俺だというのか……！？」
+The brave man says "What are you saying... Am I the soldier ?"
+魔導師ゼノ「そうだ……しかし、おまえの技量はその神剣ウェポナーを使いこなすには十分ではなかった。だから、私は偽りの情報を流し、様々なワナをこの塔にしかけ、おまえが来るのを待っていたのだ。そして、予定通り、おまえは神剣を扱うのに十分な力を身につけてここまで来た。」
+The Magic Serg. Zeno says "Yes. But when you came here, your ability wasn't sufficient to master the sacred sword 'Weaponer'."For that reason, I gave false information, set various traps in this tower, and waited for you to come. You came to here master the power enough to using the sacred sword as arranged beforehand.
+勇者「では、姫がさらわれたという情報も、俺をここまで、おびき寄せる為のワナだったというのかっ！？」
+The brave man replies "Well, this means that the rumour that a princess was trapped here... was actually a lie in order to get me here, wasn't it ?"
+魔導師ゼノ「その通りだ。そして、後は私がおまえの力を取りこめば、この茶番劇も終わりとなる……。時は来たれり……我全能なる力を用いて、神剣を砕き偉大なる知恵を手に入れん……。ゆくぞっ！神剣の戦士よ！」
+The Magic Serg. Zeno says "Yes, that's right. And now, if we can work together, this farce will end. Now is the time to act. Using omniscient power, We shall break the sacred sword and recieve great enlightenment. Soldier of the Sacred Sword! Let's finish this!"
+「わしが言うことは何もない。この階に、あるメッセージが隠されているじゃろう。」
+"I have nothing to say. A certain message may be hidden in this room."
+魔導師ゼノ「ゴホッ！おのれ、この私が倒されるとは……、しかしこれぐらいで死ぬような私ではない！おぬしともう一度、戦う日が来ることを楽しみに待っているぞ！」
+The Magic Serg. Zeno says "You villain. Little did I expect to be beaten. But I would never die in such a way. I'll be looking forward to fighting with you again."
+「この塔には鍵で開けられる扉のほかに ”門” というものがあって、これはその門を守っているモンスターを倒さなければあかないじゃろう。」
+"There are doors which cannot be openned by a key. You can open these doors by beating the monsters which guard them."
+「商人から物を買うと、あとで重要な情報を聞くことができるじゃろう。」
+"If you buy goods from merchants, you will be able to hear important information later."
+「この塔は全部で５０階建てで、１０階ごとに１つのブロックを形成している。塔の内部には、各ブロックを統括するボスが配置されていて、そいつらを倒さないことには、それより上の階に行くことはできないだろう。」
+"This tower has fifty floor. Every ten floor form one area. The boss who controls each area, are posted in this tower. You cannot ascend from there if you don't beat them."
+「祭壇に寄進したときは、攻撃力よりも防御力を主に上げてもらった方がいいでしょう。ただし、攻撃力をまったく上げないと、あとで倒せない敵がでてくるかもしれないよ。」
+"When you offer gold at an alter, you may as well have your defensive power risen rather than your offensive power. The enemy whom you cannot beat may appear, provided you won't raise your offensive power."
+「９階と１６階と１８階の抜け穴には気が付いたかい？」
+"Did you notice the secret passages on the 9th, 16th, and 18th floors?"
+「十字架を持っていれば、ゾンビやバンパイアに対する攻撃力が２倍になる。特にバンパイアは十字架を持っていないと倒せないだろう。これより上の階のどこかにあるらしいが……。」
+"If you carry a cross, the strength of Zombies and Vampires will be cut in half. It is near impossible to defeat them without a cross, especially Vampires. A cross is on a floor higher than this one."
+「このブロックでは赤い鍵は２ヶ所で手に入るそうじゃ。」
+"I heard that you can find a red key at two places in this area."
+「このブロックでは、祭壇で攻撃力を何回か上げてもらわないとロックというモンスターが倒せなくなってしまうかもしれん。注意するのじゃ。」
+"In this area, if you don't raise your offensive power at an altar a few times, you may not be able to beat 'Rock' monsters. Be careful!"
+「このブロックに、この魔法の塔の主である大魔導師がいるが、今のおまえさんでは戦っても死にに行くようなものじゃろう。とりあえず、うまくやりすごして上のブロックに行くのが正解じゃ。」
+"The Great Magic Master is in this area. He is a proprietor of this magic tower. At your strenght, to attack him means death. It stands to reason that you should not face him, but rather, get items on higher levels first."
+「この階まで来た段階で、生命力１５００、攻撃力８０、防御力９８、鍵５個、紫の鍵が１個あれば、ほぼ理想的と言えるじゃろう。」
+"In the stage of this floor, if your strength is 1500, offensive power is 80, defensive power is 98, you have five keys, and one blue key, you are almost ideal."
+「二刀流の剣士は攻撃力がものすごく高い。まともに戦えば大きなダメージを受けるだろう。一撃で倒せるようになるまで、戦わない方がよかろう。」
+"The offensive power of the swordsman who uses two swords is too high. He can use two swords at the same time. You will lose much strength if you fight him normally. You should never fight him before your attacks are stronger than his."
+「この塔は５０階建てだが、実際には４９階までしか行けないようだ。」
+"This tower is 50 stories high, but in reality it seems that you cannot go up to the 50th floor."
+「急がば回れじゃ。」
+"More haste, less speed."
+「この階の４つの抜け穴をうまく使えば、強い敵とは戦わずに上の階に行けるじゃろう。」
+"You may be able to go upstairs without fighting strong enemies, if you could use four tunnels skillfully in this floor."
+「この階の宝物庫にある宝を取るためにはマトックが必要じゃ。」
+"You need the mattock in order to get the treasure which is in the item warehouse on this floor."
+「門番のいる所には必ず門があるよ。逆に門のある階には、それを守っている敵がいるよ。だから……。」
+"There is never a gate without a Gate-Keeper. Conversely there are always enemies who keep the gate on floors that have gates. So,"
+「３時になれば空間移動の秘宝が現れるじゃろう。」
+"At three o'clock, the secret treasure that lets one travel in space will appear."
+「この塔のどこかに、幸運の金貨というものがあって、それを持っていると敵を倒したときに得られるお金が２倍になるそうだ。」
+"There is a Lucky Gold somewhere in this tower. If you have it, you can get twice as much money when you beat an enemy."
+「魔術師は隣接すると魔法攻撃をしてくる。魔導師ははさまれると生命力を半分にする攻撃をしてくる。魔導師のはさみ攻撃は自分の生命力が高いほど受けるダメージが大きいはずじゃから気をつけてな。」
+"A Magician will attack using magic when he is next to you. The Magic Sergeants will attack and divide the vital power in half when you are caught between two. As for an attack on both sides from the Magic Sergeant, the stronger you are, the more damage you take. So, please be careful."
+「この塔の４４階は幻の階じゃ。普通の階段を登り降りしたのでは行くことができないらしい。ワープでもしないかぎり行くことは不可能じゃろう。」
+"The 44th floor in this tower is an illusion. It seems that we cannot go to there even if we use the stairs. I think that it is impossible to get there without teleporting."
+「神盾は、魔法使いたちの魔法攻撃を防ぐ力があるらしい。……しかし、この盾は幻の階に隠されているそうだ。」
+"The sacred shield can defend you against magic attacks. But I heard this shield is hidden on a floor that doesn't exist."
+「４１階は完全に左右対称になっておる。だから……。」
+"The 41st floor is perfectly symmetrical, and therefore,"
+「ドラゴンを倒す気なら、聖剣と聖盾、それにドラゴンスレーヤーを持って、なおかつレベルが高くなければならないだろう。」
+"If you want to beat the Dragon, you must have a holy sword, a holy shield, and a Dragon slayer, and also you must be high level."
+「サイコロの５の目の形には、魔を封じ込める力があるという。このブロックのボスと戦う時には、このことを頭にいれておきなされ。」
+"It is said that the symbol of 5 on a pair of dice has the force of sealing magic. You had better memorize it till you fight the boss of this area."
+「もう、話は終わりじゃ。」
+"I have done what I can. Good luck!"
+「おお、助けてくれてありがとうよ。お礼に、そなたの攻撃力と防御力を３％だけあげてやろう」（攻撃力と防御力が上がった!）
+"Oh, thank you for your help. I will raise your offensive and defensive power 3 percent as a token of my gratitude. [You begin feeling stronger]"
+「おぬしにこの勇者のオーブをさずけよう。これを持っていれば今いる階のモンスターの能力を調べてダメージを予測してくれるじゃろう。有効に使うのじゃ」
+"I will grant you the orb of the hero. It will forecast the results of fighting monsters on the current floor. Use it often."
+「やれやれ、見つかってしもうたか。褒美におぬしに”エリクサー”をやろう。この薬を使えば、その時の攻撃力と防御力に応じた値だけ生命力が回復するじゃろう。じゃから、当然、後の方で使う方が効果は大きいぞ。」
+"Thank goodness, you found me. I will give you an elixir as a symbol of my gratitude. Using this medicine will cause you to gain life according to your offensive and defensive power. So naturally, the later you use, the more it will have an effect on you."
+「もう、話す事はないよ。」
+"Be careful. I have nothing more to say."
+「有効に使ってね!」
+"Please, use it wisely."
+「やあ、助けてくれてありがとう。少ないけれど、お礼にとっておいてくれ！」（１０００ＧＯＬＤもらった!）
+"Thank you for your help. Please accept money as a small token of my gratitude. (Got 1000 Gold.)"
+「紫の鍵を大特価の５０ＧＯＬＤで売るよ! 買わないかい?」
+"I will sell a blue key at very special price (50 gold)! Will you buy it?"
+「鍵を５個セットで５０ＧＯＬＤで売るよ! 買わないかい?」
+"I will sell five keys for 50 Gold! Will you buy them?"
+「希少品の赤い鍵を８００ＧＯＬＤで売るよ！買わないかい？」
+"I will sell the rare red key for 800 Gold! Will you buy it?"
+「うちの店は鍵をいくらでも売るよ。１つ１０００ＧＯＬＤだが買うかい？」
+"My store will sell as many keys as you need. They are 1000 Gold each. Will you buy them?"
+「紫の鍵を２００ＧＯＬＤで売るよ！買わないかい？」
+"I will sell a blue key for 200 Gold! Will you buy it?"
+「鍵１個を１００ＧＯＬＤで買うよ。鍵を売るかい？」
+"I will buy your keys at 100 Gold a piece. Will you sell me keys?"
+「鍵を４個と紫の鍵をセットにして１０００ＧＯＬＤだ！買うかい？」
+"I will sell four keys and a blue key for 1000 Gold! Will you buy them?"
+「鍵３個を大サービスの２００ＧＯＬＤで売るよ！早い者勝ちだよ！」
+"I will sell three keys at special price (200 gold). First come, first served."
+「紫の鍵が３個で２０００ＧＯＬＤだが、買うかい？」
+"2000 Golds for three blue keys. Deal?"
+「１０００ＧＯＬＤで生命力を２０００ポイント回復してあげるよ。」
+"I will increase your life 2000 points at 1000 Gold."
+「超希少品のスーパーマトックを４０００ＧＯＬＤで買わないかい？」
+"Would you like to buy a super mattock (it's very rare) for 4000 Gold?"
+表示する情報がありません。
+You don't have an informations any more.
+「まいどーっ！」
+"Thank you very much."
+盗賊「ようまたあったな！無事だったか？これは聞いた話なんだが、２５階のボスを倒すと『時空の門』がどこかにできるらしいぞ。」
+The thief says "Ah!, we meet again! Thank goodness you're alive! I heard that if you beat the boss of 25th floor, 'the gate of time and space' will appear somewhere."
+Ｇスライム
+Green Slime
+Ｒスライム
+Red Slime
+Ｂスライム
+Big Slime
+バット
+Bat
+僧　侶
+Priest
+上級僧侶
+Superion Priest
+門番Ｃ
+Gate-Keeper C
+門番Ｂ
+Gate-Keeper B
+スケルトンＣ
+Skeleton C
+スケルトンＢ
+Skeleton B
+スケルトンＡ
+Skeleton A
+大バット
+Big Bat
+ゾンビ
+Zombie
+ゾンビナイト
+Zombie Knight
+ロック
+Rock
+魔導師ゼノ
+Magic Serg. Zeno
+魔導師
+Magic Sergeant
+バンパイア
+Vampire
+大ダコ
+Giant Octopus
+ドラゴン
+Dragon
+金騎士
+Golden Knight
+騎　士
+Knight
+剣　士
+Swordsman
+兵　士
+Soldier
+死霊兵士
+Ghost Soldier
+スライムマン
+Slime Man
+大魔導師
+Great Magic Master
+吸血コウモリ
+Vampire Bat
+Ｋスライム
+SlimeLord
+魔術師Ａ
+Magician A
+魔術師Ｂ
+Magician B
+黒騎士
+Dark Knight
+門番Ａ
+Gate-Keeper A
+扉の鍵を手に入れた。
+Got a key.
+青色の扉の鍵を手に入れた。
+Got a blue key.
+赤色の扉の鍵を手に入れた。
+Got a red key.
+扉が開いた。
+The door has opened.
+青色の扉が開いた。
+The blue door has opened.
+赤色の扉が開いた。
+The red door has opened.
+階段を上った。
+Went up the stairs.
+階段を下った。
+Went down the stairs.
+壁がくずれた！
+The wall collapsed!
+勇者のオーブを手に入れた！
+Got the orb of the hero.
+老人がいる。
+You see an old man.
+商人がいる。
+You see a merchant.
+妖精がいる。
+You see a fairy.
+盗賊がいる。
+You see a thief.
+扉の鍵がない！
+Don't have the key.
+青色の鍵がない！
+Don't have the blue key.
+赤色の鍵がない！
+Don't have the red key.
+階段がある。
+You see stairs.
+飛翔のオーブは階段のとなりでなくては使えない！
+You must be near the stairs to use the orb of flying!
+飛翔のオーブを手に入れた！
+Got the orb of flying.
+知恵のオーブを手に入れた！
+Got the orb of wisdom.
+飛翔のオーブを使った！
+Used the orb of flying!
+祭壇がある。
+You see an altar.
+鉄の剣を手に入れた。攻撃力が１０ポイントアップ！
+Got an Iron Sword! Your offensive power was 10 points up!
+銀の剣を手に入れた。攻撃力が２０ポイントアップ！
+Got a Silver Sword! Your offensive power was 20 points up!
+騎士の剣を手に入れた。攻撃力が４０ポイントアップ！
+Got a Sword of Knight! Your offensive power was 40 points up!
+聖　剣を手に入れた。攻撃力が５０ポイントアップ！
+Got a Holy Sword! Your offensive power was 50 points up!
+神　剣を手に入れた。攻撃力が１００ポイントアップ！
+Got a Sacred Sword! Your offensive power was 100 points up!
+鉄の盾を手に入れた。防御力が１０ポイントアップ！
+Got an Iron Shield! Your defensive power was 10 points up!
+銀の盾を手に入れた。防御力が２０ポイントアップ！
+Got a Silver Shield! Your defensive power was 20 points up!
+騎士の盾を手に入れた。防御力４０がポイントアップ！
+Got a Shield of Knight! Your defensive power was 40 points up!
+聖　盾を手に入れた。防御力が５０ポイントアップ！
+Got a Holy Shield! Your defensive power was 50 points up!
+神　盾を手に入れた。防御力が１００ポイントアップ！
+Got a Sacred Shield! Your defensive power was 100 points up!
+赤い回復薬を手に入れた。生命力が５０ポイントアップ！
+Got a red elixir. Your vital power was 50 points up!
+青い回復薬を手に入れた。生命力が２００ポイントアップ！
+Got a blue elixir. Your vital power was 200 points up!
+赤のクリスタルを手に入れた。攻撃力が１ポイントアップ！
+Got a red crystal. Your offensive power was 1 point up!
+青のクリスタルを手に入れた。防御力が１ポイントアップ！
+Got a blue crystal. Your defensive power was 1 point up!
+十字架を手に入れた！バンパイア、ゾンビに対する攻撃力が２倍になった！
+Got a cross! Your offensive power against Vampires and Zombies has doubled.
+エリクサーを手に入れた！
+Recieved the Magic Elixir.
+マトックを手に入れた！
+Got the Magic Mattock.
+破壊の玉を手に入れた！
+Got the Destructible Ball!
+空間転移の秘宝を手に入れた！
+Got the Warp Staff!
+昇華の翼を手に入れた！
+Got wings to fly up!
+降臨の翼を手に入れた！
+Got wings to fly down!
+ドラゴンスレーヤーを手に入れた！ドラゴンに対する攻撃力が２倍になった！
+Got the Dragon Slayer! Your attack power against the Dragon has doubled!
+雪の結晶を手に入れた！
+Got the snow crystal!
+魔法の鍵を手に入れた！
+Got the magic key!
+スーパーマトックを手に入れた！
+Got the Super Magic Mattock!
+幸運の金貨を手に入れた！敵が持っているＧＯＬＤ数が２倍になる。
+Got the Lucky Gold! You can get twice gold which monster has from now.
+溶岩が流れている。
+The lava is really hot.
+この階にいるモンスターの生命力、攻撃力、防御力、プレーヤーの受けるダメージを検索
+Looking up the results of battling these monsters.
+命
+Vital power:
+攻
+Offensive power:
+防
+Defensive power:
+予想ダメージ
+Expected damage:
+攻撃不可能
+Attack is impossible!
+エリクサーを使った！生命力が
+Used the Magic Elixir. Your vital power was 
+マトックを使った！四方の壁が崩れた！
+Used the Magic Mattock! The walls fell down!
+破壊の玉を使った！四方の敵が倒れた！
+Used The Destructible Ball! Enemies on all sides died!
+空間転移した！
+Warped!
+昇華の翼を使った！
+Used the wing to fly up!
+降臨の翼を使った！
+Used the wing to fly down!
+雪の結晶を使った！
+Used the snow crystal!
+魔法の鍵を使った！この階の扉がすべて開いた！
+Used the Magic Key! All these doors opened on this floor.
+スーパーマトックを使った！この階の壁がすべて崩れた！
+Used the Super Magic Mattock! All the walls fell down on this floor!
+転送先に障害物があって空間転移ができない！
+Can't warp (There's an object in the way).
+上の階に障害物があって転移ができない！
+Can't go upstairs (it's blocked)!
+下の階に障害物があって転移ができない！
+Can't go downstairs (it's blocked)!
+溶岩が固まって道ができた！
+The lava cooled and turned to stone.
+をたおした！
+You've beat 
+ＧＯＬＤを
+. Recieved 
+枚手に入れた！
+ Gold.
+「この祭壇に
+"If you offer me 
+ ＧＯＬＤ寄進すれば望みをかなえてやろう。寄進するか？」
+ Gold, I will grant your request. Will you?"
+「どの望みをかなえて欲しいのだ？」
+"What option shall you choose?"
+・生命力を
+Your life recovers by 
+ポイント回復
+ points.
+・攻撃力を
+The offensive power is raised 
+ポイントアップ
+・防御力を
+The defensive power is raised 
+・やっぱりやめる
+Then I won't do it after all.
+「金がたらん！」
+"You don't have enough money!"
+塔
+Tower
+階
+ F
+生命力
+Life
+攻撃力
+Offense
+防御力
+Defense
+相手の防御力が高すぎて攻撃ができない！
+You can't battle him. Because his defensive power is too high!
+勇者「なんだと～！」
+The brave man says "What?"
+勇者「あ～っ」
+The brave man says "Hey!"
+「この階までのあなたの生命力、防御力、攻撃力、鍵の個数からあなたの実力を評価すると・・・
+"Judging by your vital power, offensive power, defensive power, and number of keys, you have 
+点です。
+うーん、この点数だとこれから先へ進むのは、かなり無理があるでしょう。」
+If you have that many points, you might want to reconsider going higher..."
+いまひとつですね。これから先はかなり苦戦するでしょう。」
+A bit below average. Maybe you should try harder."
+まあまあですね。この点数ならこれから先もなんとかなるでしょう。」
+You are ordinary. You might get by okay!"
+なかなかのものです。もう少し頑張れば称号を差し上げましょう。」
+Doing fine! If you wish to continue, I will give you a special rank..."
+おめでとう！満点です。
+Congratulations! Your score is GREAT! 
+よくがんばりましたね。
+Do you wish to go on? 
+あなたには
+I give you the special rank of 
+『戦士』
+FIGHTER
+『勇者』
+BRAVE MAN
+『英雄』
+HERO
+『剣帝』
+SWORD EMPEROR
+『闘神』
+FIGHTER GOD
+の称号を差し上げましょう。
+. 
+これから先もこの調子でね。」
+You may as well play as good as you have from this point on."
+ここまでおつかれさまでした。」
+It was nice fight so far."
+魔術師Ａの魔法攻撃だ！生命力が２００ポイント減少！
+Your vital power decreased 200 points by magic attack of Magician A!
+魔術師Ｂの魔法攻撃だ！生命力が１００ポイント減少！
+Your vital power decreased 100 points by magic attack of Magician B!
+魔導師の魔法攻撃だ！生命力が半減！
+Your vital power decreased in half by the magic attack of Magic Master!
+大ダコの一部
+some of Giant Octopus
+道が壁に変わった！
+The road changed to the wall!
+セーブデータがありません。
+Nobody saved that game yet.
+階段を移動中
+You are using the stairs.
+おめでとう！得点が第
+Congratulations! You win the 
+位の成績でした。
+ place with the points which you got.
+ データをロード(読み込み)しました。
+Loaded the Game.
+ データをセーブ(保存)しました。
+Saved the Game.
+ 鍵を持ってないよ！
+You don't have a key!
+このデータはロードできません。
+This Game can't load.
+赤い回復薬を手に入れた。生命力が１００ポイントアップ！
+Got a red elixir. Your vital power was 100 points up!
+赤い回復薬を手に入れた。生命力が２００ポイントアップ！
+Got a red elixir. Your vital power was 200 points up!
+赤い回復薬を手に入れた。生命力が２５０ポイントアップ！
+Got a red elixir. Your vital power was 250 points up!
+青い回復薬を手に入れた。生命力が４００ポイントアップ！
+Got a blue elixir. Your vital power was 400 points up!
+青い回復薬を手に入れた。生命力が８００ポイントアップ！
+Got a blue elixir. Your vital power was 800 points up!
+青い回復薬を手に入れた。生命力が１０００ポイントアップ！
+Got a blue elixir. Your vital power was 1000 points up!
+赤のクリスタルを手に入れた。攻撃力が２ポイントアップ！
+Got a red crystal. Your offensive power was 2 points up!
+赤のクリスタルを手に入れた。攻撃力が４ポイントアップ！
+Got a red crystal. Your offensive power was 4 points up!
+赤のクリスタルを手に入れた。攻撃力が５ポイントアップ！
+Got a red crystal. Your offensive power was 5 points up!
+青のクリスタルを手に入れた。防御力が２ポイントアップ！
+Got a blue crystal. Your defensive power was 2 points up!
+青のクリスタルを手に入れた。防御力が４ポイントアップ！
+Got a blue crystal. Your defensive power was 4 points up!
+青のクリスタルを手に入れた。防御力が５ポイントアップ！
+Got a blue crystal. Your defensive power was 5 points up!
+「・・・」
+"------"
+Magic Tower Ver0.8a
+ドラゴンが火を吹いた！生命力が１０００ポイント減少！
+Dragon blew on the fire! Your vital power decreased 1000 points.
+鉄の剣
+Iron
+銀の剣
+Silver
+騎士の剣
+聖　剣
+Holy
+神　剣
+Sacred
+鉄の盾
+銀の盾
+騎士の盾
+聖　盾
+神　盾
+「生命力がなくなりました。再挑戦してください。」
+"You have perished in Magic Tower. Please try again!"
+上書きします。よろしいですか？
+Over write. Is it true ?
+情報番号　
+Information No.
+「願いをかなえたぞ！」
+"Your wish came true."
+実行中...
+Executing...
+セーブできません。ポリシーツールで入出力の設定をして下さい。
+Can't save this game. Please set by policytool.
+ランキングデータを初期化しました。
+Initialized Ranking data.
+ランキングデータを初期化できません。ポリシーツールで入出力の設定をして下さい。
+Can't initialize this raning data. Please set by policytool.
+This data can't load.
+Wav サウンドオン！
+Wav sound on.
+Midiバックグラウンドミュージックオン！
+Midi Background music on.
+サウンドオフ！　ＢＧＭオフ！
+Sound and Background music off.
+サウンドオフ！
+Sound off.
+バックグラウンドミュージックオフ！
+Background music off.
+Au サウンドオン！
+Au sound on.
+Auバックグラウンドミュージックオン！
+Au Background music on.
+「遊んでくれてありがとう！　まだ完成できていません。　楽しみに待っていてね！」
+"Thank you for playing this game. Please wait for completing."
+ points up!
+ Got 
+勇者のオーブ
+The orb of the hero
+知恵のオーブ
+The orb of wisdom
+飛翔のオーブ
+The orb of flying
+十字架
+A cross
+エリクサー
+The Magic Elixir
+マトック
+The Magic Mattock
+破壊の玉
+The Destructible Ball
+空間転移の秘宝
+The Warp Staff
+昇華の翼
+Wings to fly up
+降臨の翼
+Wings to fly down
+ドラゴンスレーヤー
+The Dragon Slayer
+雪の結晶
+The snow crystal
+魔法の鍵
+The magic key
+スーパーマトック
+The Super Magic Mattock
+幸運の金貨
+The Lucky Gold
+アイテムを使用します。よろしいですか？
+Do you use this item?
+Now Loading CG data .....
+image/MTower.gif
+Tracker Exception !!!
+Now Loading CG data ..... Done.
+Now Making character CG .....
+java/awt/image/FilteredImageSource
+java/awt/image/CropImageFilter
+image/door1.gif
+image/door2.gif
+image/door3.gif
+image/door4.gif
+image/door5.gif
+image/door6.gif
+image/door7.gif
+image/door8.gif
+image/door9.gif
+image/door10.gif
+image/key1.gif
+image/key2.gif
+image/key3.gif
+image/right1.gif
+image/left.gif
+image/tkoma.gif
+image/image.gif
+data/open2.gif
+data/open3.gif
+data2/edata01.gif
+Now Making character CG ..... Done.
+Tower 
+F
+java/awt/image/PixelGrabber
+java/awt/image/MemoryImageSource
+data2/edata16.gif
+data2/edata17.gif
+data2/edata02.gif
+data2/edata03.gif
+data2/edata04.gif
+data2/edata05.gif
+data2/edata06.gif
+data2/edata07.gif
+data2/edata08.gif
+data2/edata09.gif
+data2/edata10.gif
+data2/edata11.gif
+data2/edata12.gif
+data2/edata13.gif
+data2/edata14.gif
+data2/edata15.gif
+data2/edata18.gif
+data/edata16.gif
+data/edata17.gif
+data/open4.gif
+data/open1.gif
+savedat/data
+6.dat
+7.dat
+8.dat
+./savedat/data1.dat/
+./savedat/data2.dat/
+./savedat/data3.dat/
+./savedat/data4.dat/
+./savedat/data5.dat/
+./savedat/data6.dat/
+./savedat/data7.dat/
+./savedat/data8.dat/
+Error:
+Error:MalformedURLException
+Error:FileNotFoundException
+Error:IOException
+Iron Sword
+Iron Shield
+スケルトンＡ　
+僧侶　　　　　
+スケルトンＢ　
+老人　　　　　
+スケルトンＣ　
+門番Ｃ　　　　
+バット　　　　
+Ｒスライム　　
+Ｇスライム　　
+盗賊　　　　　
+100
+90
+80
+70
+60
+50
+40
+30
+20
+10
+500
+450
+400
+350
+300
+250
+200
+150
+25
+24
+23
+22
+21
+19
+18
+17
+16
+Big Octopus
+Blue Crystal
+バンパイア　　
+上級僧侶　　　
+ゾンビナイト　
+門番Ｂ　　　　
+ロック　　　　
+大ダコ　　　　
+ゾンビ　　　　
+大バット　　　
+Ｂスライム　　
+青のクリスタル
+1000
+900
+800
+700
+600
+45
+35
+15
+5
+Magic Master
+Thief
+Fairy
+Merchant
+Princess
+Old Man
+Brave Man
+Mattock
+Cross
+Lucky Gold
+大魔導師　　　
+妖精　　　　　
+商人　　　　　
+お姫様　　　　
+マトック　　　
+勇者　　　　　
+十字架　　　　
+幸運の金貨　　
+魔法の鍵　　　
+10000
+9000
+8000
+7000
+6000
+5000
+4000
+3000
+2000
+Fancer
+Sword of Knight
+Shield of Knight
+金騎士　　　　
+騎士　　　　　
+剣士　　　　　
+兵士　　　　　
+死霊兵士　　　
+ドラゴン　　　
+スライムマン　
+エリクサー　　
+騎士の剣　　　
+騎士の盾　　　
+4500
+3500
+2500
+1500
+190
+180
+170
+160
+140
+130
+120
+110
+Black Knight
+Bloodsucker Bat
+King Slime
+Holy Sword
+Holy Shield
+魔導師ゼノ　　
+魔術師Ａ　　　
+黒騎士　　　　
+魔導師　　　　
+門番Ａ　　　　
+吸血コウモリ　
+魔術師Ｂ　　　
+Ｋスライム　　
+聖剣　　　　　
+聖盾　　　　　
+MTower
+java/applet/Applet
+java/lang/Runnable
+(Ljava/awt/Component;)V
+(Ljava/lang/String;)V
+(Ljava/lang/String;Ljava/awt/MenuShortcut;)V
+add
+(Ljava/awt/MenuItem;)Ljava/awt/MenuItem;
+addSeparator
+java/awt/Component
+(Ljava/awt/PopupMenu;)V
+(Ljava/awt/Frame;)V
+(Ljava/awt/Frame;Ljava/lang/String;Z)V
+requestFocus
+getCodeBase
+()Ljava/net/URL;
+getDocumentBase
+getImage
+(Ljava/net/URL;Ljava/lang/String;)Ljava/awt/Image;
+addImage
+(Ljava/awt/Image;I)V
+waitForAll
+createImage
+(II)Ljava/awt/Image;
+getGraphics
+()Ljava/awt/Graphics;
+(Ljava/lang/Runnable;)V
+java/awt/Graphics
+dispose
+sleep
+(J)V
+java/lang/System
+out
+Ljava/io/PrintStream;
+java/io/PrintStream
+println
+repaint
+drawImage
+(Ljava/awt/Image;IILjava/awt/image/ImageObserver;)Z
+showStatus
+getAudioClip
+(Ljava/net/URL;Ljava/lang/String;)Ljava/applet/AudioClip;
+setEnabled
+(Z)V
+(Ljava/net/URL;Ljava/lang/String;)V
+openStream
+()Ljava/io/InputStream;
+java/awt/Color
+white
+Ljava/awt/Color;
+setColor
+(Ljava/awt/Color;)V
+show
+(Ljava/awt/Component;II)V
+setLocation
+(II)V
+(IILjava/net/URL;)V
+Ans
+equals
+(Ljava/lang/Object;)Z
+DisplayFlag
+append
+(Ljava/lang/String;)Ljava/lang/StringBuffer;
+valueOf
+(I)Ljava/lang/String;
+toString
+()Ljava/lang/String;
+setVisible
+java/awt/Window
+isShowing
+()Z
+str
+black
+fillRoundRect
+(IIIIII)V
+yellow
+(I)Ljava/lang/StringBuffer;
+play
+getAppletContext
+()Ljava/applet/AppletContext;
+java/applet/AppletContext
+showDocument
+err
+isEnabled
+java/awt/Event
+modifiers
+target
+Ljava/lang/Object;
+loop
+setLabel
+(Ljava/lang/String;II)V
+setFont
+(Ljava/awt/Font;)V
+(Ljava/awt/Image;IIIILjava/awt/image/ImageObserver;)Z
+getFontMetrics
+(Ljava/awt/Font;)Ljava/awt/FontMetrics;
+java/awt/FontMetrics
+stringWidth
+(Ljava/lang/String;)I
+drawString
+(Ljava/io/InputStream;)V
+readUTF
+java/io/FilterInputStream
+close
+(Ljava/lang/Object;)Ljava/lang/StringBuffer;
+java/lang/Integer
+parseInt
+(Ljava/io/OutputStream;)V
+writeUTF
+java/io/FilterOutputStream
+charAt
+(I)C
+([C)V
+length
+()I
+red
+waitForID
+getSource
+()Ljava/awt/image/ImageProducer;
+(IIII)V
+(Ljava/awt/image/ImageProducer;Ljava/awt/image/ImageFilter;)V
+(Ljava/awt/image/ImageProducer;)Ljava/awt/Image;
+(Ljava/awt/Image;IIII[III)V
+grabPixels
+(II[III)V
+writeChar
+readChar
+()C

@@ -1,0 +1,111 @@
+using NUnit.Framework;
+using UnityEngine;
+
+/// <summary>会話ウィンドウの寸法が原典（MTE.EXE 0x94ba）どおりかを確かめる。</summary>
+public class DialogueWindowTests
+{
+    [Test]
+    public void 窓は画面中央寄りの横320ドット()
+    {
+        Assert.AreEqual(640, DialogueWindow.ScreenWidth);
+        Assert.AreEqual(160, DialogueWindow.Left, "原典 0x14 バイト = 160 ドット");
+        Assert.AreEqual(320, DialogueWindow.Width, "原典 0x14 ワード = 320 ドット");
+        Assert.AreEqual(DialogueWindow.Left + DialogueWindow.Width,
+                        DialogueWindow.ScreenWidth - DialogueWindow.Left, "左右の余白が同じ");
+    }
+
+    [Test]
+    public void 高さは行数の二十倍足す四()
+    {
+        Assert.AreEqual(24, DialogueWindow.Height(1));
+        Assert.AreEqual(44, DialogueWindow.Height(2));
+        Assert.AreEqual(124, DialogueWindow.Height(6));
+        Assert.AreEqual(164, DialogueWindow.Height(8));
+        Assert.AreEqual(184, DialogueWindow.Height(9));
+    }
+
+    [Test]
+    public void 原典で使われる行数はどれも画面に収まる()
+    {
+        for (int n = 1; n <= 11; n++)
+        {
+            Assert.IsTrue(DialogueWindow.Fits(DialogueWindow.For(n)), $"{n}行");
+            Assert.IsTrue(DialogueWindow.Fits(DialogueWindow.For(n, true)), $"{n}行（高い位置）");
+        }
+    }
+
+    [Test]
+    public void 姿の見えない声は上端五十に開く()
+    {
+        Assert.AreEqual(120, DialogueWindow.For(6).yMin);
+        Assert.AreEqual(50, DialogueWindow.For(6, true).yMin);
+    }
+
+    [Test]
+    public void 十階の盗賊は九行の窓を高い位置に開く()
+    {
+        var body = GameText.Instance.Dialogue(107).Value.Body;
+        var r = DialogueWindow.ForBody(body, high: true);
+        Assert.AreEqual(9, DialogueBox.WindowLines(body));
+        Assert.AreEqual(new RectInt(160, 50, 320, 184), r);
+        Assert.IsTrue(DialogueWindow.Fits(r));
+    }
+
+    [Test]
+    public void 一行のセリフは一番小さい窓()
+    {
+        var body = GameText.Instance.Dialogue(156).Value.Body;
+        Assert.AreEqual(1, DialogueBox.WindowLines(body), "「うっ……この陣形は……まずいっ！」");
+        Assert.AreEqual(new RectInt(160, 50, 320, 24),
+                        DialogueWindow.ForBody(body, high: true));
+    }
+
+    [Test]
+    public void 帯の大きさがLcg1と一致する()
+    {
+        Assert.AreEqual(320, DialogueWindow.Width);
+        Assert.AreEqual(32, DialogueWindow.StripHeight);
+        var tex = Resources.Load<Texture2D>("Screens/Lcg_1");
+        if (tex != null)   // Resources 外に置いてある場合は飛ばす
+        {
+            Assert.AreEqual(320, tex.width);
+            Assert.AreEqual(32, tex.height);
+        }
+    }
+
+    // ---- Canvas への置き換え ----
+
+    [Test]
+    public void 原典の画面とCanvasの倍率が一定()
+    {
+        Assert.AreEqual(1.8f, DialogueWindow.CanvasScale, 1e-6f);
+        Assert.AreEqual(1152f, DialogueWindow.CanvasWidth, 1e-3f);
+        Assert.AreEqual(720f, DialogueWindow.CanvasHeight, 1e-3f);
+    }
+
+    [Test]
+    public void 原典の座標がCanvasの位置に直る()
+    {
+        var r = DialogueWindow.For(6);                 // (160,120,320,124)
+        Assert.AreEqual(new Vector2(288f, -216f), DialogueWindow.ToCanvas(r));
+        Assert.AreEqual(new Vector2(576f, 223.2f), DialogueWindow.SizeOnCanvas(r));
+    }
+
+    [Test]
+    public void 高い位置に開くセリフは三件だけ()
+    {
+        CollectionAssert.AreEquivalent(new[] { 107, 159, 156 }, DialogueWindowView.HighRecords);
+        foreach (var id in DialogueWindowView.HighRecords)
+            Assert.IsTrue(DialogueWindowView.HighFor(
+                GameText.Instance.Dialogue(id).Value.Body), $"セリフ{id}");
+        Assert.IsFalse(DialogueWindowView.HighFor(
+            GameText.Instance.Dialogue(116).Value.Body), "普通のセリフは120");
+    }
+
+    [Test]
+    public void 窓の色は原典のパレットから取る()
+    {
+        Assert.AreEqual(new Color32(0x44, 0x44, 0x44, 0xff), (Color32)DialogueWindowView.Fill);
+        Assert.AreEqual(new Color32(0xff, 0xff, 0xff, 0xff), (Color32)DialogueWindowView.Text);
+    }
+}

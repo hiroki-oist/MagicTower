@@ -15,9 +15,10 @@ public class ItemManager : MonoBehaviour
     [SerializeField] TextMeshProUGUI red_key_value;
     
     void Awake() {
-        yellowKey = 10;
-        blueKey = 10;
-        redKey = 10;
+        // 原典では主人公は捕らえられて装備も鍵も奪われた状態から始まる
+        yellowKey = 0;
+        blueKey = 0;
+        redKey = 0;
     }
 
     public void UpdateKeyValue(){

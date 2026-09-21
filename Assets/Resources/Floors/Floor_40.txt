@@ -1,0 +1,43 @@
+# Floor 40
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 5035 / meta=[41, 16, 104]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | ...........
+  +4 | .OOO.O.OOO.
+  +3 | ...........
+  +2 | ..OOO.OOO..
+  +1 | ...........
+  +0 | ###.....###
+  -1 | ###.....###
+  -2 | #####r#####
+  -3 | OO.#O.O#OO.
+  -4 | O..#...#O..
+  -5 | O.Ob...y..<
+
+objects:  (x, y, prefab, note)
+  -4 +4  Enemy_Samurai              ID137
+  -3 +4  Enemy_Samurai              ID137
+  -2 +4  Enemy_Samurai              ID137
+  +0 +4  Enemy_Worrior              ID133
+  +2 +4  Enemy_GreatWorrior         ID135
+  +3 +4  Enemy_GreatWorrior         ID135
+  +4 +4  Enemy_GreatWorrior         ID135
+  -3 +2  Enemy_GreatZombie          ID141
+  -2 +2  Enemy_GreatZombie          ID141
+  -1 +2  Enemy_GreatZombie          ID141
+  +1 +2  Enemy_GreatZombieSoldier   ID139
+  +2 +2  Enemy_GreatZombieSoldier   ID139
+  +3 +2  Enemy_GreatZombieSoldier   ID139
+  -5 -3  Gem_Defense                ID35
+  -4 -3  Key_Yellow                 ID29
+  -1 -3  Enemy_MozaikuMan           ID143
+  +1 -3  Enemy_MozaikuMan           ID143
+  +3 -3  Potion_Red                 ID32
+  +4 -3  Enemy_Samurai              ID137
+  -5 -4  Potion_Blue                ID33
+  +3 -4  Enemy_GreatZombieSoldier   ID139
+  -5 -5  Gem_Attack                 ID34
+  -3 -5  Enemy_GreatWorrior         ID135

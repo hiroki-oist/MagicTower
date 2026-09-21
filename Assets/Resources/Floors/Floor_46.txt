@@ -1,0 +1,43 @@
+# Floor 46
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 5779 / meta=[47, 119, 11]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | .Oy.OOO.b.<
+  +4 | O.#.....#..
+  +3 | O.########y
+  +2 | .Oy.....O..
+  +1 | ##########y
+  +0 | O.O.O#O.yO.
+  -1 | .###.#.O#..
+  -2 | O#O#O#y###y
+  -3 | .#.O.#.O#O.
+  -4 | O#####..#..
+  -5 | .O.O.b..y.>
+
+objects:  (x, y, prefab, note)
+  -4 +5  Enemy_ID151                ID151
+  -1 +5  Vendor                     ID15
+  +0 +5  Shop_Altar                 ID16
+  +1 +5  Shop_Altar                 ID17
+  -5 +4  Potion_Red                 ID32
+  -5 +3  Gem_Attack                 ID34
+  -4 +2  Enemy_ID153                ID153
+  +3 +2  Enemy_ID147                ID147
+  -5 +0  Enemy_GreatZombieSoldier   ID139
+  -3 +0  Enemy_Samurai              ID137
+  -1 +0  Enemy_GreatWorrior         ID135
+  +1 +0  Potion_Red                 ID32
+  +4 +0  Enemy_ID149                ID149
+  +2 -1  Enemy_ID151                ID151
+  -5 -2  Enemy_Zombie               ID85
+  -3 -2  Key_Magic                  ID48
+  -1 -2  Enemy_ID149                ID149
+  -2 -3  Enemy_ID153                ID153
+  +2 -3  Master                     ID25
+  +4 -3  Enemy_ID153                ID153
+  -5 -4  Enemy_GreatBat             ID83
+  -4 -5  Enemy_Skeleton             ID77
+  -2 -5  Enemy_SlimeR               ID63

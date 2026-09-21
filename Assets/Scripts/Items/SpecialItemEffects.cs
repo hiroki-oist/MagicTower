@@ -1,0 +1,141 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+/// <summary>
+/// スペシャル・アイテムを使ったときの効果。
+/// 原典 MTE.EXE の「どのアイテムを使いますか？」の処理（0x7d50〜0x8a46）より。
+///
+/// 原典のメニューの並びもこの順:
+///   エリクサー / マトック / 破壊の玉 / 空間転移の秘宝 / 昇華の翼 / 降臨の翼 /
+///   魔法の鍵 / スーパーマトック / やっぱりやめる
+///
+/// 使うと所持フラグが 0 に戻るものは**使い切り**（下の <see cref="IsConsumedOnUse"/>）。
+/// </summary>
+public static class SpecialItemEffects
+{
+    /// <summary>地図のマスの値。原典の物体IDと同じ。</summary>
+    public const int CellFloor = 6;
+    public const int CellWall  = 8;
+    public const int CellLockYellow = 1;
+
+    /// <summary>破壊の玉が効かない相手（原典が明示的に除外しているID）。</summary>
+    public static readonly int[] DestructionImmuneIds = { 91, 104, 122, 145 };
+    // 91 魔導師ゼノ / 104 大ダコ / 122 ドラゴン / 145 大魔導師
+
+    /// <summary>空間転移の秘宝を使うと支払う生命力（原典 0x320）。</summary>
+    public const int TeleportHpCost = 800;
+
+    /// <summary>使うと無くなるアイテムか。</summary>
+    public static bool IsConsumedOnUse(SpecialItems.Kind k)
+    {
+        switch (k)
+        {
+            case SpecialItems.Kind.Elixir:
+            case SpecialItems.Kind.Matock:
+            case SpecialItems.Kind.SuperMatock:
+            case SpecialItems.Kind.DestructionOrb:
+            case SpecialItems.Kind.WingUp:
+            case SpecialItems.Kind.WingDown:
+            case SpecialItems.Kind.MagicKey:
+            case SpecialItems.Kind.SnowCrystal:
+                return true;
+            default:
+                return false;   // オーブ3種・十字架・幸運の金貨・ドラゴンスレイヤーは持ち続ける
+        }
+    }
+
+    /// <summary>
+    /// エリクサーの回復量。原典は
+    /// <c>ax = 攻撃力×2 + 防御力 ; 回復量 = ax×5</c>。
+    /// 原典の説明「その時の攻撃力と防御力に応じた値だけ生命力が回復する。
+    /// じゃから、当然、後の方で使う方が効果は大きいぞ。」に対応する。
+    /// </summary>
+    public static int ElixirHeal(int attack, int defense)
+    {
+        return 5 * (attack * 2 + defense);
+    }
+
+    /// <summary>マトック: 上下左右のマスが壁なら床にする。</summary>
+    public static List<Vector2Int> MatockTargets(Vector2Int at, Func<Vector2Int, int> cellAt)
+    {
+        var list = new List<Vector2Int>();
+        if (cellAt == null) return list;
+        foreach (var d in Around)
+        {
+            var p = at + d;
+            if (cellAt(p) == CellWall) list.Add(p);
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// スーパーマトック: **その階の壁をすべて**床にする。
+    /// 原典は 11×11 を二重ループで走査して 8 のマスを 6 にしている。
+    /// </summary>
+    public static List<Vector2Int> SuperMatockTargets(Func<Vector2Int, int> cellAt)
+    {
+        return ScanFloor(cellAt, v => v == CellWall);
+    }
+
+    /// <summary>
+    /// 魔法の鍵: **その階の黄色い扉をすべて**開ける。
+    /// 原典は 11×11 を走査して 1 のマスを 6 にしている。
+    /// </summary>
+    public static List<Vector2Int> MagicKeyTargets(Func<Vector2Int, int> cellAt)
+    {
+        return ScanFloor(cellAt, v => v == CellLockYellow);
+    }
+
+    /// <summary>
+    /// 破壊の玉: 上下左右の敵を消す。
+    /// ただし <see cref="DestructionImmuneIds"/> の4体は消せない。
+    /// </summary>
+    public static List<Vector2Int> DestructionTargets(Vector2Int at,
+                                                      Func<Vector2Int, int> cellAt,
+                                                      Func<int, bool> isEnemy)
+    {
+        var list = new List<Vector2Int>();
+        if (cellAt == null || isEnemy == null) return list;
+        foreach (var d in Around)
+        {
+            var p = at + d;
+            int id = cellAt(p);
+            if (!isEnemy(id)) continue;
+            if (Array.IndexOf(DestructionImmuneIds, id) >= 0) continue;
+            list.Add(p);
+        }
+        return list;
+    }
+
+    /// <summary>
+    /// 翼で移動したあとの階。
+    /// **階段と違い「44階を飛ばす」補正を通らない**ので、
+    /// これが幻の階 F44 へ行く唯一の方法になる
+    /// （原典ヒント「我々のいる４４階に行くには、２種類のスペシャルアイテムのうち、
+    ///   どちらかを使うしかない」）。
+    /// </summary>
+    public static int WingFloor(int floor, bool up)
+    {
+        return up ? floor + 1 : floor - 1;
+    }
+
+    static readonly Vector2Int[] Around =
+    {
+        new Vector2Int(0, 1), new Vector2Int(0, -1),
+        new Vector2Int(-1, 0), new Vector2Int(1, 0)
+    };
+
+    static List<Vector2Int> ScanFloor(Func<Vector2Int, int> cellAt, Func<int, bool> match)
+    {
+        var list = new List<Vector2Int>();
+        if (cellAt == null) return list;
+        for (int y = 5; y >= -5; y--)
+            for (int x = -5; x <= 5; x++)
+            {
+                var p = new Vector2Int(x, y);
+                if (match(cellAt(p))) list.Add(p);
+            }
+        return list;
+    }
+}

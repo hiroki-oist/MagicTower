@@ -1,0 +1,44 @@
+# Floor 5
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 695 / meta=[6, 11, 109]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | >#.Oy.#..y.
+  +4 | .#..#O#OO#O
+  +3 | .yO.#.#OO#.
+  +2 | ###y#O#OO#.
+  +1 | O.O.#.####.
+  +0 | O..O#.O....
+  -1 | #O###.####O
+  -2 | ....#O#....
+  -3 | OOOO#.#y###
+  -4 | #####.#.#..
+  -5 | <.....#.%.O
+
+objects:  (x, y, prefab, note)
+  -2 +5  Enemy_SlimeR               ID63
+  +0 +4  Key_Yellow                 ID29
+  +2 +4  Enemy_SlimeG               ID61
+  +3 +4  Enemy_SlimeG               ID61
+  +5 +4  Enemy_SlimeR               ID63
+  -3 +3  Enemy_Bat                  ID67
+  +2 +3  Key_Yellow                 ID29
+  +3 +3  Key_Yellow                 ID29
+  +0 +2  Enemy_Bat                  ID67
+  +2 +2  Key_Yellow                 ID29
+  +3 +2  Key_Yellow                 ID29
+  -5 +1  Key_Yellow                 ID29
+  -3 +1  Enemy_Apprentice           ID69
+  -5 +0  Key_Yellow                 ID29
+  -2 +0  Enemy_Bat                  ID67
+  +1 +0  Enemy_SlimeG               ID61
+  -4 -1  Enemy_SkeletonWorrior      ID79
+  +5 -1  Enemy_SlimeR               ID63
+  +0 -2  Enemy_SlimeG               ID61
+  -5 -3  Gem_Defense                ID35
+  -4 -3  Key_Yellow                 ID29
+  -3 -3  Potion_Red                 ID32
+  -2 -3  Orb_Wisdom                 ID37
+  +5 -5  Sword_1                    ID51

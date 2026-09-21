@@ -27,7 +27,10 @@ public class Battler
     }
 
     public void TakeDamage(Battler attacker){
-        int damage = attacker.Attack - Defense;
+        // 原典の式: ダメージ = 攻撃側の攻撃力 - 防御側の防御力
+        // 防御力が攻撃力以上なら 0 ダメージ（原典では「倒せない敵」になる）。
+        // クランプしないと負のダメージで相手を回復させてしまう。
+        int damage = Mathf.Max(0, attacker.Attack - Defense);
         HP = Mathf.Clamp(HP - damage, 0, MaxHP);
         Debug.Log($"Attack: {attacker.Attack}");
         Debug.Log($"Defense: {Defense}");

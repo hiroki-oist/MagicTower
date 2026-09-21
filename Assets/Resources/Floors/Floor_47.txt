@@ -1,0 +1,41 @@
+# Floor 47
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 5903 / meta=[48, 109, 99]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | >.b...y...O
+  +4 | ..#.O.#O##O
+  +3 | .######.O.O
+  +2 | .#.yO.#y###
+  +1 | .#O#.O#.O..
+  +0 | .y.#..#O..O
+  -1 | .#.#OO####y
+  -2 | .#.bOO#....
+  -3 | O######O###
+  -4 | ..#O.O#.#..
+  -5 | ..y.O.y...<
+
+objects:  (x, y, prefab, note)
+  +5 +5  Key_Yellow                 ID29
+  -1 +4  Merchant                   ID19
+  +2 +4  Enemy_ID151                ID151
+  +5 +4  Gem_Defense                ID35
+  +3 +3  Enemy_ID149                ID149
+  +5 +3  Key_Yellow                 ID29
+  -1 +2  Enemy_ID151                ID151
+  -3 +1  Enemy_ID147                ID147
+  +0 +1  Enemy_ID153                ID153
+  +3 +1  Enemy_ID153                ID153
+  +2 +0  Key_Yellow                 ID29
+  +5 +0  Enemy_ID147                ID147
+  -1 -1  Key_Blue                   ID31
+  +0 -1  Key_Yellow                 ID29
+  -1 -2  Gem_Attack                 ID34
+  +0 -2  Gem_Defense                ID35
+  -5 -3  Enemy_ID151                ID151
+  +2 -3  Enemy_ID149                ID149
+  -2 -4  Potion_Red                 ID32
+  +0 -4  Gem_Attack                 ID34
+  -1 -5  Enemy_ID153                ID153

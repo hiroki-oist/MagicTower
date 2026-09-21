@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
   m_Name: Enemy_SkeletonWorrior
   m_EditorClassIdentifier: 
-  name: "\u9AB8\u9AA8\u6226\u58EB"
+  name: "\u30B9\u30B1\u30EB\u30C8\u30F3\uFF22"
   maxHP: 55
   attack: 52
   defense: 12

@@ -24,8 +24,11 @@ public class BattleSystem : MonoBehaviour
     public UnityAction OnBattleOver;
     public float fadeInTime = 1.0f;
 
+    /// <summary>直前の戦闘にプレーヤーが勝ったか。決着後に GameController が参照する。</summary>
+    public bool PlayerWon { get; private set; }
+
     public void BattleStart(Battler player, Battler enemy){
-        // state = State.Start;
+        PlayerWon = false;
         SetupBattle(player, enemy);
         state = State.StartTurns;
     }
@@ -60,7 +63,8 @@ public class BattleSystem : MonoBehaviour
 
             if (playerBattleUnit.Battler.HP <= 0)
             {
-                Debug.Log("あなたはやられてしまった。。");
+                // 原典のメッセージ: 「生命力がなくなりました。再挑戦してください。」
+                PlayerWon = false;
                 state = State.BattleOver;
             } else {
                 state = State.StartTurns;
@@ -69,6 +73,7 @@ public class BattleSystem : MonoBehaviour
         
     }
     private void HandlePlayerWin(BattleUnit playerBattleUnit, BattleUnit enemyTargetUnit){
+        PlayerWon = true;
         playerBattleUnit.Battler.EarnCoin(enemyTargetUnit.Battler);
         playerBattleUnit.UpdateCoinUI();
         state = State.BattleOver;

@@ -11,3 +11,20 @@ Temp
 UserSettings
 *.meta
 *.sln
+# --- ここから下は Claude が追記（61:45） ---
+# ビルド成果物（523MB）
+Build/
+mono_crash.*.json
+
+# 原典そのもののファイルと、そこから直に起こしたもの。
+# リメイクは権利者の許諾を得ているが、**原典のデータやその逆アセンブルを
+# 公開リポジトリへ置くのは別の話**なので、解析の「結果の表」だけを残して
+# 元データは手元に置く。必要になったらこの行を消せば入る。
+docs/original/disk/
+docs/original/p58png/
+docs/original/sound_wav/
+docs/original/frame2/
+docs/original/video_tiles/
+docs/original/*.raw
+docs/MTE_disasm.txt
+docs/original/MTE.DOC

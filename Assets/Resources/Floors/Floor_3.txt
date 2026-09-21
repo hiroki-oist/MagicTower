@@ -1,0 +1,46 @@
+# Floor 3
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 447 / meta=[4, 109, 99]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | OO#OOO#.#.O
+  +4 | .O#OOO#.yO.
+  +3 | O.#OOO#.###
+  +2 | y###.##.#.O
+  +1 | ..O...O....
+  +0 | y##...#.###
+  -1 | O.##.##.#.O
+  -2 | .O#...#.yOO
+  -3 | OO#...#.###
+  -4 | ####.##O#..
+  -5 | <.....#.y.>
+
+objects:  (x, y, prefab, note)
+  -5 +5  Key_Yellow                 ID29
+  -4 +5  Gem_Defense                ID35
+  -2 +5  Key_Yellow                 ID29
+  -1 +5  Potion_Blue                ID33
+  +0 +5  Key_Yellow                 ID29
+  +5 +5  Potion_Red                 ID32
+  -4 +4  Potion_Red                 ID32
+  -2 +4  Potion_Blue                ID33
+  -1 +4  Key_Yellow                 ID29
+  +0 +4  Potion_Blue                ID33
+  +4 +4  Enemy_Bat                  ID67
+  -5 +3  Enemy_Apprentice           ID69
+  -2 +3  Key_Yellow                 ID29
+  -1 +3  Key_Blue                   ID31
+  +0 +3  Key_Yellow                 ID29
+  +5 +2  Master                     ID25
+  -3 +1  Enemy_Bat                  ID67
+  +1 +1  Enemy_SlimeG               ID61
+  -5 -1  Enemy_Skeleton             ID77
+  +5 -1  Potion_Red                 ID32
+  -4 -2  Key_Yellow                 ID29
+  +4 -2  Enemy_Apprentice           ID69
+  +5 -2  Key_Yellow                 ID29
+  -5 -3  Potion_Red                 ID32
+  -4 -3  Gem_Attack                 ID34
+  +2 -4  Enemy_SlimeR               ID63

@@ -1,0 +1,46 @@
+# Floor 32
+grid: 11x11  x:-5..5  y:-5..5
+# 出典: PC98版 INITIAL.DAT（原典）word offset 4043 / meta=[33, 9, 1]
+
+terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
+          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
+
+  +5 | O.b.......>
+  +4 | .O###.###..
+  +3 | y##.y.y.###
+  +2 | O.O.#.#O#OO
+  +1 | .O.O#.#.y.O
+  +0 | #####O#.###
+  -1 | OOOO#.#O#OO
+  -2 | ...O#.#.y.O
+  -3 | #s###.#####
+  -4 | O.O#...#OOO
+  -5 | .....<.O...
+
+objects:  (x, y, prefab, note)
+  -5 +5  Gem_Defense                ID35
+  -4 +4  Gem_Attack                 ID34
+  -5 +2  Enemy_GreatZombieSoldier   ID139
+  -3 +2  Enemy_MozaikuMan           ID143
+  +2 +2  Enemy_GreatZombie          ID141
+  +4 +2  Key_Yellow                 ID29
+  +5 +2  Potion_Blue                ID33
+  -4 +1  Key_Yellow                 ID29
+  -2 +1  Enemy_MozaikuMan           ID143
+  +5 +1  Key_Yellow                 ID29
+  +0 +0  Enemy_Worrior              ID133
+  -5 -1  Key_Yellow                 ID29
+  -4 -1  Key_Yellow                 ID29
+  -3 -1  Key_Yellow                 ID29
+  -2 -1  Key_Yellow                 ID29
+  +2 -1  Enemy_GreatWorrior         ID135
+  +4 -1  Key_Yellow                 ID29
+  +5 -1  Key_Blue                   ID31
+  -2 -2  Key_Blue                   ID31
+  +5 -2  Key_Yellow                 ID29
+  -5 -4  Enemy_GreatGuardian        ID75
+  -3 -4  Enemy_GreatGuardian        ID75
+  +3 -4  Vendor                     ID15
+  +4 -4  Shop_Altar                 ID16
+  +5 -4  Shop_Altar                 ID17
+  +2 -5  Enemy_GreatZombie          ID141

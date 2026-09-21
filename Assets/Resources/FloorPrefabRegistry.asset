@@ -1,0 +1,165 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8df5d129f2c0ae791cd291eb279f1d35, type: 3}
+  m_Name: FloorPrefabRegistry
+  m_EditorClassIdentifier: 
+  entries:
+  - key: Wall
+    prefab: {fileID: 1202224252037734103, guid: 95f8fe02e1a744c729b995763e3bd7c1, type: 3}
+  - key: SecretWall
+    prefab: {fileID: 3599185956571280089, guid: 959086ef14eed4cf48b0e5d5750ce348, type: 3}
+  - key: Magma
+    prefab: {fileID: 6932945408463971422, guid: 9ddbe2c33001f4b62a00afad24b790af, type: 3}
+  - key: Floor
+    prefab: {fileID: 802394082654749007, guid: 9452ec97a1aab465fbe4da9aa6bf9d31, type: 3}
+  - key: StairsUp
+    prefab: {fileID: 5021434315847584788, guid: 51dee547941b04e3ab222a06080145a0, type: 3}
+  - key: StairsDown
+    prefab: {fileID: 5058817054871429997, guid: 5ec6cd5d69dc44d86a0eeec1791bb017, type: 3}
+  - key: LockYellow
+    prefab: {fileID: 9213810528131241186, guid: c67076bb8f9414c538a15b4ed7c278bf, type: 3}
+  - key: LockPurple
+    prefab: {fileID: 5314614932883867799, guid: 9f2341fbdb709433b844b693d38d685e, type: 3}
+  - key: LockRed
+    prefab: {fileID: 9135025774666957443, guid: 0a94ba411d9974394b4efe442b0cec66, type: 3}
+  - key: LockSealed
+    prefab: {fileID: 660245660508318283, guid: efb4b6112045241179bf78b03a4fefda, type: 3}
+  - key: LockSpecial
+    prefab: {fileID: 1741549826888390296, guid: fa06d5d15f1964b23bc0e0962cb0b4b7, type: 3}
+  - key: Void
+    prefab: {fileID: 681399464502979449, guid: 10a5c97b738b9cf8035b084a1331fd8c, type: 3}
+  - key: Ball_Destruction
+    prefab: {fileID: 131663920570755343, guid: d3c1a08faa8ced8dcbdb08214e88c6db, type: 3}
+  - key: Boss_Dragon
+    prefab: {fileID: 911995691013459804, guid: ce2e32d1e86bcfa49532fe71942bf7d6, type: 3}
+  - key: Boss_GiantOctopus
+    prefab: {fileID: 515342546905771489, guid: 1544f066734f22f1d0bbdf786f5d58c3, type: 3}
+  - key: Cross
+    prefab: {fileID: 175948141230503966, guid: f2fbc100334b5cf2a803d90704b7f0da, type: 3}
+  - key: Enemy_Apprentice
+    prefab: {fileID: 8770718213249853786, guid: 236d84307e8414b3488dbf9caa7fb439, type: 3}
+  - key: Enemy_Bat
+    prefab: {fileID: 1447534751011455481, guid: 0bcfa335da85b4a589d5bb706548dfb0, type: 3}
+  - key: Enemy_BossSkeleton
+    prefab: {fileID: 4459729827818140448, guid: 18eb27644fd134c8ebbf97dce9995167, type: 3}
+  - key: Enemy_GreatBat
+    prefab: {fileID: 1080975443258828130, guid: c4167cace5d3c49f9b353c323c264602, type: 3}
+  - key: Enemy_GreatGuardian
+    prefab: {fileID: 2327020377100578278, guid: eb498ffaa1ca24c0698ce7a1232eb637, type: 3}
+  - key: Enemy_GreatWorrior
+    prefab: {fileID: 6106378431357527602, guid: ccaf2b8c9c21741029be459aa5c0373f, type: 3}
+  - key: Enemy_GreatZombie
+    prefab: {fileID: 4655966982615126874, guid: 4e4caf797dfa94918bf1ec2059b904fd, type: 3}
+  - key: Enemy_GreatZombieSoldier
+    prefab: {fileID: 3896178054492814597, guid: 144f153ca84754a1ca2af5e129761716, type: 3}
+  - key: Enemy_Guardian
+    prefab: {fileID: 4089281335867978017, guid: b73767fb56d64439183a9bc238aff457, type: 3}
+  - key: Enemy_ID147
+    prefab: {fileID: 832840105135112860, guid: a107b02e2e54ad7fc4ccd93f344335cf, type: 3}
+  - key: Enemy_ID149
+    prefab: {fileID: 938727465889005713, guid: 0558c07933dd55868f87f8dcba2855c7, type: 3}
+  - key: Enemy_ID151
+    prefab: {fileID: 47743230814815487, guid: 83623f075f50b9bca77c0e18adbe4344, type: 3}
+  - key: Enemy_ID153
+    prefab: {fileID: 424348189414748311, guid: c86959099bf1f0bb384971217b6e94bf, type: 3}
+  - key: Enemy_ID155
+    prefab: {fileID: 407812634656709107, guid: c2d91b87441fca9c7723522501c2785b, type: 3}
+  - key: Enemy_ID157
+    prefab: {fileID: 1022501096027680864, guid: ad5004ff7c58220bf3adabc51fa513c3, type: 3}
+  - key: Enemy_ID93
+    prefab: {fileID: 464361769463202811, guid: 16405de3225f9bc3c8f5473cf4edd37a, type: 3}
+  - key: Enemy_KingMagician
+    prefab: {fileID: 6350727373102248461, guid: 46548dbea484848688c4f94f31ce8c0b, type: 3}
+  - key: Enemy_Magician
+    prefab: {fileID: 6723953517076490381, guid: aa1b875f9f65948b995c9744e5c0dbb5, type: 3}
+  - key: Enemy_MozaikuMan
+    prefab: {fileID: 4092257612774417446, guid: 5d3d14a4614cd4470836013416ab57b6, type: 3}
+  - key: Enemy_Rock
+    prefab: {fileID: 4267340408592901300, guid: 2d54d0e24085749d8b8b503ef45ae3a1, type: 3}
+  - key: Enemy_Samurai
+    prefab: {fileID: 7837102611888365098, guid: e10121f4855304fc0a55ba5c187f2a30, type: 3}
+  - key: Enemy_Skeleton
+    prefab: {fileID: 3369337682598401876, guid: 4aa565186c92f4d45b06020a3422dfe2, type: 3}
+  - key: Enemy_SkeletonWorrior
+    prefab: {fileID: 346236384816978317, guid: 6fd0bb0d48f564141bfadaa8ac7385b5, type: 3}
+  - key: Enemy_SlimeB
+    prefab: {fileID: 2396799724211604997, guid: 72d660b402a83487ebda61a4607554dd, type: 3}
+  - key: Enemy_SlimeG
+    prefab: {fileID: 6510999897226577945, guid: a2cc360e08bf94e44846a5ec6d1b55b7, type: 3}
+  - key: Enemy_SlimeR
+    prefab: {fileID: 2563143353062916848, guid: cea2ea91d444447399a4724058fac807, type: 3}
+  - key: Enemy_Worrior
+    prefab: {fileID: 4513055132831473628, guid: a92512c2b513c4d2089f77897efccf5b, type: 3}
+  - key: Enemy_Zombie
+    prefab: {fileID: 3236057369636735986, guid: e9e6c2da6a87243f4b4eb24d843f5990, type: 3}
+  - key: Enemy_ZombieWorrior
+    prefab: {fileID: 8141472806100993606, guid: bf36483ff16884604968d2922bcb069f, type: 3}
+  - key: Gem_Attack
+    prefab: {fileID: 8179407737910667048, guid: f290975b6859e49c9a02f27b75f50074, type: 3}
+  - key: Gem_Defense
+    prefab: {fileID: 6971843114447649890, guid: 0919a0ca45a124b798159acdb179cb20, type: 3}
+  - key: Key_Blue
+    prefab: {fileID: 6887953915764911648, guid: f06cc1a6cac83446ea50fc6cb8b3af49, type: 3}
+  - key: Key_Magic
+    prefab: {fileID: 278769598637750427, guid: 79ed6b5ed13b27fb8f976a415de0a2b4, type: 3}
+  - key: Key_Red
+    prefab: {fileID: 4872651211042783946, guid: c37dda192ede740769ffe914dafcc84b, type: 3}
+  - key: Key_Yellow
+    prefab: {fileID: 2409326438864433437, guid: f742e52a0c44940c9bd9d6345d21adc2, type: 3}
+  - key: Marker_ID10
+    prefab: {fileID: 523661145237511166, guid: 620fe4b7b09b77e4820820db40ff82d6, type: 3}
+  - key: Marker_ID7
+    prefab: {fileID: 457666100263942523, guid: e5cecf472e99900c97c7112dae33570b, type: 3}
+  - key: Master
+    prefab: {fileID: 2293725780674138905, guid: d15ab4514aa38435d9db894317da3cbe, type: 3}
+  - key: Merchant
+    prefab: {fileID: 4501489131498922689, guid: d0ed86afe75e64bd1bf7046ee21910f8, type: 3}
+  - key: Mikata
+    prefab: {fileID: 8305752889916259024, guid: 20dd52aef4e694022aa918a3664be255, type: 3}
+  - key: Orb_Flight
+    prefab: {fileID: 426318473293438434, guid: ef3e1996b435b8368d5a2d81c5fa291e, type: 3}
+  - key: Orb_Wisdom
+    prefab: {fileID: 462168532284673536, guid: f40e6fff243b98eba21e1f17217c3ac2, type: 3}
+  - key: Potion_Blue
+    prefab: {fileID: 6684277416900795353, guid: 899548a337e944c4f9587fc8fedeb208, type: 3}
+  - key: Potion_Red
+    prefab: {fileID: 5329814359916014185, guid: d3d48ce2a0e894eb49c85cdc6cfcdce1, type: 3}
+  - key: Princess
+    prefab: {fileID: 3308071535113552172, guid: 405db0c0292284df18e3380406f79af4, type: 3}
+  - key: Shield_1
+    prefab: {fileID: 869650273035404343, guid: 219bcd20224846de621025276bfdcc16, type: 3}
+  - key: Shield_2
+    prefab: {fileID: 353086147316727829, guid: 61423e6be7306d9e31df074bbdef99b8, type: 3}
+  - key: Shield_3
+    prefab: {fileID: 497461402326375602, guid: 47469252ae311bbcefa623a6643ef83b, type: 3}
+  - key: Shield_4
+    prefab: {fileID: 727509925401355130, guid: c7eaba0bed328dbea38b632542966f74, type: 3}
+  - key: Shield_5
+    prefab: {fileID: 229563309977680104, guid: c8fed71c2bdf8cc09b83a4bcf8832781, type: 3}
+  - key: Shop_Altar
+    prefab: {fileID: 614990742389561087, guid: a9773fc83492d9db0671e3d43e92d089, type: 3}
+  - key: Sword_1
+    prefab: {fileID: 417030703006161096, guid: f0c921d34584de95422e61176f6d14b2, type: 3}
+  - key: Sword_2
+    prefab: {fileID: 1010941439328734963, guid: 49bb5ae730e87ae527218fd859eb54ea, type: 3}
+  - key: Sword_3
+    prefab: {fileID: 719484652354367943, guid: dcca76ba1416638848365b6f64532f78, type: 3}
+  - key: Sword_4
+    prefab: {fileID: 351912070178318903, guid: 5725981b15d135c29d6d22b8ef0da070, type: 3}
+  - key: Sword_5
+    prefab: {fileID: 733889050750333291, guid: de47d56456e252cb4a2b017d9d70d72e, type: 3}
+  - key: Vendor
+    prefab: {fileID: 4773468787853144955, guid: 593e3bbb1ffc44bfaa9275482742d3a3, type: 3}
+  - key: Wing_Down
+    prefab: {fileID: 395894884577520964, guid: a1c129473f74331f162c980a027b7701, type: 3}
+  - key: Wing_Up
+    prefab: {fileID: 331231957573183309, guid: 5259aea41c471d1122e3043973ff5e2e, type: 3}
