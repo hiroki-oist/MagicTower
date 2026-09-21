@@ -61,8 +61,22 @@ public static class TowerSceneBuilder
         // プレーヤーの見た目。原典は PLAYER1.P58 / PLAYER2.P58 の2コマを
         // まとめて渡して描いている（`push 0x7e90; push 0x7d00; lcall 0x68b, 0x40d6`、10か所）。
         // その1コマ目を使う。
+        // 音を鳴らす役。本線が積んだ音を毎手引き取る。
+        // 鳴らす口（曲用と効果音用）もここで作って繋いでおく。
+        // `SoundPlayer` は自分でも用意できるが、シーンを見ただけで分かるようにする。
+        var sound = tower.AddComponent<SoundPlayer>();
+        var music = tower.AddComponent<AudioSource>();
+        music.loop = true; music.playOnAwake = false;
+        var effects = tower.AddComponent<AudioSource>();
+        effects.playOnAwake = false;
+        var sso = new SerializedObject(sound);
+        sso.FindProperty("musicSource").objectReferenceValue = music;
+        sso.FindProperty("effectSource").objectReferenceValue = effects;
+        sso.ApplyModifiedPropertiesWithoutUndo();
+
         var cso = new SerializedObject(controller);
         cso.FindProperty("loader").objectReferenceValue = loader;
+        cso.FindProperty("sound").objectReferenceValue = sound;
         var sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Effects/Player_0.png");
         if (sprite != null) cso.FindProperty("playerSprite").objectReferenceValue = sprite;
         cso.ApplyModifiedPropertiesWithoutUndo();

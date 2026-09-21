@@ -638,6 +638,10 @@ chk(_fl.count("Application.isPlaying")>=2,
     "マスの作り直しも片付けも、遊び中とエディタで消し方を分ける")
 _flt=open("Assets/Tests/Editor/FloorLoaderTests.cs",encoding="utf-8").read()
 chk("プレハブ未登録" in _flt,"組み立ての警告（未登録プレハブ）を拾う検査がある")
+_swt=open("Assets/Tests/Editor/SceneWiringTests.cs",encoding="utf-8").read()
+chk("SerializedPropertyType.ObjectReference" in _swt,"シーンの配線の抜けを見る検査がある")
+_sceneT=open("Assets/Scenes/Tower.unity",encoding="utf-8",errors="ignore").read()
+chk("AudioSource" in _sceneT,"シーンに鳴らす口（AudioSource）が置いてある")
 
 print("\n【9w】できごとと音の結び付き（Resources/SoundCues.txt）")
 _cue={}
@@ -1275,7 +1279,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=493
+MIN_CHECKS=495
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
