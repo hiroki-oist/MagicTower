@@ -1,0 +1,159 @@
+# 書き出すタイルの一覧 — 「物体ID | ファイル名のうしろ | GUID」
+#
+# `docs/p58_to_tiles.py` はここに載っているものを
+# `Assets/Sprites/Tiles/<ID3桁>_<名前>.png` として作る（無ければ作り、あれば中身を入れ直す）。
+#
+# **GUID をここに控えてあるのが肝**。`.meta` は公開リポジトリに入れていない
+# （`.gitignore` の `*.meta`）ので、控えが無いと作り直したときに別のGUIDになり、
+# プレハブとシーンの参照が全部切れる。作り直しは `docs/rebuild_assets.sh`。
+#
+# 名前は動画から切り出したときの呼び名のままで、**`ObjectIds.txt` と食い違うものがある**
+# （とくに剣の 052〜055）。引くときは必ず頭3桁のIDで引くこと。
+# 末尾 `_b` は2コマ目（原典の表 DS:0x80a で隣に並ぶIDの絵。名前は1コマ目に合わせてある）。
+#
+# 形式: ID | 名前 | GUID
+  1 | Lock_Yellow | 282f140ccd7d2e0c9712fabbc912062c
+  2 | Lock_Purple | 585398601e4ea4b13f3306763c904b86
+  3 | Lock_Red | ca641924db6ceb334a3f1b4d9ab1210d
+  4 | Lock_Sealed | ad339b2c88bb513daea569e15489c89b
+  5 | Lock_Special | b89a2b8d9a3583165e5cadf4b6e60bbf
+  6 | Floor | 5b9692a2f6edf54e5c88acd95a8042fa
+  7 | Floor_ID7 | 7de54518f55a1349b665c30b955df812
+  8 | Wall | c4027ae76111aeaf3d2d624045d553a6
+  9 | Wall_Secret_A | eb05935bc2c67ff7f4293114ab6c466b
+ 10 | Wall_Secret_B | 165144fd1470c2424b127bab29b14eed
+ 11 | Stairs_Up | 1928d31139caee210a3e0cab364f4b81
+ 12 | Stairs_Down | 7352deecad9382a7f1143f540fc559a6
+ 13 | Magma | 8e4b4e91e1876a72aeee47247c25828a
+ 14 | Void | 571ed6d8373f2e54051ca6de24b73361
+ 15 | Shop_Altar_L | 870e98b35208025492ace036f4a84a94
+ 16 | Shop_Altar_C | 02f0061400a256d7a5dcc7bcb3fac128
+ 17 | Shop_Altar_R | 95e0a9d67fac66503ac38764a1dfa754
+ 19 | Merchant | 87500d2c959042884328a5d8db528bb1
+ 20 | Merchant_b | d55fb7a407884cc5ace76585930195c8
+ 21 | Mikata | a92b4f53d7b664dcc5a202a1cbbb4c1c
+ 22 | Mikata_b | 21d2b5d386dd4c64b27eb9bd25b148f5
+ 23 | Fairy | 4f667cba873fe909d2bb482dbf92f051
+ 24 | Fairy_b | b7c676fa904c245f58885e62a6853b84
+ 25 | Master | 1f38c3dbf00322297bbbb33b00fac07f
+ 26 | Master_b | 86f541e44b6a46cf91513302ab31764b
+ 27 | Princess | b32cfd221a7cb875e11affc1d0de3dee
+ 28 | Princess_b | bcde09081f9d43b5b400555c3fc6c50b
+ 29 | Key_Yellow | 733ecbdddc4484253f823c63c21dd87c
+ 30 | Key_Red | d0750c1c8348ade647280b6324a40b59
+ 31 | Key_Purple | 9b7bf16c785e7f76bcc414c576d95f7f
+ 32 | Potion_Red | 7b812e492ef2f9333f6d6bad8956d03c
+ 33 | Potion_Blue | 1df700defbecae2ccaeb9a07a1596db7
+ 34 | Crystal_Red | 366689e31475481f4a280d9fafb8e053
+ 35 | Crystal_Blue | 2728751dc3e7a67749cfd37080fcbb29
+ 36 | Orb_Hero | aab3a6f212f644daa2820fd7403b2ea5
+ 37 | Orb_B | c5fb181aae812faac9fd4ecc7804e39e
+ 38 | Orb_A | 1aa6080941ca761a924d9724b8495b74
+ 39 | Cross | 9ab44567e325444fa02a9023832a42f4
+ 40 | Elixir | 24a908c1eb47431fb5db4fea430cefcc
+ 41 | Matock | 2689017716e74fca803f48c5378c8da7
+ 42 | Orb_C | c37b115825c01c7dee07a970ffb1d4a7
+ 43 | Relic_Teleport | 10218d59895249b79e4f4c63d5acf930
+ 44 | Matock | 6563a5551728a9b6f68ae14d0090f723
+ 45 | Wing_Down | d0c54b0400b248af9b2d31c31b99dfe0
+ 46 | Sword_Dragon | 7ea633f323f248e2b45a8226bab4e0c6
+ 47 | Crystal_Snow | 7885794ce7ca4603bdba15612ff051cf
+ 48 | SpecialKey | c98395d3ce9d63533f423232c0755f12
+ 49 | Matock_Super | efd3730a7e9a485da2d10ede53e37f6d
+ 50 | Coin_Lucky | 0695b1659a7142658b12a7702374f13a
+ 51 | Sword_1 | ec1d86dee9228c3cb9dc91f6ec4b16df
+ 52 | Sword_3 | 7cae298765ada8d6fd7ae4c6a138d97f
+ 53 | Sword_4 | 1fae4dd3279f33c4f48de6eeb272e879
+ 54 | Sword_5 | caaf2fa097d1a38c6e97b1dbae031f22
+ 55 | Sword_2 | 2bd4f4f2102c90040038c0477b216dcd
+ 56 | Shield_1 | 94fc122658589565c72795fdff712c84
+ 57 | Shield_2 | 53407ad0865de3d937b1706cd95068b7
+ 58 | Shield_3 | 338b747658c8c1a82d07d2591eb99b24
+ 59 | Shield_4 | 15bdc9e0a120a0b9cb7b377f09bad0ec
+ 60 | Shield_5 | 32014709d6aa4a03adbf26975b970fc9
+ 61 | Enemy_SlimeG | 846dbfd840e3714ab953c43ea780ac53
+ 62 | Enemy_SlimeG_b | d5095ff82fae45babf5df6409748608e
+ 63 | Enemy_SlimeR | cce472e2c1ad2b51a9514ed87e042958
+ 64 | Enemy_SlimeR_b | f5eb5aaba3184c4dbfb9e0219bf9603d
+ 65 | Enemy_SlimeB | 4c9c5bd71a68b6f318e3ae24d4269e6f
+ 66 | Enemy_SlimeB_b | d7848753963a47709010d37a9a785058
+ 67 | Enemy_Bat | b8c4abf395053d8c3f1f90bac273dfca
+ 68 | Enemy_Bat_b | f1e7ce20f001468d916c8fc2b0a2bf25
+ 69 | Enemy_Apprentice | e789e8e6877b47807fe8378045f5afbc
+ 70 | Enemy_Apprentice_b | 0a2dac9eb36241fa8fe8a151dfd29689
+ 71 | Enemy_Magician | 2e5d7a61be4778d1124ca9e24788f0cf
+ 72 | Enemy_Magician_b | e781365577924c9c9bcb2130479165a0
+ 73 | Enemy_Guardian | a82f42ee3fd91dad3a7576ba18853616
+ 74 | Enemy_Guardian_b | 0a0e1806e83f4a47b81bf536c5660082
+ 75 | Enemy_GreatGuardian | 6f9e98205d1b0dd8458b7f7e58c072f5
+ 76 | Enemy_GreatGuardian_b | 69fa935be06545a096b763e653dc65a4
+ 77 | Enemy_Skeleton | 30c19cfc480c505a2232e2bc88fbdb70
+ 78 | Enemy_Skeleton_b | 57c1c19cecd0406ab86831f80dd891f2
+ 79 | Enemy_SkeletonWorrior | b10b91903a76f6e98be89e7ed0c6b3b1
+ 80 | Enemy_SkeletonWorrior_b | f73f57d9cf7e4d7fbb82431c262cd625
+ 81 | Enemy_BossSkeleton | 965a21573ab264c3d53650776fd49d74
+ 82 | Enemy_BossSkeleton_b | 87cdfc7db6aa47fd97c6453d51cd20c3
+ 83 | Enemy_GreatBat | 76d2f0daa7919892b71b5d20e4ba102c
+ 84 | Enemy_GreatBat_b | 5c182349a72548df9aa4927de0710504
+ 85 | Enemy_Zombie | 786921e8133ebcc5f3fd7d9c387e395f
+ 86 | Enemy_Zombie_b | 8c840d4617f04b06931c44372aecbb0f
+ 87 | Enemy_ZombieWorrior | 9ebd838519ee732c067c296a9e2ac3a3
+ 88 | Enemy_ZombieWorrior_b | f69f486efc5441acbd12f1eb7519cb36
+ 89 | Enemy_Rock | dee5890a146818e1b0995452cfc458ec
+ 90 | Enemy_Rock_b | caf63e33e77c4fc5a7f0b74b28469d96
+ 91 | Enemy_Zeno | a628d1d34de84fd5ad7f4d022bb7a74b
+ 92 | Enemy_Zeno_b | 4275149b18e0e4d74a20941fa5b30bb2
+ 93 | Enemy_ID93 | 7670155bc250cd8d43742f9a2672b914
+ 94 | Enemy_ID93_b | 70baae7151214b33a3714b7cec9436fc
+ 95 | Enemy_Vampire | ac321a36a365486f90b07a7ee85029af
+ 96 | Enemy_Vampire_b | 9fe85d33045f34c31bf2f4ad9ea92978
+ 97 | Boss_GiantOctopus_0 | 11ebee11d0a73545269e8339f9db0767
+ 98 | Boss_GiantOctopus_1 | 7fcabe74aaf323f450e88c9431a221c9
+ 99 | Boss_GiantOctopus_2 | 45d6542956f1815759296862281a2100
+100 | Boss_GiantOctopus_3 | d12e0191a9743d12d46955104a05e629
+101 | Boss_GiantOctopus_4 | 7245f91e52c95d071888ca693de40497
+102 | Boss_GiantOctopus_5 | bc4c2e3300722cd92b190436509c2a53
+103 | Boss_GiantOctopus_6 | 543ef22819192268f32665c794f27c8e
+104 | Boss_GiantOctopus_7 | 4c17ef4247971681a4bd5b6735c21e16
+105 | Boss_GiantOctopus_8 | 4f43442e87cfd29b089422a036146182
+115 | Boss_Dragon_0 | f354195a0c45322113bc5a416fb5c980
+116 | Boss_Dragon_1 | d0e2a7d3c74900b8af9a68c53cab6589
+117 | Boss_Dragon_2 | a99f359c6954a4115e818a84c6e1da39
+118 | Boss_Dragon_3 | 4903e39011f5f49b8f93fb978a5e791d
+119 | Boss_Dragon_4 | a3a3c1bebbb50bd23191beefd31594cc
+120 | Boss_Dragon_5 | 388b9dd6d4cf7fc6469b089823ca98c0
+121 | Boss_Dragon_6 | 2cefb4539a16887a045578fa7249c290
+122 | Boss_Dragon_7 | 96a242c760b2331a0d75073a63254c1a
+123 | Boss_Dragon_8 | 0768b29cc76b4891e0f6b5b8b4f53291
+133 | Enemy_Worrior | 53575a1f81e2ca4a79f1531b5cef4c8b
+134 | Enemy_Worrior_b | 1e77f76a661c48fa872e8de2163b12b8
+135 | Enemy_GreatWorrior | 7363d811803982ec0b4c28667e954477
+136 | Enemy_GreatWorrior_b | ffd1b18a23a54db2a958eab7d843b7e0
+137 | Enemy_Samurai | cfbc4e045cbbb5f58b484036bec182bf
+138 | Enemy_Samurai_b | e0045fcdcad94638ae1505d3a0240dcd
+139 | Enemy_GreatZombieSoldier | a4dbcb645d0cf4765a57f17e4a297d8a
+140 | Enemy_GreatZombieSoldier_b | 4543af325a9d497988cb1542492deefc
+141 | Enemy_GreatZombie | 24f4c8ae20d7c24410a94baef72d9ad7
+142 | Enemy_GreatZombie_b | 1e994a9e19b4416eb1e4f81cfd308efb
+143 | Enemy_MozaikuMan | 38c1152149eae80bef656e9345024e9e
+144 | Enemy_MozaikuMan_b | 8602f5f4eae343a988da3d9eecc29d72
+145 | Enemy_KingMagician | ddc6df9187d2fdb6ec354dcca0ebd2e6
+146 | Enemy_KingMagician_b | ac56f0aee5a94ee8b56023eaf79dc6ed
+147 | Enemy_ID147 | 135d1830f79893edf1b5c00c501ddc35
+148 | Enemy_ID147_b | df8def3c5346440bbcb27160122e70f1
+149 | Enemy_ID149 | df18c07bd1b24f6e92ab8154edb2690e
+150 | Enemy_ID149_b | ab3274270dda480c949a6f5ba50b13e5
+151 | Enemy_ID151 | f1bb7a6a7e781993579b6b92f66432a5
+152 | Enemy_ID151_b | f252ac06a8ba4ec2a285127732cfb594
+153 | Enemy_ID153 | 067bcd4026f5b3045ae80f7381a6eb4c
+154 | Enemy_ID153_b | 09f551a75d49422dbd6ced79251e38d4
+155 | Enemy_ID155 | 5f3dea5e83d2e72e65b53f66191440e3
+156 | Enemy_ID155_b | 173c823806b04067910a0f17be60cc4c
+157 | Enemy_ID157 | a2aac88ddda365a1a6cf77cbbcb6e517
+158 | Enemy_ID157_b | 1065fa8082da40f09a8d5d56489bf45a
+900 | Boss_Dragon | b51da1c9a115adbdbc0d80e611702236
+900 | Boss_Dragon_b | ece0a885646a46c6b241aade910259a6
+901 | Boss_GiantOctopus | ad6fb7a524d246a838bcfd058b443cad
+901 | Boss_GiantOctopus_b | 1ecf97f85e7a4fc4a08bcd21d30b60d6
+902 | Shop_Altar | 1f7a359cc1aca217326422a4540ba901
+902 | Shop_Altar_b | a9adb3757d8d49dbb3afbba99d03a2d7

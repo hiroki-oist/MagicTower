@@ -153,24 +153,62 @@ def composite(sp, base, cols, rows):
     return out
 
 
-# 盤面のデータ（INITIAL.DAT）には一度も出ないが、**できごとで現れる**ので絵が要るもの。
-# 動画にも写らないので切り出しが無く、ここで原典から直に書き出す。
-#   ID23 妖精 … 10階の解錠で現れて、その場で採点して消える
-#   ID41 マトック / ID46 ドラゴンスレイヤー / ID47 雪のクリスタル … 解錠の褒美
-EXTRA = {23: "Fairy", 41: "Matock", 46: "Sword_Dragon", 47: "Crystal_Snow"}
+# 書き出すタイルの一覧は `docs/tile_list.txt`（「物体ID | 名前」）。
+# 動画から切り出した切り出しが手元に無くても、**この一覧と原典の *.P58 だけで
+# 一式を作り直せる**ようにしてある（`docs/rebuild_assets.sh`）。
+
+
+def tile_list():
+    """docs/tile_list.txt を読む。→ {(ID, 名前): GUID}。2コマ目（_b）も含む。"""
+    out = {}
+    for line in open(f"{ROOT}/docs/tile_list.txt", encoding="utf-8"):
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+        cols = [c.strip() for c in line.split("|")]
+        out[(int(cols[0]), cols[1])] = cols[2] if len(cols) > 2 else ""
+    return out
+
+
+def guid_for(oid, name):
+    """控えてある GUID。無ければ名前から作る（新しく足す絵のとき）。"""
+    import hashlib
+    g = tile_list().get((oid, name), "")
+    return g or hashlib.md5(f"MagicTower/tile/{oid}".encode()).hexdigest()
+
+
+def write_meta_if_missing(path, oid):
+    """.meta が無いときだけ作る。**既にあるものは触らない**（GUIDが変わると参照が切れる）。
+
+    GUID は `docs/tile_list.txt` に控えてあるものを使う。`.meta` はリポジトリに
+    入れていないので、控えが無いと作り直したときに参照が全部切れる。
+    """
+    if os.path.exists(path + ".meta"):
+        return
+    name = os.path.basename(path)[:-4].split("_", 1)[1]
+    open(path + ".meta", "w").write(TILE_META.format(guid=guid_for(oid, name)))
 
 
 def write_missing(sp, ks_all):
-    """EXTRA のうちファイルが無いものを作る（.meta も添える）。"""
-    import hashlib
+    """一覧にあってファイルが無いものを作る（.meta も添える）。"""
+    os.makedirs(f"{ROOT}/Assets/Sprites/Tiles", exist_ok=True)
     made = []
-    for oid, name in sorted(EXTRA.items()):
+    for (oid, name) in sorted(tile_list()):
+        if name.endswith("_b"):
+            continue                       # 2コマ目は下の道で作る
         path = f"{ROOT}/Assets/Sprites/Tiles/{oid:03d}_{name}.png"
-        if os.path.exists(path) or oid not in sp:
+        if os.path.exists(path):
             continue
-        write_rgba(path, sp[oid], transparent_border(sp[oid], transparent_index(ks_all.get(oid))))
-        guid = hashlib.md5(f"MagicTower/tile/{oid}".encode()).hexdigest()
-        open(path + ".meta", "w").write(TILE_META.format(guid=guid))
+        if oid in COMPOSITE:
+            base, cols, rows = COMPOSITE[oid]
+            px = composite(sp, base, cols, rows)
+            ks_all[oid] = ks_all.get(base)
+        elif oid in sp:
+            px = sp[oid]
+        else:
+            continue
+        write_rgba(path, px, transparent_border(px, transparent_index(ks_all.get(oid))))
+        write_meta_if_missing(path, oid)
         made.append(os.path.basename(path))
     return made
 
@@ -300,6 +338,7 @@ def main():
                             px[r * 32 + y][c * 32 + x] = src[y][x]
             out = f"{ROOT}/Assets/Sprites/Tiles/{oid:03d}_{name[4:]}_b.png"
             write_rgba(out, px, transparent_border(px))
+            write_meta_if_missing(out, oid)
             frames += 1
             continue
         if oid in boss_parts:
@@ -316,6 +355,7 @@ def main():
         px = sp[nxt]
         out = f"{ROOT}/Assets/Sprites/Tiles/{nxt:03d}_{name[4:]}_b.png"
         write_rgba(out, px, transparent_border(px))
+        write_meta_if_missing(out, nxt)
         frames += 1
     print(f"差し替え {done} 枚 / 対応なし {skipped} 枚 / 2コマ目 {frames} 枚")
 
