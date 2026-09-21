@@ -10,46 +10,52 @@ def chk(ok,label,detail=""):
     print(("  ✓ " if ok else "  ✗ ")+label+(f"  {detail}" if detail else ""))
     if not ok: issues.append(label)
 
-src=open("Assets/Scripts/PlayerController.cs",encoding="utf-8").read()
+src=open("Assets/Scripts/Items/ItemPickup.cs",encoding="utf-8").read()
 
 print("【1】装備の上昇値（原典: 剣盾とも +10/+20/+40/+50/+100）")
-atk=[int(m) for m in re.findall(r"PlayerBattler\.Attack \+= (\d+);",src)]
-dfn=[int(m) for m in re.findall(r"PlayerBattler\.Defense \+= (\d+);",src)]
-chk(atk[:5]==[10,20,40,50,100], "剣の5段階", f"実装={atk[:5]}")
-chk(dfn[:5]==[10,20,40,50,100], "盾の5段階", f"実装={dfn[:5]}")
+_eq=re.search(r"EquipGain = \{ ([^}]+)\}",src).group(1)
+_eq=[int(x) for x in _eq.replace(" ","").split(",") if x]
+chk(_eq==[0,10,20,40,50,100],"剣と盾の5段階（0番目は未装備）",f"実装={_eq}")
+chk(src.count("EquipGain[rank]")==2,"剣も盾も同じ表を引く")
 
-print("\n【2】装備の表示名（原典: 鉄の剣/銀の剣/騎士の剣/聖　剣/神　剣）")
-sw=re.findall(r'swordName\.text = "([^"]+)"',src)
-sh=re.findall(r'shieldName\.text = "([^"]+)"',src)
-chk(sw==["鉄の剣","銀の剣","騎士の剣","聖　剣","神　剣"], "剣の名前", f"実装={sw}")
-chk(sh==["鉄の盾","銀の盾","騎士の盾","聖　盾","神　盾"], "盾の名前", f"実装={sh}")
+print("\n【2】装備の表示名（原典 DS の6文字幅の短縮名）")
+_msg=open("Assets/Resources/Messages.txt",encoding="utf-8").read()
+_sw=[re.search(rf"^panel_sword_{i} \| (.+)$",_msg,re.M).group(1) for i in range(1,6)]
+_sh=[re.search(rf"^panel_shield_{i} \| (.+)$",_msg,re.M).group(1) for i in range(1,6)]
+chk(_sw==["　長剣","　銀の剣","騎士の剣","　聖剣","　神剣"],"剣の名前",f"実装={_sw}")
+chk(_sh==["　鉄の盾","　銀の盾","騎士の盾","　聖盾","　神盾"],"盾の名前",f"実装={_sh}")
 
 print("\n【3】回復薬・クリスタルが階別データ駆動か")
-chk("ItemPowerTable.Instance.ForFloor" in src, "回復薬が階別データ駆動")
-chk(src.count("ItemPowerTable.Instance.ForFloor")>=2, "クリスタルも階別データ駆動")
+chk("power.ForFloor(player.Floor)" in src,"拾ったときの効き目は階別の表から")
+chk(all(k in src for k in ("band.PotionRed","band.PotionBlue",
+                           "band.CrystalAttack","band.CrystalDefense")),
+    "薬2種とクリスタル2種が同じ表を引く")
 
-print("\n【4】初期値（原典: 生命力1000 / 攻撃10 / 防御10 / 金0 / 鍵0,0,0）")
-pl=open("Assets/Resources/Battlers/Player.asset",encoding="utf-8").read()
-g=lambda k:int(re.search(rf"^  {k}: (-?\d+)$",pl,re.M).group(1))
-chk(g("attack")==10,"初期攻撃力",f"実装={g('attack')}")
-chk(g("defense")==10,"初期防御力",f"実装={g('defense')}")
-chk(g("coin")==0,"初期金",f"実装={g('coin')}")
-im=open("Assets/Scripts/Keys/ItemManager.cs",encoding="utf-8").read()
-chk("yellowKey = 0" in im and "blueKey = 0" in im and "redKey = 0" in im,"初期の鍵は0本")
-chk("HP = 1000" in src,"初期生命力1000")
+print("\n【4】初期値（原典: 序章は 1000/100/100・神剣神盾、ゼノのあとは 400/10/10・丸腰）")
+_gs=open("Assets/Scripts/GameStart.cs",encoding="utf-8").read()
+chk("Hp = 1000, Attack = 100, Defense = 100" in _gs,"序章の値")
+chk("SwordRank = 5, ShieldRank = 5" in _gs,"序章は神剣と神盾")
+chk("Hp = 400, Attack = 10, Defense = 10" in _gs,"ゼノに奪われたあとの値")
+chk("SwordRank = 0, ShieldRank = 0" in _gs,"奪われたあとは丸腰")
+_ps=open("Assets/Scripts/PlayerState.cs",encoding="utf-8").read()
+chk("YellowKeys" in _ps and "PurpleKeys" in _ps and "RedKeys" in _ps,"鍵は3種を持つ")
 
 print("\n【5】戦闘規則")
 bt=open("Assets/Scripts/Battle/Battlers/Battler.cs",encoding="utf-8").read()
 chk("Mathf.Max(0, attacker.Attack - Defense)" in bt,"負ダメージのクランプ")
-chk("BattleRules.CanDefeat" in src,"倒せない敵のガード")
+chk("CanDefeat" in open("Assets/Scripts/Battle/BattleRules.cs",encoding="utf-8").read()
+    and "Predict" in open("Assets/Scripts/Battle/TowerBattle.cs",encoding="utf-8").read(),
+    "倒せない敵のガード（Predict が CanWin を返す）")
 br=open("Assets/Scripts/Battle/BattleRules.cs",encoding="utf-8").read()
 chk("EnemyKind.Vampire && (charms & Charms.Cross) == 0) return false" not in br,
     "バンパイアの誤った禁止ルールが無い")
 
 print("\n【6】扉の解錠（原典 MTE.EXE 0x23ee: 種別1の鍵の扉だけが開く。門と特殊扉は触れても開かない）")
-chk("Lock_Yellow" in src and "SetYellowKey(k - 1)" in src,"鍵が足りないときは扉が残る")
-chk('tag == "Lock_Sealed"' not in src.replace("// ",""),"門(Lock_Sealed)は触れても開かない（原典: 属性表の種別1だけが鍵の扉）")
-chk("opened = false" in src and "if (!opened)" in src,"鍵の判定が扉の破棄より先")
+_tp=open("Assets/Scripts/TowerPlayer.cs",encoding="utf-8").read()
+chk("if (keys <= 0) return Make(Outcome.Blocked" in _tp,"鍵が足りないときは扉が残る")
+chk('case "s":' in _tp and 'case "x":' in _tp and "Outcome.Blocked, to, what" in _tp,
+    "門(s)と特殊扉(x)は触れても開かない（原典: 属性表の種別1だけが鍵の扉）")
+chk("keys--;" in _tp and "floor.Clear(at);" in _tp,"鍵を1本使ってからマスを床にする")
 print("\n【6b】鍵の色（原典は 黄・紫・赤。リメイクは Blue を紫の意味で使用）")
 chk("LockPurple" in open("Assets/Scripts/Floor/FloorData.cs",encoding="utf-8").read(),
     "FloorData が紫として扱う")
@@ -82,7 +88,8 @@ chk(_os.path.exists("Assets/Resources/Dialogue.txt"),"セリフ原文のデー�
 chk(_os.path.exists("Assets/Resources/Messages.txt"),"PC98版メッセージのデータ")
 _dlg=open("Assets/Resources/Dialogue.txt",encoding="utf-8").read()
 chk(sum(1 for l in _dlg.splitlines() if l[:1].isdigit())>=98,"セリフ98本以上")
-chk("GameText.Instance.Message" in src,"メッセージがデータ駆動")
+chk("GameText.Instance.Message" in open("Assets/Scripts/TowerGame.cs",
+                                       encoding="utf-8").read(),"メッセージがデータ駆動")
 
 print("\n【7a2】モンスターの表示名（MTE.EXE の nameptr から直接）")
 import struct as _st

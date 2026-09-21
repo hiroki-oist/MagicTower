@@ -59,12 +59,11 @@ public static class TowerSceneBuilder
         rso.ApplyModifiedPropertiesWithoutUndo();
 
         // プレーヤーの見た目。原典は PLAYER1.P58 / PLAYER2.P58 の2コマを
-        // まとめて渡して描いている（`push 0x7e90; push 0x7d00; lcall 0x68b, 0x40d6`、5か所）。
-        // その1コマ目を使う。無ければ以前どおり既存のプレハブから借りる。
+        // まとめて渡して描いている（`push 0x7e90; push 0x7d00; lcall 0x68b, 0x40d6`、10か所）。
+        // その1コマ目を使う。
         var cso = new SerializedObject(controller);
         cso.FindProperty("loader").objectReferenceValue = loader;
-        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Effects/Player_0.png")
-                     ?? FindPlayerSprite();
+        var sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Effects/Player_0.png");
         if (sprite != null) cso.FindProperty("playerSprite").objectReferenceValue = sprite;
         cso.ApplyModifiedPropertiesWithoutUndo();
 
@@ -329,18 +328,4 @@ public static class TowerSceneBuilder
         return t;
     }
 
-    /// <summary>既存の Player プレハブが参照しているスプライトを探す。</summary>
-    static Sprite FindPlayerSprite()
-    {
-        foreach (var guid in AssetDatabase.FindAssets("MTower t:Texture2D"))
-        {
-            var path = AssetDatabase.GUIDToAssetPath(guid);
-            foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path))
-            {
-                var sp = o as Sprite;
-                if (sp != null) return sp;
-            }
-        }
-        return null;
-    }
 }

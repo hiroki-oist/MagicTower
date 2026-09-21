@@ -59,7 +59,6 @@
     <Analyzer Include="/Applications/Unity/Hub/Editor/2022.3.11f1/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets/Scripts/GameController.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorPrefabRegistry.cs" />
     <Compile Include="Assets/Scripts/Floor/PositionEvents.cs" />
     <Compile Include="Assets/Scripts/Ending.cs" />
@@ -77,17 +76,14 @@
     <Compile Include="Assets/Scripts/Items/SoundSynth.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_ExampleScript_01.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMPro_InstructionOverlay.cs" />
-    <Compile Include="Assets/Scripts/Battle/Battlers/PlayerStats.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/VertexShakeB.cs" />
     <Compile Include="Assets/Scripts/UI/TowerHud.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/DropdownSample.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/VertexColorCycler.cs" />
-    <Compile Include="Assets/Scripts/Battle/Battlers/EnemyStats.cs" />
     <Compile Include="Assets/Scripts/UI/MenuWindowView.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/EnvMapAnimator.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorData.cs" />
     <Compile Include="Assets/Scripts/Items/Shop.cs" />
-    <Compile Include="Assets/Scripts/FloorBase.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorConnections.cs" />
     <Compile Include="Assets/Scripts/Battle/Battlers/Battler.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextSelector_A.cs" />
@@ -96,18 +92,14 @@
     <Compile Include="Assets/Scripts/Items/MasterHints.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark01_UGUI.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/SimpleScript.cs" />
-    <Compile Include="Assets/Scripts/SpecialEvents/F10_SpecialEvent.cs" />
     <Compile Include="Assets/Scripts/Items/TowerNpc.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark04.cs" />
     <Compile Include="Assets/Scripts/Items/SoundVoices.cs" />
     <Compile Include="Assets/Scripts/Battle/BattleRules.cs" />
-    <Compile Include="Assets/Scripts/Battle/BattleSystem.cs" />
     <Compile Include="Assets/Scripts/Floor/SealedDoors.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/ChatController.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/ObjectSpin.cs" />
-    <Compile Include="Assets/Scripts/LoadObjectManager.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_PhoneNumberValidator.cs" />
-    <Compile Include="Assets/Scripts/Battle/BattleManager.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorState.cs" />
     <Compile Include="Assets/Scripts/Items/SoundBank.cs" />
     <Compile Include="Assets/Scripts/Items/SpecialItems.cs" />
@@ -128,11 +120,8 @@
     <Compile Include="Assets/Scripts/UI/TitleScreen.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/VertexZoom.cs" />
     <Compile Include="Assets/Scripts/TowerRuntime.cs" />
-    <Compile Include="Assets/Scripts/SpecialEvents/F3_SpecialEvent.cs" />
     <Compile Include="Assets/Scripts/Cutscenes.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark02.cs" />
-    <Compile Include="Assets/Scripts/Battle/Battlers/EnemyUnit.cs" />
-    <Compile Include="Assets/Scripts/DialogueHandler.cs" />
     <Compile Include="Assets/Scripts/PlayerState.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorLoader.cs" />
     <Compile Include="Assets/Scripts/UI/FullScreenView.cs" />
@@ -152,19 +141,14 @@
     <Compile Include="Assets/Scripts/Floor/SpacetimeGate.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/ShaderPropAnimator.cs" />
     <Compile Include="Assets/Scripts/Prologue.cs" />
-    <Compile Include="Assets/Scripts/FloorManager.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/CameraController.cs" />
-    <Compile Include="Assets/Scripts/Battle/Battlers/BattleUnit.cs" />
-    <Compile Include="Assets/Scripts/PlayerController.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark03.cs" />
     <Compile Include="Assets/Scripts/GameRules.cs" />
     <Compile Include="Assets/Scripts/UI/ScreenLayout.cs" />
     <Compile Include="Assets/Scripts/Battle/MagicAttack.cs" />
     <Compile Include="Assets/Scripts/Items/Altar.cs" />
-    <Compile Include="Assets/Scripts/Battle/EndBattleUIController.cs" />
     <Compile Include="Assets/Scripts/Items/Fairy.cs" />
     <Compile Include="Assets/Scripts/Battle/BattlePresentation.cs" />
-    <Compile Include="Assets/Scripts/Keys/ItemManager.cs" />
     <Compile Include="Assets/Scripts/Battle/Battlers/BattlerBase.cs" />
     <Compile Include="Assets/Scripts/GameStart.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextInfoDebugTool.cs" />
