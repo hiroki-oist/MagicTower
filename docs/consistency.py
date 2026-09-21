@@ -1500,6 +1500,16 @@ _cs3=[l for l in open("Assets/Resources/Cutscenes.txt",encoding="utf-8")
 chk(_cs3.index("=門")<_cs3.index("ボスが現れる")<_cs3.index("(-1,+1)"),
     "順番は 退路の門 → ボスが現れる → 三つ組（原典 0x30b1 → 0x3119 → 0x3199）")
 
+# 終幕の塔の絵が流れていく（原典 0x0ce83 の輪）
+_en=open("Assets/Scripts/Ending.cs",encoding="utf-8").read()
+chk("TowerSteps = 0x1a" in _en,"塔の絵は26回送る（原典 cmp [bp-0x24e], 0x1a）")
+chk("TowerStepWait = 0x1e" in _en,"1回 0x1e(30) 待つ")
+chk("TowerScrollPerStep = 15" in _en,"1回15ドット送る（原典は高さを 15*i で縮める）")
+chk("TowerSound = 7" in _en,"1回ごとに音7（原典 0xcf9f）")
+chk("直線で近似" in _en,"濃さの変わり方は近似だと明記してある")
+_fs=open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read()
+chk("Ending.TowerSteps" in _fs and "scrollTower" in _fs,"見た目の側が塔の絵を流す")
+
 # 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
 # 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
 # 3階のゼノとの初対面と20階のボス登場で何も現れなかった。
@@ -1923,7 +1933,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=652
+MIN_CHECKS=658
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

@@ -23,6 +23,57 @@ public static class Ending
     /// <summary>塔を駆け上がった先。原典 0x23a6 が 0x32（50）まで上げる。</summary>
     public const int LastFloor = 50;
 
+    // ------------------------------------------------ 終幕の塔の絵（原典 0x0ce83 の輪）
+    //
+    //   i = 0;
+    //   do {
+    //     if (i < 7)     パレットを 入りの表[i] に差し替える   （lcall 0xf5f,0x416、1つ32バイト）
+    //     if (i > 0x12)  パレットを 出の表[…]   に差し替える   （降り順、同じく32バイト刻み）
+    //     絵を 15ドットぶん上へずらして描き直す               （高さ 0x190 - 15*i の領域を写す）
+    //     音 7 を鳴らす                                       （lcall 0x10da,0x20b）
+    //     0x1e(30) 待つ                                       （lcall 0xf5f,0x3f2）
+    //   } while (++i < 0x1a);
+    //
+    // 26回 x 30コマ ＝ **13秒**、送り合計 26x15 ＝ 390ドットで画面（400）をほぼ流し切る。
+    // 音の表の「遠ざかる」はこの見せ方を指している。
+
+    /// <summary>塔の絵を送る回数（原典 0x1a）。</summary>
+    public const int TowerSteps = 0x1a;
+
+    /// <summary>1回ぶんの待ち（原典 0x1e）。単位は垂直帰線の回数＝1/60秒。</summary>
+    public const int TowerStepWait = 0x1e;
+
+    /// <summary>1回で上へ送るドット数（原典は 15*i で高さを縮めている）。</summary>
+    public const int TowerScrollPerStep = 15;
+
+    /// <summary>はじめの何回でパレットが明るくなるか（原典 `i &lt; 7`）。</summary>
+    public const int TowerFadeInSteps = 7;
+
+    /// <summary>この回を**超えたら**パレットが暗くなる（原典 `i &gt; 0x12`）。</summary>
+    public const int TowerFadeOutAfter = 0x12;
+
+    /// <summary>1回ごとに鳴らす音（原典 0xcf9f の 7）。</summary>
+    public const int TowerSound = 7;
+
+    /// <summary>塔の絵の長さ（秒）。</summary>
+    public static float TowerDuration
+    {
+        get { return TowerSteps * TowerStepWait / 60f; }
+    }
+
+    /// <summary>
+    /// その回の明るさ（0〜1）。**原典はパレットの表を差し替えている**が、
+    /// 表の中身（32バイト x 7本 x 2組）はまだ読めていないので、
+    /// **入りと出を7段の直線で近似**している。濃さの変わり方が分かったら差し替える。
+    /// </summary>
+    public static float TowerBrightness(int step)
+    {
+        if (step < TowerFadeInSteps) return (step + 1) / (float)TowerFadeInSteps;
+        if (step > TowerFadeOutAfter)
+            return Mathf.Max(0f, 1f - (step - TowerFadeOutAfter) / (float)TowerFadeInSteps);
+        return 1f;
+    }
+
     /// <summary>
     /// 駆け上がりの始まり。原典 0x237c が現在階に 0x18（24）を書いてから数え上げる。
     /// </summary>

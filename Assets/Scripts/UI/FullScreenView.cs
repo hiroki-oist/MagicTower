@@ -46,6 +46,14 @@ public class FullScreenView : MonoBehaviour
     /// </summary>
     [SerializeField] Sprite[] steps = new Sprite[0];
 
+    /// <summary>
+    /// 終幕の塔の絵だけは**上へ流れていく**（原典 0x0ce83 の輪）。
+    /// 26回、1回ごとに15ドット送って音7を鳴らし、30コマ待つ。規則は <see cref="Ending"/>。
+    /// </summary>
+    [SerializeField] bool scrollTower;
+
+    Coroutine towerRun;
+
     void LateUpdate()
     {
         if (controller == null || controller.Game == null) return;
@@ -57,5 +65,37 @@ public class FullScreenView : MonoBehaviour
             if (steps[n] != null) art.sprite = steps[n];
         }
         if (panel != null && panel.activeSelf != mine) panel.SetActive(mine);
+
+        if (!scrollTower) return;
+        if (mine && towerRun == null && isActiveAndEnabled) towerRun = StartCoroutine(ScrollTower());
+        if (!mine && towerRun != null) { StopCoroutine(towerRun); towerRun = null; ResetTower(); }
+    }
+
+    /// <summary>塔の絵が上へ流れていく（原典 0x0ce83）。</summary>
+    System.Collections.IEnumerator ScrollTower()
+    {
+        var rt = art != null ? art.rectTransform : null;
+        var from = rt != null ? rt.anchoredPosition : Vector2.zero;
+        for (int i = 0; i < Ending.TowerSteps; i++)
+        {
+            if (rt != null)
+                rt.anchoredPosition = from + new Vector2(
+                    0f, i * Ending.TowerScrollPerStep * DialogueWindow.CanvasScale);
+            if (art != null)
+            {
+                float b = Ending.TowerBrightness(i);
+                art.color = new Color(b, b, b, 1f);
+            }
+            if (controller.Sound != null) controller.Sound.PlayCue(SoundCues.SceneBeat);
+            yield return new WaitForSeconds(Ending.TowerStepWait * MonsterAnimation.FrameSeconds);
+        }
+        towerRun = null;
+    }
+
+    void ResetTower()
+    {
+        if (art == null) return;
+        art.color = Color.white;
+        art.rectTransform.anchoredPosition = Vector2.zero;
     }
 }

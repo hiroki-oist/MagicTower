@@ -18,6 +18,12 @@ public class TowerController : MonoBehaviour
     /// <summary>勇者の絵。戦闘の帯（<see cref="BattleBandView"/>）も同じ絵を使う。</summary>
     public Sprite PlayerSprite { get { return playerSprite; } }
 
+    /// <summary>
+    /// 音を鳴らす役。ふだんは本線が積んだものを一手ごとに流すが、
+    /// **1枚絵の中で回る演出**（終幕の塔）は本線の外で進むので、そこからも鳴らせるようにする。
+    /// </summary>
+    public SoundPlayer Sound { get { return sound; } }
+
     public TowerGame Game { get; private set; }
 
     Transform playerView;

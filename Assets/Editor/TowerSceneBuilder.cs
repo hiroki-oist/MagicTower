@@ -373,9 +373,16 @@ public static class TowerSceneBuilder
                                 "Assets/Sprites/Screens/Prologue_2.png",
                                 "Assets/Sprites/Screens/Prologue_3.png" });
         // 終幕の塔の絵（MTOWER2）と、終わりの言葉（MTENDMJ、段落が1つずつ）
-        BuildFullScreen(screen, font, controller, TowerGame.PageKind.EndingTower,
+        // 終幕の塔の絵は上へ流れていく（原典 0x0ce83 の26回の輪）
+        var towerScreen = BuildFullScreen(screen, font, controller, TowerGame.PageKind.EndingTower,
                         "EndingTowerScreen", "Assets/Sprites/Screens/Ending_Tower2.png",
                         "", Ending.TitleDot, "", Ending.AnyKeyDot);
+        if (towerScreen != null)
+        {
+            var tso = new SerializedObject(towerScreen);
+            tso.FindProperty("scrollTower").boolValue = true;
+            tso.ApplyModifiedPropertiesWithoutUndo();
+        }
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.EndingText,
                         "EndingTextScreen", "Assets/Sprites/Screens/Ending_Text_0.png",
                         "", Ending.TitleDot, "", Ending.AnyKeyDot,
@@ -630,7 +637,8 @@ public static class TowerSceneBuilder
     /// 画面いっぱいの1枚絵と2行の文字（題名・終幕）。ふだんは隠しておく。
     /// 文字の位置は原典が渡す値そのままで、x はバイト（＝8ドット）、y はドット。
     /// </summary>
-    static void BuildFullScreen(RectTransform screen, TMP_FontAsset font, TowerController controller,
+    static FullScreenView BuildFullScreen(RectTransform screen, TMP_FontAsset font,
+                                TowerController controller,
                                 TowerGame.PageKind showOn, string name, string artPath,
                                 string first, Vector2Int firstAt,
                                 string second, Vector2Int secondAt,
@@ -686,6 +694,7 @@ public static class TowerSceneBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);
+        return view;
     }
 
     const string FramePath = "Assets/Sprites/Screens/Frame.png";
