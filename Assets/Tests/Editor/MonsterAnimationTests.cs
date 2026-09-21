@@ -138,3 +138,50 @@ public class MonsterAnimatorTests
         }
     }
 }
+
+/// <summary>
+/// 0階（原典 INITIAL.DAT の1階の1つ手前）。行けないが正典のデータ。
+/// </summary>
+public class Floor0Tests
+{
+    [Test]
+    public void 零階は床だけの部屋で真ん中に幸運の金貨がある()
+    {
+        var d = FloorData.Load(0);
+        Assert.IsNotNull(d, "0階のデータが無い");
+        Assert.AreEqual(1, d.Objects.Count, "置いてあるのは1つだけ");
+        Assert.AreEqual("Coin_Lucky", d.Objects[0].Prefab);
+        Assert.AreEqual(new Vector2Int(0, 0), d.Objects[0].Pos, "盤面の中央");
+    }
+
+    [Test]
+    public void 零階には上り階段だけがある()
+    {
+        var d = FloorData.Load(0);
+        int up = 0, down = 0, other = 0;
+        for (int y = FloorData.MinY; y <= FloorData.MaxY; y++)
+            for (int x = FloorData.MinX; x <= FloorData.MaxX; x++)
+            {
+                var t = d.At(x, y);
+                if (t == FloorData.Terrain.StairsUp) up++;
+                else if (t == FloorData.Terrain.StairsDown) down++;
+                else if (t != FloorData.Terrain.Floor) other++;
+            }
+        Assert.AreEqual(1, up, "上り階段は1つ");
+        Assert.AreEqual(0, down, "下り階段は無い");
+        Assert.AreEqual(0, other, "ほかの地形は無い");
+        Assert.AreEqual(FloorData.Terrain.StairsUp, d.At(-5, 5), "上り階段は左上");
+    }
+
+    [Test]
+    public void 一階に下り階段が無いので零階へは行けない()
+    {
+        var d = FloorData.Load(1);
+        for (int y = FloorData.MinY; y <= FloorData.MaxY; y++)
+            for (int x = FloorData.MinX; x <= FloorData.MaxX; x++)
+                Assert.AreNotEqual(FloorData.Terrain.StairsDown, d.At(x, y),
+                                   $"1階に下り階段 ({x},{y})");
+        // 始まりは1階（INITIAL.DAT の先頭 …,1,1,5,10 の「現在階=1」）
+        Assert.AreEqual(1, GameStart.Prologue.Floor);
+    }
+}

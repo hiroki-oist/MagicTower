@@ -215,6 +215,7 @@
     <None Include="Assets/Resources/Floors/Floor_31.txt" />
     <None Include="Assets/Resources/KnightCharge.txt" />
     <None Include="Assets/TextMesh Pro/Shaders/TMPro_Properties.cginc" />
+    <None Include="Assets/Resources/Floors/Floor_0.txt" />
     <None Include="Assets/Resources/ThiefEvents.txt" />
     <None Include="Assets/Resources/Floors/Floor_45.txt" />
     <None Include="Assets/Resources/Floors/Floor_20.txt" />

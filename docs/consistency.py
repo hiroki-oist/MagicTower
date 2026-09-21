@@ -823,7 +823,24 @@ _base={10:(400,29,35),20:(800,74,80),25:(3000,350,460),40:(1600,152,198),49:(300
 chk(all(_sc(f,*_base[f],0,0)==60 for f in _base),"5本の式が基準値でちょうど60点")
 
 print("\n【8】フロアデータ")
-chk(len(glob.glob("Assets/Resources/Floors/Floor_*.txt"))==50,"全50階のデータ")
+chk(len(glob.glob("Assets/Resources/Floors/Floor_*.txt"))==51,
+    "全50階＋0階のデータ",str(len(glob.glob("Assets/Resources/Floors/Floor_*.txt"))))
+# 0階（word offset 75）は原典に実在するが、**行ける道が無い**。
+# 中身は床だけの部屋で、左上に上り階段、真ん中に幸運の金貨が1つ。
+_f0=open("Assets/Resources/Floors/Floor_0.txt",encoding="utf-8").read()
+chk("word offset 75" in _f0,"0階は 1階の1つ手前のブロック")
+chk(_f0.count("Coin_Lucky")==1,"0階の真ん中に幸運の金貨がある")
+chk("+0 +0  Coin_Lucky" in _f0,"幸運の金貨は盤面の中央 (0,0)")
+_ids50=0
+for _fp in glob.glob("Assets/Resources/Floors/Floor_*.txt"):
+    _ids50+=open(_fp,encoding="utf-8").read().count("Coin_Lucky")
+chk(_ids50==1,"幸運の金貨は原典の全データで1つだけ（0階の中央）",str(_ids50))
+# 1階に下り階段が無いので0階へは行けない。現在階に0を書く道筋もコードに無い。
+_f1=open("Assets/Resources/Floors/Floor_1.txt",encoding="utf-8").read()
+_g1=[l.split("|")[1] for l in _f1.split("\n") if re.match(r"\s*[+-]\d\s*\|",l)]
+chk(not any("<" in _r for _r in _g1),"1階に下り階段が無い（0階へは行けない）")
+chk("mov     word ptr es:[0x9e], 0   ; 現在階" not in _dis,
+    "現在階に0を書く所は原典に無い")
 chk(os.path.exists("Assets/Resources/FloorConnections.txt"),"階段接続表")
 chk(os.path.exists("Assets/Resources/ItemPower.txt"),"階別効果量表")
 
@@ -1441,7 +1458,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=549
+MIN_CHECKS=555
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

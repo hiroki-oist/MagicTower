@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
-"""PC98版 INITIAL.DAT から全50階の正典データを生成する。
-  1階の開始 = word offset 199 / ストライド = 124ワード（121マップ + 3メタ）"""
+"""PC98版 INITIAL.DAT から全50階＋0階の正典データを生成する。
+  1階の開始 = word offset 199 / ストライド = 124ワード（121マップ + 3メタ）
+
+**0階**（word offset 75、1階の1つ手前）も原典のデータとして実在する。
+中身は床だけの部屋で、左上 (-5,+5) に上り階段（ID11）、真ん中 (0,0) に
+**幸運の金貨（ID50）**が1つ置いてあるだけ。
+
+ただし原典はここに行けない: 始まりは 現在階=1（INITIAL.DAT の先頭 …,1,1,5,10）で、
+**1階に下り階段が無く**（全50階で下りが無いのは 1・44・50 階）、
+現在階に0を書く道筋もコードに無い。
+つまり幸運の金貨は、ヒント26が「この塔のどこかにある」と言っているのに
+**この版では手に入らない**（絵だけ残ったモンスター2体と同じ、作りかけの名残）。
+正典なのでデータとしては出しておき、行ける道は足さない。"""
 import struct,os,sys
 SRC=sys.argv[1]; FD=os.path.expanduser("~/Code/MagicTower/Assets/Resources/Floors")
 d=open(SRC,'rb').read()
@@ -53,7 +64,7 @@ BOSS3x3={**{i:"Boss_GiantOctopus" for i in range(97,106)},
 HDR=("terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空\n"
      "          y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体")
 unknown=set()
-for n in range(1,51):
+for n in range(0,51):
     b=OFF+(n-1)*ST; cells=w[b:b+121]; meta=w[b+121:b+124]
     grid=[]; objs=[]
     for r in range(11):
@@ -77,4 +88,4 @@ for n in range(1,51):
     L += ["", "objects:  (x, y, prefab, note)"]
     L += [f"  {x:+d} {y:+d}  {p:<26} {note}" for x,y,p,note in objs]
     open(os.path.join(FD,f"Floor_{n}.txt"),"w").write("\n".join(L)+"\n")
-print(f"全50階を生成。未同定ID: {sorted(unknown)}")
+print(f"0階＋全50階を生成。未同定ID: {sorted(unknown)}")
