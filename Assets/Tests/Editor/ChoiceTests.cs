@@ -143,3 +143,93 @@ public class ChoiceTests
         StringAssert.Contains("Game.ConfirmChoice", src);
     }
 }
+
+/// <summary>
+/// メニューの「スペシャル・アイテムを使う」。原典の一覧は
+/// エリクサー／マトック／破壊の玉／空間転移の秘宝／昇華の翼／降臨の翼／魔法の鍵／
+/// スーパーマトック／やっぱりやめる の9行（Messages.txt の special_1〜9）。
+///
+/// ここが繋がっていなくて、**スペシャル・アイテムが一度も使えなかった**。
+/// </summary>
+public class SpecialItemMenuTests
+{
+    static TowerGame WithItems(SpecialItems.Kind items)
+    {
+        var p = new PlayerState
+        {
+            Hp = 1000, Attack = 100, Defense = 100, Floor = 5,
+            Position = new Vector2Int(0, 0), HighestFloor = 10,
+        };
+        p.Give(items);
+        return new TowerGame(p);
+    }
+
+    [Test]
+    public void 一覧は原典の並び順()
+    {
+        CollectionAssert.AreEqual(new[]
+        {
+            SpecialItems.Kind.Elixir, SpecialItems.Kind.Matock,
+            SpecialItems.Kind.DestructionOrb, SpecialItems.Kind.TeleportRelic,
+            SpecialItems.Kind.WingUp, SpecialItems.Kind.WingDown,
+            SpecialItems.Kind.MagicKey, SpecialItems.Kind.SuperMatock,
+        }, TowerMenu.Usable);
+        Assert.AreEqual(9, TowerMenu.ItemCount, "8つ＋やっぱりやめる");
+        var text = TowerMenu.ItemText().Split('\n');
+        Assert.AreEqual(10, text.Length, "見出し＋9行");
+        StringAssert.Contains("エリクサー", text[1]);
+        StringAssert.Contains("やっぱりやめる", text[9]);
+    }
+
+    [Test]
+    public void エリクサーを選ぶと生命力が増える()
+    {
+        var g = WithItems(SpecialItems.Kind.Elixir);
+        g.Player.Hp = 100;
+        g.OpenMenu();
+        while (g.MenuCurrent != TowerMenu.Entry.SpecialItems) g.MenuMove(1);
+        g.MenuConfirm();
+        Assert.AreEqual(TowerGame.MenuStage.Items, g.Stage, "一覧が出る");
+        g.MenuConfirm();                          // 1つ目＝エリクサー
+        Assert.Greater(g.Player.Hp, 100, "生命力が増える");
+        Assert.IsFalse(g.Player.Has(SpecialItems.Kind.Elixir), "使い切り");
+    }
+
+    [Test]
+    public void やっぱりやめるは何も起きない()
+    {
+        var g = WithItems(SpecialItems.Kind.Elixir);
+        g.Player.Hp = 100;
+        g.OpenMenu();
+        while (g.MenuCurrent != TowerMenu.Entry.SpecialItems) g.MenuMove(1);
+        g.MenuConfirm();
+        for (int i = 0; i < 20; i++) g.ItemMove(1);     // いちばん下＝やめる
+        g.MenuConfirm();
+        Assert.AreEqual(100, g.Player.Hp);
+        Assert.IsTrue(g.Player.Has(SpecialItems.Kind.Elixir), "持ったまま");
+    }
+
+    [Test]
+    public void 持っていないものを選んでも何も起きない()
+    {
+        var g = WithItems(SpecialItems.Kind.Elixir);
+        g.OpenMenu();
+        while (g.MenuCurrent != TowerMenu.Entry.SpecialItems) g.MenuMove(1);
+        g.MenuConfirm();
+        g.ItemMove(1);                                  // マトック（持っていない）
+        Assert.IsFalse(g.ConfirmItem());
+    }
+
+    [Test]
+    public void 段ごとに正しい行へ印が出る()
+    {
+        var g = WithItems(SpecialItems.Kind.Elixir);
+        g.OpenMenu();
+        Assert.AreEqual(g.MenuIndex, g.MenuStageIndex, "本体では項目の番号");
+        while (g.MenuCurrent != TowerMenu.Entry.SpecialItems) g.MenuMove(1);
+        g.MenuConfirm();
+        g.ItemMove(2);
+        Assert.AreEqual(g.ItemIndex, g.MenuStageIndex, "一覧ではアイテムの番号");
+        StringAssert.Contains("破壊の玉", g.MenuStageText.Split('\n')[3]);
+    }
+}

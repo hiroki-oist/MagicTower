@@ -141,6 +141,7 @@ public class TowerController : MonoBehaviour
             {
                 case TowerGame.MenuStage.Root:         Game.MenuMove(-move.y); break;
                 case TowerGame.MenuStage.FlightFloors: Game.FlightMove(move.y); break;
+                case TowerGame.MenuStage.Items:        Game.ItemMove(-move.y); break;
                 default:                               Game.SlotMove(-move.y); break;
             }
             return true;

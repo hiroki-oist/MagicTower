@@ -30,6 +30,39 @@ public static class TowerMenu
         Load, Save, Resume, Quit,
     }
 
+    /// <summary>
+    /// 「スペシャル・アイテムを使う」で並ぶもの。**原典の並び順そのまま**
+    /// （Messages.txt の `special_1`〜`special_8`）。
+    /// 十字架・ドラゴンスレーヤー・幸運の金貨は**持っているだけで効く**ので並ばない。
+    /// </summary>
+    public static readonly SpecialItems.Kind[] Usable =
+    {
+        SpecialItems.Kind.Elixir,          // special_1 エリクサー
+        SpecialItems.Kind.Matock,          // special_2 マトック
+        SpecialItems.Kind.DestructionOrb,  // special_3 破壊の玉
+        SpecialItems.Kind.TeleportRelic,   // special_4 空間転移の秘宝
+        SpecialItems.Kind.WingUp,          // special_5 昇華の翼
+        SpecialItems.Kind.WingDown,        // special_6 降臨の翼
+        SpecialItems.Kind.MagicKey,        // special_7 魔法の鍵
+        SpecialItems.Kind.SuperMatock,     // special_8 スーパーマトック
+    };
+
+    /// <summary>
+    /// アイテムの一覧の文字。原典は**持っていなくても8つとも並べて**、
+    /// 最後に「やっぱりやめる」を置く（文言が固定なのがその証拠）。
+    /// </summary>
+    public static string ItemText()
+    {
+        var t = GameText.Instance;
+        var sb = new System.Text.StringBuilder(t.Message("special_ask"));
+        for (int i = 1; i <= Usable.Length; i++) sb.Append("\n").Append(t.Message("special_" + i));
+        sb.Append("\n").Append(t.Message("special_9"));
+        return sb.ToString();
+    }
+
+    /// <summary>並びの数（やめるを含む）。</summary>
+    public static int ItemCount { get { return Usable.Length + 1; } }
+
     /// <summary>今出すべき項目。持っていないオーブは並ばない。</summary>
     public static List<Entry> Entries(PlayerState p)
     {

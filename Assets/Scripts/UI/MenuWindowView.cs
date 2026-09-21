@@ -45,8 +45,9 @@ public class MenuWindowView : MonoBehaviour
     /// <summary>選んでいる行の先頭2文字を印に置き換える。</summary>
     public static string Compose(TowerGame g)
     {
-        var lines = g.MenuText.Split('\n');
-        int pick = g.MenuIndex + 1;          // 1行目は見出し
+        var lines = g.MenuStageText.Split('\n');
+        // 1行目は見出し。段によって「今選んでいる行」が違う（本体・アイテム・スロット）。
+        int pick = g.MenuStageIndex + 1;
         for (int i = 1; i < lines.Length; i++)
         {
             if (i != pick) continue;

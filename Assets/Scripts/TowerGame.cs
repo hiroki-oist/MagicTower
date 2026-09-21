@@ -478,7 +478,7 @@ public class TowerGame
     }
 
     /// <summary>メニューのどの段にいるか。</summary>
-    public enum MenuStage { Root, LoadSlots, SaveSlots, FlightFloors }
+    public enum MenuStage { Root, LoadSlots, SaveSlots, FlightFloors, Items }
 
     /// <summary>今の段。</summary>
     public MenuStage Stage { get; private set; }
@@ -507,10 +507,14 @@ public class TowerGame
     {
         get
         {
-            if (Stage == MenuStage.Root) return MenuText;
-            var rec = Stage == MenuStage.LoadSlots ? LoadRecord : SaveRecord;
-            var line = GameText.Instance.Dialogue(rec);
-            return line.HasValue ? line.Value.Body : "";
+            if (Stage == MenuStage.Items) return TowerMenu.ItemText();
+            if (Stage == MenuStage.LoadSlots || Stage == MenuStage.SaveSlots)
+            {
+                var rec = Stage == MenuStage.LoadSlots ? LoadRecord : SaveRecord;
+                var line = GameText.Instance.Dialogue(rec);
+                return line.HasValue ? line.Value.Body : "";
+            }
+            return MenuText;                      // 本体と、階選び（階の案内は別に出す）
         }
     }
 
@@ -518,6 +522,7 @@ public class TowerGame
     public TowerMenu.Entry MenuConfirm()
     {
         if (Stage == MenuStage.FlightFloors) { ConfirmFlight(); return TowerMenu.Entry.FlightOrb; }
+        if (Stage == MenuStage.Items) { ConfirmItem(); return TowerMenu.Entry.SpecialItems; }
         if (Stage != MenuStage.Root) { ConfirmSlot(); return TowerMenu.Entry.Resume; }
 
         var e = MenuCurrent;
@@ -551,10 +556,49 @@ public class TowerGame
                 if (!string.IsNullOrEmpty(text)) Say(text);
                 break;
             }
+            case TowerMenu.Entry.SpecialItems:
+                // ⚠ ここが繋がっていなくて、**スペシャル・アイテムが一度も使えなかった**。
+                Stage = MenuStage.Items; ItemIndex = 0;
+                break;
             case TowerMenu.Entry.Load: Stage = MenuStage.LoadSlots; SlotIndex = 0; break;
             case TowerMenu.Entry.Save: Stage = MenuStage.SaveSlots; SlotIndex = 0; break;
         }
         return e;
+    }
+
+    /// <summary>アイテムの一覧で今選んでいるもの。</summary>
+    public int ItemIndex { get; private set; }
+
+    /// <summary>今の段で印を置く行（0から）。見出しは数えない。</summary>
+    public int MenuStageIndex
+    {
+        get
+        {
+            if (Stage == MenuStage.Items) return ItemIndex;
+            if (Stage == MenuStage.LoadSlots || Stage == MenuStage.SaveSlots) return SlotIndex;
+            return MenuIndex;
+        }
+    }
+
+    /// <summary>一覧の中で選び直す。</summary>
+    public void ItemMove(int delta)
+    {
+        if (Stage != MenuStage.Items) return;
+        ItemIndex = Mathf.Clamp(ItemIndex + delta, 0, TowerMenu.ItemCount - 1);
+    }
+
+    /// <summary>
+    /// 選んだものを使う。持っていないもの・その場では効かないものを選んでも何も起きない
+    /// （原典も一覧は持ち物に関わらず8つとも並べる）。
+    /// </summary>
+    public bool ConfirmItem()
+    {
+        if (Stage != MenuStage.Items) return false;
+        Stage = MenuStage.Root;
+        if (ItemIndex < 0 || ItemIndex >= TowerMenu.Usable.Length) return false;  // やめる
+        bool ok = UseItem(TowerMenu.Usable[ItemIndex]);
+        if (ok) CloseMenu();
+        return ok;
     }
 
     /// <summary>飛翔のオーブで今選んでいる階。</summary>

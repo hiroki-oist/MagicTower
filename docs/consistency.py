@@ -2056,6 +2056,18 @@ chk("TowerNpc.Buy(Player, choiceOffer)" in _tg4 and "TowerNpc.Donate(Player, wis
 _ctrl=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("Game.IsChoosing" in _ctrl and "Game.MoveChoice" in _ctrl and "Game.ConfirmChoice" in _ctrl,
     "入力の側が選ばせに繋がっている（原典 0x9e78 は上下とリターン／スペース）")
+# 「スペシャル・アイテムを使う」も繋がっていなかった（選んでも何も起きない）。
+chk("case TowerMenu.Entry.SpecialItems:" in _tg4 and "MenuStage.Items" in _tg4,
+    "メニューのアイテムの段がある")
+chk("public bool ConfirmItem()" in _tg4 and "UseItem(TowerMenu.Usable[ItemIndex])" in _tg4,
+    "選んだアイテムが UseItem に繋がっている")
+chk("Game.ItemMove" in _ctrl,"入力の側がアイテムの選び直しに繋がっている")
+_tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
+chk("SpecialItems.Kind.Elixir,          // special_1" in _tm,
+    "アイテムの並びは原典（special_1〜8）そのまま")
+_mv=open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read()
+chk("g.MenuStageText" in _mv and "g.MenuStageIndex" in _mv,
+    "メニューの窓は段ごとの文章と印を出す（前は段が変わっても本体の文章のままだった）")
 chk(re.search(r"^2 +\| - +\| gift +\| gold:1000 +\| 1000 \| 29 \| - +\| 50",
               open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read(),re.M) is not None,
     "2階のもらいものには覚え書き50が付いている（原典は 0x32 直書き）")
@@ -2067,7 +2079,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=694
+MIN_CHECKS=699
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。
