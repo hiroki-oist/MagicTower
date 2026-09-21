@@ -69,7 +69,8 @@ public class MonsterPanelTests
     public void シーンに相手の欄があって最初は隠してある()
     {
         UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/Tower.unity");
-        var panel = GameObject.Find("HUD/Screen/MonsterPanel");
+        // 縦画面（作者の指定）では、原典の座標の入れ物は枠 PhoneFrame の下にある
+        var panel = GameObject.Find("HUD/PhoneFrame/Screen/MonsterPanel");
         Assert.IsNotNull(panel, "MonsterPanel が無い");
         Assert.IsFalse(panel.activeSelf, "戦闘していない間は隠す");
         foreach (var n in new[] { "MonsterIcon", "MonsterName", "HpLabel",

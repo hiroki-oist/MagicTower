@@ -213,3 +213,57 @@ public class PhoneScreenTests
             Assert.IsNotNull(UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path), path);
     }
 }
+
+/// <summary>
+/// **窓の形が変わっても並びが崩れない**こと。
+/// 最初は帯の高さだけを画布の単位で固定していたので、横長の窓で開くと
+/// 帯が画面を食い尽くして盤面が10%ほどに潰れてしまった（作者からの報告）。
+/// いまはスマホの画面ぶんの枠（1080x1920）を中央に置き、並びはその中だけで決める。
+/// </summary>
+public class PhoneFrameTests
+{
+    [Test]
+    public void 枠はどの窓でも千八十掛ける千九百二十()
+    {
+        // 枠の中では、上の帯17% / 盤面56% / 下の帯27% で必ず割れる
+        float side = PhoneScreen.MapSide(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight);
+        Assert.AreEqual(PhoneScreen.ReferenceWidth, side, 0.01f, "盤面は幅いっぱい");
+        float h = PhoneScreen.ReferenceHeight;
+        Assert.AreEqual(0.17f, PhoneScreen.TopHeight / h, 0.02f, "上の帯は約17%");
+        Assert.AreEqual(0.56f, side / h, 0.02f, "盤面は約56%");
+        Assert.AreEqual(0.27f, PhoneScreen.BottomHeight / h, 0.02f, "下の帯は約27%");
+    }
+
+    [Test]
+    public void 組み立てたシーンに枠がある()
+    {
+        var path = "Assets/Scenes/Tower.unity";
+        if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            RectTransform frame = null;
+            foreach (var go in scene.GetRootGameObjects())
+                foreach (var rt in go.GetComponentsInChildren<RectTransform>(true))
+                    if (rt.name == "PhoneFrame") frame = rt;
+            Assert.IsNotNull(frame, "PhoneFrame が無い");
+            Assert.AreEqual(new Vector2(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight),
+                            frame.sizeDelta, "枠はいつも 1080x1920");
+            // 帯も盤面も窓もこの枠の中に置く
+            foreach (var n in new[] { "TopPanel", "BottomPanel", "MapArea", "Screen" })
+            {
+                var child = frame.Find(n);
+                Assert.IsNotNull(child, n + " が枠の外にある");
+            }
+            // 画布は「入りきる側」に合わせる（横長の窓でも形が変わらない）
+            var scaler = frame.GetComponentInParent<UnityEngine.UI.CanvasScaler>();
+            Assert.AreEqual(UnityEngine.UI.CanvasScaler.ScreenMatchMode.Shrink,
+                            scaler.screenMatchMode);
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+}

@@ -215,27 +215,37 @@ public static class TowerSceneBuilder
         // 盤面が画面の幅いっぱいなので、**幅を基準**に合わせる。
         scaler.referenceResolution =
             new Vector2(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight);
+        // **入りきる側に合わせる**（Shrink）。窓が横長でも縦長でも、
+        // スマホの画面（1080x1920）がそのままの形で入る。
+        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.Shrink;
         scaler.matchWidthOrHeight = 0f;
-        var canvasRt = canvasGo.GetComponent<RectTransform>();
+
+        // スマホの画面ぶんの枠。中の並べ方はこの枠の中だけで決める（PhoneLayoutView）。
+        var frameGo = new GameObject("PhoneFrame", typeof(RectTransform));
+        frameGo.transform.SetParent(canvasGo.transform, false);
+        var frame = frameGo.GetComponent<RectTransform>();
+        frame.anchorMin = frame.anchorMax = frame.pivot = new Vector2(0.5f, 0.5f);
+        frame.anchoredPosition = Vector2.zero;
+        frame.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight);
 
         // 盤面の枠。中身はカメラが写すので、ここは場所を決めるためだけの空の枠。
         var mapGo = new GameObject("MapArea", typeof(RectTransform));
-        mapGo.transform.SetParent(canvasGo.transform, false);
+        mapGo.transform.SetParent(frame, false);
         var mapArea = mapGo.GetComponent<RectTransform>();
         mapArea.anchorMin = mapArea.anchorMax = mapArea.pivot = new Vector2(0.5f, 0.5f);
 
         // 原典の座標で置く入れ物（会話とメニューの窓・戦闘の帯・1枚絵）。
         // 大きさと場所は PhoneLayoutView が盤面に合わせる。
         var screenGo = new GameObject("Screen", typeof(RectTransform));
-        screenGo.transform.SetParent(canvasGo.transform, false);
+        screenGo.transform.SetParent(frame, false);
         var screen = screenGo.GetComponent<RectTransform>();
         screen.anchorMin = screen.anchorMax = screen.pivot = new Vector2(0.5f, 0.5f);
         screen.anchoredPosition = Vector2.zero;
         screen.sizeDelta = new Vector2(DialogueWindow.CanvasWidth, DialogueWindow.CanvasHeight);
 
         // 上下の帯。地は原典の枠の左右の欄と同じ石積み（作者の指定）。
-        var top = Band(canvasGo.transform, "TopPanel", true, PhoneScreen.TopHeight);
-        var bottom = Band(canvasGo.transform, "BottomPanel", false, PhoneScreen.BottomHeight);
+        var top = Band(frame, "TopPanel", true, PhoneScreen.TopHeight);
+        var bottom = Band(frame, "BottomPanel", false, PhoneScreen.BottomHeight);
 
         var view = canvasGo.AddComponent<TowerHudView>();
         var vso = new SerializedObject(view);
@@ -426,7 +436,7 @@ public static class TowerSceneBuilder
         BuildMenuWindow(screen, font, controller);
         BuildDialogueWindow(screen, font, controller, blinkView, bossView);
         // 一覧は画面いっぱいに出すので、原典の座標の入れ物ではなく画布に直に置く
-        BuildHeroOrbPanel(canvasRt, font, controller,
+        BuildHeroOrbPanel(frame, font, controller,
                           Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry"));
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
                         // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
@@ -492,6 +502,7 @@ public static class TowerSceneBuilder
         var layout = canvasGo.AddComponent<PhoneLayoutView>();
         var lso = new SerializedObject(layout);
         lso.FindProperty("boardCamera").objectReferenceValue = cam;
+        lso.FindProperty("frame").objectReferenceValue = frame;
         lso.FindProperty("mapArea").objectReferenceValue = mapArea;
         lso.FindProperty("topBand").objectReferenceValue = top;
         lso.FindProperty("bottomBand").objectReferenceValue = bottom;

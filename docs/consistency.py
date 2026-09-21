@@ -1831,6 +1831,15 @@ chk("CanvasScale = 1.8f" in _dwin,"Canvas 基準1152x720 は原典640x400 のち
 _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
 chk("PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight" in _sb,
     "シーンの基準解像度が縦画面（1080x1920）")
+# 窓が横長でも縦長でも、スマホの画面ぶんの枠（1080x1920）がそのままの形で入る。
+# 帯の高さだけを固定していたときは、横長の窓で盤面が10%まで潰れた。
+chk("ScreenMatchMode.Shrink" in _sb,"画布は入りきる側に合わせる（Shrink）")
+chk('GameObject("PhoneFrame"' in _sb,"スマホの画面ぶんの枠を中央に置く")
+_plv=open("Assets/Scripts/UI/PhoneLayoutView.cs",encoding="utf-8").read()
+chk("frame.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth" in _plv,
+    "枠はいつも 1080x1920 のまま")
+chk("boardCamera.rect = new Rect(0f, 0f, 1f, 1f)" in _plv,
+    "カメラは画面いっぱい（一部だけ写すと外側が塗り残しになる）")
 _ps=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
 chk("ReferenceWidth = 1080f, ReferenceHeight = 1920f" in _ps,"縦画面の基準は 1080x1920")
 chk("BrickPath" in _ps and "Assets/Sprites/Hud/Brick.png" in _ps,
@@ -2191,7 +2200,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=732
+MIN_CHECKS=736
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

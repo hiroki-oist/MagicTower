@@ -1,17 +1,22 @@
 using UnityEngine;
 
 /// <summary>
-/// 縦画面の並べ方（<see cref="PhoneScreen"/>）に合わせて、
-/// **盤面の枠を正方形にし、その枠へカメラを合わせる**役。
+/// 縦画面の並べ方（<see cref="PhoneScreen"/>）を、**端末の縦横比によらず同じ形**で出す役。
 ///
-/// 盤面はカメラが写す（画布ではない）ので、画面の中のどこに出すかは
-/// カメラの `rect`（画面に対する割合）で決める。枠の大きさは端末の縦横比で
-/// 変わるので、毎コマ合わせ直す。
+/// 画布は 1080x1920 の「スマホの画面」を1枚の枠（<see cref="frame"/>）として持ち、
+/// 窓がそれより横長でも縦長でも、**枠はいつも 1080x1920 のまま**中央に置く
+/// （余った所は盤面の下地の色で埋まる）。以前は帯の高さだけを画布の単位で固定して
+/// いたので、横長の窓で開くと帯が画面を食い尽くして盤面が潰れていた。
+///
+/// 盤面はカメラが写す（画布ではない）ので、**枠の中の盤面の場所にちょうど 11 マスが
+/// 入るよう**カメラの大きさと位置を毎コマ合わせる。カメラは画面いっぱいのままに
+/// しておく（一部だけを写すと、外側が塗り残しになるため）。
 /// </summary>
 [ExecuteAlways]
 public class PhoneLayoutView : MonoBehaviour
 {
     [SerializeField] Camera boardCamera;
+    [SerializeField] RectTransform frame;      // 1080x1920 のスマホの画面
     [SerializeField] RectTransform mapArea;
     [SerializeField] RectTransform screen;     // 原典の座標で置く入れ物（会話の窓など）
     [SerializeField] RectTransform topBand, bottomBand;
@@ -21,42 +26,42 @@ public class PhoneLayoutView : MonoBehaviour
 
     public void Apply()
     {
-        if (mapArea == null) return;
-        var parent = mapArea.parent as RectTransform;
-        if (parent == null) return;
+        if (frame == null || mapArea == null) return;
 
-        // 盤面の枠は正方形。幅いっぱいか、上下の帯を除いた高さのどちらか小さいほう。
-        float side = PhoneScreen.MapSide(parent.rect.width, parent.rect.height);
-        mapArea.sizeDelta = new Vector2(side, side);
-        // 上の帯と下の帯の間の真ん中に置く
+        // 枠はいつも 1080x1920。窓に入らないぶんは縮む（画布の側が拡大率を合わせる）。
+        frame.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight);
+
+        float side = PhoneScreen.MapSide(frame.rect.width, frame.rect.height);
         float center = (PhoneScreen.BottomHeight - PhoneScreen.TopHeight) / 2f;
+        mapArea.sizeDelta = new Vector2(side, side);
         mapArea.anchoredPosition = new Vector2(0f, center);
 
-        // 上下の帯は**盤面の枠にぴったり接する**まで伸ばす。カメラは盤面の枠しか塗らず、
-        // 画布（Overlay）は絵の上に重なるので、帯で埋めない所は塗り残しになる。
-        float half = parent.rect.height / 2f;
+        // 上下の帯は盤面にぴったり接するまで伸ばす
+        float half = frame.rect.height / 2f;
         if (topBand != null)
             topBand.sizeDelta = new Vector2(0f, Mathf.Max(0f, half - center - side / 2f));
         if (bottomBand != null)
             bottomBand.sizeDelta = new Vector2(0f, Mathf.Max(0f, half + center - side / 2f));
 
-        if (boardCamera != null)
+        if (boardCamera != null && side > 0f)
         {
-            var c = new Vector3[4];
-            mapArea.GetWorldCorners(c);      // 画布が Overlay なので world = 画面の画素
-            float w = Mathf.Max(1f, c[2].x - c[0].x), h = Mathf.Max(1f, c[2].y - c[0].y);
-            boardCamera.rect = new Rect(c[0].x / Screen.width, c[0].y / Screen.height,
-                                        w / Screen.width, h / Screen.height);
-            // 正方形の枠に 11 マスちょうど。横長に崩れても縦は 11 マスのまま。
-            boardCamera.orthographicSize = PhoneScreen.CameraSize;
+            // 画面いっぱいに写したまま、**盤面の枠にちょうど11マス**が来るようにする。
+            // 1画布単位あたりの世界の長さ = 11 / 枠の一辺
+            var canvas = frame.parent as RectTransform;
+            float canvasHeight = canvas != null ? canvas.rect.height : frame.rect.height;
+            float perUnit = PhoneScreen.MapCells / side;
+            boardCamera.rect = new Rect(0f, 0f, 1f, 1f);
+            boardCamera.orthographicSize = canvasHeight * perUnit / 2f;
+            var p = boardCamera.transform.position;
+            boardCamera.transform.position = new Vector3(0f, -center * perUnit, p.z);
         }
 
         // 会話やメニューの窓・戦闘の帯・1枚絵は原典の座標（640x400）で置いてあるので、
-        // 入れ物ごと縮めて**原典の画面の幅が画布の幅にちょうど入る**ようにし、
-        // 盤面の真ん中に重ねる（原典も窓は盤面の上に開く）。
+        // 入れ物ごと縮めて**原典の画面の幅が枠の幅にちょうど入る**ようにし、
+        // 盤面の真ん中に重ねる。
         if (screen != null)
         {
-            float k = parent.rect.width
+            float k = frame.rect.width
                     / (DialogueWindow.ScreenWidth * DialogueWindow.CanvasScale);
             screen.localScale = new Vector3(k, k, 1f);
             screen.anchoredPosition = mapArea.anchoredPosition;
