@@ -2039,8 +2039,16 @@ chk((_kb_k["red"],_kb_d["red"])==(3,12),"赤の鍵3本・赤の扉12枚",
 chk(all(_kb_k[_c]<_kb_d[_c] for _c in ("yellow","purple","red")),
     "どの色も鍵より扉が多い（開ける扉を選ぶのが遊びの骨）")
 chk(os.path.exists("docs/key_budget.py"),"鍵の出入りを数える道具がある")
+chk(os.path.exists("docs/floor_keys.py"),"階ごとに要る鍵を見積もる道具がある")
+# 遅い階ほど扉が多い。41階の黄の扉19枚が最多で、ここは12階の鍵屋が無いと回らない。
+_f41=[l for l in open("Assets/Resources/Floors/Floor_41.txt",encoding="utf-8")]
+_f41d=sum(l.split("|")[1].count("y") for l in _f41 if re.match(r"\s*[+-]\d+ \| ",l))
+chk(_f41d==19,"41階の黄の扉は19枚（いちばん多い階）",str(_f41d))
+_shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
+chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
+    "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=685
+MIN_CHECKS=688
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。
