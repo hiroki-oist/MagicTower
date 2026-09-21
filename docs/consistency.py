@@ -1204,24 +1204,29 @@ chk(len(_tiles)==96,"タイルは96枚（1コマ目）",str(len(_tiles)))
 # 敵と人の絵は必ず背景が抜けている。抜く色は種別で決まる（0xabe6 の 0x11 / 0x88 ＝ 索引1 / 8）。
 # 左上の1点で背景を決めていたころ、そこに絵が来ている赤スライム(ID63)だけ
 # 透過が付かず灰色の四角が残っていた。
-# 「絵の全部が中身」という絵もある（ボスの真ん中や祭壇）ので、
-# **縁に背景の色が残って不透明のまま**になっていないかを見る。
+# 敵と人の絵の背景が**不透明のまま縁に残っていないか**。
+# 抜く色は種別で決まる（0xabe6 の重ね方 0x11 / 0x88 ＝ 索引1（茶）と 8（淡緑））。
+# 赤スライム(ID63)は縁126点が索引1なのに左上だけ索引13で、背景を左上の1点で
+# 決めていたころは透過が付かず**灰色の四角が残ったまま**盤面に出ていた。
+#
+# 物・道具・壁は別の道（`lcall 0xf5f,0xa6`）で描かれていて色を渡さないので、
+# ここでは見ない（茶色そのものを使う絵＝壁があり、区別が付かないため）。
 _PAL={1:(119,68,34),8:(170,204,170)}
 _opaque=[]
-for _t in _tiles:
+for _t in sorted(glob.glob("Assets/Sprites/Tiles/*.png")):
     _oid=int(os.path.basename(_t)[:3])
     _k=_kind.get(_oid)
     _bgi=1 if _k in (8,9) else (8 if _k in (7,10,11) else None)
     if _bgi is None: continue
     _rgb=_PAL[_bgi]
-    _w,_h,_ct,_rows=_rgba(_t)
-    _edge=[(0,_x) for _x in range(_w)]+[(_h-1,_x) for _x in range(_w)] \
-         +[(_y,0) for _y in range(_h)]+[(_y,_w-1) for _y in range(_h)]
-    if any(_rows[_y][_x*4+3]!=0 and
-           (_rows[_y][_x*4],_rows[_y][_x*4+1],_rows[_y][_x*4+2])==_rgb
+    _w0,_h0,_ct0,_r0=_rgba(_t)
+    _edge=([(0,_x) for _x in range(_w0)]+[(_h0-1,_x) for _x in range(_w0)]
+           +[(_y,0) for _y in range(_h0)]+[(_y,_w0-1) for _y in range(_h0)])
+    if any(_r0[_y][_x*4+3]!=0 and
+           (_r0[_y][_x*4],_r0[_y][_x*4+1],_r0[_y][_x*4+2])==_rgb
            for _y,_x in _edge):
         _opaque.append(os.path.basename(_t))
-chk(not _opaque,"敵と人の絵の縁に背景色が残っていない",str(_opaque))
+chk(not _opaque,"敵と人の絵の縁に背景色が不透明のまま残っていない",str(_opaque[:6]))
 # 参照が外れていると何も言わずに消えるので、プレハブの絵の参照先を全部確かめる
 _guids=set()
 for _m in glob.glob("Assets/**/*.meta",recursive=True):
