@@ -41,10 +41,18 @@ public static class GameStart
         Position = new Vector2Int(0, -5),              // 原典は X=5,Y=10（盤面の中央下）
     };
 
-    /// <summary>ゼノのイベント直後（2階の牢、丸腰）。ここから本編。</summary>
+    /// <summary>
+    /// ゼノのイベント直後（2階の牢、丸腰）。ここから本編。
+    ///
+    /// ⚠ 攻撃力・防御力は <see cref="DebugPlay.StrongAfterZeno"/> が立っている間だけ
+    /// 1000 になる（イベントの通りを見て回るための細工）。**原典は 10 / 10**。
+    /// </summary>
     public static readonly State AfterZeno = new State
     {
-        Hp = 400, Attack = 10, Defense = 10, Gold = 0,
+        Hp = DebugPlay.StrongHpAfterZeno ? DebugPlay.StrongHp : 400,
+        Attack = DebugPlay.StrongAfterZeno ? DebugPlay.StrongStat : 10,
+        Defense = DebugPlay.StrongAfterZeno ? DebugPlay.StrongStat : 10,
+        Gold = 0,
         Floor = 2, SwordRank = 0, ShieldRank = 0,
         // 原典 0x0701e / 0x07029 が X=2, Y=7 を書く。盤面では x = 2-5 = -3、y = 5-7 = -2。
         // そこは 2階の牢の中で、**盗賊(-3,-1) の真下**にあたる（起こしてくれる相手の隣）。

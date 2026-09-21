@@ -31,9 +31,16 @@ public class PrologueTests
     {
         var p = Prologue.Finish(PlayerState.NewGame());
         Assert.AreEqual(2, p.Floor, "2階の牢");
-        Assert.AreEqual(400, p.Hp);
-        Assert.AreEqual(10, p.Attack);
-        Assert.AreEqual(10, p.Defense);
+        Assert.AreEqual(GameStart.AfterZeno.Hp, p.Hp);
+        Assert.AreEqual(GameStart.AfterZeno.Attack, p.Attack);
+        Assert.AreEqual(GameStart.AfterZeno.Defense, p.Defense);
+        // 原典は 400 / 10 / 10。今は調べもの用に DebugPlay で攻守を差し替えている。
+        if (!DebugPlay.StrongAfterZeno)
+        {
+            Assert.AreEqual(10, p.Attack, "原典の攻撃力");
+            Assert.AreEqual(10, p.Defense, "原典の防御力");
+        }
+        if (!DebugPlay.StrongHpAfterZeno) Assert.AreEqual(400, p.Hp, "原典の生命力");
         Assert.AreEqual(0, p.SwordRank, "神剣を奪われている");
         Assert.AreEqual(0, p.ShieldRank, "神盾を奪われている");
     }
@@ -67,9 +74,9 @@ public class PrologueTests
         while (g.IsShowingPage) g.NextPage();
 
         Assert.AreEqual(2, g.Player.Floor, "2階に移る");
-        Assert.AreEqual(400, g.Player.Hp);
-        Assert.AreEqual(10, g.Player.Attack);
-        Assert.AreEqual(10, g.Player.Defense);
+        Assert.AreEqual(GameStart.AfterZeno.Hp, g.Player.Hp);
+        Assert.AreEqual(GameStart.AfterZeno.Attack, g.Player.Attack);
+        Assert.AreEqual(GameStart.AfterZeno.Defense, g.Player.Defense);
         Assert.AreEqual(0, g.Player.SwordRank, "神剣を奪われる");
         Assert.AreEqual(0, g.Player.ShieldRank, "神盾を奪われる");
         Assert.AreEqual(new Vector2Int(-3, -2), g.Player.Position);

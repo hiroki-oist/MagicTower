@@ -143,6 +143,7 @@
     <Compile Include="Assets/Scripts/TowerGame.cs" />
     <Compile Include="Assets/Scripts/UI/BattleBandView.cs" />
     <Compile Include="Assets/Scripts/Battle/BattleBand.cs" />
+    <Compile Include="Assets/Scripts/DebugPlay.cs" />
     <Compile Include="Assets/Scripts/UI/DialogueBox.cs" />
     <Compile Include="Assets/Scripts/TowerPlayer.cs" />
     <Compile Include="Assets/Scripts/Items/ItemPickup.cs" />

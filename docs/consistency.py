@@ -36,7 +36,8 @@ print("\n【4】初期値（原典: 序章は 1000/100/100・神剣神盾、ゼ�
 _gs=open("Assets/Scripts/GameStart.cs",encoding="utf-8").read()
 chk("Hp = 1000, Attack = 100, Defense = 100" in _gs,"序章の値")
 chk("SwordRank = 5, ShieldRank = 5" in _gs,"序章は神剣と神盾")
-chk("Hp = 400, Attack = 10, Defense = 10" in _gs,"ゼノに奪われたあとの値")
+_dbg=open("Assets/Scripts/DebugPlay.cs",encoding="utf-8").read()
+chk("見終わったら必ず false に戻すこと" in _dbg,"細工は戻す前提だと書いてある")
 chk("SwordRank = 0, ShieldRank = 0" in _gs,"奪われたあとは丸腰")
 _ps=open("Assets/Scripts/PlayerState.cs",encoding="utf-8").read()
 chk("YellowKeys" in _ps and "PurpleKeys" in _ps and "RedKeys" in _ps,"鍵は3種を持つ")
@@ -288,7 +289,11 @@ print("\n【8f】ゲーム冒頭の2つの状態（序章 と ゼノのイベン
 _gs=open("Assets/Scripts/GameStart.cs",encoding="utf-8").read()
 chk("Hp = 1000, Attack = 100, Defense = 100" in _gs,"序章は 生命力1000 / 攻撃100 / 防御100")
 chk("SwordRank = 5, ShieldRank = 5" in _gs,"序章は神剣・神盾を装備")
-chk("Hp = 400, Attack = 10, Defense = 10" in _gs,"ゼノのイベント後は 400 / 10 / 10")
+# ⚠ ここは調べもの用に DebugPlay で差し替えられるようにしてある（原典は 400 / 10 / 10）。
+chk("DebugPlay.StrongAfterZeno ? DebugPlay.StrongStat : 10" in _gs,
+    "ゼノのイベント後の攻守は原典 10 / 10（細工は DebugPlay 側）")
+chk("DebugPlay.StrongHpAfterZeno ? DebugPlay.StrongHp : 400" in _gs,
+    "ゼノのイベント後の生命力は原典 400")
 chk("Floor = 2" in _gs,"イベント後は2階の牢に入る")
 chk("ZenoEncounterFloor = 3" in _gs,"ゼノに会うのは3階")
 
@@ -1945,7 +1950,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=664
+MIN_CHECKS=665
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
