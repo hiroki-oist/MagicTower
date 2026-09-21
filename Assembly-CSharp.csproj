@@ -121,6 +121,7 @@
     <Compile Include="Assets/Scripts/UI/TitleScreen.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/VertexZoom.cs" />
     <Compile Include="Assets/Scripts/TowerRuntime.cs" />
+    <Compile Include="Assets/Scripts/UI/AuthorStyle.cs" />
     <Compile Include="Assets/Scripts/Cutscenes.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark02.cs" />
     <Compile Include="Assets/Scripts/PlayerState.cs" />
@@ -135,6 +136,8 @@
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/WarpTextExample.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TextMeshProFloatingText.cs" />
     <Compile Include="Assets/Scripts/TowerGame.cs" />
+    <Compile Include="Assets/Scripts/UI/BattleBandView.cs" />
+    <Compile Include="Assets/Scripts/Battle/BattleBand.cs" />
     <Compile Include="Assets/Scripts/UI/DialogueBox.cs" />
     <Compile Include="Assets/Scripts/TowerPlayer.cs" />
     <Compile Include="Assets/Scripts/Items/ItemPickup.cs" />

@@ -26,6 +26,14 @@ public static class TowerBattle
         public int Hits;
         /// <summary>倒せないときに出す文言のキー。</summary>
         public string MessageKey;
+
+        // 戦いに使った数字そのもの（封印で下がったゼノの数値もこちら）。
+        // 作者の旧版の見せ方（BattleBand）が帯に出すのに要る。
+        public int EnemyHp, EnemyAttack, EnemyDefense;
+        /// <summary>自分の一撃で相手が減る量。</summary>
+        public int PlayerDamage;
+        /// <summary>相手の一撃で自分が減る量。</summary>
+        public int EnemyDamage;
     }
 
     /// <summary>
@@ -76,6 +84,10 @@ public static class TowerBattle
                                     ehp, eatk, edef, e.Coin, kind, charms);
 
         r.Fought = true;
+        r.EnemyHp = ehp; r.EnemyAttack = eatk; r.EnemyDefense = edef;
+        r.PlayerDamage = BattleRules.DamagePerHit(
+            BattleRules.EffectiveAttack(player.Attack, kind, charms), edef);
+        r.EnemyDamage = BattleRules.DamagePerHit(eatk, player.Defense);
         if (!p.CanWin)
         {
             r.MessageKey = "cannot_attack";   // 「相手の防御力が高すぎて攻撃できない。」

@@ -31,6 +31,12 @@ public class BattleView : MonoBehaviour
     /// </summary>
     public int HitsDone { get; private set; }
 
+    /// <summary>
+    /// ここまでに受けた反撃の数。作者の旧版の帯（<see cref="AuthorStyle"/>）が
+    /// 自分の命を1ターンごとに減らすのに見る。
+    /// </summary>
+    public int CountersDone { get; private set; }
+
     List<BattlePresentation.Step> playing;
     List<Vector2Int> playingCharge;
     GameObject effect;
@@ -90,6 +96,7 @@ public class BattleView : MonoBehaviour
     {
         IsPlaying = true;
         HitsDone = 0;
+        CountersDone = 0;
         foreach (var s in steps)
         {
             switch (s.Kind)
@@ -99,7 +106,7 @@ public class BattleView : MonoBehaviour
                     break;
                 case "斬る":
                 case "反撃":
-                    if (s.Kind == "斬る") HitsDone++;
+                    if (s.Kind == "斬る") HitsDone++; else CountersDone++;
                     ShowEffect(s.At);
                     yield return new WaitForSeconds(BattlePresentation.WaitSeconds(s.Value));
                     effect.SetActive(false);

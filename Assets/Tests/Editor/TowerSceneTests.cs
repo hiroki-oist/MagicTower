@@ -56,6 +56,32 @@ public class TowerSceneTests
     }
 
     [Test]
+    public void 戦闘の黒い帯がシーンに組まれている()
+    {
+        // 作者の旧版の見せ方（AuthorStyle）。原典に戻すときは Enabled を false にする。
+        var view = Object.FindObjectOfType<BattleBandView>(true);
+        if (!AuthorStyle.Enabled) { Assert.Pass("原典どおりの見せ方なので帯は無い"); return; }
+        Assert.IsNotNull(view, "BattleBandView が無い");
+        var so = new UnityEditor.SerializedObject(view);
+        foreach (var name in new[] { "controller", "battleView", "registry", "panel",
+                                     "background", "turnText",
+                                     "playerIcon", "playerName",
+                                     "enemyIcon", "enemyName" })
+            Assert.IsNotNull(so.FindProperty(name).objectReferenceValue, $"{name} が未設定");
+        foreach (var side in new[] { "playerStats", "enemyStats" })
+        {
+            var arr = so.FindProperty(side);
+            Assert.AreEqual(AuthorStyle.StatTops.Length, arr.arraySize, side);
+            for (int i = 0; i < arr.arraySize; i++)
+                Assert.IsNotNull(arr.GetArrayElementAtIndex(i).objectReferenceValue,
+                                 $"{side}[{i}] が未設定");
+        }
+        // 帯は始め隠れていること
+        var panel = (RectTransform)so.FindProperty("panel").objectReferenceValue;
+        Assert.IsFalse(panel.gameObject.activeSelf, "帯は始め隠しておく");
+    }
+
+    [Test]
     public void 入力を受ける側にも参照が繋がっている()
     {
         var c = Object.FindObjectOfType<TowerController>();

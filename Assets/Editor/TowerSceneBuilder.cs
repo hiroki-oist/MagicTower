@@ -299,6 +299,9 @@ public static class TowerSceneBuilder
         BuildMonsterPanel(screen, font, vso);
         vso.ApplyModifiedPropertiesWithoutUndo();
 
+        // 作者の旧版の見せ方（黒い帯）。AuthorStyle.Enabled が false なら出ない。
+        BuildBattleBand(screen, font, controller, battleView);
+
         BuildDialogueWindow(screen, font, controller);
         BuildMenuWindow(screen, font, controller);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
@@ -342,18 +345,20 @@ public static class TowerSceneBuilder
     /// 窓の中の文字。原典は窓の左上から (16,12) の内側に、行送り20ドットで書く
     /// （x=0x16 バイト＝176、y=上端+0xc、行送りは lcall 0x107e,0 の 0x14）。
     /// </summary>
-    static TextMeshProUGUI WindowBody(GameObject panelGo, TMP_FontAsset font)
+    static TextMeshProUGUI WindowBody(GameObject panelGo, TMP_FontAsset font, bool author = false)
     {
+        int left = author ? AuthorStyle.DialogueTextLeft : DialogueWindow.TextLeft;
+        int top  = author ? AuthorStyle.DialogueTextTop  : DialogueWindow.TextTop;
         var textGo = new GameObject("Body", typeof(RectTransform));
         textGo.transform.SetParent(panelGo.transform, false);
         var trt = textGo.GetComponent<RectTransform>();
         trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-        trt.offsetMin = new Vector2(DialogueWindow.TextLeft * DialogueWindow.CanvasScale, 0f);
-        trt.offsetMax = new Vector2(0f, -DialogueWindow.TextTop * DialogueWindow.CanvasScale);
+        trt.offsetMin = new Vector2(left * DialogueWindow.CanvasScale, 0f);
+        trt.offsetMax = new Vector2(0f, -top * DialogueWindow.CanvasScale);
         var tmp = textGo.AddComponent<TextMeshProUGUI>();
         if (font != null) tmp.font = font;
-        tmp.fontSize = ScreenLayout.TextSizeOnCanvas;
-        tmp.lineSpacing = TowerHud.InfoLineSpacing;
+        tmp.fontSize = author ? AuthorStyle.DialogueTextOnCanvas : ScreenLayout.TextSizeOnCanvas;
+        tmp.lineSpacing = author ? AuthorStyle.DialogueLineSpacing : TowerHud.InfoLineSpacing;
         tmp.color = DialogueWindowView.Text;
         tmp.alignment = TextAlignmentOptions.TopLeft;
         tmp.enableWordWrapping = false;
@@ -397,14 +402,15 @@ public static class TowerSceneBuilder
         var rt = panelGo.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
 
-        var r = DialogueWindow.For(6);          // はじめは6行ぶんの大きさ
+        // はじめは6行ぶんの大きさ（作者の見せ方のときは広い窓）
+        var r = AuthorStyle.Enabled ? AuthorStyle.DialogueFor(6) : DialogueWindow.For(6);
         rt.anchoredPosition = DialogueWindow.ToCanvas(r);
         rt.sizeDelta = DialogueWindow.SizeOnCanvas(r);
 
         var img = panelGo.GetComponent<UnityEngine.UI.Image>();
         img.color = DialogueWindowView.Fill;
 
-        var tmp = WindowBody(panelGo, font);
+        var tmp = WindowBody(panelGo, font, AuthorStyle.Enabled);
 
         var win = screen.gameObject.AddComponent<DialogueWindowView>();
         var wso = new SerializedObject(win);
@@ -463,6 +469,63 @@ public static class TowerSceneBuilder
         var t = Box(parent, font, name, r, ScreenLayout.TextSizeOnCanvas,
                     TextAlignmentOptions.Left);
         t.text = text;
+    }
+
+    /// <summary>
+    /// 戦闘中の黒い帯（**作者の旧版の見せ方**、<see cref="AuthorStyle"/>）。
+    /// 旧版 `Assets/Scenes/Floor1.unity`（commit a58a72a）の BattleUI と同じ並びで、
+    /// 左が自分・右が相手、上に「第 N ターン」。原典どおりの見せ方に戻すなら
+    /// <c>AuthorStyle.Enabled</c> を false にする（この入れ物は出なくなる）。
+    /// </summary>
+    static void BuildBattleBand(RectTransform screen, TMP_FontAsset font,
+                                TowerController controller, BattleView battleView)
+    {
+        // 入れ物は画面の左上に合わせておく。中の欄は原典の画面座標をそのまま使える。
+        var holderGo = new GameObject("BattleBand", typeof(RectTransform));
+        holderGo.transform.SetParent(screen, false);
+        var holder = holderGo.GetComponent<RectTransform>();
+        holder.anchorMin = holder.anchorMax = holder.pivot = new Vector2(0f, 1f);
+        holder.anchoredPosition = Vector2.zero;
+        holder.sizeDelta = Vector2.zero;
+
+        var band = Icon(holder, "Band", AuthorStyle.Band);
+        band.color = AuthorStyle.BandFill;
+
+        var view = screen.gameObject.AddComponent<BattleBandView>();
+        var so = new SerializedObject(view);
+        so.FindProperty("controller").objectReferenceValue = controller;
+        so.FindProperty("battleView").objectReferenceValue = battleView;
+        so.FindProperty("registry").objectReferenceValue =
+            Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
+        so.FindProperty("panel").objectReferenceValue = holder;
+        so.FindProperty("background").objectReferenceValue = band;
+        so.FindProperty("turnText").objectReferenceValue =
+            Box(holder, font, "BattleTurn", AuthorStyle.TurnBox,
+                AuthorStyle.DialogueTextOnCanvas, TextAlignmentOptions.Center);
+
+        BuildBandSide(holder, font, so, "Player", AuthorStyle.PlayerCenterX);
+        BuildBandSide(holder, font, so, "Enemy",  AuthorStyle.EnemyCenterX);
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        holderGo.SetActive(false);
+    }
+
+    /// <summary>帯の片側（絵・名前・HP/ATK/DEF の3行）。</summary>
+    static void BuildBandSide(RectTransform holder, TMP_FontAsset font,
+                              SerializedObject so, string side, int centerX)
+    {
+        var lower = char.ToLowerInvariant(side[0]) + side.Substring(1);
+        so.FindProperty(lower + "Icon").objectReferenceValue =
+            Icon(holder, side + "Icon", AuthorStyle.Icon(centerX));
+        so.FindProperty(lower + "Name").objectReferenceValue =
+            Box(holder, font, side + "Name", AuthorStyle.Name(centerX),
+                ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Center);
+        var stats = so.FindProperty(lower + "Stats");
+        stats.arraySize = AuthorStyle.StatTops.Length;
+        for (int i = 0; i < AuthorStyle.StatTops.Length; i++)
+            stats.GetArrayElementAtIndex(i).objectReferenceValue =
+                Box(holder, font, side + "Stat" + i, AuthorStyle.Stat(centerX, i),
+                    ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Left);
     }
 
     static BattleView BuildBattleView(TowerController controller)

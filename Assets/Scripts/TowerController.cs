@@ -14,6 +14,9 @@ public class TowerController : MonoBehaviour
     [SerializeField] MonsterAnimator monsters;
     [SerializeField] SoundPlayer sound;
 
+    /// <summary>勇者の絵。戦闘の帯（<see cref="BattleBandView"/>）も同じ絵を使う。</summary>
+    public Sprite PlayerSprite { get { return playerSprite; } }
+
     public TowerGame Game { get; private set; }
 
     Transform playerView;
@@ -68,7 +71,8 @@ public class TowerController : MonoBehaviour
         {
             var dir = ReadInput();
             // 壁にぶつかったら、その向きは**キーを離すまで**もう試さない。
-            // 押しっぱなしのまま毎コマ叩き続けると、音も判定も鳴りっぱなしになる。
+            // 押しっぱなしのまま毎コマ叩き続けると、判定が鳴りっぱなしになる。
+            // ぶつかったときの音は**足さない**（原典に無く、作者もそれでよいとのこと）。
             if (dir == Vector2Int.zero) blockedDir = Vector2Int.zero;
             acted = dir != Vector2Int.zero && dir != blockedDir;
             if (acted)

@@ -98,6 +98,7 @@
     <Compile Include="Assets/Tests/Editor/TowerSaveTests.cs" />
     <Compile Include="Assets/Tests/Editor/OriginalDataTests.cs" />
     <Compile Include="Assets/Tests/Editor/FlightOrbTests.cs" />
+    <Compile Include="Assets/Tests/Editor/BattleBandTests.cs" />
     <Compile Include="Assets/Tests/Editor/SoundSynthTests.cs" />
     <Compile Include="Assets/Tests/Editor/ScreenTextTests.cs" />
     <Compile Include="Assets/Tests/Editor/KeyIconTests.cs" />

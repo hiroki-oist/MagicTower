@@ -66,7 +66,7 @@ public class DialogueWindowView : MonoBehaviour
     /// </summary>
     System.Collections.IEnumerator Open(string page)
     {
-        var r = DialogueWindow.ForBody(page, high: HighFor(page));
+        var r = Rect(page);
         int lines = DialogueBox.WindowLines(page);
         int times = 0x14 * lines / DialogueWindow.RowStep + 1;
         bool fast = controller != null && controller.Game != null
@@ -75,8 +75,14 @@ public class DialogueWindowView : MonoBehaviour
         if (body != null) body.enabled = false;
         for (int i = 0; i <= times - 1; i++)
         {
-            int h = Mathf.Min(DialogueWindow.StripHeight + DialogueWindow.RowStep * i,
-                              r.height);
+            // 作者の見せ方では窓が原典より高いので、同じきざみ数で下端まで届かせる。
+            int h = AuthorStyle.Enabled
+                ? Mathf.Min(DialogueWindow.StripHeight
+                            + Mathf.RoundToInt((r.height - DialogueWindow.StripHeight)
+                                               * i / (float)Mathf.Max(1, times - 1)),
+                            r.height)
+                : Mathf.Min(DialogueWindow.StripHeight + DialogueWindow.RowStep * i,
+                            r.height);
             panel.sizeDelta = new Vector2(r.width * DialogueWindow.CanvasScale,
                                           h * DialogueWindow.CanvasScale);
             if (!fast) yield return new WaitForSeconds(MonsterAnimation.FrameSeconds);
@@ -89,11 +95,22 @@ public class DialogueWindowView : MonoBehaviour
     /// <summary>開いている途中か（テストから見る）。</summary>
     public bool IsOpening { get { return opening != null; } }
 
-    /// <summary>原典の寸法で窓を置き直す。</summary>
+    /// <summary>
+    /// この一枚を出す窓の位置と大きさ。ふだんは原典どおり（0x94ba）だが、
+    /// **作者の見せ方**（<see cref="AuthorStyle"/>）のときは画面いっぱいに近い広い窓にする。
+    /// 遊んでもらった報告の5番目「セリフも私が作ったやつの方が見やすい」に合わせたもの。
+    /// </summary>
+    public static RectInt Rect(string page)
+    {
+        if (AuthorStyle.Enabled) return AuthorStyle.DialogueFor(DialogueBox.WindowLines(page));
+        return DialogueWindow.ForBody(page, high: HighFor(page));
+    }
+
+    /// <summary>窓を置き直す。</summary>
     void Layout(string page)
     {
         if (panel == null) return;
-        var r = DialogueWindow.ForBody(page, high: HighFor(page));
+        var r = Rect(page);
         panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0f, 1f);
         panel.anchoredPosition = DialogueWindow.ToCanvas(r);
         panel.sizeDelta = DialogueWindow.SizeOnCanvas(r);

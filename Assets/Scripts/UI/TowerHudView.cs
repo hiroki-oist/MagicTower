@@ -101,7 +101,9 @@ public class TowerHudView : MonoBehaviour
         if (monsterPanel == null) return false;
         var fighting = battleView != null && battleView.IsPlaying
                        && !string.IsNullOrEmpty(controller.Game.LastBattleEnemy);
-        monsterPanel.gameObject.SetActive(fighting);
+        // 作者の見せ方（AuthorStyle）のときは同じ中身を黒い帯（BattleBandView）が
+        // 画面の中央に出すので、原典の右下の欄は重ねずに隠す。
+        monsterPanel.gameObject.SetActive(fighting && !AuthorStyle.Enabled);
         if (!fighting) return false;
 
         var info = TowerHud.Inspect(p, controller.Game.LastBattleEnemy);

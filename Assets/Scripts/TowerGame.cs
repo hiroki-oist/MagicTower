@@ -262,6 +262,12 @@ public class TowerGame
     public string LastBattleEnemy { get; private set; }
 
     /// <summary>
+    /// 直前の戦闘の数字ひとそろい。**作者の旧版の見せ方**（黒い帯）が
+    /// 1ターンごとのHPを出すのに使う。<see cref="AuthorStyle"/> を参照。
+    /// </summary>
+    public BattleBand.Numbers LastBattleNumbers { get; private set; }
+
+    /// <summary>
     /// 出すべき閃光の場所。原典は戦闘・魔法攻撃・場面の節目の**7か所すべてで
     /// 同じ絵**（GROUND.P58 の11枚目、buffer 変位 0x87a）を貼る。
     /// 音と同じで、ここは**場所を積むだけ**にして描くのは見た目の層に任せる。
@@ -594,9 +600,25 @@ public class TowerGame
             case TowerPlayer.Outcome.Encounter:
             {
                 var before2 = Player.Position;
+                int hpBefore = Player.Hp;
                 var b = TowerBattle.Resolve(Player, r.What);
                 LastBattle = BattlePresentation.Steps(before2, r.Target, b.Hits);
                 LastBattleEnemy = r.What;
+                // 作者の旧版の帯（BattleBand）に出す数字。戦う前の値を残しておく。
+                LastBattleNumbers = new BattleBand.Numbers
+                {
+                    Enemy = r.What,
+                    PlayerHp = hpBefore,
+                    PlayerAttack = Player.Attack,
+                    PlayerDefense = Player.Defense,
+                    EnemyHp = b.EnemyHp,
+                    EnemyAttack = b.EnemyAttack,
+                    EnemyDefense = b.EnemyDefense,
+                    PlayerDamage = b.PlayerDamage,
+                    EnemyDamage = b.EnemyDamage,
+                    Hits = b.Hits,
+                    Gold = b.GoldGained,
+                };
                 // 原典は一撃ごとに音9（自分の攻撃）、相手が生きていれば音10（反撃）。
                 // 回数は BattlePresentation.Steps の並びと同じ。
                 for (int i = 0; i < b.Hits; i++)
