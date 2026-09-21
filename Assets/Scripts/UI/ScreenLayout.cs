@@ -128,6 +128,40 @@ public static class ScreenLayout
     /// <summary>右下の大きい欄。モンスターの情報とメッセージを兼ねる。</summary>
     public static readonly RectInt MessageBox = new RectInt(528, 224, 96, 128);
 
+    // ---- 持ち物の欄（原典 0x2f8c）----
+    //
+    // 左の帯のいちばん下の大きな箱に、**持っている道具の絵を並べる**。
+    // 道具を拾うたびに 0x2f8c が呼ばれて全部描き直す。
+    //
+    //   表 DS:0x35a から 6バイト×15件（旗 0x23〜0x31 ＝ 物体ID 36〜50 の順）
+    //   置き場 = ((番号%3) + (番号/3)*0x280) * 4 + 0x3c02
+    //          → 0x3c02 は 行192・バイト列2 ＝ (16,192)
+    //          → 横は 4バイト＝32ドットおき、縦は 0x280*4＝0xa00 ＝ 32行おき
+    //   持っていないマスは 0xdd で塗るだけ（空欄）
+    //
+    // 塗り潰しの数え上げ（screen_fills.txt）に出てこないのは、
+    // 箱ごと塗らずに**1マスずつ**描き替えているから。
+
+    /// <summary>持ち物の欄の左上。</summary>
+    public static readonly Vector2Int ItemPanelOrigin = new Vector2Int(16, 192);
+
+    /// <summary>1マスの間隔（ドット）と、1行に並べる数。</summary>
+    public const int ItemPanelStep = 32, ItemPanelColumns = 3;
+
+    /// <summary>並べる数（物体ID 36〜50）。</summary>
+    public const int ItemPanelSlots = 15;
+
+    /// <summary>その番号のマスの場所。</summary>
+    public static RectInt ItemPanelSlot(int index)
+    {
+        return new RectInt(ItemPanelOrigin.x + (index % ItemPanelColumns) * ItemPanelStep,
+                           ItemPanelOrigin.y + (index / ItemPanelColumns) * ItemPanelStep,
+                           ItemPanelStep, ItemPanelStep);
+    }
+
+    /// <summary>その番号のマスに出る物体ID。原典の表は 36〜50 の順。</summary>
+    public static int ItemPanelObjectId(int index) { return 36 + index; }
+
     // ---- 戦闘中の相手の情報（原典 0x9626）----
     //
     // 戦闘（0x6082）に入るとき、右下の欄を塗り直して相手の絵と能力値を出す。

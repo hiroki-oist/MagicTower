@@ -638,6 +638,17 @@ chk(len(_second)==36,"2コマ目の絵が36枚ある（ふつう33＋組み立�
 chk("原典はこれを実際に描く" in open("docs/p58_to_tiles.py",encoding="utf-8").read(),
     "2コマ目は原典が描くものだと書いてある")
 
+# 持ち物の欄（0x2f8c）。左の帯の下の箱に、持っている道具の絵を3列で並べる。
+chk(_dis.count("add     bx, 0x3c02")==1,"持ち物の欄の左上は 0x3c02 ＝ (16,192)")
+chk(_dis.count("mov     si, 0x35a")==1 and _dis.count("cmp     si, 0x3b4")==1,
+    "並べる表は DS:0x35a から 6バイト×15件")
+chk((0x3b4-0x35a)//6==15,"15件ちょうど")
+chk("ItemPanelSlots = 15" in _sl and "ItemPanelColumns = 3" in _sl,
+    "持ち物の欄の数がリメイクにも入っている")
+_missing_item=[_i for _i in range(36,51)
+               if not glob.glob(f"Assets/Sprites/Tiles/{_i:03d}_*.png")]
+chk(not _missing_item,"持ち物15種の絵が揃っている",str(_missing_item))
+
 # 戦闘中の相手の欄（0x9626）。戦闘 0x6082 の中から1か所だけ呼ばれる。
 chk(_dis.count("mov     cx, 0x110")>=1 and _dis.count("mov     cx, 0x128")>=1,
     "相手の名前(y=272)と命(y=296)の位置が原典にある")
@@ -1249,7 +1260,7 @@ def _rgba(path):
         out.append(bytes(line)); prev=line
     return w,h,ct,out
 _tiles=sorted(q for q in glob.glob("Assets/Sprites/Tiles/*.png") if not q.endswith("_b.png"))
-chk(len(_tiles)==96,"タイルは96枚（1コマ目）",str(len(_tiles)))
+chk(len(_tiles)==103,"タイルは103枚（1コマ目）",str(len(_tiles)))
 # 敵と人の絵は必ず背景が抜けている。抜く色は種別で決まる（0xabe6 の 0x11 / 0x88 ＝ 索引1 / 8）。
 # 左上の1点で背景を決めていたころ、そこに絵が来ている赤スライム(ID63)だけ
 # 透過が付かず灰色の四角が残っていた。
@@ -1651,7 +1662,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=597
+MIN_CHECKS=602
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
