@@ -530,6 +530,9 @@ _cutx=open("Assets/Resources/Cutscenes.txt",encoding="utf-8").read()
 chk("PlayEffect(Player.Position)" in _tgx,"魔法攻撃と場面の節目は自分のマスに閃光")
 chk(_cutx.count("閃光")>=2,"場面の閃光2件（ゼノとの初対面・金騎士処刑）",str(_cutx.count("閃光")))
 chk("ConsumeEffects" in _tgx,"閃光を見た目の層が引ける")
+_pt=open("Assets/Editor/TowerPlaythrough.cs",encoding="utf-8").read()
+chk("BestDoor" in _pt,"自動プレイは開ける扉を選ぶ（近い順ではない）")
+chk("keys * 100 + cells" in _pt,"扉は「鍵が何本増えるか」を重く見て選ぶ")
 _tg3=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("Player.Position = r.Target;" in _tg3,
     "敵に勝つと相手のマスに立つ（戦闘処理が座標を動かす。原典 0x61ef と 0x631f）")
@@ -1231,7 +1234,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=470
+MIN_CHECKS=472
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

@@ -207,6 +207,14 @@ public static class TowerPlaythrough
             if (hasGoal && next.HasValue && IsDoor(game.Floor.At(next.Value))
                 && Route(game.Floor, game.Player.Position, goal, giveUp, game) != null)
                 next = null;
+
+            // 扉を開けるなら**いちばん得をする扉**を選ぶ。近い扉から順に開けると
+            // 鍵を無駄にしやすい（7階で鍵切れになっていたのがこれ）。
+            if (next.HasValue && IsDoor(game.Floor.At(next.Value)))
+            {
+                var best = BestDoor(game, giveUp, hasGoal ? goal : (Vector2Int?)null);
+                if (best.HasValue) next = best;
+            }
             var target = next ?? goal;
             if (step % 500 == 499)
                 trace.Add($"{step}歩: 位置({game.Player.Position.x},{game.Player.Position.y}) "
@@ -392,6 +400,91 @@ public static class TowerPlaythrough
         }
         foreach (var b in best) if (b.HasValue) return b;
         return null;
+    }
+
+    /// <summary>
+    /// 開けられる扉のうち、**開けたときに新しく行ける範囲がいちばん広いもの**を選ぶ。
+    /// 階段に届くようになる扉があればそれを最優先にする。
+    /// 近い順に開けていくと鍵を無駄づかいして先に進めなくなるため。
+    /// </summary>
+    static Vector2Int? BestDoor(TowerGame game, HashSet<Vector2Int> giveUp, Vector2Int? goal)
+    {
+        var now = Reach(game, null);
+        Vector2Int? best = null;
+        int bestGain = 0;
+        bool bestOpensGoal = false;
+
+        foreach (var d in now)
+        {
+            foreach (var dir in new[] { Vector2Int.up, Vector2Int.down,
+                                        Vector2Int.left, Vector2Int.right })
+            {
+                var c = d + dir;
+                if (c.x < FloorData.MinX || c.x > FloorData.MaxX ||
+                    c.y < FloorData.MinY || c.y > FloorData.MaxY) continue;
+                if (!IsDoor(game.Floor.At(c)) || giveUp.Contains(c)) continue;
+                if (!HasKeyFor(game.Player, game.Floor.At(c))) continue;
+
+                var after = Reach(game, c);
+                // 「広さ」より「鍵が何本増えるか」を重く見る。
+                // 鍵の扉は開けるのに1本使うので、鍵の取れない扉を先に開けると詰む。
+                int keys = 0, cells = 0;
+                foreach (var n2 in after)
+                {
+                    if (now.Contains(n2)) continue;
+                    cells++;
+                    if (game.Floor.At(n2).StartsWith("Key_")) keys++;
+                }
+                int gain = keys * 100 + cells;
+                bool opensGoal = goal.HasValue && !now.Contains(goal.Value)
+                                               && after.Contains(goal.Value);
+                if (opensGoal && !bestOpensGoal) { best = c; bestGain = gain; bestOpensGoal = true; }
+                else if (opensGoal == bestOpensGoal && gain > bestGain) { best = c; bestGain = gain; }
+            }
+        }
+        return best;
+    }
+
+    /// <summary>今いる場所から行ける範囲。<paramref name="opened"/> の扉は開いたものとみなす。</summary>
+    static HashSet<Vector2Int> Reach(TowerGame game, Vector2Int? opened)
+    {
+        var floor = game.Floor;
+        var seen = new HashSet<Vector2Int> { game.Player.Position };
+        var q = new Queue<Vector2Int>();
+        q.Enqueue(game.Player.Position);
+        while (q.Count > 0)
+        {
+            var at = q.Dequeue();
+            foreach (var dir in new[] { Vector2Int.up, Vector2Int.down,
+                                        Vector2Int.left, Vector2Int.right })
+            {
+                var n = at + dir;
+                if (seen.Contains(n)) continue;
+                if (n.x < FloorData.MinX || n.x > FloorData.MaxX ||
+                    n.y < FloorData.MinY || n.y > FloorData.MaxY) continue;
+                var w = floor.At(n);
+                // 開けると決めた扉だけは通れるものとして数える。
+                // ほかの鍵の扉は閉じたまま（そこを開けるかはこのあと別に比べる）。
+                bool open = (opened.HasValue && n == opened.Value)
+                            || (Passable(w) && !IsDoor(w));
+                if (!open) continue;
+                seen.Add(n);
+                q.Enqueue(n);
+            }
+        }
+        return seen;
+    }
+
+    /// <summary>その色の鍵を持っているか。</summary>
+    static bool HasKeyFor(PlayerState p, string door)
+    {
+        switch (door)
+        {
+            case "y": return p.YellowKeys > 0;
+            case "b": return p.PurpleKeys > 0;
+            case "r": return p.RedKeys > 0;
+        }
+        return false;
     }
 
     static bool IsDoor(string what)
