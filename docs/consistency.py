@@ -2010,7 +2010,37 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
 
-MIN_CHECKS=680
+# 鍵の出入り（docs/key_budget.py と同じ数え方）。**落ちている鍵より扉の方が多い**
+# ＝「開ける扉を選ぶ」のが遊びの骨。ここが狂うと階のデータが壊れたということ。
+def _key_budget():
+    _door={"y":"yellow","b":"purple","r":"red"}
+    _item={"Key_Yellow":"yellow","Key_Blue":"purple","Key_Red":"red"}
+    k={"yellow":0,"purple":0,"red":0}; d={"yellow":0,"purple":0,"red":0}
+    for _n in range(1,51):
+        _inobj=False
+        for _l in open(f"Assets/Resources/Floors/Floor_{_n}.txt",encoding="utf-8"):
+            if _l.startswith("objects:"): _inobj=True; continue
+            if _inobj:
+                _m=re.match(r"\s*([+-]\d+) ([+-]\d+)\s+(\S+)",_l)
+                if _m and _m.group(3) in _item: k[_item[_m.group(3)]]+=1
+                continue
+            _m=re.match(r"\s*([+-]\d+) \| (.{11})$",_l.rstrip("\n"))
+            if _m:
+                for _c in _m.group(2):
+                    if _c in _door: d[_door[_c]]+=1
+    return k,d
+_kb_k,_kb_d=_key_budget()
+chk((_kb_k["yellow"],_kb_d["yellow"])==(169,239),"黄の鍵169本・黄の扉239枚",
+    f'{_kb_k["yellow"]}/{_kb_d["yellow"]}')
+chk((_kb_k["purple"],_kb_d["purple"])==(20,39),"紫の鍵20本・紫の扉39枚",
+    f'{_kb_k["purple"]}/{_kb_d["purple"]}')
+chk((_kb_k["red"],_kb_d["red"])==(3,12),"赤の鍵3本・赤の扉12枚",
+    f'{_kb_k["red"]}/{_kb_d["red"]}')
+chk(all(_kb_k[_c]<_kb_d[_c] for _c in ("yellow","purple","red")),
+    "どの色も鍵より扉が多い（開ける扉を選ぶのが遊びの骨）")
+chk(os.path.exists("docs/key_budget.py"),"鍵の出入りを数える道具がある")
+
+MIN_CHECKS=685
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。
