@@ -112,7 +112,7 @@ public class TowerController : MonoBehaviour
         var d = now - posBefore;
         bool oneStep = Game.Player.Floor == floorBefore
                        && (Mathf.Abs(d.x) + Mathf.Abs(d.y)) == 1;
-        if (oneStep && isActiveAndEnabled) StartCoroutine(Slide(posBefore, now));
+        if (oneStep && isActiveAndEnabled) slidingRoutine = StartCoroutine(Slide(posBefore, now));
         else PlacePlayerView();
 
         if (sound != null) sound.Flush(Game);      // 本線が積んだ音を鳴らす
@@ -120,6 +120,17 @@ public class TowerController : MonoBehaviour
 
     /// <summary>移動の演出の最中か。</summary>
     bool sliding;
+
+    Coroutine slidingRoutine, drawingRoutine;
+
+    /// <summary>出している演出を止めて、見た目を整った形に戻す。</summary>
+    void StopShows()
+    {
+        if (slidingRoutine != null) { StopCoroutine(slidingRoutine); slidingRoutine = null; }
+        if (drawingRoutine != null) { StopCoroutine(drawingRoutine); drawingRoutine = null; }
+        sliding = drawing = false;
+        if (playerView != null) playerView.gameObject.SetActive(true);
+    }
 
     /// <summary>階を描き出している最中か。</summary>
     bool drawing;
@@ -169,6 +180,7 @@ public class TowerController : MonoBehaviour
             foreach (var sr in list) if (sr != null) sr.enabled = true;
         if (playerView != null) playerView.gameObject.SetActive(true);
         drawing = false;
+        drawingRoutine = null;
     }
 
     /// <summary>
@@ -192,6 +204,7 @@ public class TowerController : MonoBehaviour
         }
         PlacePlayerView();
         sliding = false;
+        slidingRoutine = null;
     }
 
     /// <summary>メニューの開け閉めに使う鍵（原典 0x1c / 0x34）。</summary>
@@ -244,8 +257,11 @@ public class TowerController : MonoBehaviour
         Game.Floor.ConsumeDirty();     // 作り直したので差分は無かったことにする
         PlacePlayerView();
 
-        // 原典は階に入ると盤面を渦巻きの順に1マスずつ描く（0xafa6）
-        if (isActiveAndEnabled) StartCoroutine(DrawFloor());
+        // 原典は階に入ると盤面を渦巻きの順に1マスずつ描く（0xafa6）。
+        // **前の描き出しや移動が走っていたら止める** — 階が変わると前の階の絵を
+        // 出し続けることになるし、2つ走ると入力の止め方が食い違う。
+        StopShows();
+        if (isActiveAndEnabled) drawingRoutine = StartCoroutine(DrawFloor());
     }
 
     /// <summary>変わったマスだけ作り直す。</summary>
