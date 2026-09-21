@@ -115,48 +115,135 @@ public static class SoundSynth
             if (s.Kind == "rest") { for (int i = 0; i < n; i++) buf.Add(0f); continue; }
 
             double f = Frequency(s.Value, octave);
-            double amp = Math.Pow(volume / 15.0, 1.6) * 0.5;
-            int attack = (int)(0.004 * SampleRate);
-            int release = (int)(0.03 * SampleRate);
+            double amp = Math.Pow(volume / 15.0, 1.6) * 0.9;
+            var fm = voice != null ? new FmVoice(voice) : null;
+            double keyOff = (n / (double)SampleRate) * 0.85;      // 音長の後ろ15%で離す
             for (int i = 0; i < n; i++)
             {
                 double t = i / (double)SampleRate;
-                double env = 1.0;
-                if (i < attack) env = i / (double)attack;
-                if (!s.Tie && n - i < release) env = (n - i) / (double)release;
-                double ph = 2.0 * Math.PI * f * t;
-                buf.Add((float)(amp * env * Wave(ph, voice) / 1.6));
+                double w;
+                if (fm != null)
+                {
+                    w = fm.Next(f, SampleRate, t, !s.Tie && t >= keyOff, keyOff);
+                }
+                else
+                {
+                    double ph = 2.0 * Math.PI * f * t;
+                    double env = 1.0;
+                    double rel = 0.03;
+                    if (!s.Tie && (n - i) / (double)SampleRate < rel)
+                        env = (n - i) / (double)SampleRate / rel;
+                    w = env * (Math.Sin(ph) + 0.4 * Math.Sin(2 * ph) + 0.2 * Math.Sin(3 * ph)) / 1.6;
+                }
+                buf.Add((float)(amp * w));
             }
         }
         return buf.ToArray();
     }
 
     /// <summary>
-    /// 波の形。原典の音色から **ALG（つなぎ方）と TL（大きさ）だけ**を見て寄せる。
+    /// 原典の音色で4つのオペレータを繋いで鳴らす。OPN の組み方をそのまま写す。
     ///
-    /// 本物の OPN は4つのオペレータを ALG のとおりに繋いで鳴らすが、ここでは
-    ///   ALG 0〜3（直列が主）… 変調をかけた波（変調の深さは op1 の TL から）
-    ///   ALG 4〜7（並列が主）… 倍音を足した波（大きさは各 op の TL から）
-    /// という2通りに寄せる。**音程・長さ・強弱・テンポは原典どおり**で、
-    /// ここだけが近似。4オペレータをちゃんと組むときはこの関数を差し替えればよい。
+    /// つなぎ方（ALG）は YM2203 の8通り:
+    /// <code>
+    ///   0: 1→2→3→4          1: (1+2)→3→4        2: (1 + 2→3)→4      3: (1→2 + 3)→4
+    ///   4: 1→2, 3→4 の和     5: 1→(2,3,4) の和    6: 1→2 と 3,4 の和   7: 1+2+3+4
+    /// </code>
+    /// 各オペレータの音程は基本周波数×MUL（MUL=0 は 1/2）、大きさは TL（0.75dB刻み）、
+    /// 包絡は AR/DR/SL/SR/RR。**包絡の速さだけは原典の表が無いので近似**で、
+    /// つなぎ方・倍率・大きさ・折り返し点は原典の値そのまま。
+    /// 自己帰還（FB）は op1 にだけかかる。
     /// </summary>
-    static double Wave(double ph, SoundVoices.Voice v)
+    public class FmVoice
     {
-        if (v == null) return Math.Sin(ph) + 0.4 * Math.Sin(2 * ph) + 0.2 * Math.Sin(3 * ph);
-        if (v.Algorithm <= 3)
+        readonly SoundVoices.Voice v;
+        readonly double[] phase = new double[4];
+        readonly double[] outv = new double[4];      // 1標本ごとに作らない（22秒×4本ぶん回る）
+        double last1, last1b;
+
+        public FmVoice(SoundVoices.Voice voice) { v = voice; }
+
+        /// <summary>MUL の倍率。0 は 1/2 倍（OPN の決まり）。</summary>
+        static double Ratio(int mul) { return mul == 0 ? 0.5 : mul; }
+
+        /// <summary>包絡の速さ。値が大きいほど速い（原典の表の代わりの近似）。</summary>
+        static double Rate(int r, double slowest)
         {
-            // 直列。op1 を変調に使う（MUL がその倍率）
-            double index = 6.0 * SoundVoices.LevelOf(v.Ops[0].TL);
-            int mul = Mathf.Max(1, v.Ops[0].MUL);
-            return Math.Sin(ph + index * Math.Sin(mul * ph)) * 1.6;
+            if (r <= 0) return 0.0;                       // 0 は「動かない」
+            return slowest * Math.Pow(2.0, (r - 31) / 4.0);
         }
-        double w = 0.0;
-        for (int i = 0; i < 4; i++)
+
+        /// <summary>時刻 t（音が鳴り始めてからの秒）でのオペレータの出力の大きさ（0〜1）。</summary>
+        static double Envelope(SoundVoices.Op o, double t, bool released, double releasedAt)
         {
-            int mul = Mathf.Max(1, v.Ops[i].MUL);
-            w += SoundVoices.LevelOf(v.Ops[i].TL) * Math.Sin(mul * ph);
+            double atk = Rate(o.AR, 600.0);               // 1秒あたりに進む割合
+            double dec = Rate(o.DR, 60.0);
+            double sus = Rate(o.SR, 6.0);
+            double rel = Rate(o.RR * 2 + 1, 120.0);
+            double sl = o.SL == 15 ? 0.0 : 1.0 - o.SL / 16.0;   // 折り返し点（SL15は無音）
+
+            double e;
+            double ta = atk > 0 ? 1.0 / atk : 0.0;
+            if (t < ta) e = atk > 0 ? t * atk : 1.0;      // 立ち上がり
+            else
+            {
+                double td = t - ta;
+                double d = dec > 0 ? (1.0 - td * dec) : 1.0;
+                e = d > sl ? d : sl - (td - (dec > 0 ? (1.0 - sl) / dec : 0.0)) * sus;
+            }
+            if (released) e -= (t - releasedAt) * rel;
+            return e < 0.0 ? 0.0 : (e > 1.0 ? 1.0 : e);
         }
-        return w;
+
+        /// <summary>1標本ぶん進める。<paramref name="f"/> は基本周波数。</summary>
+        public double Next(double f, int rate, double t, bool released, double releasedAt)
+        {
+            var op = v.Ops;
+            double fb = v.Feedback == 0 ? 0.0 : Math.Pow(2.0, v.Feedback) / 64.0;
+
+            for (int i = 0; i < 4; i++)
+                phase[i] += 2.0 * Math.PI * f * Ratio(op[i].MUL) / rate;
+
+            // op1 は自分の出力を戻して変調する（平均を取るのが実機に近い）
+            double m1 = fb * (last1 + last1b) * 0.5;
+            outv[0] = Math.Sin(phase[0] + m1)
+                    * SoundVoices.LevelOf(op[0].TL) * Envelope(op[0], t, released, releasedAt);
+            last1b = last1; last1 = outv[0];
+
+            double In(int i, double mod)
+            {
+                return Math.Sin(phase[i] + mod * 6.0)
+                     * SoundVoices.LevelOf(op[i].TL) * Envelope(op[i], t, released, releasedAt);
+            }
+
+            switch (v.Algorithm)
+            {
+                case 0:
+                    outv[1] = In(1, outv[0]); outv[2] = In(2, outv[1]); outv[3] = In(3, outv[2]);
+                    return outv[3];
+                case 1:
+                    outv[1] = In(1, 0); outv[2] = In(2, outv[0] + outv[1]); outv[3] = In(3, outv[2]);
+                    return outv[3];
+                case 2:
+                    outv[1] = In(1, 0); outv[2] = In(2, outv[1]); outv[3] = In(3, outv[0] + outv[2]);
+                    return outv[3];
+                case 3:
+                    outv[1] = In(1, outv[0]); outv[2] = In(2, 0); outv[3] = In(3, outv[1] + outv[2]);
+                    return outv[3];
+                case 4:
+                    outv[1] = In(1, outv[0]); outv[2] = In(2, 0); outv[3] = In(3, outv[2]);
+                    return (outv[1] + outv[3]) * 0.5;
+                case 5:
+                    outv[1] = In(1, outv[0]); outv[2] = In(2, outv[0]); outv[3] = In(3, outv[0]);
+                    return (outv[1] + outv[2] + outv[3]) / 3.0;
+                case 6:
+                    outv[1] = In(1, outv[0]); outv[2] = In(2, 0); outv[3] = In(3, 0);
+                    return (outv[1] + outv[2] + outv[3]) / 3.0;
+                default:
+                    outv[1] = In(1, 0); outv[2] = In(2, 0); outv[3] = In(3, 0);
+                    return (outv[0] + outv[1] + outv[2] + outv[3]) * 0.25;
+            }
+        }
     }
 
     /// <summary>その音（曲なら全チャンネル）を混ぜて波にする。</summary>

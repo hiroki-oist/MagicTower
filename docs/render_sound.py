@@ -56,29 +56,93 @@ def load_scores():
         scores.setdefault(int(p[0]), []).append(p[2].split())
     return scores
 
+# --- 4オペレータの合成（Unity 側の SoundSynth.FmVoice と同じ作り）------------
+
+ALG_OUT = {0:(3,),1:(3,),2:(3,),3:(3,),4:(1,3),5:(1,2,3),6:(1,2,3),7:(0,1,2,3)}
+
+def ratio(mul):
+    return 0.5 if mul == 0 else mul
+
+def rate(r, slowest):
+    return 0.0 if r <= 0 else slowest * 2.0 ** ((r - 31) / 4.0)
+
+def envelope(o, t, released, released_at):
+    atk = rate(o["AR"], 600.0); dec = rate(o["DR"], 60.0)
+    sus = rate(o["SR"], 6.0);   rel = rate(o["RR"] * 2 + 1, 120.0)
+    sl = 0.0 if o["SL"] == 15 else 1.0 - o["SL"] / 16.0
+    ta = 1.0 / atk if atk > 0 else 0.0
+    if t < ta:
+        e = t * atk if atk > 0 else 1.0
+    else:
+        td = t - ta
+        d = 1.0 - td * dec if dec > 0 else 1.0
+        e = d if d > sl else sl - (td - ((1.0 - sl) / dec if dec > 0 else 0.0)) * sus
+    if released:
+        e -= (t - released_at) * rel
+    return max(0.0, min(1.0, e))
+
+class Fm:
+    def __init__(self, v):
+        self.v = v; self.ph = [0.0] * 4; self.l1 = 0.0; self.l1b = 0.0
+
+    def next(self, f, rate_hz, t, released, released_at):
+        v = self.v; ops = v["ops"]
+        fb = 0.0 if v["FB"] == 0 else 2.0 ** v["FB"] / 64.0
+        for i in range(4):
+            self.ph[i] += 2 * math.pi * f * ratio(ops[i]["MUL"]) / rate_hz
+        m1 = fb * (self.l1 + self.l1b) * 0.5
+        out = [0.0] * 4
+        out[0] = (math.sin(self.ph[0] + m1) * level(ops[0]["TL"])
+                  * envelope(ops[0], t, released, released_at))
+        self.l1b, self.l1 = self.l1, out[0]
+
+        def op(i, mod):
+            return (math.sin(self.ph[i] + mod * 6.0) * level(ops[i]["TL"])
+                    * envelope(ops[i], t, released, released_at))
+
+        a = v["ALG"]
+        if a == 0:
+            out[1] = op(1, out[0]); out[2] = op(2, out[1]); out[3] = op(3, out[2])
+        elif a == 1:
+            out[1] = op(1, 0); out[2] = op(2, out[0] + out[1]); out[3] = op(3, out[2])
+        elif a == 2:
+            out[1] = op(1, 0); out[2] = op(2, out[1]); out[3] = op(3, out[0] + out[2])
+        elif a == 3:
+            out[1] = op(1, out[0]); out[2] = op(2, 0); out[3] = op(3, out[1] + out[2])
+        elif a == 4:
+            out[1] = op(1, out[0]); out[2] = op(2, 0); out[3] = op(3, out[2])
+        elif a == 5:
+            out[1] = op(1, out[0]); out[2] = op(2, out[0]); out[3] = op(3, out[0])
+        elif a == 6:
+            out[1] = op(1, out[0]); out[2] = op(2, 0); out[3] = op(3, 0)
+        else:
+            out[1] = op(1, 0); out[2] = op(2, 0); out[3] = op(3, 0)
+        idx = ALG_OUT[a]
+        return sum(out[i] for i in idx) / len(idx)
+
 def fm_voices():
-    """原典の音色。ALG と TL だけ使う（本物の4オペレータ合成はまだ作っていない）。"""
+    """原典の音色（29バイト）。並びは OPN のレジスタの順。"""
     img = open(EXE, "rb").read()[HDR:]
     base = SEG * 16
     out = {}
     for a in (0x3c4, 0x3e1, 0x3fe, 0x41b):
         b = img[base + a:base + a + 29]
-        out[a] = {"ALG": b[28] & 7,
-                  "TL": [b[4 + i] & 0x7f for i in range(4)],
-                  "MUL": [b[i] & 15 for i in range(4)]}
+        out[a] = {
+            "FB": (b[28] >> 3) & 7, "ALG": b[28] & 7,
+            "ops": [{"DT": (b[i] >> 4) & 7, "MUL": b[i] & 15,
+                     "TL": b[4 + i] & 0x7f,
+                     "KS": (b[8 + i] >> 6) & 3, "AR": b[8 + i] & 0x1f,
+                     "AM": (b[12 + i] >> 7) & 1, "DR": b[12 + i] & 0x1f,
+                     "SR": b[16 + i] & 0x1f,
+                     "SL": (b[20 + i] >> 4) & 15, "RR": b[20 + i] & 15,
+                     "SSG": b[24 + i] & 15} for i in range(4)],
+        }
     return out
 
 VOICES = fm_voices()
 
 def level(tl):
     return 10.0 ** (-tl * 0.75 / 20.0)
-
-def fm_wave(ph, v):
-    if v is None:
-        return math.sin(ph) + 0.4 * math.sin(2 * ph) + 0.2 * math.sin(3 * ph)
-    if v["ALG"] <= 3:
-        return math.sin(ph + 6.0 * level(v["TL"][0]) * math.sin(max(1, v["MUL"][0]) * ph)) * 1.6
-    return sum(level(v["TL"][i]) * math.sin(max(1, v["MUL"][i]) * ph) for i in range(4))
 
 def render_channel(tokens, rate=RATE, tempo=120):
     """1チャンネルを鳴らして float の並びにする。"""
@@ -115,16 +179,21 @@ def render_channel(tokens, rate=RATE, tempo=120):
         if head not in NOTES:
             continue
         f = freq(NOTES.index(head), octave)
-        amp = (volume / 15.0) ** 1.6 * 0.5
+        amp = (volume / 15.0) ** 1.6 * 0.9
+        fm = Fm(voice) if voice else None
+        key_off = (n / float(rate)) * 0.85
         for i in range(n):
             t = i / float(rate)
-            env = 1.0
-            a = int(0.004 * rate)
-            if i < a: env = i / float(a)                        # 立ち上がり
-            rel = int(0.03 * rate)
-            if not tie and n - i < rel: env = (n - i) / float(rel)
-            ph = 2 * math.pi * f * t
-            out.append(amp * env * fm_wave(ph, voice) / 1.6)
+            if fm is not None:
+                w = fm.next(f, rate, t, (not tie) and t >= key_off, key_off)
+            else:
+                ph = 2 * math.pi * f * t
+                env = 1.0
+                rel = 0.03
+                if not tie and (n - i) / float(rate) < rel:
+                    env = (n - i) / float(rate) / rel
+                w = env * (math.sin(ph) + 0.4 * math.sin(2 * ph) + 0.2 * math.sin(3 * ph)) / 1.6
+            out.append(amp * w)
     return out
 
 def render_sound(channels, tempo=120):
