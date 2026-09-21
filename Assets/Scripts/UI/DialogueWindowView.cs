@@ -117,7 +117,8 @@ public class DialogueWindowView : MonoBehaviour
     }
 
     /// <summary>
-    /// 姿の見えない相手の声か。原典で上端50に開くのはセリフ107・159・156の3件だけ。
+    /// 上端50に開く窓か。原典の会話表示の呼び出しを全部拾った
+    /// `docs/original/dialogue_windows.txt` から取ったもの。
     /// </summary>
     public static bool HighFor(string page)
     {
@@ -130,8 +131,23 @@ public class DialogueWindowView : MonoBehaviour
         return false;
     }
 
-    /// <summary>上端50に開くセリフ（原典 0x0006eb / 0x001aa9 / 0x005d9e）。</summary>
-    public static readonly int[] HighRecords = { 107, 159, 156 };
+    /// <summary>
+    /// 上端50に開くセリフ。**以前は107・159・156の3件だけだと書いていたが誤り**で、
+    /// `docs/original/dialogue_windows.txt`（原典の呼び出しを全部拾った表）を見ると
+    /// 場面の中から呼ばれるものを含めて10件ある。
+    ///
+    /// <code>
+    ///   0x008b5b  53 … 姿の見えない声（10行の窓）
+    ///   0x0006eb 107 … 盗賊との再会
+    ///   0x006be1 110 … 3階のゼノの口上
+    ///   0x006930 130 / 0x006a49 131 … 金騎士敗走
+    ///   0x007257 150 / 0x007294 151 … 金騎士処刑（ゼノの声）
+    ///   0x00d391 155 … 最後のゼノ
+    ///   ...      156 / 0x001aa9 159 … 姿の見えない声
+    /// </code>
+    /// </summary>
+    public static readonly int[] HighRecords = { 53, 107, 110, 130, 131,
+                                                 150, 151, 155, 156, 159 };
 
     /// <summary>次のページへ。もう無ければ false。</summary>
     public bool Advance()

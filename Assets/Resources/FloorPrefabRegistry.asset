@@ -43,6 +43,8 @@ MonoBehaviour:
     prefab: {fileID: 911995691013459804, guid: ce2e32d1e86bcfa49532fe71942bf7d6, type: 3}
   - key: Boss_GiantOctopus
     prefab: {fileID: 515342546905771489, guid: 1544f066734f22f1d0bbdf786f5d58c3, type: 3}
+  - key: Boss_Zeno
+    prefab: {fileID: 677797957732883519, guid: a077054b8cb0e64908dc4579d89ad2fd, type: 3}
   - key: Coin_Lucky
     prefab: {fileID: 171350041369563071, guid: eef2404271104373275a143393079f23, type: 3}
   - key: Cross
@@ -79,6 +81,8 @@ MonoBehaviour:
     prefab: {fileID: 1022501096027680864, guid: ad5004ff7c58220bf3adabc51fa513c3, type: 3}
   - key: Enemy_ID93
     prefab: {fileID: 464361769463202811, guid: 16405de3225f9bc3c8f5473cf4edd37a, type: 3}
+  - key: Enemy_ID95
+    prefab: {fileID: 8910695716584479, guid: d2a55626860cc1c61c70e690cf1ecdd4, type: 3}
   - key: Enemy_KingMagician
     prefab: {fileID: 6350727373102248461, guid: 46548dbea484848688c4f94f31ce8c0b, type: 3}
   - key: Enemy_Magician

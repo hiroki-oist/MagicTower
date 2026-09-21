@@ -1,9 +1,39 @@
 #!/usr/bin/env python3
 """不足しているプレハブを .prefab YAML として直接生成する。Unity不要。
 スプライトは Assets/Sprites/Tiles/ の動画抽出タイルを参照する。"""
-import os,hashlib
+import os,re,hashlib
 ROOT=os.path.expanduser("~/Code/MagicTower")
+TILES=os.path.join(ROOT,"Assets/Sprites/Tiles")
+
 def sguid(key): return hashlib.md5(f"MagicTower/tile/{key}".encode()).hexdigest()
+
+def _tile_metas():
+    out={}
+    for f in sorted(os.listdir(TILES)):
+        if not f.endswith(".png.meta"): continue
+        g=re.search(r"guid: ([0-9a-f]{32})",open(os.path.join(TILES,f)).read())
+        if g: out[f[:-len(".png.meta")]]=g.group(1)
+    return out
+_METAS=_tile_metas()
+
+def guid_of(key):
+    """スプライトの guid。**実物のタイルの .meta から読む**。
+
+    以前はファイル名から計算した `sguid()` をそのまま書いていたが、
+    あとから書き出したタイル（ゼノ091・バンパイア095 など15枚）は
+    Unity が付けた guid を持っていて計算値と合わない。計算値を書くと
+    **どこも指さないスプライト参照**になるので、実物を引くように改めた。
+    番号ならファイル名の頭3桁（`091_`）で、文字列ならファイル名そのもので探す。
+    2コマ目（`_b`）は1コマ目と区別する（大文字小文字は区別する）。
+    """
+    if isinstance(key,int):
+        head=f"{key:03d}_"
+        for name,g in _METAS.items():
+            if name.endswith("_b"): continue
+            if name.startswith(head): return g
+    elif key in _METAS:
+        return _METAS[key]
+    raise SystemExit(f"★ タイルが見つからない: {key}")
 LAYER={"Item":15,"Enemy":11,"People":7,"Wall":9,"Lock":17}
 # (出力先, プレハブ名, タグ, レイヤー, スプライトkey, 幅, 高さ, トリガーか)
 SPEC=[
@@ -25,11 +55,16 @@ SPEC=[
  ("Item","Cross","Item_Orb","Item",39,1,1,True),
  # ID10 は隠し壁(ID9)と見た目が同じだが「何かが隠れている」マス。全50階で4つだけ。
  # 見た目も通行可否も壁と同じなので、壁として置いて中身は階ごとのできごとで出す。
- ("Wall","Marker_ID10","Wall_Secret","Wall","Wall_Field",1,1,False),
+ ("Wall","Marker_ID10","Wall_Secret","Wall",10,1,1,False),
  # F50 の星空。通行不可なので壁と同じ扱い（レイヤー Wall・トリガーでない）。
  # 見た目は動画から抽出した ID14 のタイル。
  ("Wall","Tile_Void","Wall_Field","Wall",14,1,1,False),
  ("Enemy","Enemy_ID93","Enemy_ID93","Enemy",93,1,1,True),
+ # ゼノ(ID91)とバンパイア(ID95)は INITIAL.DAT の地図には出てこない。
+ # **場面の中で地図に書き込まれて現れる**（3階のゼノとの初対面 0x6ae0 と
+ # 20階のボス登場 0x3044）ので、地図には無くてもプレハブが要る。
+ ("Enemy","Boss_Zeno","Enemy_Zeno","Enemy",91,1,1,True),
+ ("Enemy","Enemy_ID95","Enemy_ID95","Enemy",95,1,1,True),
  ("Enemy","Enemy_ID147","Enemy_ID147","Enemy",147,1,1,True),
  ("Enemy","Enemy_ID149","Enemy_ID149","Enemy",149,1,1,True),
  ("Enemy","Enemy_ID151","Enemy_ID151","Enemy",151,1,1,True),
@@ -179,7 +214,7 @@ for folder,name,tag,layer,skey,w,h,trig in SPEC:
     p=os.path.join(d,name+".prefab")
     ids=[int(hashlib.md5(f"{name}/{k}".encode()).hexdigest()[:15],16) for k in ("go","tr","sr","col")]
     open(p,"w").write(TPL.format(go=ids[0],tr=ids[1],sr=ids[2],col=ids[3],
-        layer=LAYER[layer],name=name,tag=tag,sprite=sguid(skey),
+        layer=LAYER[layer],name=name,tag=tag,sprite=guid_of(skey),
         w=w,h=h,order=2 if layer!="Wall" else 1,trig=1 if trig else 0))
     open(p+".meta","w").write(f"""fileFormatVersion: 2
 guid: {hashlib.md5(f"MagicTower/prefab/{name}".encode()).hexdigest()}

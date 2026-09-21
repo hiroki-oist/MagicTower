@@ -1207,7 +1207,9 @@ chk("結果が出ていない" in open("docs/run_tests.sh",encoding="utf-8").rea
     "結果が出ていなければ落ちたと分かるようにする")
 # 場面の中の地図の書き換え（原典 0x3044 の三つ組の表から取った）
 _cs_map=[n for n in _cs_steps if n.startswith("地図 ")]
-chk(len(_cs_map)==12,"場面の中の地図の書き換えは12件（20階のボス登場10・40階の金騎士2）",len(_cs_map))
+chk(len(_cs_map)==17,
+    "場面の中の地図の書き換えは17件（3階のゼノ5・20階のボス登場10・40階の金騎士2）",
+    len(_cs_map))
 chk(all(re.match(r"^地図 \([-+]?\d+,[-+]?\d+\)=.+$",n) for n in _cs_map),
     "場面の地図の段は「地図 (x,y)=種別」の形")
 chk("地図 (+0,+0)=ID95" in _cs_map,"20階のボス(ID95)は中央に現れる")
@@ -1358,6 +1360,36 @@ for _pf in glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
     if _gifguid and _gifguid in open(_pf,encoding="utf-8").read():
         _oldart.append(os.path.basename(_pf))
 chk(not _oldart,"盤面に出るプレハブは原典のタイルを指している",str(_oldart))
+
+# 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
+# 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
+# 3階のゼノとの初対面と20階のボス登場で何も現れなかった。
+_regkeys=set(re.findall(r"^  - key: (\S+)",_reg,re.M))
+_objids={}
+for _l in open("Assets/Resources/ObjectIds.txt",encoding="utf-8"):
+    _m=re.match(r"^(\S+)\s*\|\s*(\d+)\s*$",_l.strip())
+    if _m: _objids["ID"+_m.group(2)]=_m.group(1)
+_terrainwords={"床","壁","隠し壁","門","上り","下り","マグマ"}
+_miss=[]
+for _l in open("Assets/Resources/Cutscenes.txt",encoding="utf-8"):
+    if _l.lstrip().startswith("#"): continue
+    for _k in re.findall(r"地図\s*\([^)]*\)\s*=\s*(\S+)",_l):
+        _n=_objids.get(_k,_k)
+        if _n in _terrainwords or _n in _regkeys: continue
+        _miss.append(f"{_k}→{_n}")
+chk(not _miss,"場面が地図に書き込む物体はすべて登録簿にある",str(sorted(set(_miss))))
+
+# 3階のゼノとの初対面（原典 0x6ae0）は**ゼノ1体と魔導師4体を盤面に出す**。
+# 魔導師は主人公の立つ (-1,-3) の上下左右で、囲まれる形になる。
+_cs=open("Assets/Resources/Cutscenes.txt",encoding="utf-8").read()
+_zeno=[l for l in _cs.splitlines() if l.startswith("ゼノとの初対面")]
+chk(len(_zeno)==1 and "地図 (-1,-1)=ID91" in _zeno[0],
+    "ゼノ(ID91)は3階の (-1,-1) に現れる（原典 X4,Y6）")
+chk(len(_zeno)==1 and all(f"地図 ({x:+d},{y:+d})=ID93" in _zeno[0]
+                          for x,y in [(-1,-2),(-1,-4),(-2,-3),(0,-3)]),
+    "魔導師(ID93)4体は主人公 (-1,-3) の上下左右に現れる（原典 X4Y7/X4Y9/X3Y8/X5Y8）")
+chk(len(_zeno)==1 and _zeno[0].index("=ID91")<_zeno[0].index("110")
+    <_zeno[0].index("=ID93"),"順番は ゼノ → セリフ110 → 魔導師（原典どおり）")
 chk(len(_second)==36,"2コマ目36枚も Assets に置く（原典 0x92a4 が実際に描く）")
 # 2の冪でない絵は nPOTScale を 0 にしないと Sprite として取り込めない（3x3のボスが消えていた）
 for _m in ("900_Boss_Dragon","901_Boss_GiantOctopus","902_Shop_Altar",
@@ -1496,6 +1528,13 @@ chk(sum(1 for rid,n in _known if _nl[rid]==n)==32,
 chk(sum(1 for rid,n in _known if _nl[rid]<n)==6,
     "6件は1行以上多い窓（短いセリフを大きめの窓で出す）")
 chk("CharsPerLine = 18" in _src,"CharsPerLine は18（動画で確認した折り返し幅）")
+# 上端50に開くセリフ。**以前は107・159・156の3件だけだと書いていたが誤り**で、
+# 場面の中から呼ばれるものを含めて10件ある（原典の呼び出しの表から取る）。
+_high=sorted({int(r[3]) for r in _dw if r[3]!="-" and int(r[2])==50 and int(r[3]) in _nl})
+_hv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
+_hm=re.search(r"HighRecords\s*=\s*\{([^}]*)\}",_hv)
+_hl=sorted(int(x) for x in re.findall(r"\d+",_hm.group(1))) if _hm else []
+chk(_hl==_high,"上端50のセリフが原典の呼び出しの表と一致する",f"表={_high} 実装={_hl}")
 _tg=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("DialogueBox.Paginate" in _tg,"本線の TowerGame が会話ボックスを通している")
 chk("PendingPages" in _tg and "NextPage" in _tg,"ページ送りの口が用意されている")
@@ -1524,7 +1563,8 @@ chk("cam.backgroundColor = DialogueWindowView.Fill" in _sb,
     "盤面の下地は索引0（68,68,68）。原典が階を描く前に塗る色と同じ")
 chk("BuildDialogueWindow" in _sb,"シーンに会話ウィンドウを組み込んでいる")
 _dv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
-chk("HighRecords = { 107, 159, 156 }" in _dv,"高い位置に開くのは107/159/156の3件")
+chk("HighRecords = { 53, 107, 110, 130, 131," in _dv,
+    "高い位置に開くセリフを表どおり10件持っている")
 _sl=open("Assets/Scripts/UI/ScreenLayout.cs",encoding="utf-8").read()
 chk("MapLeft = 144, MapTop = 24" in _sl,"盤面の左上は (144,24)（原典 0x1b6d の式）")
 chk(144*2+11*32==640,"盤面は左右中央（144+352+144=640）")
@@ -1727,7 +1767,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=616
+MIN_CHECKS=621
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

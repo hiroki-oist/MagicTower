@@ -50,6 +50,20 @@ for p in glob.glob(os.path.join(ROOT,"Assets/Resources/Floors/Floor_*.txt")):
 #   Wing_Down(ID45) … 41階の解錠で現れる降臨の翼（SealedDoors.txt）
 for _n in ("Cross", "Wing_Down"):
     used[_n]+=1
+
+# 場面（Cutscenes.txt）の「地図 (x,y)=種別」で盤面に書き込まれる物体も登録する。
+# ここを見ていなかったため **ゼノ(ID91)とバンパイア(ID95)が登録簿から漏れて**
+# 3階のゼノとの初対面・20階のボス登場で姿が出なかった。
+_ids={}
+for _l in open(os.path.join(ROOT,"Assets/Resources/ObjectIds.txt"),encoding="utf-8"):
+    _m=re.match(r"^(\S+)\s*\|\s*(\d+)\s*$",_l.strip())
+    if _m: _ids["ID"+_m.group(2)]=_m.group(1)
+_TERRAIN_WORDS={"床","壁","隠し壁","門","上り","下り","マグマ"}
+for _l in open(os.path.join(ROOT,"Assets/Resources/Cutscenes.txt"),encoding="utf-8"):
+    if _l.lstrip().startswith("#"): continue
+    for _k in re.findall(r"地図\s*\([^)]*\)\s*=\s*(\S+)",_l):
+        _k=_ids.get(_k,_k)
+        if _k not in _TERRAIN_WORDS: used[_k]+=1
 # 地形用のプレハブも登録
 TERRAIN={"Wall":"Wall_Field","SecretWall":"Wall_Secret","Magma":"Magma","Floor":"road",
          "StairsUp":"Stairs_Up","StairsDown":"Stairs_Down",

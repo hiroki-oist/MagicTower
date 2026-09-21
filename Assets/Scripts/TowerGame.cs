@@ -573,7 +573,10 @@ public class TowerGame
         if (r.Outcome == TowerPlayer.Outcome.Blocked && r.What == "Marker_ID10")
             Reveal(r.Target);
         CheckMagicSeal();
-        CheckPositionEvent();
+        // 場面が流れ出したか。原典の場面（3階の 0x6ae0 など）は地図に敵を書き込んだあと
+        // **そのまま画面を乗っ取る**ので、書き込まれた魔導師から魔法攻撃を受けることはない。
+        // ここで覚えておいて、この手の魔法攻撃の判定は飛ばす。
+        bool sceneStarted = CheckPositionEvent() && !string.IsNullOrEmpty(PendingScene);
 
         switch (r.Outcome)
         {
@@ -654,7 +657,7 @@ public class TowerGame
             }
         }
 
-        if (Player.Position != before) ApplyMagicAttack();
+        if (Player.Position != before && !sceneStarted) ApplyMagicAttack();
         Evaluate();
         return r.Outcome;
     }
