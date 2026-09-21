@@ -1455,6 +1455,17 @@ chk("PageKind.GameOver" in _tg3 and "public void GameOver()" in _tg3,
 chk("if (Player.Hp <= 0) { GameOver(); return; }" in _tg3,
     "魔法攻撃で尽きてもゲームオーバー（原典 0x001df2 / 0x001fd0）")
 
+# 場面でものが現れるときの点滅（原典 0x6ae0）。ゼノ 0x32(50) 回、魔導師 0xf(15) 回。
+# 点滅のあとの待ちは 0x1e(30) と 0xa(10)。
+_zn=[l for l in open("Assets/Resources/Cutscenes.txt",encoding="utf-8")
+     if l.startswith("ゼノとの初対面")][0]
+chk(_zn.count("点滅50,30")==1,"ゼノは50回点滅してから30待つ（原典 0x6b31 / 0x6ba3）")
+chk(_zn.count("点滅15,10")==4,"魔導師は4マスとも15回点滅して10待つ（原典 0x6c20 / 0x6c92）")
+chk("点滅" not in _zn.split("序章の絵")[1],"片付け（床へ戻す）は点滅させない")
+_bv=open("Assets/Scripts/UI/BlinkView.cs",encoding="utf-8").read()
+chk("速さは原典と同じにできない" in _bv,"点滅の速さが原典と違うことを明記してある")
+chk("ConsumeBlinks" in _tg3,"点滅は本線が積み、描くのは見た目の層")
+
 # 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
 # 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
 # 3階のゼノとの初対面と20階のボス登場で何も現れなかった。
@@ -1878,7 +1889,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=634
+MIN_CHECKS=639
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

@@ -119,6 +119,7 @@
     <Compile Include="Assets/Scripts/Floor/ArrivalEvents.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark01.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TextMeshSpawner.cs" />
+    <Compile Include="Assets/Scripts/UI/BlinkView.cs" />
     <Compile Include="Assets/Scripts/UI/TitleScreen.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/VertexZoom.cs" />
     <Compile Include="Assets/Scripts/TowerRuntime.cs" />

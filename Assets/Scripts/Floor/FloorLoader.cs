@@ -130,6 +130,24 @@ public class FloorLoader : MonoBehaviour
         if (!string.IsNullOrEmpty(kind)) Spawn(kind, pos.x, pos.y);
     }
 
+    /// <summary>
+    /// そのマスに置いてある物体を返す（下地の床は除く）。無ければ null。
+    /// 点滅の演出（<see cref="BlinkView"/>）が絵を出し入れするのに使う。
+    /// </summary>
+    public GameObject ObjectAt(Vector2Int pos)
+    {
+        var suffix = $"_{pos.x}_{pos.y}";
+        var parent = container != null ? container : transform;
+        for (int i = 0; i < parent.childCount; i++)
+        {
+            var c = parent.GetChild(i);
+            if (!c.name.EndsWith(suffix)) continue;
+            if (c.name.StartsWith("Floor_")) continue;
+            return c.gameObject;
+        }
+        return null;
+    }
+
     public void Clear()
     {
         var t = container != null ? container : transform;

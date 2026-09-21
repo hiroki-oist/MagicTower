@@ -74,10 +74,30 @@ public class Cutscenes
     /// </summary>
     public const string MapStepPrefix = "地図 ";
 
-    /// <summary>"地図 (x,y)=種別" を読む。違う形なら false。</summary>
-    public static bool TryParseMap(string step, out Vector2Int pos, out string kind)
+    /// <summary>
+    /// 地図の書き換え1つぶん。"地図 (x,y)=種別" と、あれば "点滅N,W"。
+    ///
+    /// 原典の場面はものを出すとき、**そのマスを床とものとで交互に描いて点滅させる**
+    /// （3階の 0x6ae0 は ゼノを50回、魔導師を各15回）。回数のあとの数は、
+    /// 点滅が終わってからの待ち（原典の `lcall 0xf5f,0x3f2` に渡す垂直帰線の回数）。
+    /// </summary>
+    public struct MapStep
     {
-        pos = Vector2Int.zero; kind = null;
+        public Vector2Int Pos;
+        public string Kind;
+        /// <summary>床とものを入れ替える回数。0なら点滅させない。</summary>
+        public int Blinks;
+        /// <summary>点滅のあとの待ち（垂直帰線の回数＝1/60秒）。</summary>
+        public int Wait;
+    }
+
+    /// <summary>点滅の書き方の頭。</summary>
+    public const string BlinkPrefix = "点滅";
+
+    /// <summary>"地図 (x,y)=種別 [点滅N,W]" を読む。違う形なら false。</summary>
+    public static bool TryParseMap(string step, out MapStep map)
+    {
+        map = new MapStep();
         if (step == null || !step.StartsWith(MapStepPrefix)) return false;
         var t = step.Substring(MapStepPrefix.Length).Trim();
         int close = t.IndexOf(')'), eq = t.IndexOf('=');
@@ -86,9 +106,33 @@ public class Cutscenes
         int x, y;
         if (xy.Length != 2 || !int.TryParse(xy[0].Trim(), out x) || !int.TryParse(xy[1].Trim(), out y))
             return false;
-        pos = new Vector2Int(x, y);
-        kind = t.Substring(eq + 1).Trim();
+        map.Pos = new Vector2Int(x, y);
+
+        var rest = t.Substring(eq + 1).Trim();
+        int sp = rest.IndexOf(' ');
+        if (sp > 0)
+        {
+            var tail = rest.Substring(sp + 1).Trim();
+            rest = rest.Substring(0, sp);
+            if (tail.StartsWith(BlinkPrefix))
+            {
+                var nums = tail.Substring(BlinkPrefix.Length).Split(',');
+                int b, w;
+                if (nums.Length > 0 && int.TryParse(nums[0].Trim(), out b)) map.Blinks = b;
+                if (nums.Length > 1 && int.TryParse(nums[1].Trim(), out w)) map.Wait = w;
+            }
+        }
+        map.Kind = rest;
         return true;
+    }
+
+    /// <summary>種別だけ要るとき用。</summary>
+    public static bool TryParseMap(string step, out Vector2Int pos, out string kind)
+    {
+        MapStep m;
+        bool ok = TryParseMap(step, out m);
+        pos = m.Pos; kind = m.Kind;
+        return ok;
     }
 
     readonly Dictionary<string, List<string>> scenes = new Dictionary<string, List<string>>();

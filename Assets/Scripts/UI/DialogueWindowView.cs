@@ -15,6 +15,7 @@ public class DialogueWindowView : MonoBehaviour
     [SerializeField] RectTransform panel;
     [SerializeField] Image background;
     [SerializeField] TextMeshProUGUI body;
+    [SerializeField] BlinkView blink;
 
     /// <summary>原典のパレットの色（DS:0x908）。内側は索引0、文字は索引15。</summary>
     public static readonly Color Fill = new Color32(0x44, 0x44, 0x44, 0xff);
@@ -80,6 +81,12 @@ public class DialogueWindowView : MonoBehaviour
                     && controller.Game.Player.FastMode;
 
         if (body != null) body.enabled = false;
+        // 原典は**点滅が終わってから**窓を出す（0x6ae0 は点滅→0x1e待ち→0x94ba）。
+        if (blink != null && blink.IsPlaying)
+        {
+            panel.sizeDelta = new Vector2(r.width * DialogueWindow.CanvasScale, 0f);
+            while (blink.IsPlaying) yield return null;
+        }
         for (int i = 0; i <= times - 1; i++)
         {
             // 作者の見せ方では窓が原典より高いので、同じきざみ数で下端まで届かせる。

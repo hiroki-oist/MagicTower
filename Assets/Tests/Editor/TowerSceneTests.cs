@@ -82,6 +82,22 @@ public class TowerSceneTests
     }
 
     [Test]
+    public void 点滅の役がシーンに組まれている()
+    {
+        var blink = Object.FindObjectOfType<BlinkView>(true);
+        Assert.IsNotNull(blink, "BlinkView が無い");
+        var bso = new UnityEditor.SerializedObject(blink);
+        foreach (var name in new[] { "controller", "loader" })
+            Assert.IsNotNull(bso.FindProperty(name).objectReferenceValue, $"{name} が未設定");
+        // 会話の窓は点滅が終わってから出す（原典 0x6ae0 も点滅→待ち→0x94ba）
+        var win = Object.FindObjectOfType<DialogueWindowView>(true);
+        Assert.IsNotNull(win);
+        var wso = new UnityEditor.SerializedObject(win);
+        Assert.IsNotNull(wso.FindProperty("blink").objectReferenceValue,
+                         "会話の窓に点滅の役が繋がっていない");
+    }
+
+    [Test]
     public void 入力を受ける側にも参照が繋がっている()
     {
         var c = Object.FindObjectOfType<TowerController>();

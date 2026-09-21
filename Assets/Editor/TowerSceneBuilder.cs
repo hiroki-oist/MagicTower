@@ -306,7 +306,17 @@ public static class TowerSceneBuilder
         // 作者の旧版の見せ方（黒い帯）。AuthorStyle.Enabled が false なら出ない。
         BuildBattleBand(screen, font, controller, battleView);
 
-        BuildDialogueWindow(screen, font, controller);
+        // 場面でものが現れるときの点滅（原典 0x6ae0）。会話の窓はこれが終わってから出す。
+        var blinkGo = new GameObject("BlinkView");
+        blinkGo.transform.SetParent(controller.transform, false);
+        var blinkView = blinkGo.AddComponent<BlinkView>();
+        var blso = new SerializedObject(blinkView);
+        blso.FindProperty("controller").objectReferenceValue = controller;
+        blso.FindProperty("loader").objectReferenceValue =
+            controller.GetComponent<FloorLoader>();
+        blso.ApplyModifiedPropertiesWithoutUndo();
+
+        BuildDialogueWindow(screen, font, controller, blinkView);
         BuildMenuWindow(screen, font, controller);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
                         // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
@@ -403,7 +413,8 @@ public static class TowerSceneBuilder
     }
 
     /// <summary>会話ウィンドウ。位置と大きさは原典（MTE.EXE 0x94ba）由来。</summary>
-    static void BuildDialogueWindow(RectTransform screen, TMP_FontAsset font, TowerController controller)
+    static void BuildDialogueWindow(RectTransform screen, TMP_FontAsset font,
+                                    TowerController controller, BlinkView blink)
     {
         var panelGo = new GameObject("DialogueWindow", typeof(RectTransform),
                                      typeof(UnityEngine.UI.Image));
@@ -434,6 +445,7 @@ public static class TowerSceneBuilder
         wso.FindProperty("panel").objectReferenceValue = rt;
         wso.FindProperty("background").objectReferenceValue = img;
         wso.FindProperty("body").objectReferenceValue = tmp;
+        wso.FindProperty("blink").objectReferenceValue = blink;
         wso.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);

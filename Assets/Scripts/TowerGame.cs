@@ -81,7 +81,7 @@ public class TowerGame
         /// ゼノを出す → セリフ110 → 魔導師を出す → セリフ111 の順）ので、
         /// 場面を積むときにまとめて書いてしまうと**順番が崩れる**。
         /// </summary>
-        public List<KeyValuePair<Vector2Int, string>> MapBefore;
+        public List<Cutscenes.MapStep> MapBefore;
     }
 
     readonly Queue<Page> pages = new Queue<Page>();
@@ -118,15 +118,31 @@ public class TowerGame
         return pages.Count > 0;
     }
 
-    /// <summary>地図の書き換えをまとめて当てる。</summary>
-    void ApplyMap(List<KeyValuePair<Vector2Int, string>> writes)
+    /// <summary>地図の書き換えをまとめて当てる。点滅の指定があれば見た目の層へ渡す。</summary>
+    void ApplyMap(List<Cutscenes.MapStep> writes)
     {
         if (writes == null || Floor == null) return;
         foreach (var w in writes)
         {
-            if (w.Value == "床") Floor.Clear(w.Key);
-            else Floor.Put(w.Key, FloorState.SymbolOfKind(w.Value));
+            if (w.Kind == "床") Floor.Clear(w.Pos);
+            else Floor.Put(w.Pos, FloorState.SymbolOfKind(w.Kind));
+            if (w.Blinks > 0) blinks.Add(w);
         }
+    }
+
+    /// <summary>
+    /// これから点滅させるマス。原典の場面はものを出すとき
+    /// **床とものを交互に描いて点滅させる**（3階の 0x6ae0）。
+    /// 音や閃光と同じで、ここは積むだけにして描くのは見た目の層に任せる。
+    /// </summary>
+    readonly List<Cutscenes.MapStep> blinks = new List<Cutscenes.MapStep>();
+
+    /// <summary>積んだ点滅を取り出して空にする。</summary>
+    public List<Cutscenes.MapStep> ConsumeBlinks()
+    {
+        var copy = new List<Cutscenes.MapStep>(blinks);
+        blinks.Clear();
+        return copy;
     }
 
     /// <summary>
@@ -187,7 +203,7 @@ public class TowerGame
         // 「ゼノを出す → セリフ110 → 魔導師を出す → セリフ111 → …
         //   → 5マスを床に戻す → 奪われる」の順に書いているので、
         // ここでまとめて当ててしまうと出す順も消す順も崩れる。
-        List<KeyValuePair<Vector2Int, string>> pendingMap = null;
+        List<Cutscenes.MapStep> pendingMap = null;
         System.Func<Page, Page> withMap = page =>
         {
             page.MapBefore = pendingMap; pendingMap = null; return page;
@@ -254,13 +270,12 @@ public class TowerGame
                 }));
                 continue;
             }
-            Vector2Int mapAt; string mapKind;
-            if (Cutscenes.TryParseMap(step, out mapAt, out mapKind))
+            Cutscenes.MapStep mapStep;
+            if (Cutscenes.TryParseMap(step, out mapStep))
             {
                 // 場面の中の地図の書き換え。当てるのは**次のページの直前**。
-                if (pendingMap == null)
-                    pendingMap = new List<KeyValuePair<Vector2Int, string>>();
-                pendingMap.Add(new KeyValuePair<Vector2Int, string>(mapAt, mapKind));
+                if (pendingMap == null) pendingMap = new List<Cutscenes.MapStep>();
+                pendingMap.Add(mapStep);
                 continue;
             }
             int id;
