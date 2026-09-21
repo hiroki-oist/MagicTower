@@ -69,6 +69,101 @@ public class SceneWiringTests
         Assert.IsEmpty(empty, "繋ぎ忘れ: " + string.Join(" / ", empty.ToArray()));
     }
 
+    /// <summary>
+    /// 画面の中身（枠・欄・窓）が**画布の中央に置いた原典と同じ大きさの入れ物**に入っている。
+    /// top-left に直接置くと、窓の横幅が 16:10 より広いときに**枠だけ左に寄って
+    /// 盤面（カメラ）とずれる**。手で遊んでもらって見つかったのがこれ。
+    /// </summary>
+    [Test]
+    public void 画面の中身は中央に置いた入れ物の中にある()
+    {
+        var path = "Assets/Scenes/Tower.unity";
+        if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
+
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            RectTransform screen = null;
+            var found = new Dictionary<string, RectTransform>();
+            foreach (var go in scene.GetRootGameObjects())
+                foreach (var rt in go.GetComponentsInChildren<RectTransform>(true))
+                {
+                    if (rt.name == "Screen") screen = rt;
+                    if (rt.name == "Frame" || rt.name == "Hp" || rt.name == "Message"
+                        || rt.name == "TitleScreen" || rt.name == "DialogueWindow")
+                        found[rt.name] = rt;
+                }
+
+            Assert.IsNotNull(screen, "入れ物 Screen が無い");
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), screen.anchorMin, "中央に置く");
+            Assert.AreEqual(new Vector2(0.5f, 0.5f), screen.anchorMax);
+            Assert.AreEqual(new Vector2(DialogueWindow.CanvasWidth, DialogueWindow.CanvasHeight),
+                            screen.sizeDelta, "原典の画面と同じ大きさ（1.8倍）");
+            Assert.AreEqual(Vector2.zero, screen.anchoredPosition);
+
+            foreach (var kv in found)
+                Assert.AreSame(screen, kv.Value.parent, kv.Key + " が入れ物の外にある");
+
+            // 画布は縦で合わせる（盤面はカメラの縦で決まるので）
+            var scaler = screen.GetComponentInParent<UnityEngine.UI.CanvasScaler>();
+            Assert.IsNotNull(scaler);
+            Assert.AreEqual(1f, scaler.matchWidthOrHeight, 0.001f, "縦を基準にする");
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+
+    /// <summary>
+    /// 主人公と当たりの絵は**盤面のマスと同じ大きさ**で取り込む。
+    /// 取り込みの設定（1マス＝32ドット）が既定の100のままだと1/3の大きさで出る。
+    /// </summary>
+    [Test]
+    public void 絵は一マス三十二ドットで取り込んである()
+    {
+        foreach (var path in new[]
+        {
+            "Assets/Sprites/Effects/Player_0.png",
+            "Assets/Sprites/Effects/Player_1.png",
+            "Assets/Sprites/Effects/Hit.png",
+            "Assets/Sprites/Tiles/006_Floor.png",
+        })
+        {
+            var sp = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            Assert.IsNotNull(sp, path);
+            Assert.AreEqual(32f, sp.pixelsPerUnit, 0.01f, path);
+            Assert.AreEqual(1f, sp.bounds.size.x, 0.01f, path + " は1マスぶん");
+            Assert.AreEqual(1f, sp.bounds.size.y, 0.01f, path + " は1マスぶん");
+        }
+    }
+
+    /// <summary>
+    /// 音を聴く耳がシーンに1つある。**無いと何も鳴らない**（手で組み立てたカメラには
+    /// 付いてこないので、実際に鳴らないまま気づかなかった）。
+    /// </summary>
+    [Test]
+    public void 音を聴く耳がシーンに一つある()
+    {
+        var path = "Assets/Scenes/Tower.unity";
+        if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
+
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            int ears = 0;
+            foreach (var go in scene.GetRootGameObjects())
+                ears += go.GetComponentsInChildren<AudioListener>(true).Length;
+            Assert.AreEqual(1, ears, "AudioListener はちょうど1つ");
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+
     /// <summary>音を鳴らす役がシーンに居て、本線に繋がっている。</summary>
     [Test]
     public void 音を鳴らす役がシーンに居る()

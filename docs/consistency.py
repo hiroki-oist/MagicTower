@@ -646,6 +646,20 @@ _vct=open("Assets/Tests/Editor/ViewCoroutineTests.cs",encoding="utf-8").read()
 for _n in ("戦闘の演出を最後まで流せる","金騎士の突撃を最後まで流せる","駆け上がりを最後まで流せる"):
     chk(_n in _vct,f"コルーチンの検査「{_n}」がある")
 
+# 手で遊んで見つかった3件（配置のずれ・絵の大きさ・画面が付いてこない）
+_tc=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
+chk("AfterAction" in _tc and _tc.count("AfterAction(floorBefore)")>=1,
+    "一手ぶんの後始末が1か所にまとまっている（会話やメニューでも階が変わる）")
+chk("new FloorState(data)" in _tc,
+    "階を作り直すとき、済んだこと（開けた扉・倒した敵）を盤面から反映する")
+_sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
+chk("AudioListener" in _sb,"音を聴く耳をシーンに置く")
+chk("matchWidthOrHeight = 1f" in _sb,"画布は縦を基準に合わせる")
+chk('GameObject("Screen"' in _sb,"画面の中身は中央に置いた入れ物に入れる")
+for _m in ("Assets/Sprites/Effects/Player_0.png.meta","Assets/Sprites/Effects/Hit.png.meta"):
+    chk("spritePixelsToUnits: 32" in open(_m,encoding="utf-8").read(),
+        f"{_os.path.basename(_m)} は1マス32ドットで取り込む")
+
 print("\n【9w】できごとと音の結び付き（Resources/SoundCues.txt）")
 _cue={}
 for _l in open("Assets/Resources/SoundCues.txt",encoding="utf-8"):
@@ -1282,7 +1296,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=498
+MIN_CHECKS=505
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

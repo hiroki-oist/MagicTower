@@ -64,6 +64,7 @@
     <Compile Include="Assets/Tests/Editor/CutsceneTests.cs" />
     <Compile Include="Assets/Tests/Editor/DialogueFlowTests.cs" />
     <Compile Include="Assets/Tests/Editor/RuntimeSmokeTests.cs" />
+    <Compile Include="Assets/Tests/Editor/ViewSyncTests.cs" />
     <Compile Include="Assets/Tests/Editor/StatCapTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerItemUseTests.cs" />
     <Compile Include="Assets/Tests/Editor/TitleScreenTests.cs" />
@@ -102,6 +103,7 @@
     <Compile Include="Assets/Tests/Editor/TowerSceneTests.cs" />
     <Compile Include="Assets/Tests/Editor/HiddenOccupantsTests.cs" />
     <Compile Include="Assets/Tests/Editor/GameRulesTests.cs" />
+    <Compile Include="Assets/Tests/Editor/WindowViewTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerBattleTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerHudTests.cs" />
     <Compile Include="Assets/Tests/Editor/DialogueWindowTests.cs" />

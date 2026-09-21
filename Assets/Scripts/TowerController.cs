@@ -34,41 +34,67 @@ public class TowerController : MonoBehaviour
     {
         if (Game == null) return;
 
-        // 会話や演出が出ている間は、どのキーでも1つ送るだけ（原典もキー待ち）
+        int floorBefore = Game.Player.Floor;
+        bool acted;
+
         if (Game.IsShowingPage)
         {
-            if (Input.anyKeyDown) Game.NextPage();
-            return;
+            // 会話や演出が出ている間は、どのキーでも1つ送るだけ（原典もキー待ち）。
+            // **送った拍子に階が変わることがある**（序章でゼノに奪われて2階の牢に移る、
+            // 終幕で50階まで駆け上がる）ので、送ったあとも必ず見た目を合わせ直す。
+            acted = Input.anyKeyDown;
+            if (acted) Game.NextPage();
         }
-
-        // メニュー。原典は鍵 0x1c(リターン) と 0x34(スペース) のどちらでも開く
-        if (Game.IsMenuOpen)
+        else if (Game.IsMenuOpen)
         {
-            if (Input.GetKeyDown(KeyCode.Escape)) { Game.MenuBack(); return; }
-            var move = ReadInput();
-            if (move.y != 0)
-            {
-                // 段によって上下の意味が変わる。
-                //   本体 … 項目を選ぶ／スロット … 保存先を選ぶ／飛翔 … 階を選ぶ
-                switch (Game.Stage)
-                {
-                    case TowerGame.MenuStage.Root:         Game.MenuMove(-move.y); break;
-                    case TowerGame.MenuStage.FlightFloors: Game.FlightMove(move.y); break;
-                    default:                               Game.SlotMove(-move.y); break;
-                }
-            }
-            else if (MenuKeyDown()) Game.MenuConfirm();
-            if (sound != null) sound.Flush(Game);
-            return;
+            acted = StepMenu();
         }
-        if (MenuKeyDown()) { Game.OpenMenu(); return; }
+        else if (MenuKeyDown())
+        {
+            // 原典は鍵 0x1c(リターン) と 0x34(スペース) のどちらでもメニューに入る
+            Game.OpenMenu();
+            acted = true;
+        }
+        else
+        {
+            var dir = ReadInput();
+            acted = dir != Vector2Int.zero;
+            if (acted) Game.TryStep(dir);
+        }
 
-        var dir = ReadInput();
-        if (dir == Vector2Int.zero) return;
+        if (!acted) return;
+        AfterAction(floorBefore);
+    }
 
-        int floorBefore = Game.Player.Floor;
-        Game.TryStep(dir);
+    /// <summary>メニューの中の一手。何かしたら true。</summary>
+    bool StepMenu()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape)) { Game.MenuBack(); return true; }
 
+        var move = ReadInput();
+        if (move.y != 0)
+        {
+            // 段によって上下の意味が変わる。
+            //   本体 … 項目を選ぶ／スロット … 保存先を選ぶ／飛翔 … 階を選ぶ
+            switch (Game.Stage)
+            {
+                case TowerGame.MenuStage.Root:         Game.MenuMove(-move.y); break;
+                case TowerGame.MenuStage.FlightFloors: Game.FlightMove(move.y); break;
+                default:                               Game.SlotMove(-move.y); break;
+            }
+            return true;
+        }
+        if (MenuKeyDown()) { Game.MenuConfirm(); return true; }
+        return false;
+    }
+
+    /// <summary>
+    /// 一手ぶんの後始末。**階が変わっていれば作り直し、変わっていなければ差分だけ**直す。
+    /// 会話を送っただけ・メニューを触っただけでも階が変わることがある
+    /// （序章のゼノ、飛翔のオーブ、終幕の駆け上がり）ので、入口はここ1つにまとめてある。
+    /// </summary>
+    void AfterAction(int floorBefore)
+    {
         if (Game.Player.Floor != floorBefore) RebuildView();
         else SyncChangedCells();
         PlacePlayerView();
@@ -91,11 +117,31 @@ public class TowerController : MonoBehaviour
         return Vector2Int.zero;
     }
 
-    /// <summary>階が変わったので全部作り直す。</summary>
+    /// <summary>
+    /// 階が変わったので全部作り直す。
+    ///
+    /// **初期配置をそのまま敷くだけでは駄目**で、その階で既に起きたこと
+    /// （開けた扉・倒した敵・イベントで出た物・開いた牢）を上から反映する。
+    /// `TowerGame` は階ごとの盤面を覚えているので、そちらを正として差を当てる。
+    /// </summary>
     public void RebuildView()
     {
         if (loader == null || Game == null) return;
-        loader.Build(FloorData.Load(Game.Player.Floor));
+        var data = FloorData.Load(Game.Player.Floor);
+        loader.Build(data);
+
+        // 初期配置と違うマスだけ作り直す。全部を作り直すと
+        // 3x3のボス（1体だけ出す約束）が9体に増えてしまう。
+        var initial = new FloorState(data);
+        for (int y = FloorData.MinY; y <= FloorData.MaxY; y++)
+            for (int x = FloorData.MinX; x <= FloorData.MaxX; x++)
+            {
+                var p = new Vector2Int(x, y);
+                var now = Game.Floor.At(p);
+                if (now == initial.At(p)) continue;
+                loader.Refresh(p, FloorState.ViewKeyOf(now));
+            }
+
         Game.Floor.ConsumeDirty();     // 作り直したので差分は無かったことにする
         PlacePlayerView();
     }
