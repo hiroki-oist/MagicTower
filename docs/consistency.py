@@ -600,6 +600,31 @@ chk("Tail(" not in _hvw,"情報欄に履歴を積まない（原典は毎回塗�
 chk("InfoBox(" in _hvw,"情報欄は原典の折り返しを通す")
 chk(_dis.count("cmp     word ptr [bp - 2], 6")>=1,"折り返しは6桁（0x9de0）")
 
+# 敵と人は2コマで動く（0x92a4）。以前「2コマ目は一度も描かない」と書いていたのは誤り。
+chk(_dis.count("cmp     word ptr [0x17ea], 0x79")==1,"マスの番号は121で0に戻す")
+chk(_dis.count("mov     word ptr [bp - 6], 5")>=1,"1回で5マスぶん塗り直す")
+_ma=open("Assets/Scripts/Floor/MonsterAnimation.cs",encoding="utf-8").read()
+chk("Cells = 121" in _ma and "CellsPerTick = 5" in _ma and "TicksPerStep = 6" in _ma,
+    "2コマの動きの数が原典どおり")
+# 表 DS:0x80a は「並べた順」。敵は 種別8/9 と 10/11 が隣り合う対になっている
+_t=[_st.unpack("<H",_exe[_dgb+0x80a+2*_i:_dgb+0x80a+2*_i+2])[0] for _i in range(150)]
+chk(_t[:4]==[61,62,63,64],"並べた表の頭は 61,62,63,64",str(_t[:4]))
+_kind={}
+for _l in open("docs/original/p58_map.txt",encoding="utf-8"):
+    if _l.startswith("#") or "|" not in _l: continue
+    _a,_b,_c=[x.strip() for x in _l.split("|")]
+    _kind[int(_a)]=int(_b)
+_pairs=[(_t[_i],_t[_i+1]) for _i in range(len(_t)-1)
+        if _kind.get(_t[_i]) in (8,10) and _kind.get(_t[_i+1]) in (9,11)]
+# ふつうの敵は +1、3x3のボス（大ダコ 97〜105 / ドラゴン 115〜123）は +9 が2コマ目
+chk(all(_b in (_a+1,_a+9) for _a,_b in _pairs) and len(_pairs)>=20,
+    "敵の1コマ目と2コマ目は表で隣り合う（ふつうは+1、3x3のボスは+9）",
+    str([p for p in _pairs if p[1] not in (p[0]+1,p[0]+9)]))
+chk(len(glob.glob("Assets/Sprites/Tiles/*_b.png"))==38,"2コマ目の絵が38枚ある",
+    str(len(glob.glob("Assets/Sprites/Tiles/*_b.png"))))
+chk("原典はこれを実際に描く" in open("docs/p58_to_tiles.py",encoding="utf-8").read(),
+    "2コマ目は原典が描くものだと書いてある")
+
 # 戦闘中の相手の欄（0x9626）。戦闘 0x6082 の中から1か所だけ呼ばれる。
 chk(_dis.count("mov     cx, 0x110")>=1 and _dis.count("mov     cx, 0x128")>=1,
     "相手の名前(y=272)と命(y=296)の位置が原典にある")
@@ -1039,10 +1064,10 @@ def _rgba(path):
                 line[x]=(line[x]+pr)&0xff
         out.append(bytes(line)); prev=line
     return w,h,ct,out
-_tiles=sorted(glob.glob("Assets/Sprites/Tiles/*.png"))
-chk(len(_tiles)==93,"タイルは93枚",str(len(_tiles)))
-chk(len(glob.glob("docs/original/frame2/*.png"))==38,
-    "2コマ目38枚は docs/original/frame2/ に置く（原典のこのビルドは描かない）")
+_tiles=sorted(p for p in glob.glob("Assets/Sprites/Tiles/*.png") if not p.endswith("_b.png"))
+chk(len(_tiles)==93,"タイルは93枚（1コマ目）",str(len(_tiles)))
+chk(len(glob.glob("Assets/Sprites/Tiles/*_b.png"))==38,
+    "2コマ目38枚も Assets に置く（原典 0x92a4 が実際に描く）")
 chk(len(glob.glob("docs/original/video_tiles/*.png"))==93,"差し替え前の動画切り出しを控えてある")
 _bad=[]
 for _p in _tiles:
@@ -1398,7 +1423,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=540
+MIN_CHECKS=547
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

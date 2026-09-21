@@ -141,6 +141,7 @@
     <Compile Include="Assets/Scripts/Battle/MagicSeal.cs" />
     <Compile Include="Assets/Scripts/Floor/SpacetimeGate.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/ShaderPropAnimator.cs" />
+    <Compile Include="Assets/Scripts/Floor/MonsterAnimation.cs" />
     <Compile Include="Assets/Scripts/Prologue.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/CameraController.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark03.cs" />

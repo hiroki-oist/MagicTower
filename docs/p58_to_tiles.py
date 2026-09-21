@@ -120,9 +120,13 @@ def main():
             continue
         write_rgba(p, px, transparent_border(px))
         done += 1
-    # 2コマ目（敵と人の偶数ID）も書き出す。ただし**原典のこのビルドは一度も描かない**ので
-    # Assets ではなく docs/original/frame2/ に置く（絵の位置を引く箇所14件を全部調べ、
-    # IDに1を足したり属性表の次のレコードを引いたりする経路が無いことを確認済み）。
+    # 2コマ目（敵と人の次のID）。**原典はこれを実際に描く** — 0x92a4 が盤面を
+    # 5マスずつなめて、種別 7/8/10 のマスに「表 DS:0x80a の並びで次の絵」を貼り、
+    # 121マスなめ終わるたびに 1コマ目／2コマ目を入れ替える。
+    #
+    # 以前ここに「原典のこのビルドは一度も描かない」と書いていたのは誤り。
+    # 属性表の「絵の位置」を引く箇所だけを調べていたが、0x92a4 は属性表を使わず、
+    # **表 DS:0x80a で引いた番号から VRAM の並び位置を計算して**貼るので見落としていた。
     ks = kinds()
     frames = 0
     for p in sorted(glob.glob(f"{ROOT}/Assets/Sprites/Tiles/*.png")):
@@ -136,7 +140,7 @@ def main():
         if ks.get(nxt) not in (7, 9, 11) or nxt not in sp:
             continue
         px = sp[nxt]
-        out = f"{ROOT}/docs/original/frame2/{nxt:03d}_{name[4:]}_b.png"
+        out = f"{ROOT}/Assets/Sprites/Tiles/{nxt:03d}_{name[4:]}_b.png"
         write_rgba(out, px, transparent_border(px))
         frames += 1
     print(f"差し替え {done} 枚 / 対応なし {skipped} 枚 / 2コマ目 {frames} 枚")
