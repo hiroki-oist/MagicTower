@@ -7,9 +7,17 @@
 絵だけ差し替えると **1 x 2.5 = 2.5マス** になり、黄色の鍵・赤いクリスタル・檻が
 「バカデカい」状態になる。
 
-ここで直すのは2つ:
+ここで直すのは3つ:
   * 絵を原典のタイル（`Assets/Sprites/Tiles/NNN_*.png`）に向ける
   * `m_LocalScale` と `m_Size` を 1 にする（32px / PPU32 = ちょうど1マス）
+  * **Animator を外す**
+
+Animator は敵と人の36個に付いていて、`Assets/Images/CharMoveAnim/*.anim` が
+SpriteRenderer の `m_Sprite` を毎コマ書き換える。差し替え先は**旧アトラス**の切り出しで、
+そちらは **PPU 100**（32px なら 0.32ユニット）。旧尺度 2.5 のときは 0.8マスで
+それらしく見えていたが、尺度を1に直した途端に **0.32マス＝極端に小さく**なった。
+2コマの動きは原典どおりの仕掛け（`MonsterAnimator`、原典 0x92a4）が受け持っているので、
+このクリップは要らない。外すことで**旧アトラスへの参照も完全に無くなる**。
 
 3x3のボスと祭壇、および `docs/make_prefabs.py` が作るプレハブは触らない
 （あちらは初めから 尺度1 で作ってある）。
@@ -50,6 +58,15 @@ GENERATED=set(re.findall(r'\("(?:Item|Wall|Enemy|FieldObstacle)","([^"]+)"',
                          open(os.path.join(ROOT,"docs/make_prefabs.py"),
                               encoding="utf-8").read()))
 
+def strip_animator(text):
+    """Animator の部品と、GameObject 側の参照を取り除く。"""
+    m=re.search(r"^--- !u!95 &(\d+)\nAnimator:\n(?:.*\n)*?(?=^--- !u!|\Z)",text,re.M)
+    if not m: return text
+    fid=m.group(1)
+    text=text[:m.start()]+text[m.end():]
+    text=re.sub(r"^  - component: \{fileID: "+fid+r"\}\n","",text,flags=re.M)
+    return text
+
 def main():
     ids=object_ids(); tiles=tile_guids()
     changed=[]; skipped=[]
@@ -61,6 +78,7 @@ def main():
             skipped.append(name); continue
         tname,tguid=tiles[oid]
         t=open(p,encoding="utf-8").read(); before=t
+        t=strip_animator(t)
         t=re.sub(r"m_Sprite: \{fileID: -?\d+, guid: [0-9a-f]{32}, type: 3\}",
                  f"m_Sprite: {{fileID: 21300000, guid: {tguid}, type: 3}}", t)
         t=re.sub(r"m_LocalScale: \{x: [\d.-]+, y: [\d.-]+, z: [\d.-]+\}",
@@ -69,7 +87,7 @@ def main():
             t=re.sub(k+r": \{x: [\d.-]+, y: [\d.-]+\}", k+": {x: 1, y: 1}", t)
         if t!=before:
             open(p,"w",encoding="utf-8").write(t); changed.append((name,tname))
-    print(f"{len(changed)} 個を原典のタイル・尺度1に揃えた")
+    print(f"{len(changed)} 個を原典のタイル・尺度1・Animator無しに揃えた")
     for n,t in changed: print(f"  {n:26s} → {t}")
     if skipped: print(f"\n対応するタイルが無くて触らなかったもの {len(skipped)}件: {sorted(skipped)}")
 

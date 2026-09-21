@@ -339,6 +339,11 @@ public static class TowerSceneBuilder
                                 "Assets/Sprites/Screens/Ending_Text_2.png",
                                 "Assets/Sprites/Screens/Ending_Text_3.png",
                                 "Assets/Sprites/Screens/Ending_Text_4.png" });
+        // ゲームオーバー（原典 0x097ac）。真っ黒に1行だけ。
+        BuildFullScreen(screen, font, controller, TowerGame.PageKind.GameOver,
+                        "GameOverScreen", "",
+                        GameOverScreen.Line, GameOverScreen.Dot,
+                        "", GameOverScreen.Dot);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.FinalScreen,
                         "EndingScreen", "Assets/Sprites/Screens/Ending_Art.png",
                         Ending.TitleLine,  Ending.TitleDot,

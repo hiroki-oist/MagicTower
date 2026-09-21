@@ -27,6 +27,16 @@ public class TowerController : MonoBehaviour
         if (loader == null) loader = GetComponent<FloorLoader>();
         if (sound == null) sound = GetComponent<SoundPlayer>();
         if (sound == null) sound = gameObject.AddComponent<SoundPlayer>();
+        StartNewGame();
+    }
+
+    /// <summary>
+    /// 最初から始める。原典のゲームオーバー（0x097ac）は
+    /// キーを待って **INITIAL.DAT を読み直す**ので、同じ結果になるようにする。
+    /// </summary>
+    void StartNewGame()
+    {
+        StopShows();
         Game = new TowerGame(PlayerState.NewGame());
         RebuildView();
         // 原典は序章のあと（ゼノに奪われた直後）に本編の曲を鳴らす。
@@ -53,7 +63,12 @@ public class TowerController : MonoBehaviour
             // **送った拍子に階が変わることがある**（序章でゼノに奪われて2階の牢に移る、
             // 終幕で50階まで駆け上がる）ので、送ったあとも必ず見た目を合わせ直す。
             acted = Input.anyKeyDown;
-            if (acted) Game.NextPage();
+            if (acted)
+            {
+                // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
+                if (Game.IsGameOver) { StartNewGame(); return; }
+                Game.NextPage();
+            }
         }
         else if (Game.IsMenuOpen)
         {

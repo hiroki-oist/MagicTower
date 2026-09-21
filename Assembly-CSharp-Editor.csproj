@@ -92,6 +92,7 @@
     <Compile Include="Assets/Editor/TowerPlaythrough.cs" />
     <Compile Include="Assets/Editor/TowerSceneBuilder.cs" />
     <Compile Include="Assets/Tests/Editor/SceneWiringTests.cs" />
+    <Compile Include="Assets/Tests/Editor/GameOverTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerNpcTests.cs" />
     <Compile Include="Assets/Tests/Editor/KnightChargeTests.cs" />
     <Compile Include="Assets/Tests/Editor/StoryWalkTests.cs" />

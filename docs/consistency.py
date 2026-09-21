@@ -1345,9 +1345,16 @@ chk(not _dangling,"プレハブの絵の参照先が全部ある",str(_dangling)
 # 盤面に出るプレハブは**原典から書き出したタイル**を指していること。
 # 昔の絵（Assets/Images/MagicTower/MTower.gif の切り出し）を指したままだと、
 # 別の絵が出たり何も出なかったりする（2階の檻・魔導師がそれだった）。
+# ⚠ 旧アトラスは **2枚ある**（`Assets/Images/MTower.gif` と
+#    `Assets/Images/MagicTower/MTower.gif`）。以前は後者しか見ておらず、
+#    前者を指すプレハブ15個を見逃していた。両方を見る。
+_gifguids=set()
+for _gp in ("Assets/Images/MTower.gif.meta","Assets/Images/MagicTower/MTower.gif.meta"):
+    if not os.path.exists(_gp): continue
+    for _l in open(_gp,encoding="utf-8"):
+        if _l.startswith("guid: "): _gifguids.add(_l.split()[1]); break
+chk(len(_gifguids)==2,"旧アトラスは2枚ある（両方を見張る）",str(len(_gifguids)))
 _gifguid=None
-for _l in open("Assets/Images/MagicTower/MTower.gif.meta",encoding="utf-8"):
-    if _l.startswith("guid: "): _gifguid=_l.split()[1]; break
 _reg=open("Assets/Resources/FloorPrefabRegistry.asset",encoding="utf-8").read()
 _regguids=set(re.findall(r"prefab: \{fileID: -?\d+, guid: ([0-9a-f]{32})",_reg))
 _oldart=[]
@@ -1358,9 +1365,14 @@ for _pf in glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
     for _l in open(_mt,encoding="utf-8"):
         if _l.startswith("guid: "): _pg=_l.split()[1]; break
     if _pg not in _regguids: continue          # 登録簿に無い古いプレハブは見ない
-    if _gifguid and _gifguid in open(_pf,encoding="utf-8").read():
+    _ptxt=open(_pf,encoding="utf-8").read()
+    if any(_g in _ptxt for _g in _gifguids):
         _oldart.append(os.path.basename(_pf))
-chk(not _oldart,"盤面に出るプレハブは原典のタイルを指している",str(_oldart))
+    # Animator は旧アトラスの切り出しを毎コマ貼り直してしまう（`Images/CharMoveAnim/*.anim`）。
+    # 2コマの動きは原典どおりの仕掛け（MonsterAnimator、0x92a4）が受け持つので要らない。
+    if re.search(r"^Animator:",_ptxt,re.M):
+        _oldart.append(os.path.basename(_pf)+"(Animator)")
+chk(not _oldart,"盤面に出るプレハブは原典のタイルだけを指し Animator を持たない",str(_oldart))
 
 # 盤面に置くものは **絵の大きさ = マスの数** でなければならない。
 # 作者の古いプレハブは旧アトラス（1枚0.4ユニット）向けに m_LocalScale 2.5 で
@@ -1394,6 +1406,20 @@ def _cell_size_check():
     return bad
 _cellbad=_cell_size_check()
 chk(not _cellbad,"盤面のプレハブは 絵32ドット=1マス の大きさで出る",str(_cellbad[:5]))
+
+# ゲームオーバー（原典 0x097ac）。生命力が尽きたら必ずここへ来る。
+_gv=open("Assets/Scripts/UI/GameOverScreen.cs",encoding="utf-8").read()
+chk('Line = "ＧＡＭＥ　ＯＶＥＲ"' in _gv,"ゲームオーバーの文字は原典 DS:0x181e のまま")
+chk("X = 0x1f, Y = 0xbe" in _gv,"出す位置は原典 0x9e30 に渡す (0x1f, 0xbe)")
+_tb=open("Assets/Scripts/Battle/TowerBattle.cs",encoding="utf-8").read()
+chk("if (p.DamageTaken >= player.Hp)" in _tb,
+    "相手の一撃で生命力が尽きるなら死ぬ（原典 0x64cd の「生命力 > 一撃」）")
+chk("r.Died = true" in _tb and "player.Hp = 0" in _tb,"死んだら生命力は0")
+_tg3=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("PageKind.GameOver" in _tg3 and "public void GameOver()" in _tg3,
+    "本線がゲームオーバーの画面を積む")
+chk("if (Player.Hp <= 0) { GameOver(); return; }" in _tg3,
+    "魔法攻撃で尽きてもゲームオーバー（原典 0x001df2 / 0x001fd0）")
 
 # 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
 # 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
@@ -1818,7 +1844,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=625
+MIN_CHECKS=632
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

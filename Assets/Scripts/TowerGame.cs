@@ -64,7 +64,7 @@ public class TowerGame
 
     /// <summary>出すものの種類。</summary>
     public enum PageKind { Dialogue, Title, Effect, FinalScreen, Prologue,
-                           EndingTower, EndingText }
+                           EndingTower, EndingText, GameOver }
 
     /// <summary>出すもの1つぶん。</summary>
     public struct Page
@@ -668,6 +668,12 @@ public class TowerGame
                     PlaySound(SoundCues.Slash);
                     if (i < b.Hits - 1) PlaySound(SoundCues.Hit);
                 }
+                if (b.Died)
+                {
+                    // 原典 0x64cd → 0x68b:0x2efc。生命力が尽きたらゲームオーバー。
+                    GameOver();
+                    break;
+                }
                 if (!b.Won)
                 {
                     Say(GameText.Instance.Message(b.MessageKey));
@@ -701,6 +707,29 @@ public class TowerGame
         return r.Outcome;
     }
 
+    /// <summary>
+    /// ゲームオーバー。原典（0x097ac）は画面を黒く塗って
+    /// 「ＧＡＭＥ　ＯＶＥＲ」を出し、キーを待って INITIAL.DAT を読み直す。
+    /// ここでは1枚の画面として積み、送ったら最初からやり直す。
+    /// </summary>
+    public void GameOver()
+    {
+        if (IsGameOver) return;
+        Player.Hp = 0;
+        pages.Clear();
+        frontMapDone = true;
+        pages.Enqueue(new Page
+        {
+            Kind = PageKind.GameOver, Text = GameOverScreen.Line, Record = -1
+        });
+    }
+
+    /// <summary>ゲームオーバーの画面を出している最中か。</summary>
+    public bool IsGameOver
+    {
+        get { return pages.Count > 0 && pages.Peek().Kind == PageKind.GameOver; }
+    }
+
     /// <summary>隣接マスの魔術士・魔導師から魔法攻撃を受ける。神盾があれば無効。</summary>
     void ApplyMagicAttack()
     {
@@ -710,6 +739,8 @@ public class TowerGame
         int after = MagicAttack.Apply(Player.Hp, Player.ShieldRank, n, out key);
         if (key == null) return;
         Player.Hp = after;
+        // 原典 0x001df2 / 0x001fd0 も、ここで尽きたらゲームオーバーへ行く。
+        if (Player.Hp <= 0) { GameOver(); return; }
         // 原典（0x1b75〜0x1ba7）は**自分の立っているマス**に閃光を出す。
         PlayEffect(Player.Position);
         PlaySound(SoundCues.Magic);

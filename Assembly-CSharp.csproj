@@ -86,6 +86,7 @@
     <Compile Include="Assets/Scripts/Floor/FloorData.cs" />
     <Compile Include="Assets/Scripts/Items/Shop.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorConnections.cs" />
+    <Compile Include="Assets/Scripts/UI/GameOverScreen.cs" />
     <Compile Include="Assets/Scripts/Battle/Battlers/Battler.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextSelector_A.cs" />
     <Compile Include="Assets/Scripts/Floor/HiddenOccupants.cs" />

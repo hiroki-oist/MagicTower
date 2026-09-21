@@ -21,6 +21,13 @@ public static class TowerBattle
     {
         public bool Fought;         // そもそも戦闘になったか
         public bool Won;
+        /// <summary>
+        /// 生命力が尽きたか。原典 0x64cd は**相手の一撃ごとに**
+        /// `生命力 > その一撃` を調べ、そうでなければ生命力を0にして
+        /// ゲームオーバー（0x68b:0x2efc）へ行く。
+        /// 受ける合計と比べるのと同じことなので、ここでは合計で判定する。
+        /// </summary>
+        public bool Died;
         public int DamageTaken;
         public int GoldGained;
         public int Hits;
@@ -94,11 +101,20 @@ public static class TowerBattle
             return r;
         }
 
-        r.Won = true;
         r.Hits = p.PlayerHits;
         r.DamageTaken = p.DamageTaken;
-        r.GoldGained = p.GoldGained;
 
+        // 原典 0x64cd: 相手の一撃で生命力が尽きるなら、そこで終わり。
+        // 倒す前に死ぬので**相手は残り、金も入らない**（0x6327 まで届かない）。
+        if (p.DamageTaken >= player.Hp)
+        {
+            r.Died = true;
+            player.Hp = 0;
+            return r;
+        }
+
+        r.Won = true;
+        r.GoldGained = p.GoldGained;
         player.Hp -= p.DamageTaken;
         player.Gold += p.GoldGained;
         return r;
