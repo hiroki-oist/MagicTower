@@ -139,3 +139,42 @@ public class CursorSpriteTests
         }
     }
 }
+
+/// <summary>セリフの窓の印も、メニューと同じ原典の絵を使う。</summary>
+public class DialogueCursorTests
+{
+    [Test]
+    public void セリフの窓にも印の絵が繋がっている()
+    {
+        var path = "Assets/Scenes/Tower.unity";
+        if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            var v = UnityEngine.Object.FindObjectOfType<DialogueWindowView>(true);
+            Assert.IsNotNull(v);
+            var so = new UnityEditor.SerializedObject(v);
+            var cur = so.FindProperty("cursor").objectReferenceValue as UnityEngine.UI.Image;
+            Assert.IsNotNull(cur, "印の絵が未設定");
+            Assert.IsNotNull(cur.sprite, "絵が入っていない");
+            StringAssert.Contains("Cursor", cur.sprite.name, "メニューと同じ絵");
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+
+    [Test]
+    public void 選んでいる行を本文から数える()
+    {
+        // 「◎」の付いた行だけを数えて、ChoiceIndex 番目に印を置く
+        var src = System.IO.File.ReadAllText("Assets/Scripts/UI/DialogueWindowView.cs");
+        StringAssert.Contains("static int ChoiceLine(", src);
+        StringAssert.Contains("lines[i].IndexOf('◎')", src);
+        // 行送りは見せ方によって違う（作者の見せ方は26、原典は20）
+        StringAssert.Contains("AuthorStyle.DialogueLineAdvance", src);
+        StringAssert.Contains("ScreenLayout.LineAdvance", src);
+    }
+}

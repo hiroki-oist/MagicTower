@@ -513,6 +513,14 @@ public static class TowerSceneBuilder
         wso.FindProperty("body").objectReferenceValue = tmp;
         wso.FindProperty("blink").objectReferenceValue = blink;
         wso.FindProperty("boss").objectReferenceValue = boss;
+        // 選んでいる行に置く印（メニューの窓と同じ、原典 PICTURE.P58 の4枚目）
+        var dcurGo = new GameObject("Cursor", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        dcurGo.transform.SetParent(panelGo.transform, false);
+        var dcur = dcurGo.GetComponent<UnityEngine.UI.Image>();
+        dcur.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Cursor_0.png");
+        dcur.raycastTarget = false;
+        dcur.enabled = false;
+        wso.FindProperty("cursor").objectReferenceValue = dcur;
         wso.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);

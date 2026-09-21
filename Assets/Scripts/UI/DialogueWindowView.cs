@@ -16,6 +16,11 @@ public class DialogueWindowView : MonoBehaviour
     [SerializeField] Image background;
     [SerializeField] TextMeshProUGUI body;
     [SerializeField] BlinkView blink;
+    /// <summary>
+    /// 選んでいる行に置く印。原典は PICTURE.P58 の4枚目を
+    /// `0x9e78` が変位 -0x337 から貼る（メニューの窓と同じ絵）。
+    /// </summary>
+    [SerializeField] UnityEngine.UI.Image cursor;
     [SerializeField] BossAppearView boss;
 
     /// <summary>原典のパレットの色（DS:0x908）。内側は索引0、文字は索引15。</summary>
@@ -43,8 +48,10 @@ public class DialogueWindowView : MonoBehaviour
             panel.gameObject.SetActive(show);
         if (!show) { Showing = null; return; }
 
-        // 選ばせている間は、選んでいる行に印を出す（印の絵は原典で未同定なので「→」で代用）
-        var shownText = controller.Game.IsChoosing ? WithMark(page, controller.Game) : page;
+        PlaceCursor(page);
+        // 印の絵が無いときだけ、選んでいる行に文字の印を付ける
+        var shownText = (cursor == null && controller.Game.IsChoosing)
+                      ? WithMark(page, controller.Game) : page;
         if (page != Showing || (body != null && body.text != shownText))
         {
             Showing = page;
@@ -56,9 +63,45 @@ public class DialogueWindowView : MonoBehaviour
         }
     }
 
+    /// <summary>選んでいる行が本文の何行目か。無ければ -1。</summary>
+    static int ChoiceLine(string page, TowerGame game)
+    {
+        if (string.IsNullOrEmpty(page)) return -1;
+        var lines = page.Split('\n');
+        int seen = 0;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].IndexOf('◎') < 0) continue;
+            if (seen == game.ChoiceIndex) return i;
+            seen++;
+        }
+        return -1;
+    }
+
     /// <summary>
-    /// 選んでいる行の頭に印を置く。原典（0x9e78）は行の高さ16ドットぶんずつ
-    /// 印を動かすが、**印そのものの絵はまだ同定できていない**ので「→」で代用している。
+    /// 印の絵を選んでいる行へ置く。原典（0x9e78）は行の高さぶんずつ印を動かす。
+    /// </summary>
+    void PlaceCursor(string page)
+    {
+        if (cursor == null) return;
+        int line = controller.Game.IsChoosing ? ChoiceLine(page, controller.Game) : -1;
+        bool show = line >= 0;
+        if (cursor.enabled != show) cursor.enabled = show;
+        if (!show) return;
+        int left    = AuthorStyle.Enabled ? AuthorStyle.DialogueTextLeft : DialogueWindow.TextLeft;
+        int top     = AuthorStyle.Enabled ? AuthorStyle.DialogueTextTop  : DialogueWindow.TextTop;
+        int advance = AuthorStyle.Enabled ? AuthorStyle.DialogueLineAdvance
+                                          : ScreenLayout.LineAdvance;
+        var rt = cursor.rectTransform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.sizeDelta = new Vector2(16f * DialogueWindow.CanvasScale,
+                                   16f * DialogueWindow.CanvasScale);
+        rt.anchoredPosition = new Vector2(left * DialogueWindow.CanvasScale,
+                                          -(top + advance * line) * DialogueWindow.CanvasScale);
+    }
+
+    /// <summary>
+    /// 選んでいる行の頭に文字の印を置く（印の絵が繋がっていないときの控え）。
     /// 文言の「◎」は原典の文字列にもともと入っているもの。
     /// </summary>
     static string WithMark(string page, TowerGame game)
