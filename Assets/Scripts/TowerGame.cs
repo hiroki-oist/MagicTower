@@ -63,7 +63,7 @@ public class TowerGame
     }
 
     /// <summary>出すものの種類。</summary>
-    public enum PageKind { Dialogue, Title, Effect, FinalScreen }
+    public enum PageKind { Dialogue, Title, Effect, FinalScreen, Prologue }
 
     /// <summary>出すもの1つぶん。</summary>
     public struct Page
@@ -89,6 +89,9 @@ public class TowerGame
 
     /// <summary>今出すべきものの中身。無ければ null。</summary>
     public Page? Current { get { return pages.Count > 0 ? pages.Peek() : (Page?)null; } }
+
+    /// <summary>今出すべきものの番号（序章の絵なら何行目まで出すか）。無ければ 0。</summary>
+    public int CurrentRecord { get { return pages.Count > 0 ? pages.Peek().Record : 0; } }
 
     /// <summary>今出すべきものの種類。何も無ければ null。</summary>
     public PageKind? CurrentKind
@@ -174,6 +177,18 @@ public class TowerGame
                     Text = Ending.TitleLine + "\n" + Ending.AnyKeyLine,
                     Record = -1
                 });
+                continue;
+            }
+            if (step == Cutscenes.PrologueStep)
+            {
+                // 序章の1枚絵。行が1つずつ現れるので、行数ぶんページを積む。
+                for (int shown = 1; shown <= Cutscenes.PrologueLines; shown++)
+                    pages.Enqueue(new Page
+                    {
+                        Kind = PageKind.Prologue,
+                        Text = "",
+                        Record = shown           // 何行目まで出すか
+                    });
                 continue;
             }
             if (step == Cutscenes.TitleStep)

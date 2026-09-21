@@ -312,6 +312,14 @@ public static class TowerSceneBuilder
                         "TitleScreen", "",
                         TitleScreen.Title,   TitleScreen.TitleDot,
                         TitleScreen.Copyright, TitleScreen.CopyrightDot);
+        // 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚を差し替える。
+        BuildFullScreen(screen, font, controller, TowerGame.PageKind.Prologue,
+                        "PrologueScreen", "Assets/Sprites/Screens/Prologue_0.png",
+                        "", TitleScreen.TitleDot, "", TitleScreen.CopyrightDot,
+                        new[] { "Assets/Sprites/Screens/Prologue_0.png",
+                                "Assets/Sprites/Screens/Prologue_1.png",
+                                "Assets/Sprites/Screens/Prologue_2.png",
+                                "Assets/Sprites/Screens/Prologue_3.png" });
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.FinalScreen,
                         "EndingScreen", "Assets/Sprites/Screens/Ending_Art.png",
                         Ending.TitleLine,  Ending.TitleDot,
@@ -470,7 +478,8 @@ public static class TowerSceneBuilder
     static void BuildFullScreen(RectTransform screen, TMP_FontAsset font, TowerController controller,
                                 TowerGame.PageKind showOn, string name, string artPath,
                                 string first, Vector2Int firstAt,
-                                string second, Vector2Int secondAt)
+                                string second, Vector2Int secondAt,
+                                string[] stepArt = null)
     {
         var panelGo = new GameObject(name, typeof(RectTransform));
         panelGo.transform.SetParent(screen, false);
@@ -512,6 +521,13 @@ public static class TowerSceneBuilder
         so.FindProperty("art").objectReferenceValue = art;
         so.FindProperty("line1").objectReferenceValue = t1;
         so.FindProperty("line2").objectReferenceValue = t2;
+        if (stepArt != null)
+        {
+            var steps = so.FindProperty("steps");
+            steps.arraySize = stepArt.Length;
+            for (int i = 0; i < stepArt.Length; i++)
+                steps.GetArrayElementAtIndex(i).objectReferenceValue = LoadSprite(stepArt[i]);
+        }
         so.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);

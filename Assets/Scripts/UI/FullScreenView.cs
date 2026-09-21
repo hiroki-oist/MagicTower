@@ -39,10 +39,23 @@ public class FullScreenView : MonoBehaviour
     /// 原典も題名（0x6db2）と最後の画面（0xd45c）はこの形で、
     /// 絵と文字を出したあとキー入力を待つだけ。
     /// </summary>
+    /// <summary>
+    /// 序章の1枚絵は**行が1つずつ現れる**ので、行数ぶんの絵を持っておいて差し替える。
+    /// 原典は絵の中に3行とも描いてあり、パレットを差し替えて出していく
+    /// （`lcall 0xf5f,0x461`。動画 Part1 t≈34〜41）。
+    /// </summary>
+    [SerializeField] Sprite[] steps = new Sprite[0];
+
     void LateUpdate()
     {
         if (controller == null || controller.Game == null) return;
         bool mine = controller.Game.CurrentKind == showOn;
+        if (mine && steps.Length > 0 && art != null)
+        {
+            // ページの「番号」が何行目まで出すかを表す
+            var n = Mathf.Clamp(controller.Game.CurrentRecord, 0, steps.Length - 1);
+            if (steps[n] != null) art.sprite = steps[n];
+        }
         if (panel != null && panel.activeSelf != mine) panel.SetActive(mine);
     }
 }

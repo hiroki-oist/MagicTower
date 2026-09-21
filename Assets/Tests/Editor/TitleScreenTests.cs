@@ -38,7 +38,7 @@ public class TitleScreenTests
             var line = raw.Trim();
             if (!line.StartsWith("ゼノとの初対面")) continue;
             var seq = line.Split('|')[2];
-            StringAssert.Contains("111 ; 閃光 ; 題名 ; 奪われる ; 112", seq.Replace("  ", " "));
+            StringAssert.Contains("111 ; 閃光 ; 題名 ; 序章の絵 ; 奪われる ; 112", seq.Replace("  ", " "));
             return;
         }
         Assert.Fail("ゼノとの初対面の行が見つからない");

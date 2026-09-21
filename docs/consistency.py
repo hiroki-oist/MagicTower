@@ -1186,10 +1186,15 @@ _cs=[[c.strip() for c in l.split("|")] for l in
 chk(len(_cs)==9,"場面は9つ（七つ＋物語の終わりの2つ）",str(len(_cs)))
 _cs_steps=[n.strip() for r in _cs for n in r[2].split(";")]
 _cs_say=[n for n in _cs_steps
-         if n not in ("題名","奪われる","牢が開く","最後の画面","駆け上がる","閃光","斬りかかる")
+         if n not in ("題名","奪われる","牢が開く","最後の画面","駆け上がる","閃光",
+                      "斬りかかる","序章の絵")
          and not n.startswith("地図 ")]
 chk(all(int(n) in _dlg for n in _cs_say),
     "場面のセリフ番号が Dialogue.txt に実在する（「題名」「奪われる」は別仕立て）")
+# 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚ぶん書き出してある
+chk(all(os.path.exists(f"Assets/Sprites/Screens/Prologue_{_i}.png") for _i in range(4)),
+    "序章の1枚絵が4枚ある（行が0〜3つ出た状態）")
+chk("序章の絵" in _cs_steps,"序章の絵の段が場面の表にある")
 # 場面の中の地図の書き換え（原典 0x3044 の三つ組の表から取った）
 _cs_map=[n for n in _cs_steps if n.startswith("地図 ")]
 chk(len(_cs_map)==12,"場面の中の地図の書き換えは12件（20階のボス登場10・40階の金騎士2）",len(_cs_map))
@@ -1420,7 +1425,9 @@ chk(open("docs/original/disk/MTE.EXE","rb").read().find(b"MTWAKU")<0,
 _scr=[[c.strip() for c in l.split("|")] for l in
       open("docs/original/screens.txt",encoding="utf-8") if l.strip() and not l.startswith("#")]
 chk(len(_scr)==13,"画面の絵は13枚",str(len(_scr)))
-chk(len(glob.glob("Assets/Sprites/Screens/*.png"))==14,"Assets には枠を足して14枚")
+chk(len(glob.glob("Assets/Sprites/Screens/*.png"))==18,
+    "Assets には枠と序章の4枚を足して18枚",
+    str(len(glob.glob("Assets/Sprites/Screens/*.png"))))
 # 枠の中央が盤面と同じ大きさで空いている
 _lcg0=_p58.to_indices(*_p58.decode_all(open("docs/original/disk/LCG.P58","rb").read())[0])
 _hole={_lcg0[_y][_x] for _y in range(24,376) for _x in range(144,496)}
@@ -1544,7 +1551,7 @@ for _off,_want in ((0x113c,"Ｔｏｗｅｒ"),(0x1167,"（Ｃ）１９９６")):
 chk("AfterRecord = 111" in _ts and "NextRecord = 112" in _ts,
     "題名は序章の111と112の間に入る")
 _cs2=open("Assets/Resources/Cutscenes.txt",encoding="utf-8").read()
-chk("111 ; 閃光 ; 題名 ; 奪われる ; 112" in _cs2,
+chk("111 ; 閃光 ; 題名 ; 序章の絵 ; 奪われる ; 112" in _cs2,
     "111のあと閃光→題名→奪われるの順（原典 0x6d09→0x6db2→0x06f1b）")
 chk("起動直後ではない" in open("Assets/Scripts/Prologue.cs",encoding="utf-8").read(),
     "序章が位置イベント由来だと明記してある")
@@ -1691,7 +1698,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=609
+MIN_CHECKS=611
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

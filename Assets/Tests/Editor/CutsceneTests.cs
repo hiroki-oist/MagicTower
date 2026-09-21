@@ -20,7 +20,8 @@ public class CutsceneTests
     {
         var steps = Cutscenes.Instance.Steps("ゼノとの初対面");
         CollectionAssert.AreEqual(
-            new[] { "110", "111", "閃光", "題名", "奪われる", "112", "113", "114", "115", "牢が開く" },
+            new[] { "110", "111", "閃光", "題名", "序章の絵", "奪われる",
+                    "112", "113", "114", "115", "牢が開く" },
             steps);
     }
 
@@ -45,8 +46,9 @@ public class CutsceneTests
         var g = Game(1, new Vector2Int(0, -5));
         Assert.IsTrue(g.PlayScene("ゼノとの初対面"));
 
-        // 110 111 閃光 題名 奪われる 112 113 114 115 牢が開く → 10 
-        Assert.AreEqual(10, g.PendingPages);
+        // 110 111 閃光 題名 序章の絵×3 奪われる 112 113 114 115 牢が開く
+        // → 会話5 ＋ 閃光1 ＋ 題名1 ＋ 序章の絵3 ＝ 13（奪われる・牢が開くはページを作らない）
+        Assert.AreEqual(13, g.PendingPages);
 
         StringAssert.Contains("１００人目の侵入者", g.CurrentPage);
         Assert.AreEqual(110, g.Current.Value.Record);
@@ -60,8 +62,16 @@ public class CutsceneTests
         StringAssert.Contains("Ｔｏｗｅｒ", g.CurrentPage);
         StringAssert.Contains("１９９６", g.CurrentPage);
 
-        g.NextPage();          // 題名 → 奪われるが自動で起きて 112 が出る
-        Assert.AreEqual(112, g.Current.Value.Record, "題名と奪われるのあとは112");
+        // 題名のあとは序章の1枚絵が3枚（行が1つずつ現れる）
+        for (int shown = 1; shown <= Cutscenes.PrologueLines; shown++)
+        {
+            g.NextPage();
+            Assert.AreEqual(TowerGame.PageKind.Prologue, g.Current.Value.Kind, $"{shown}枚目");
+            Assert.AreEqual(shown, g.Current.Value.Record, "何行目まで出すか");
+        }
+
+        g.NextPage();          // 序章の絵 → 奪われるが自動で起きて 112 が出る
+        Assert.AreEqual(112, g.Current.Value.Record, "序章と奪われるのあとは112");
         Assert.AreEqual(2, g.Player.Floor, "奪われて2階にいる");
     }
 
@@ -73,7 +83,7 @@ public class CutsceneTests
 
         g.Step(Vector2Int.down);
         Assert.AreEqual("ゼノとの初対面", g.PendingScene);
-        Assert.AreEqual(10, g.PendingPages, "場面がそのまま積まれる");
+        Assert.AreEqual(13, g.PendingPages, "場面がそのまま積まれる（序章の絵3枚を含む）");
         StringAssert.Contains("ようこそ", g.CurrentPage);
     }
 

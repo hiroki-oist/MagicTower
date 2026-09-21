@@ -13,6 +13,17 @@ public class Cutscenes
     /// <summary>題名画面を表す行。</summary>
     public const string TitleStep = "題名";
 
+    /// <summary>
+    /// 序章の1枚絵を表す行（MTOPSTR）。原典は**絵の中に3行とも描いてあり**、
+    /// 行ごとに色の索引（1・2・3）を分けておいて、パレットを差し替えて
+    /// 1行ずつ白くする（`lcall 0xf5f,0x461`。動画 Part1 t≈34〜41）。
+    /// リメイクは色を変えた4枚（`Prologue_0`〜`3`）を順に出す。
+    /// </summary>
+    public const string PrologueStep = "序章の絵";
+
+    /// <summary>序章の絵の行数（3行）。</summary>
+    public const int PrologueLines = 3;
+
     /// <summary>ゼノに全てを奪われる処理を表す行（原典 0x06f1b）。</summary>
     public const string ZenoTakesStep = "奪われる";
 
