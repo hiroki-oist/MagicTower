@@ -22,6 +22,7 @@
 import os, sys, zlib, struct
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from p58 import decode, to_indices, GAME_PALETTE
+from p58_to_tiles import write_meta_if_missing
 
 ROOT = os.path.expanduser("~/Code/MagicTower")
 SRC = f"{ROOT}/docs/original/disk/GROUND.P58"
@@ -40,7 +41,12 @@ PLAYERS = [("PLAYER1", 32000, f"{ROOT}/Assets/Sprites/Effects/Player_0.png"),
 # つまり PICTURE は buffer の**手前**に読まれている。属性表からは一度も指されない。
 KEYS = [(0, f"{ROOT}/Assets/Sprites/Hud/Key_Yellow.png"),
         (1, f"{ROOT}/Assets/Sprites/Hud/Key_Red.png"),
-        (2, f"{ROOT}/Assets/Sprites/Hud/Key_Purple.png")]
+        (2, f"{ROOT}/Assets/Sprites/Hud/Key_Purple.png"),
+        # 選ばせるときの印（原典 0x9e78 が変位 -0x337 から貼る 16x16）。
+        # 鍵3枚の次に並んでいて、-0x381 + 74 = -0x337 と間隔も合う。
+        # 剣を横に向けたような形で、#4 はそれを1点ずらした2コマ目。
+        (3, f"{ROOT}/Assets/Sprites/Hud/Cursor_0.png"),
+        (4, f"{ROOT}/Assets/Sprites/Hud/Cursor_1.png")]
 
 def images(data):
     """(変位, 絵) の並び。"""
@@ -89,6 +95,7 @@ def main():
     for k, out in KEYS:
         idx = to_indices(*pic[k][1])
         png(out, idx, {idx[0][0]})      # まわりの欄の灰色は透過にする
+        write_meta_if_missing(out, 700 + k)   # .meta はリポジトリに入れていないので添える
         print(f"鍵の絵 PICTURE #{k} → {out}")
 
     for name, addr, out in PLAYERS:

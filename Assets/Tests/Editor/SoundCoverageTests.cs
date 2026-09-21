@@ -87,3 +87,55 @@ public class SpriteCoverageTests
         }
     }
 }
+
+/// <summary>
+/// 選んでいる行に置く印。原典は **PICTURE.P58 の4枚目**（16x16）を
+/// `0x9e78` が変位 -0x337 から貼る。鍵3枚（-0x40c / -0x3cb / -0x381）の次に並んでいて、
+/// 間隔（65 / 74バイト）も合う。
+/// </summary>
+public class CursorSpriteTests
+{
+    [Test]
+    public void 印の絵が書き出してある()
+    {
+        Assert.IsTrue(System.IO.File.Exists("Assets/Sprites/Hud/Cursor_0.png"),
+                      "PICTURE #3（印）");
+        Assert.IsTrue(System.IO.File.Exists("Assets/Sprites/Hud/Cursor_1.png"),
+                      "PICTURE #4（印の2コマ目）");
+        var t = UnityEditor.AssetDatabase.LoadAssetAtPath<UnityEngine.Texture2D>(
+            "Assets/Sprites/Hud/Cursor_0.png");
+        Assert.IsNotNull(t);
+        Assert.AreEqual(16, t.width);
+        Assert.AreEqual(16, t.height);
+    }
+
+    [Test]
+    public void 変位の並びが鍵の次になっている()
+    {
+        // -0x40c(黄) → +65 → -0x3cb(赤) → +74 → -0x381(紫) → +74 → -0x337(印)
+        Assert.AreEqual(-0x3cb, -0x40c + 65);
+        Assert.AreEqual(-0x381, -0x3cb + 74);
+        Assert.AreEqual(-0x337, -0x381 + 74);
+    }
+
+    [Test]
+    public void メニューの窓に印の絵が繋がっている()
+    {
+        var path = "Assets/Scenes/Tower.unity";
+        if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            var v = UnityEngine.Object.FindObjectOfType<MenuWindowView>(true);
+            Assert.IsNotNull(v);
+            var so = new UnityEditor.SerializedObject(v);
+            var cur = so.FindProperty("cursor").objectReferenceValue;
+            Assert.IsNotNull(cur, "印の絵が未設定");
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+}

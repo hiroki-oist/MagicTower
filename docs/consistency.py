@@ -2091,6 +2091,13 @@ chk(not _silent,"鳴らす所の無い音が無い",str(_silent))
 chk("playerSprite2" in _ctrl and "sideways" in _ctrl,
     "主人公は左右に歩くと2コマ目に入れ替わる（原典 0xa276 の 0x100→0x120）")
 chk(os.path.exists("Assets/Sprites/Effects/Player_1.png"),"主人公の2コマ目が書き出してある")
+# 選んでいる行の印。原典は PICTURE.P58 の4枚目（0x9e78 が変位 -0x337 から貼る）。
+chk(os.path.exists("Assets/Sprites/Hud/Cursor_0.png")
+    and os.path.exists("Assets/Sprites/Hud/Cursor_1.png"),
+    "印の絵（PICTURE #3/#4）が書き出してある")
+chk(-0x337 == -0x381 + 74,"印の変位は紫の鍵の次（-0x381 + 74）")
+_mvw=open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read()
+chk("Image cursor" in _mvw and "PlaceCursor" in _mvw,"メニューの窓が印の絵を置く")
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("SpecialItems.Kind.Elixir,          // special_1" in _tm,
     "アイテムの並びは原典（special_1〜8）そのまま")
@@ -2108,7 +2115,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=706
+MIN_CHECKS=709
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

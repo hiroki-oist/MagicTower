@@ -458,12 +458,20 @@ public static class TowerSceneBuilder
 
         var tmp = WindowBody(panelGo, font);
 
+        // 選んでいる行に置く印（原典 PICTURE.P58 の4枚目。0x9e78 が -0x337 から貼る）
+        var curGo = new GameObject("Cursor", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        curGo.transform.SetParent(panelGo.transform, false);
+        var cur = curGo.GetComponent<UnityEngine.UI.Image>();
+        cur.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Cursor_0.png");
+        cur.raycastTarget = false;
+
         var win = screen.gameObject.AddComponent<MenuWindowView>();
         var wso = new SerializedObject(win);
         wso.FindProperty("controller").objectReferenceValue = controller;
         wso.FindProperty("panel").objectReferenceValue = rt;
         wso.FindProperty("background").objectReferenceValue = img;
         wso.FindProperty("body").objectReferenceValue = tmp;
+        wso.FindProperty("cursor").objectReferenceValue = cur;
         wso.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);

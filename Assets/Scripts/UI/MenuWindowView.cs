@@ -16,7 +16,32 @@ public class MenuWindowView : MonoBehaviour
     [SerializeField] TextMeshProUGUI body;
 
     /// <summary>選んでいる項目に付ける印。原典は剣の絵。</summary>
+    /// <summary>
+    /// 選んでいる行に置く印。**原典は PICTURE.P58 の4枚目**（16x16、剣を横にした形）を
+    /// `0x9e78` が変位 -0x337 から貼る。鍵3枚の次に並んでいて間隔も合う。
+    /// 絵が繋がっていないときのために、文字の印も残してある。
+    /// </summary>
     public const string Cursor = "▶";
+
+    /// <summary>原典の印の絵。無ければ文字の印になる。</summary>
+    [SerializeField] UnityEngine.UI.Image cursor;
+
+    /// <summary>印を置く行へ動かす。</summary>
+    void PlaceCursor(TowerGame g)
+    {
+        if (cursor == null) return;
+        bool show = g.IsMenuOpen;
+        if (cursor.enabled != show) cursor.enabled = show;
+        if (!show) return;
+        int line = g.MenuStageIndex + 1;                 // 1行目は見出し
+        var rt = cursor.rectTransform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.sizeDelta = new Vector2(16f * DialogueWindow.CanvasScale,
+                                   16f * DialogueWindow.CanvasScale);
+        rt.anchoredPosition = new Vector2(
+            DialogueWindow.TextLeft * DialogueWindow.CanvasScale,
+            -(DialogueWindow.TextTop + ScreenLayout.LineAdvance * line) * DialogueWindow.CanvasScale);
+    }
 
     string shown;
 
@@ -30,7 +55,7 @@ public class MenuWindowView : MonoBehaviour
             panel.gameObject.SetActive(show);
         if (!show) { shown = null; return; }
 
-        var text = Compose(g);
+        var text = cursor != null ? g.MenuStageText : Compose(g);
         if (text == shown) return;
         shown = text;
         if (body != null)
@@ -40,6 +65,7 @@ public class MenuWindowView : MonoBehaviour
         }
         if (background != null) background.color = DialogueWindowView.Fill;
         Layout();
+        PlaceCursor(g);
     }
 
     /// <summary>選んでいる行の先頭2文字を印に置き換える。</summary>
