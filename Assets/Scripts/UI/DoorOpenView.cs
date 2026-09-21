@@ -51,8 +51,9 @@ public class DoorOpenView : MonoBehaviour
             yield return new WaitForSeconds(DoorAnimation.FrameSeconds);
         }
         cel.SetActive(false);
-        // 原典は9コマのあと 0x9288(8) で盤面の動きだけを8コマぶん回す
-        yield return new WaitForSeconds(DoorAnimation.TailFrames * DoorAnimation.FrameSeconds);
+        // 原典は9コマのあと盤面の動きだけを回す（鍵の扉は 0x9288(8)、門は 0x9288(0x14)）
+        yield return new WaitForSeconds(
+            DoorAnimation.TailOf(door.Cell) * DoorAnimation.FrameSeconds);
         running--;
     }
 

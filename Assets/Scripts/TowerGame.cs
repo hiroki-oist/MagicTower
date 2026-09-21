@@ -793,9 +793,22 @@ public class TowerGame
     {
         Player.ClampStats();       // 原典は描き直すたびに上限で頭を押さえる
         if (Floor == null) return;
+        // 門が開いたマスを拾うために、開く前の門の場所を控えておく。
+        // 原典（0x4762）は門1マスごとに 0x7a68（9コマの動き）を呼ぶ。
+        var gates = new List<Vector2Int>();
+        for (int y = FloorData.MinY; y <= FloorData.MaxY; y++)
+            for (int x = FloorData.MinX; x <= FloorData.MaxX; x++)
+            {
+                var at = new Vector2Int(x, y);
+                if (Floor.At(at) == "s") gates.Add(at);
+            }
         var fired = Floor.ApplyUnlocks(f => Player.EventFlags.Contains(f));
         foreach (var u in fired)
             PlaySound(u.Floor == 2 ? SoundCues.BigUnlock : SoundCues.Unlock);
+        if (fired.Count > 0)
+            foreach (var at in gates)
+                if (Floor.At(at) != "s")
+                    doorOpens.Add(new DoorOpen { At = at, Cell = "s" });
     }
 
     /// <summary>

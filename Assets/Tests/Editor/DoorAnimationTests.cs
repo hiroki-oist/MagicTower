@@ -57,6 +57,41 @@ public class DoorAnimationTests
     }
 
     [Test]
+    public void 門は後ろの間が長い()
+    {
+        // 門は別の関数（原典 0x07a68）だが 9コマ・音11・貼り方は同じで、
+        // 後ろの間だけ 0x9288(0x14) と長い。鍵の扉は 0x9288(8)。
+        Assert.AreEqual(8, DoorAnimation.TailOf("y"));
+        Assert.AreEqual(8, DoorAnimation.TailOf("b"));
+        Assert.AreEqual(8, DoorAnimation.TailOf("r"));
+        Assert.AreEqual(0x14, DoorAnimation.TailOf("s"));
+    }
+
+    [Test]
+    public void 門が開くと動きが積まれる()
+    {
+        // 2階の檻（特殊扉6枚）と同じ仕組み。解錠で門が床になったマスを拾う。
+        var p = new PlayerState { Hp = 1000, Attack = 100, Defense = 100, Floor = 1,
+                                  Position = new Vector2Int(0, 0) };
+        var g = new TowerGame(p);
+        var at = new Vector2Int(0, 1);
+        g.Floor.Put(at, "s");
+        g.ConsumeDoorOpens();
+        // 門を直に床へ変えても積まれない（解錠が起きたときだけ）
+        g.Floor.Clear(at);
+        Assert.AreEqual(0, g.ConsumeDoorOpens().Count);
+    }
+
+    [Test]
+    public void ボスが現れる十コマも書き出してある()
+    {
+        // LCG #6（480x192）は 96x96（3x3マス）が横5x縦2 の10コマ。原典 0x03044。
+        for (int i = 0; i < 10; i++)
+            Assert.IsTrue(System.IO.File.Exists($"Assets/Sprites/Effects/BossAppear_{i}.png"),
+                          $"BossAppear_{i} が無い");
+    }
+
+    [Test]
     public void 本線は扉を積むだけで描かない()
     {
         var src = System.IO.File.ReadAllText("Assets/Scripts/TowerGame.cs");

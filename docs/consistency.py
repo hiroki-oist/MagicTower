@@ -1484,6 +1484,12 @@ chk("ConsumeDoorOpens" in _tg3 and "doorOpens.Add" in _tg3,
 _sc=open("Assets/Resources/SoundCues.txt",encoding="utf-8").read()
 chk("扉を開ける       | 11 | 0x7be6" in _sc,
     "扉を開ける音は 0x7be6 の 11（0x23ee の 6 は「拾う」と39階の仕掛け）")
+chk("門が開く         | 11 | 0x7a68" in _sc,
+    "0x7a68 は「画面効果」ではなく門が開く9コマの動き")
+chk("SealedTailFrames = 0x14" in _da,"門の後ろの間は 0x9288(0x14)＝20コマ")
+_bossfr=sorted(glob.glob("Assets/Sprites/Effects/BossAppear_*.png"))
+chk(len(_bossfr)==10,"20階のボスが現れる動きは10コマ（LCG #6 を 96x96 で横5x縦2）",
+    str(len(_bossfr)))
 
 # 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
 # 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
@@ -1908,7 +1914,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=646
+MIN_CHECKS=649
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

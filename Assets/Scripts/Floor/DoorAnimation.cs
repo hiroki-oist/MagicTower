@@ -32,6 +32,21 @@ public static class DoorAnimation
     /// <summary>動きのあと、盤面の動きだけを回すコマ数（原典 0x9288(8)）。</summary>
     public const int TailFrames = 8;
 
+    /// <summary>
+    /// 門（封印扉）が開くときの後ろの間（原典 `0x07a68` は `0x9288(0x14)`）。
+    /// 門の方は鍵の扉と別の関数だが、**9コマ・音11・貼り方は同じ**で、
+    /// 絵が LCG #5、後ろの間だけ 20コマと長い。
+    /// 呼ばれるのは解錠（0x4762）から25か所と、位置イベント・金騎士の突撃・
+    /// ボススケルトン登場から各1〜2か所。
+    /// </summary>
+    public const int SealedTailFrames = 0x14;
+
+    /// <summary>その色の後ろの間（コマ数）。</summary>
+    public static int TailOf(string cell)
+    {
+        return cell == "s" ? SealedTailFrames : TailFrames;
+    }
+
     /// <summary>1コマの長さ。0x92a4 の中の縦帰線待ち1回ぶん。</summary>
     public const float FrameSeconds = 1f / 60f;
 

@@ -75,6 +75,28 @@ TextureImporter:
 """
 
 
+# LCG #6（480x192）は **20階のボスが現れる動き**。原典 0x03044（ボス登場）が
+# 作業域 0x3c00 に敷いてから、96x96（＝3x3マス）を **横5 x 縦2 の10コマ**として
+# 盤面の中央（VRAM 0x2fa2 ＝ 左上のマスが (-1,+1)）へ順に貼る。
+# 1コマごとに 0x19(25) 待つので、全部で 250/60 ≒ 4.2秒。
+BOSS_STRIP = 6
+BOSS_CELL = 96
+BOSS_COLS, BOSS_ROWS = 5, 2
+
+
+def boss_frames(imgs):
+    px = to_indices(*imgs[BOSS_STRIP])
+    h, w = len(px), len(px[0])
+    if (w, h) != (BOSS_CELL * BOSS_COLS, BOSS_CELL * BOSS_ROWS):
+        raise SystemExit(f"★ LCG #{BOSS_STRIP} の大きさが {w}x{h}")
+    out = []
+    for r in range(BOSS_ROWS):
+        for c in range(BOSS_COLS):
+            out.append([row[c * BOSS_CELL:(c + 1) * BOSS_CELL]
+                        for row in px[r * BOSS_CELL:(r + 1) * BOSS_CELL]])
+    return out
+
+
 def main():
     os.makedirs(OUT, exist_ok=True)
     imgs = decode_all(open(f"{ROOT}/docs/original/disk/LCG.P58", "rb").read())
@@ -91,7 +113,16 @@ def main():
             guid = hashlib.md5(f"MagicTower/door/{name}/{f}".encode()).hexdigest()
             open(path + ".meta", "w").write(META.format(guid=guid))
             n += 1
-    print(f"{n} 枚の扉のコマを書き出した → {OUT}")
+    # 20階のボスが現れる動き（LCG #6）
+    eff = os.path.join(ROOT, "Assets/Sprites/Effects")
+    os.makedirs(eff, exist_ok=True)
+    for i, frame in enumerate(boss_frames(imgs)):
+        path = os.path.join(eff, f"BossAppear_{i}.png")
+        write_rgba(path, frame, None)
+        guid = hashlib.md5(f"MagicTower/boss-appear/{i}".encode()).hexdigest()
+        open(path + ".meta", "w").write(META.format(guid=guid))
+        n += 1
+    print(f"{n} 枚を書き出した（扉36枚＋ボス登場10枚） → {OUT} / {eff}")
 
 
 if __name__ == "__main__":
