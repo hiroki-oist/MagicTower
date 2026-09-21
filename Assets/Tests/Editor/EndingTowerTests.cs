@@ -21,24 +21,38 @@ public class EndingTowerTests
     }
 
     [Test]
-    public void 明るさは入り七段と出七段()
+    public void 白への寄せ具合が原典のパレットの表どおり()
     {
-        // 原典は i<7 で入りの表、i>0x12 で出の表のパレットに差し替える
+        // 原典 0x0c4d8 がスタックに積む8本の表。番号0（下地）の濃さは
+        // 15, 11, 9, 7, 5, 3, 1, 0（まっ白 → ふだんの色）。
         Assert.AreEqual(7, Ending.TowerFadeInSteps);
         Assert.AreEqual(0x12, Ending.TowerFadeOutAfter);
-        Assert.Less(Ending.TowerBrightness(0), 1f, "はじめは暗い");
-        Assert.AreEqual(1f, Ending.TowerBrightness(6), 1e-5f, "7回目で出そろう");
+
+        // 入り: [bp-0x228] から後ろへ ＝ 11/15 → 0（白からすうっと現れる）
+        var wantIn = new[] { 11, 9, 7, 5, 3, 1, 0 };
+        for (int i = 0; i < wantIn.Length; i++)
+            Assert.AreEqual(wantIn[i] / 15f, Ending.TowerWhiteMix(i), 1e-5f, $"{i}回目");
+
+        // 途中は差し替えない ＝ ふだんの色のまま
         for (int i = 7; i <= Ending.TowerFadeOutAfter; i++)
-            Assert.AreEqual(1f, Ending.TowerBrightness(i), 1e-5f, $"{i}回目はそのまま");
-        Assert.Less(Ending.TowerBrightness(Ending.TowerFadeOutAfter + 1), 1f, "そのあと暗くなる");
-        Assert.AreEqual(0f, Ending.TowerBrightness(Ending.TowerSteps - 1), 1e-5f, "終わりは真っ暗");
+            Assert.AreEqual(0f, Ending.TowerWhiteMix(i), 1e-5f, $"{i}回目はそのまま");
+
+        // 出: [bp+0xd8] から 32*i を引く ＝ 1/15 → 15/15（まっ白に消える）
+        var wantOut = new[] { 1, 3, 5, 7, 9, 11, 15 };
+        for (int k = 0; k < wantOut.Length; k++)
+            Assert.AreEqual(wantOut[k] / 15f,
+                            Ending.TowerWhiteMix(Ending.TowerFadeOutAfter + 1 + k), 1e-5f,
+                            $"{Ending.TowerFadeOutAfter + 1 + k}回目");
+        Assert.AreEqual(1f, Ending.TowerWhiteMix(Ending.TowerSteps - 1), 1e-5f,
+                        "終わりはまっ白（そのあと終わりの言葉が白地に出る）");
     }
 
     [Test]
-    public void 濃さの変わり方が近似であることを明記してある()
+    public void パレットの表を原典から起こしたと書いてある()
     {
         var src = System.IO.File.ReadAllText("Assets/Scripts/Ending.cs");
-        StringAssert.Contains("直線で近似", src, "パレットの表はまだ読めていない");
+        StringAssert.Contains("0fff 1fff 2fff", src, "表そのものを控えてある");
+        StringAssert.Contains("逆だった", src, "以前の近似が逆向きだったことを残す");
     }
 
     [Test]
@@ -48,6 +62,7 @@ public class EndingTowerTests
         StringAssert.Contains("Ending.TowerSteps", src);
         StringAssert.Contains("Ending.TowerScrollPerStep", src);
         StringAssert.Contains("SoundCues.SceneBeat", src);
+        StringAssert.Contains("Ending.TowerWhiteMix", src);
     }
 
     [Test]
@@ -71,6 +86,20 @@ public class EndingTowerTests
                     }
                 }
             Assert.AreEqual(1, scrolling, "流れるのは終幕の塔の絵だけ");
+            // 白へ寄せる板は、流れる1枚だけが持っていること
+            int veils = 0;
+            foreach (var go in scene.GetRootGameObjects())
+                foreach (var v in go.GetComponentsInChildren<FullScreenView>(true))
+                {
+                    var so = new UnityEditor.SerializedObject(v);
+                    var veil = so.FindProperty("whiteVeil").objectReferenceValue;
+                    if (veil == null) continue;
+                    veils++;
+                    Assert.AreEqual("EndingTowerScreen", v.name);
+                    Assert.IsTrue(so.FindProperty("scrollTower").boolValue,
+                                  "白へ寄せるのは流れる絵だけ");
+                }
+            Assert.AreEqual(1, veils, "白へ寄せる板は1枚だけ");
         }
         finally
         {

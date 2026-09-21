@@ -1553,7 +1553,10 @@ chk("TowerSteps = 0x1a" in _en,"塔の絵は26回送る（原典 cmp [bp-0x24e],
 chk("TowerStepWait = 0x1e" in _en,"1回 0x1e(30) 待つ")
 chk("TowerScrollPerStep = 15" in _en,"1回15ドット送る（原典は高さを 15*i で縮める）")
 chk("TowerSound = 7" in _en,"1回ごとに音7（原典 0xcf9f）")
-chk("直線で近似" in _en,"濃さの変わり方は近似だと明記してある")
+chk("0fff 1fff 2fff" in _en,"パレットの表（原典 0x0c4d8 の8本）を控えてある")
+chk("15, 11, 9, 7, 5, 3, 1, 0" in _en,"番号0の濃さの段が原典どおり")
+chk("TowerWhiteMix" in open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read(),
+    "見た目の側が白への寄せ具合を使う")
 _fs=open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read()
 chk("Ending.TowerSteps" in _fs and "scrollTower" in _fs,"見た目の側が塔の絵を流す")
 
@@ -2005,7 +2008,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=675
+MIN_CHECKS=677
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

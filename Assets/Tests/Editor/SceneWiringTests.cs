@@ -20,6 +20,9 @@ public class SceneWiringTests
     static readonly HashSet<string> MayBeEmpty = new HashSet<string>
     {
         "TowerRuntime.player",
+        // 白へ寄せる板は**終幕の塔の絵だけ**が持つ（ほかの1枚絵は流れも寄せもしない）。
+        // 塔の絵の側は TowerSceneTests / EndingTowerTests で別に見ている。
+        "FullScreenView.whiteVeil",
     };
 
     /// <summary>自分たちが書いたスクリプトか（Unity や TMP のものは見ない）。</summary>

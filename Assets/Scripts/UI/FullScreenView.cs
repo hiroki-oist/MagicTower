@@ -52,6 +52,12 @@ public class FullScreenView : MonoBehaviour
     /// </summary>
     [SerializeField] bool scrollTower;
 
+    /// <summary>
+    /// 塔の絵に重ねる白。原典はパレットで色を白へ寄せる（`Ending.TowerWhiteMix`）ので、
+    /// こちらは同じ形になるよう**白い板を上から薄くかける**。
+    /// </summary>
+    [SerializeField] UnityEngine.UI.Image whiteVeil;
+
     Coroutine towerRun;
 
     void LateUpdate()
@@ -81,11 +87,8 @@ public class FullScreenView : MonoBehaviour
             if (rt != null)
                 rt.anchoredPosition = from + new Vector2(
                     0f, i * Ending.TowerScrollPerStep * DialogueWindow.CanvasScale);
-            if (art != null)
-            {
-                float b = Ending.TowerBrightness(i);
-                art.color = new Color(b, b, b, 1f);
-            }
+            if (whiteVeil != null)
+                whiteVeil.color = new Color(1f, 1f, 1f, Ending.TowerWhiteMix(i));
             if (controller.Sound != null) controller.Sound.PlayCue(SoundCues.SceneBeat);
             yield return new WaitForSeconds(Ending.TowerStepWait * MonsterAnimation.FrameSeconds);
         }
@@ -94,6 +97,7 @@ public class FullScreenView : MonoBehaviour
 
     void ResetTower()
     {
+        if (whiteVeil != null) whiteVeil.color = new Color(1f, 1f, 1f, 0f);
         if (art == null) return;
         art.color = Color.white;
         art.rectTransform.anchoredPosition = Vector2.zero;

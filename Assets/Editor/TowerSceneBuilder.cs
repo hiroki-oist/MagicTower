@@ -379,8 +379,20 @@ public static class TowerSceneBuilder
                         "", Ending.TitleDot, "", Ending.AnyKeyDot);
         if (towerScreen != null)
         {
+            // 白へ寄せるぶんの板。原典はパレットで色を白へ寄せる（0x0c4d8 の表）。
+            var veilGo = new GameObject("WhiteVeil", typeof(RectTransform),
+                                        typeof(UnityEngine.UI.Image));
+            veilGo.transform.SetParent(towerScreen.transform, false);
+            var vrt = veilGo.GetComponent<RectTransform>();
+            vrt.anchorMin = Vector2.zero; vrt.anchorMax = Vector2.one;
+            vrt.offsetMin = vrt.offsetMax = Vector2.zero;
+            var veil = veilGo.GetComponent<UnityEngine.UI.Image>();
+            veil.color = new Color(1f, 1f, 1f, 0f);
+            veil.raycastTarget = false;
+
             var tso = new SerializedObject(towerScreen);
             tso.FindProperty("scrollTower").boolValue = true;
+            tso.FindProperty("whiteVeil").objectReferenceValue = veil;
             tso.ApplyModifiedPropertiesWithoutUndo();
         }
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.EndingText,

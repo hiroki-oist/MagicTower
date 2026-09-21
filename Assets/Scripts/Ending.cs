@@ -62,16 +62,46 @@ public static class Ending
     }
 
     /// <summary>
-    /// その回の明るさ（0〜1）。**原典はパレットの表を差し替えている**が、
-    /// 表の中身（32バイト x 7本 x 2組）はまだ読めていないので、
-    /// **入りと出を7段の直線で近似**している。濃さの変わり方が分かったら差し替える。
+    /// パレットの表（原典が `0x0c4d8` でスタックに積む 8本 x 16語）。
+    /// 1語は **`NGRB`**（上位4ビットが色の番号、残りが緑・赤・青の濃さ）で、
+    /// 番号7〜15はどの本でも `fff`（白のまま）、**動くのは番号0〜6だけ**。
+    ///
+    /// <code>
+    ///   [bp-0x248] 0fff 1fff 2fff 3fff 4fff 5fff 6fff 7fff …   ← 全部まっ白
+    ///   [bp-0x228] 0bbb 1bbb 2bbb 3bbb 4bbb 5bbc 6ddd 7fff …
+    ///   [bp-0x208] 0999 1999 2999 3999 499a 599c 6ddd 7fff …
+    ///   [bp-0x1e8] 0777 1777 2777 3778 477a 588c 6ddd 7fff …
+    ///   [bp-0x1c8] 0555 1555 2556 3558 466a 588c 6ddd 7fff …
+    ///   [bp-0x1a8] 0333 1334 2336 3448 466a 588c 6ddd 7fff …
+    ///   [bp-0x188] 0112 1114 2226 3448 466a 588c 6ddd 7fff …
+    ///   [bp-0x168] 0002 1004 2226 3448 466a 588c 6fff 7fff …   ← ふだんの色
+    /// </code>
+    ///
+    /// 番号0（下地）の濃さを並べると **15, 11, 9, 7, 5, 3, 1, 0** の段になる。
+    /// これを「**白へどれだけ寄せるか**」（0＝ふだんの色 / 1＝まっ白）として持つ。
     /// </summary>
-    public static float TowerBrightness(int step)
+    static readonly int[] TowerWhiteSteps = { 15, 11, 9, 7, 5, 3, 1, 0 };
+
+    /// <summary>
+    /// その回の「白への寄せ具合」（0〜1）。原典の輪（0x0ce83）の当て方そのまま:
+    ///
+    /// <code>
+    ///   i &lt; 7      … [bp-0x228] から 32ずつ後ろへ  → 表の 1番目から7番目（11/15 → 0）
+    ///   7〜0x12    … 差し替えないので ふだんの色のまま
+    ///   i &gt; 0x12   … [bp+0xd8] から 32*i を引く   → 表の6番目から0番目（1/15 → 15/15）
+    /// </code>
+    ///
+    /// つまり **白からすうっと現れて、しばらくそのまま、最後はまっ白に消える**。
+    /// ⚠ 以前ここを「黒から現れて黒へ消える」と近似していたが**逆だった**。
+    /// 終幕の流れ（塔の絵 → 真っ白 → 終わりの言葉）とも、こちらが合う。
+    /// </summary>
+    public static float TowerWhiteMix(int step)
     {
-        if (step < TowerFadeInSteps) return (step + 1) / (float)TowerFadeInSteps;
-        if (step > TowerFadeOutAfter)
-            return Mathf.Max(0f, 1f - (step - TowerFadeOutAfter) / (float)TowerFadeInSteps);
-        return 1f;
+        int level;
+        if (step < TowerFadeInSteps) level = TowerWhiteSteps[1 + step];
+        else if (step <= TowerFadeOutAfter) level = 0;
+        else level = TowerWhiteSteps[Mathf.Max(0, 6 - (step - TowerFadeOutAfter - 1))];
+        return level / 15f;
     }
 
     /// <summary>
