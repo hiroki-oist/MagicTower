@@ -32,7 +32,12 @@ public class TowerHudTests
     public void 階の表示が原典の形になる()
     {
         Assert.AreEqual("塔　４階", TowerHud.FloorLabel(4));
-        Assert.AreEqual("塔　５０階", TowerHud.FloorLabel(50));
+        // 2桁では全角空白が数字に置き換わる（原典は「塔　　階」の真ん中2マスに右詰め）
+        Assert.AreEqual("塔５０階", TowerHud.FloorLabel(50));
+        // 数値は全角にして右詰め（原典 0xb8d6 は x + 2*(枠の数 - 桁数) から書く）
+        Assert.AreEqual("　　４", GameText.NumRight(4, 3));
+        Assert.AreEqual("５０", GameText.NumRight(50, 2));
+        Assert.AreEqual("１２３", GameText.NumRight(123, 2), "枠より長ければそのまま");
     }
 
     [Test]

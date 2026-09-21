@@ -16,10 +16,17 @@ using UnityEngine;
 /// </summary>
 public static class TowerHud
 {
-    /// <summary>「塔　Ｎ階」。</summary>
+    /// <summary>
+    /// 「塔　Ｎ階」。原典は先に **「塔　　階」** を書いてから（0xbaf5）、
+    /// 真ん中の2マスに階を**右詰め**で重ねる（0xb8d6、x=6バイト・枠2つ）。
+    /// なので2桁の階では全角空白が消えて「塔５０階」になる。
+    /// </summary>
+    public const int FloorDigits = 2;
+
     public static string FloorLabel(int floor)
     {
-        return GameText.Instance.Message("floor_label", floor);
+        return GameText.Instance.Message("floor_label",
+                                         GameText.NumRight(floor, FloorDigits));
     }
 
     /// <summary>左側に並ぶ4つの数値。全角。</summary>

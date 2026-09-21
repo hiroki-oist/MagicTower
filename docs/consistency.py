@@ -557,6 +557,39 @@ for _nm,_sub,_idx in (("黄",0x40c,0),("赤",0x3cb,1),("紫",0x381,2)):
     chk(_dis.count(f"sub     ax, 0x{_sub:x}")==1,f"鍵の絵（{_nm}）を指す番地が1か所")
     chk(0x40c-_sub==_po[_idx],f"鍵の絵（{_nm}）は PICTURE の{_idx+1}枚目",
         f"{0x40c-_sub} vs {_po[_idx]}")
+# 原典が塗り直す欄を全部数え上げ（docs/dump_fills.py）、リメイク側の欄と突き合わせる。
+# ここに出てくる欄が ScreenLayout に無ければ、画面のどこかを作り忘れている。
+_fills=[]
+for _l in open("docs/original/screen_fills.txt",encoding="utf-8"):
+    if _l.startswith("#") or "|" not in _l: continue
+    _x,_y,_w,_h,_a=[t.strip() for t in _l.split("|")]
+    _fills.append((int(_x),int(_y),int(_w),int(_h)))
+chk(len(_fills)==14,"原典が塗り直す欄は14種",str(len(_fills)))
+_slsrc=open("Assets/Scripts/UI/ScreenLayout.cs",encoding="utf-8").read()
+_slset={tuple(int(v) for v in m) for m in
+        re.findall(r"new RectInt\((\d+), (\d+), (\d+), (\d+)\)",_slsrc)}
+# 盤面だけは定数の組み合わせで書いてあるので、その定数から組み立てて足す
+_slc=dict((a,int(b)) for a,b in re.findall(r"(\w+) = (\d+)",_slsrc))
+_slset.add((_slc["MapLeft"],_slc["MapTop"],
+            _slc["MapCells"]*_slc["TileSize"],_slc["MapCells"]*_slc["TileSize"]))
+# 画面まるごと (0,1,1280,400) は画面消去なので欄ではない
+_missing=[f for f in _fills if f[2]<1280 and f not in _slset]
+chk(not _missing,"原典が塗り直す欄はすべて ScreenLayout にある",str(_missing))
+
+# 左の帯の数値（0xb9f1〜0xbaed）。塗ってから 0xb8d6 で全角数字を**右詰め**に書く。
+#   生命力/攻撃力/防御力/所持金: x=6バイト(48ドット)・枠4つ → 48〜112 ＝ 欄とぴったり
+#   階: 先に「塔　　階」を x=4(32ドット) に書き、真ん中2マスに階を右詰めで重ねる
+_msgs={}
+for _l in open("Assets/Resources/Messages.txt",encoding="utf-8"):
+    if _l.startswith("#") or "|" not in _l: continue
+    _a,_b=_l.split("|",1); _msgs[_a.strip()]=_b.strip()
+chk(_msgs.get("floor_label")=="塔{0}階",
+    "階の見出しは「塔{0}階」（全角空白は数字の枠なので入れない）",_msgs.get("floor_label"))
+chk("NumRight" in open("Assets/Scripts/UI/TowerHud.cs",encoding="utf-8").read(),
+    "階の数字は2マスに右詰め（2桁だと空白が消える）")
+chk(_dis.count("call    0xb8d6")>=5,"数値を書く所は左の帯の5か所以上",
+    str(_dis.count("call    0xb8d6")))
+
 # 装備の絵（0x9b80 付近）。欄を塗ってから 剣=物体ID 50+段位 / 盾=55+段位 の絵を貼る。
 chk(0x3b2==0x282+6*50+4 and 0x3d0==0x282+6*55+4,
     "装備の絵は属性表の物体ID 50+段位 / 55+段位 の欄から引く")
@@ -1336,7 +1369,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=521
+MIN_CHECKS=526
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

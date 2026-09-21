@@ -145,7 +145,7 @@ game_over     | ＧＡＭＥ　ＯＶＥＲ
 no_save_data  | セーブデータがありません。
 mode_normal   | 標準モードに切り替えます
 mode_fast     | 高速モードに切り替えます
-floor_label   | 塔　{0}階
+floor_label   | 塔{0}階
 title_1       | 迷宮ＲＰＧ『魔法の塔』
 title_2       | Ｔｏｗｅｒ　ｏｆ　ｔｈｅ　Ｓｏｒｃｅｒｅｒ
 title_3       | 　　　　　　　　　　（Ｃ）１９９６　Ｎ．Ｗ

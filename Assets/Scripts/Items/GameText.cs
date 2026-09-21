@@ -111,6 +111,28 @@ public class GameText
         return sb.ToString();
     }
 
+    /// <summary>
+    /// 数値を全角数字にし、**右詰めで width マスに揃える**（足りない分は全角空白）。
+    /// 原典の数値描画（0xb8d6）が `x + 2*(枠の数 - 桁数)` から書いているのと同じ。
+    /// </summary>
+    public static string NumRight(int value, int width)
+    {
+        var s = Num(value);
+        return s.Length >= width ? s : new string('　', width - s.Length) + s;
+    }
+
+    /// <summary>メッセージを取り出し、{0} を文字列で置換する。</summary>
+    public string Message(string key, string value)
+    {
+        string s;
+        if (!messages.TryGetValue(key, out s))
+        {
+            Debug.LogWarning($"GameText: メッセージ '{key}' が未定義");
+            return "";
+        }
+        return s.Replace("{0}", value);
+    }
+
     /// <summary>メッセージを取り出す。{0} があれば value（全角数字）で置換する。</summary>
     public string Message(string key, int value = 0)
     {
