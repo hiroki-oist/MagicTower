@@ -871,7 +871,7 @@ for _l in open("Assets/Resources/SoundCues.txt",encoding="utf-8"):
     if _l.startswith("#") or "|" not in _l: continue
     _p=[x.strip() for x in _l.split("|")]
     _cue[_p[0]]=(int(_p[1]),_p[2])
-chk(len(_cue)==21,"合図は21件（原典の呼び出し61か所を仕分けたもの）",str(len(_cue)))
+chk(len(_cue)==22,"合図は22件（原典の呼び出し61か所を仕分けたもの）",str(len(_cue)))
 chk(all(v[0] in _snd for v in _cue.values()),"どの合図も実在する音を指す")
 chk(all(v[1].startswith("0x") for v in _cue.values()),"どの合図にも原典の場所が控えてある")
 chk(_cue["階段"][0]==8,"階段は音8（原典 0x28e6、地形11/12の判定の直後）")
@@ -1186,11 +1186,11 @@ _pe=[[c.strip() for c in l.split("|")] for l in
      if l.strip() and not l.strip().startswith("#")]
 chk([(int(r[0]),int(r[3]) if r[3]!="-" else -1) for r in _pe]==
     [(3,89),(10,91),(10,94),(13,-1),(15,95),(20,103),(25,105),(30,109),
-     (32,111),(33,114),(33,113),(38,119),(40,121),(42,123),
+     (32,111),(33,114),(33,113),(38,119),(40,121),(42,123),(43,-1),(47,-1),
      (49,130),(24,131)],
     "階とフラグの並びが原典どおり（最後の2つが物語の終わり）")
 _pf=[int(r[3]) for r in _pe if r[3]!="-"]
-chk(len(_pe)==16,"位置イベントは16件（原典 0x1588 の分岐14＋物語の終わり2）",str(len(_pe)))
+chk(len(_pe)==18,"位置イベントは18件（原典 0x1588 の分岐16＋物語の終わり2）",str(len(_pe)))
 chk(len(_pf)==len(set(_pf)),"フラグ番号が重複しない")
 # 13階の雪の結晶。原典 0x1fd5 は一度きりの印を持たず、持ち物を使い切ることで二度目を防ぐ。
 _snow=[r for r in _pe if r[0]=="13"]
@@ -2120,6 +2120,9 @@ for _l in open("Assets/Resources/SoundCues.txt",encoding="utf-8"):
     if _l.startswith("#") or not _l.strip(): continue
     _cue=_l.split("|")[0].strip()
     if _cue == "起動時のテンポ": continue            # 音は出ない（テンポを戻すだけ）
+    # 表（PositionEvents.txt）から名前で鳴らすものもある（"音 合図名"）
+    if "音 "+_cue in open("Assets/Resources/PositionEvents.txt",encoding="utf-8").read():
+        continue
     _m=re.search(r'public const string (\w+)\s*=\s*"'+re.escape(_cue)+r'"',_sccs)
     if not _m or "SoundCues."+_m.group(1) not in _players: _silent.append(_cue)
 chk(not _silent,"鳴らす所の無い音が無い",str(_silent))

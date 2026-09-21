@@ -76,3 +76,78 @@ public class SnowCrystalTests
         Assert.AreEqual(SpecialItems.Kind.SnowCrystal, ev.Value.NeedsItem);
     }
 }
+
+/// <summary>
+/// 逃げる相手（原典 0x217b の43階と 0x209a の47階）。どちらも一度きりの印を持たず、
+/// 「そのマスにまだ居るか」を見て発火する。
+/// </summary>
+public class FleeingEnemyTests
+{
+    static TowerGame Game(int floor, Vector2Int at)
+    {
+        var p = new PlayerState
+        {
+            Hp = 5000, Attack = 500, Defense = 500,
+            YellowKeys = 9, PurpleKeys = 9, RedKeys = 9,
+            Floor = floor, HighestFloor = 50, Position = at,
+        };
+        var g = new TowerGame(p);
+        g.EnterFloor(floor, at);
+        return g;
+    }
+
+    [Test]
+    public void 四十三階は魔導師が奥へ移って退路に壁が出る()
+    {
+        var g = Game(43, new Vector2Int(2, 5));
+        Assert.AreEqual("Enemy_ID93", g.Floor.At(new Vector2Int(3, 5)), "はじめは隣に居る");
+        g.ConsumeSounds();
+        Assert.IsTrue(g.CheckPositionEvent(), "発火する");
+
+        Assert.AreEqual(FloorState.Floor, g.Floor.At(new Vector2Int(3, 5)), "居なくなる");
+        Assert.AreEqual("Enemy_ID93", g.Floor.At(new Vector2Int(5, 5)), "奥へ移る");
+        Assert.AreEqual("#", g.Floor.At(new Vector2Int(1, 5)), "退路に壁");
+        Assert.AreEqual("#", g.Floor.At(new Vector2Int(4, 5)), "行く手にも壁");
+        var sounds = new System.Collections.Generic.List<int>(g.Sounds);
+        CollectionAssert.AreEqual(new[] { 6, 11 }, sounds, "音6のあと音11（原典 0x2203 / 0x226b）");
+
+        Assert.IsFalse(g.CheckPositionEvent(), "二度目は起きない");
+    }
+
+    [Test]
+    public void 四十七階は上の相手が一マス上がる()
+    {
+        var g = Game(47, new Vector2Int(-5, -4));
+        Assert.AreEqual("Enemy_ID151", g.Floor.At(new Vector2Int(-5, -3)), "はじめは真上");
+        g.ConsumeSounds();
+        Assert.IsTrue(g.CheckPositionEvent(), "発火する");
+        Assert.AreEqual(FloorState.Floor, g.Floor.At(new Vector2Int(-5, -3)));
+        Assert.AreEqual("Enemy_ID151", g.Floor.At(new Vector2Int(-5, -2)), "もう1マス上へ");
+        Assert.Contains(6, new System.Collections.Generic.List<int>(g.Sounds), "音6");
+
+        Assert.IsFalse(g.CheckPositionEvent(), "同じ所ではもう起きない");
+    }
+
+    [Test]
+    public void 四十七階は上の列でしか起きない()
+    {
+        var g = Game(47, new Vector2Int(-4, -4));
+        g.Floor.Put(new Vector2Int(-4, -3), "Enemy_ID151");
+        Assert.IsFalse(g.CheckPositionEvent(), "左端の列(-5)でなければ起きない");
+    }
+
+    [Test]
+    public void 四十七階は追いつめると逃げ場が無くなる()
+    {
+        var g = Game(47, new Vector2Int(-5, -4));
+        // 下から順に追っていくと、y=+2 で発火しなくなる（原典の条件は Y>2 ＝ y<=+2）
+        for (int y = -4; y <= 2; y++)
+        {
+            g.Player.Position = new Vector2Int(-5, y);
+            Assert.IsTrue(g.CheckPositionEvent(), $"y={y} では逃げる");
+        }
+        Assert.AreEqual("Enemy_ID151", g.Floor.At(new Vector2Int(-5, 4)), "最後は (-5,+4)");
+        g.Player.Position = new Vector2Int(-5, 3);
+        Assert.IsFalse(g.CheckPositionEvent(), "y=+3 では逃げない（原典 Y>2 の外）");
+    }
+}

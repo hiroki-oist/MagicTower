@@ -24,7 +24,7 @@ public class SoundCueTests
     public void 合図の表は原典の音番号だけを指す()
     {
         var c = SoundCues.Instance;
-        Assert.AreEqual(21, c.Count, "61か所を仕分けた合図の数");
+        Assert.AreEqual(22, c.Count, "61か所を仕分けた合図の数");
         foreach (var name in c.Names)
         {
             int n = c.Number(name);

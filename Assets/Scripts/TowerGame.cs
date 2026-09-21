@@ -1043,7 +1043,8 @@ public class TowerGame
         var hit = PositionEvents.Instance.At(Player.Floor, Player.Position,
                                              Player.EventFlags, Floor.IsCleared,
                                              p => Floor.At(p) == "s",
-                                             k => Player.Has(k));
+                                             k => Player.Has(k),
+                                             p => Floor.At(p));
         if (!hit.HasValue) return false;
         var ev = hit.Value;
 
@@ -1069,6 +1070,18 @@ public class TowerGame
             // 持ち物で溶かすものは**1マスずつ**音が鳴る（原典 0x2079 が1周ごとに音6）
             if (ev.NeedsItem != SpecialItems.Kind.None) PlaySound(SoundCues.SnowMelt);
         }
+        // 隣のものが**もう1マス先へ逃げる**（原典 47階 0x2102〜0x2150）。
+        if (ev.FleeDir != Vector2Int.zero)
+        {
+            var from = Player.Position + ev.FleeDir;
+            var to = from + ev.FleeDir;
+            var who = Floor.At(from);
+            Floor.Clear(from);
+            Floor.Put(to, who);
+        }
+        // 表に書いてある音を順に鳴らす。
+        // ⚠ 原典は43階だけ音6と音11の間に 0x1e（30コマ）待つが、こちらは間を置かない。
+        foreach (var cue in ev.Cues) PlaySound(cue);
         if (ev.Record >= 0)
         {
             var line = GameText.Instance.Dialogue(ev.Record);

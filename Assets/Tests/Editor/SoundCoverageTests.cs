@@ -22,11 +22,14 @@ public class SoundCoverageTests
                 + System.IO.File.ReadAllText("Assets/Scripts/UI/FullScreenView.cs")
                 + System.IO.File.ReadAllText("Assets/Scripts/UI/BattleView.cs");
         var consts = System.IO.File.ReadAllText("Assets/Scripts/Items/SoundCues.cs");
+        var fromTable = System.IO.File.ReadAllText("Assets/Resources/PositionEvents.txt");
         var missing = new System.Collections.Generic.List<string>();
 
         foreach (var name in SoundCues.Instance.Names)
         {
             if (System.Array.IndexOf(MayBeSilent, name) >= 0) continue;
+            // 表（PositionEvents.txt）から名前で鳴らすものは定数を持たない
+            if (fromTable.Contains("音 " + name)) continue;
             // 合図の名前 → 定数名
             var m = System.Text.RegularExpressions.Regex.Match(
                 consts, @"public const string (\w+)\s*=\s*""" + name + @"""");

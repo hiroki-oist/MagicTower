@@ -5,10 +5,10 @@ using UnityEngine;
 public class PositionEventsTests
 {
     [Test]
-    public void 表は十六件で原典の並びどおり()
+    public void 表は十八件で原典の並びどおり()
     {
         var e = PositionEvents.Instance;
-        Assert.AreEqual(16, e.Count, "物語の引き金14件＋終わりの2件");
+        Assert.AreEqual(18, e.Count, "物語の引き金16件＋終わりの2件");
 
         var seq = new System.Collections.Generic.List<string>();
         foreach (var x in e.All) seq.Add($"{x.Floor}:{x.FlagId}");
@@ -17,6 +17,8 @@ public class PositionEventsTests
                     // 13階の雪の結晶だけは一度きりの印を持たない（原典 0x1fd5）
                     "13:-1", "15:95", "20:103", "25:105", "30:109",
                     "32:111", "33:114", "33:113", "38:119", "40:121", "42:123",
+                    // 43階・47階の逃げる相手も印を持たない（原典 0x217b / 0x209a）
+                    "43:-1", "47:-1",
                     // 物語の終わり（原典 0x2277 と 0x22cc〜0x23e5）
                     "49:130", "24:131" }, seq);
     }
@@ -49,7 +51,10 @@ public class PositionEventsTests
     {
         var seen = new System.Collections.Generic.HashSet<int>();
         foreach (var x in PositionEvents.Instance.All)
+        {
+            if (x.FlagId < 0) continue;      // 一度きりの印を持たない行（13/43/47階）
             Assert.IsTrue(seen.Add(x.FlagId), $"{x.FlagId} が重複");
+        }
     }
 
     [Test]
@@ -57,7 +62,8 @@ public class PositionEventsTests
     {
         foreach (var x in PositionEvents.Instance.All)
         {
-            int want = (x.Floor == 33 && x.FlagId == 113) ? 2 : 1;
+            // 47階は左の列のどこでも起きる（原典の条件は X==0 かつ Y>2）
+            int want = (x.Floor == 33 && x.FlagId == 113) ? 2 : (x.Floor == 47 ? 8 : 1);
             Assert.AreEqual(want, x.Spots.Count, $"F{x.Floor} フラグ{x.FlagId}");
         }
     }
