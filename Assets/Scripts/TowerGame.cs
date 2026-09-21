@@ -64,7 +64,7 @@ public class TowerGame
 
     /// <summary>出すものの種類。</summary>
     public enum PageKind { Dialogue, Title, Effect, FinalScreen, Prologue,
-                           EndingTower, EndingText, GameOver }
+                           EndingTower, EndingText, GameOver, HeroOrb }
 
     /// <summary>出すもの1つぶん。</summary>
     public struct Page
@@ -599,8 +599,17 @@ public class TowerGame
             case TowerMenu.Entry.HeroOrb:
             {
                 // 原典（0x8c2a）はセーブと「その階の相手の能力＋予想ダメージ」の両方。
+                // 見せ方だけ作者の指定（<see cref="HeroOrbPanel"/>）で一覧にするので、
+                // 会話の窓ではなく専用の頁として積む。中身は原典のまま。
                 var text = HeroOrb.Text(Floor, Player);
-                if (!string.IsNullOrEmpty(text)) Say(text);
+                if (!string.IsNullOrEmpty(text))
+                {
+                    log.Add(text);
+                    pages.Enqueue(new Page
+                    {
+                        Kind = PageKind.HeroOrb, Text = text, Record = -1
+                    });
+                }
                 break;
             }
             case TowerMenu.Entry.SpecialItems:

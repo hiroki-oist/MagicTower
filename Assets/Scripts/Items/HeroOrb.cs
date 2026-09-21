@@ -24,6 +24,12 @@ public static class HeroOrb
     {
         public string Prefab;
         public int Id;
+        /// <summary>相手の名前（Battlers の数値アセットのもの）。</summary>
+        public string Name;
+        /// <summary>倒すと手に入る金。</summary>
+        public int Gold;
+        /// <summary>倒すまでに要る手数（こちらの攻撃回数）。</summary>
+        public int Turns;
         public int Hp, Attack, Defense;
         /// <summary>攻撃できるか。攻撃力が相手の防御力以下なら false（「攻撃不可能」）。</summary>
         public bool CanAttack;
@@ -70,6 +76,9 @@ public static class HeroOrb
             {
                 Prefab = name,
                 Id = ObjectIds.Instance.Of(name),
+                Name = e.Name,
+                Gold = e.Coin,
+                Turns = p.PlayerHits,
                 Hp = e.MaxHP, Attack = e.Attack, Defense = e.Defense,
                 CanAttack = p.CanWin,
                 Damage = p.CanWin ? p.DamageTaken : 0,

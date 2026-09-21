@@ -370,6 +370,8 @@ public static class TowerSceneBuilder
         // メニューを開いたまま開く会話の窓（飛翔のオーブの断り）が隠れないようにする。
         BuildMenuWindow(screen, font, controller);
         BuildDialogueWindow(screen, font, controller, blinkView, bossView);
+        BuildHeroOrbPanel(screen, font, controller,
+                          Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry"));
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
                         // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
                         // 真っ黒な画面に
@@ -820,6 +822,118 @@ public static class TowerSceneBuilder
         // 原典の行送りは文字の高さと同じ16ドット。TMP の既定より詰める。
         t.lineSpacing = TowerHud.InfoLineSpacing;
         return t;
+    }
+
+    /// <summary>
+    /// 勇者のオーブの一覧（作者の指定。並べ方は <see cref="HeroOrbPanel"/>）。
+    /// 9行ぶんの枠をあらかじめ作っておき、出すときに中身だけ入れ替える。
+    /// </summary>
+    static void BuildHeroOrbPanel(RectTransform screen, TMP_FontAsset font,
+                                  TowerController controller, FloorPrefabRegistry registry)
+    {
+        var panelGo = new GameObject("HeroOrbPanel", typeof(RectTransform),
+                                     typeof(UnityEngine.UI.Image));
+        panelGo.transform.SetParent(screen, false);
+        var rt = panelGo.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(HeroOrbPanel.MarginX, HeroOrbPanel.MarginY);
+        rt.anchorMax = new Vector2(1f - HeroOrbPanel.MarginX, 1f - HeroOrbPanel.MarginY);
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+
+        var img = panelGo.GetComponent<UnityEngine.UI.Image>();
+        img.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(AuthorStyle.PanelSpritePath);
+        img.type = UnityEngine.UI.Image.Type.Sliced;
+        img.color = DialogueWindowView.AuthorFill;
+
+        var icons = new List<UnityEngine.UI.Image>();
+        var names = new List<TextMeshProUGUI>();
+        var golds = new List<TextMeshProUGUI>();
+        var turns = new List<TextMeshProUGUI>();
+        var stats = new List<TextMeshProUGUI>();
+        var damages = new List<TextMeshProUGUI>();
+
+        for (int i = 0; i < HeroOrb.MaxRows; i++)
+        {
+            float top = 1f - HeroOrbPanel.RowHeight * i;
+            float bottom = top - HeroOrbPanel.RowHeight;
+            var rowGo = new GameObject($"Row{i}", typeof(RectTransform));
+            rowGo.transform.SetParent(panelGo.transform, false);
+            var row = rowGo.GetComponent<RectTransform>();
+            row.anchorMin = new Vector2(0f, bottom);
+            row.anchorMax = new Vector2(1f, top);
+            row.offsetMin = new Vector2(12f, 2f);
+            row.offsetMax = new Vector2(-12f, -2f);
+
+            var iconGo = new GameObject("Icon", typeof(RectTransform),
+                                        typeof(UnityEngine.UI.Image));
+            iconGo.transform.SetParent(rowGo.transform, false);
+            var irt = iconGo.GetComponent<RectTransform>();
+            irt.anchorMin = new Vector2(HeroOrbPanel.IconLeft, 0.05f);
+            irt.anchorMax = new Vector2(HeroOrbPanel.IconLeft, 0.95f);
+            irt.pivot = new Vector2(0f, 0.5f);
+            irt.sizeDelta = new Vector2(48f, 0f);
+            irt.anchoredPosition = Vector2.zero;
+            var iconImg = iconGo.GetComponent<UnityEngine.UI.Image>();
+            iconImg.preserveAspect = true;
+            iconImg.raycastTarget = false;
+            icons.Add(iconImg);
+
+            names.Add(RowText(rowGo, font, "Name", HeroOrbPanel.NameLeft,
+                              HeroOrbPanel.MiddleLeft, true, TextAlignmentOptions.Left));
+            golds.Add(RowText(rowGo, font, "Gold", HeroOrbPanel.NameLeft,
+                              HeroOrbPanel.MiddleLeft, false, TextAlignmentOptions.Left));
+            turns.Add(RowText(rowGo, font, "Turns", HeroOrbPanel.MiddleLeft,
+                              0.72f, true, TextAlignmentOptions.Left));
+            stats.Add(RowText(rowGo, font, "Stats", HeroOrbPanel.MiddleLeft,
+                              HeroOrbPanel.RightEdge, false, TextAlignmentOptions.Left));
+            damages.Add(RowText(rowGo, font, "Damage", 0.72f,
+                                HeroOrbPanel.RightEdge, true, TextAlignmentOptions.Right));
+        }
+
+        var view = screen.gameObject.AddComponent<HeroOrbView>();
+        var vso = new SerializedObject(view);
+        vso.FindProperty("controller").objectReferenceValue = controller;
+        vso.FindProperty("registry").objectReferenceValue = registry;
+        vso.FindProperty("panel").objectReferenceValue = rt;
+        FillObjects(vso.FindProperty("icons"), icons.ConvertAll(x => (Object)x));
+        FillObjects(vso.FindProperty("names"), names.ConvertAll(x => (Object)x));
+        FillObjects(vso.FindProperty("golds"), golds.ConvertAll(x => (Object)x));
+        FillObjects(vso.FindProperty("turns"), turns.ConvertAll(x => (Object)x));
+        FillObjects(vso.FindProperty("stats"), stats.ConvertAll(x => (Object)x));
+        FillObjects(vso.FindProperty("damages"), damages.ConvertAll(x => (Object)x));
+        vso.ApplyModifiedPropertiesWithoutUndo();
+
+        panelGo.SetActive(false);
+    }
+
+    /// <summary>一覧の1行の中の文字ひとつ。上半分／下半分に置き分ける。</summary>
+    static TextMeshProUGUI RowText(GameObject row, TMP_FontAsset font, string name,
+                                   float left, float right, bool upper,
+                                   TextAlignmentOptions align)
+    {
+        var go = new GameObject(name, typeof(RectTransform));
+        go.transform.SetParent(row.transform, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(left, upper ? 0.5f : 0.05f);
+        rt.anchorMax = new Vector2(right, upper ? 0.95f : 0.5f);
+        rt.offsetMin = rt.offsetMax = Vector2.zero;
+        var t = go.AddComponent<TextMeshProUGUI>();
+        if (font != null) t.font = font;
+        t.fontSize = 22f;
+        t.enableAutoSizing = true;
+        t.fontSizeMin = 10f;
+        t.fontSizeMax = 26f;
+        t.color = HeroOrbPanel.Text;
+        t.alignment = align;    // TMP の Left / Right は縦は中央
+        t.enableWordWrapping = false;
+        t.raycastTarget = false;
+        return t;
+    }
+
+    static void FillObjects(SerializedProperty prop, List<Object> values)
+    {
+        prop.arraySize = values.Count;
+        for (int i = 0; i < values.Count; i++)
+            prop.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
     }
 
 }
