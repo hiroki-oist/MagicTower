@@ -108,7 +108,7 @@ public class MonsterAnimatorTests
         var keys = so.FindProperty("keys");
         var first = so.FindProperty("firstFrames");
         var second = so.FindProperty("secondFrames");
-        Assert.AreEqual(35, keys.arraySize, "2コマで動くもの");
+        Assert.AreEqual(36, keys.arraySize, "2コマで動くもの");
         Assert.AreEqual(keys.arraySize, first.arraySize);
         Assert.AreEqual(keys.arraySize, second.arraySize);
         for (int i = 0; i < keys.arraySize; i++)

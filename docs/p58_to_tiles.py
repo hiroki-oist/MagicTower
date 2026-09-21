@@ -163,12 +163,33 @@ def main():
             continue
         oid = int(name[:3])
         if oid in COMPOSITE:
+            # 組み立てた絵の2コマ目は、**マスごとに表の隣を引いて**作る。
+            # 3x3のボスは全マスが表に載っていて隣は +9。祭壇は真ん中(ID16)だけが
+            # 表に載っていて隣は ID18（＝口の開き方が違う同じ絵）。
             base, cols, rows = COMPOSITE[oid]
-            nxt = base + cols * rows          # 2コマ目の左上（＝ +9）
-            # 3x3 のボスは1マスずつが種別7（人や物）として並んでいる
-            if ks.get(base) not in (7, 8, 10) or nxt not in sp:
+            parts = []
+            changed = False
+            for k in range(cols * rows):
+                pid = base + k
+                nb = pid
+                if pid in tbl_index and tbl_index[pid] + 1 < len(tbl):
+                    cand = tbl[tbl_index[pid] + 1]
+                    if cand in sp and cand not in tbl_placed:
+                        nb = cand
+                        changed = True
+                if nb not in sp:
+                    parts = []
+                    break
+                parts.append(nb)
+            if not parts or not changed:
                 continue
-            px = composite(sp, nxt, cols, rows)
+            px = [[0] * (32 * cols) for _ in range(32 * rows)]
+            for r in range(rows):
+                for c in range(cols):
+                    src = sp[parts[r * cols + c]]
+                    for y in range(32):
+                        for x in range(32):
+                            px[r * 32 + y][c * 32 + x] = src[y][x]
             out = f"{ROOT}/Assets/Sprites/Tiles/{oid:03d}_{name[4:]}_b.png"
             write_rgba(out, px, transparent_border(px))
             frames += 1
