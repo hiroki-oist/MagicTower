@@ -79,3 +79,62 @@ public class MonsterAnimationTests
         }
     }
 }
+
+/// <summary>
+/// 2コマの絵がシーンに繋がっているか、絵そのものが読めるか。
+/// </summary>
+public class MonsterAnimatorTests
+{
+    [Test]
+    public void シーンに二コマの役がいて絵が揃っている()
+    {
+        UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/Tower.unity");
+        var anim = Object.FindObjectOfType<MonsterAnimator>();
+        Assert.IsNotNull(anim, "MonsterAnimator が無い");
+        var so = new UnityEditor.SerializedObject(anim);
+        foreach (var n in new[] { "controller", "loader" })
+            Assert.IsNotNull(so.FindProperty(n).objectReferenceValue, $"{n} が未設定");
+
+        var keys = so.FindProperty("keys");
+        var first = so.FindProperty("firstFrames");
+        var second = so.FindProperty("secondFrames");
+        Assert.AreEqual(24, keys.arraySize, "2コマで動くもの");
+        Assert.AreEqual(keys.arraySize, first.arraySize);
+        Assert.AreEqual(keys.arraySize, second.arraySize);
+        for (int i = 0; i < keys.arraySize; i++)
+        {
+            Assert.IsNotNull(first.GetArrayElementAtIndex(i).objectReferenceValue,
+                             $"{keys.GetArrayElementAtIndex(i).stringValue} の1コマ目");
+            Assert.IsNotNull(second.GetArrayElementAtIndex(i).objectReferenceValue,
+                             $"{keys.GetArrayElementAtIndex(i).stringValue} の2コマ目");
+        }
+    }
+
+    [Test]
+    public void 三マス四方の絵も読める()
+    {
+        // 2の冪でない大きさは nPOTScale を 0 にしておかないと取り込みに失敗する
+        foreach (var n in new[] { "900_Boss_Dragon", "901_Boss_GiantOctopus", "902_Shop_Altar" })
+        {
+            var path = $"Assets/Sprites/Tiles/{n}.png";
+            Assert.IsNotNull(UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path),
+                             $"{n} が Sprite として読めない");
+            var imp = (UnityEditor.TextureImporter)UnityEditor.AssetImporter.GetAtPath(path);
+            Assert.AreEqual(UnityEditor.TextureImporterNPOTScale.None, imp.npotScale, n);
+        }
+    }
+
+    [Test]
+    public void 盤面に置くボスの絵が繋がっている()
+    {
+        var reg = Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
+        foreach (var key in new[] { "Boss_Dragon", "Boss_GiantOctopus" })
+        {
+            var prefab = reg.Get(key);
+            Assert.IsNotNull(prefab, $"{key} のプレハブが無い");
+            var sr = prefab.GetComponent<SpriteRenderer>();
+            Assert.IsNotNull(sr, $"{key} に絵の役が無い");
+            Assert.IsNotNull(sr.sprite, $"{key} の絵が外れている");
+        }
+    }
+}

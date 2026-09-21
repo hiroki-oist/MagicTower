@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -86,12 +87,99 @@ public static class TowerSceneBuilder
 
         BuildHud(tower, controller);
 
+        // 盤面の敵と人は2コマで動く（原典 0x92a4）。
+        BuildMonsterAnimator(tower, controller, loader);
+
         System.IO.Directory.CreateDirectory("Assets/Scenes");
         EditorSceneManager.SaveScene(scene, ScenePath);
         Debug.Log($"TowerSceneBuilder: {ScenePath} を作成した");
     }
 
     const string FontPath = "Assets/TextMesh Pro/Resources/Fonts & Materials/PixelMplus12-Regular.asset";
+
+    /// <summary>
+    /// 盤面の敵と人を2コマで動かす役（原典 0x92a4）。
+    /// 2コマ目の絵は `Assets/Sprites/Tiles/*_b.png`。名前は1コマ目と揃えてある
+    /// （`061_Enemy_SlimeG.png` ↔ `062_Enemy_SlimeG_b.png`）ので、それで対応を取る。
+    /// </summary>
+    static void BuildMonsterAnimator(GameObject tower, TowerController controller,
+                                     FloorLoader loader)
+    {
+        // 絵は `061_Enemy_SlimeG.png`（1コマ目）と `062_Enemy_SlimeG_b.png`（2コマ目）で
+        // 名前を揃えてあるので、名札（頭3桁の後ろ）で対応を取る。
+        var firstOf = new Dictionary<string, string>();
+        var secondOf = new Dictionary<string, string>();
+        foreach (var path in System.IO.Directory.GetFiles("Assets/Sprites/Tiles", "*.png"))
+        {
+            var file = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (file.Length < 5) continue;
+            // macOS の照合は大文字小文字を区別しないので、`*_b.png` で引くと
+            // `010_Wall_Secret_B.png` のような別物まで拾ってしまう。ここで厳密に見る。
+            if (file.EndsWith("_b", System.StringComparison.Ordinal))
+                secondOf[file.Substring(4, file.Length - 4 - 2)] = path;
+            else
+                firstOf[file.Substring(4)] = path;
+        }
+
+        var keys = new List<string>();
+        var first = new List<Sprite>();
+        var second = new List<Sprite>();
+        foreach (var pair in secondOf)
+        {
+            string firstPath;
+            if (!firstOf.TryGetValue(pair.Key, out firstPath))
+            {
+                Debug.LogWarning($"TowerSceneBuilder: {pair.Key} の1コマ目の絵が無い");
+                continue;
+            }
+            var a = LoadSprite(firstPath);
+            var b = LoadSprite(pair.Value);
+            if (a == null || b == null)
+            {
+                Debug.LogWarning($"TowerSceneBuilder: {pair.Key} の絵が読めない");
+                continue;
+            }
+            keys.Add(pair.Key); first.Add(a); second.Add(b);
+        }
+
+        var anim = tower.AddComponent<MonsterAnimator>();
+        var so = new SerializedObject(anim);
+        so.FindProperty("controller").objectReferenceValue = controller;
+        so.FindProperty("loader").objectReferenceValue = loader;
+        Fill(so.FindProperty("keys"), keys);
+        Fill(so.FindProperty("firstFrames"), first);
+        Fill(so.FindProperty("secondFrames"), second);
+        so.ApplyModifiedPropertiesWithoutUndo();
+        Debug.Log($"TowerSceneBuilder: 2コマで動くもの {keys.Count} 種");
+    }
+
+    /// <summary>
+    /// 絵を1枚読む。切り分けの設定によっては本体ではなく下にぶら下がっているので、
+    /// <c>LoadAssetAtPath&lt;Sprite&gt;</c> では取れないことがある。全部見て最初の1枚を返す。
+    /// </summary>
+    static Sprite LoadSprite(string path)
+    {
+        path = path.Replace('\\', '/');
+        var one = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+        if (one != null) return one;
+        foreach (var o in AssetDatabase.LoadAllAssetsAtPath(path))
+            if (o is Sprite) return (Sprite)o;
+        return null;
+    }
+
+    static void Fill(SerializedProperty prop, List<string> values)
+    {
+        prop.arraySize = values.Count;
+        for (int i = 0; i < values.Count; i++)
+            prop.GetArrayElementAtIndex(i).stringValue = values[i];
+    }
+
+    static void Fill(SerializedProperty prop, List<Sprite> values)
+    {
+        prop.arraySize = values.Count;
+        for (int i = 0; i < values.Count; i++)
+            prop.GetArrayElementAtIndex(i).objectReferenceValue = values[i];
+    }
 
     /// <summary>
     /// 左右の帯と文字を作る。原典の画面構成に合わせて、

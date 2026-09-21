@@ -129,11 +129,31 @@ def main():
     # **表 DS:0x80a で引いた番号から VRAM の並び位置を計算して**貼るので見落としていた。
     ks = kinds()
     frames = 0
+    # 3x3 のボスはマス単位では2コマ目が **+9**（大ダコ 97〜105↔106〜114、
+    # ドラゴン 115〜123↔124〜132）。1マスずつの +1 は隣のマスになってしまうので、
+    # 組み立てた1枚のほうだけを作る。
+    boss_parts = set()
+    for base, cols, rows in COMPOSITE.values():
+        boss_parts.update(range(base, base + cols * rows))
+
     for p in sorted(glob.glob(f"{ROOT}/Assets/Sprites/Tiles/*.png")):
         name = os.path.basename(p)[:-4]
         if name.endswith("_b"):
             continue
         oid = int(name[:3])
+        if oid in COMPOSITE:
+            base, cols, rows = COMPOSITE[oid]
+            nxt = base + cols * rows          # 2コマ目の左上（＝ +9）
+            # 3x3 のボスは1マスずつが種別7（人や物）として並んでいる
+            if ks.get(base) not in (7, 8, 10) or nxt not in sp:
+                continue
+            px = composite(sp, nxt, cols, rows)
+            out = f"{ROOT}/Assets/Sprites/Tiles/{oid:03d}_{name[4:]}_b.png"
+            write_rgba(out, px, transparent_border(px))
+            frames += 1
+            continue
+        if oid in boss_parts:
+            continue
         if ks.get(oid) not in (7, 8, 10):
             continue
         nxt = oid + 1

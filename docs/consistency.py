@@ -620,8 +620,8 @@ _pairs=[(_t[_i],_t[_i+1]) for _i in range(len(_t)-1)
 chk(all(_b in (_a+1,_a+9) for _a,_b in _pairs) and len(_pairs)>=20,
     "敵の1コマ目と2コマ目は表で隣り合う（ふつうは+1、3x3のボスは+9）",
     str([p for p in _pairs if p[1] not in (p[0]+1,p[0]+9)]))
-chk(len(glob.glob("Assets/Sprites/Tiles/*_b.png"))==38,"2コマ目の絵が38枚ある",
-    str(len(glob.glob("Assets/Sprites/Tiles/*_b.png"))))
+_second=[q for q in glob.glob("Assets/Sprites/Tiles/*.png") if q.endswith("_b.png")]
+chk(len(_second)==24,"2コマ目の絵が24枚ある（ふつう22＋3x3のボス2）",str(len(_second)))
 chk("原典はこれを実際に描く" in open("docs/p58_to_tiles.py",encoding="utf-8").read(),
     "2コマ目は原典が描くものだと書いてある")
 
@@ -1064,10 +1064,16 @@ def _rgba(path):
                 line[x]=(line[x]+pr)&0xff
         out.append(bytes(line)); prev=line
     return w,h,ct,out
-_tiles=sorted(p for p in glob.glob("Assets/Sprites/Tiles/*.png") if not p.endswith("_b.png"))
+_tiles=sorted(q for q in glob.glob("Assets/Sprites/Tiles/*.png") if not q.endswith("_b.png"))
 chk(len(_tiles)==93,"タイルは93枚（1コマ目）",str(len(_tiles)))
-chk(len(glob.glob("Assets/Sprites/Tiles/*_b.png"))==38,
-    "2コマ目38枚も Assets に置く（原典 0x92a4 が実際に描く）")
+chk(len(_second)==24,"2コマ目24枚も Assets に置く（原典 0x92a4 が実際に描く）")
+# 2の冪でない絵は nPOTScale を 0 にしないと Sprite として取り込めない（3x3のボスが消えていた）
+for _m in ("900_Boss_Dragon","901_Boss_GiantOctopus","902_Shop_Altar",
+           "900_Boss_Dragon_b","901_Boss_GiantOctopus_b"):
+    if "nPOTScale: 0" not in open(f"Assets/Sprites/Tiles/{_m}.png.meta",encoding="utf-8").read():
+        chk(False,f"{_m} は nPOTScale: 0 にする"); break
+else:
+    chk(True,"3x3の絵は2の冪に丸めない（丸めると Sprite にならず消える）")
 chk(len(glob.glob("docs/original/video_tiles/*.png"))==93,"差し替え前の動画切り出しを控えてある")
 _bad=[]
 for _p in _tiles:
@@ -1423,7 +1429,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=547
+MIN_CHECKS=548
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
