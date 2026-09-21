@@ -49,6 +49,8 @@ MonoBehaviour:
     prefab: {fileID: 171350041369563071, guid: eef2404271104373275a143393079f23, type: 3}
   - key: Cross
     prefab: {fileID: 175948141230503966, guid: f2fbc100334b5cf2a803d90704b7f0da, type: 3}
+  - key: Crystal_Snow
+    prefab: {fileID: 590105014803379855, guid: a0dc8aea8c23c309a839e49df3448d52, type: 3}
   - key: Enemy_Apprentice
     prefab: {fileID: 8770718213249853786, guid: 236d84307e8414b3488dbf9caa7fb439, type: 3}
   - key: Enemy_Bat
@@ -109,6 +111,8 @@ MonoBehaviour:
     prefab: {fileID: 3236057369636735986, guid: e9e6c2da6a87243f4b4eb24d843f5990, type: 3}
   - key: Enemy_ZombieWorrior
     prefab: {fileID: 8141472806100993606, guid: bf36483ff16884604968d2922bcb069f, type: 3}
+  - key: Fairy
+    prefab: {fileID: 927582568877166259, guid: 565c714d1ac1c77c2b3d4e72f72c7a30, type: 3}
   - key: Gem_Attack
     prefab: {fileID: 8179407737910667048, guid: f290975b6859e49c9a02f27b75f50074, type: 3}
   - key: Gem_Defense
@@ -127,6 +131,8 @@ MonoBehaviour:
     prefab: {fileID: 457666100263942523, guid: e5cecf472e99900c97c7112dae33570b, type: 3}
   - key: Master
     prefab: {fileID: 2293725780674138905, guid: d15ab4514aa38435d9db894317da3cbe, type: 3}
+  - key: Matock
+    prefab: {fileID: 348772562289923143, guid: bbb8fc9ec4ffd6c22245622616afa1ed, type: 3}
   - key: Merchant
     prefab: {fileID: 4501489131498922689, guid: d0ed86afe75e64bd1bf7046ee21910f8, type: 3}
   - key: Mikata
@@ -165,6 +171,8 @@ MonoBehaviour:
     prefab: {fileID: 351912070178318903, guid: 5725981b15d135c29d6d22b8ef0da070, type: 3}
   - key: Sword_5
     prefab: {fileID: 733889050750333291, guid: de47d56456e252cb4a2b017d9d70d72e, type: 3}
+  - key: Sword_Dragon
+    prefab: {fileID: 1007182839427644473, guid: be4a69b79869763b486e456f58997f45, type: 3}
   - key: Vendor
     prefab: {fileID: 4773468787853144955, guid: 593e3bbb1ffc44bfaa9275482742d3a3, type: 3}
   - key: Wing_Down

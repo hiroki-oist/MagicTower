@@ -639,7 +639,7 @@ chk(all(_b in (_a+1,_a+9) for _a,_b in _pairs) and len(_pairs)>=20,
     "敵の1コマ目と2コマ目は表で隣り合う（ふつうは+1、3x3のボスは+9）",
     str([p for p in _pairs if p[1] not in (p[0]+1,p[0]+9)]))
 _second=[q for q in glob.glob("Assets/Sprites/Tiles/*.png") if q.endswith("_b.png")]
-chk(len(_second)==36,"2コマ目の絵が36枚ある（ふつう33＋組み立てた3枚）",str(len(_second)))
+chk(len(_second)==39,"2コマ目の絵が39枚ある（ふつう36＋組み立てた3枚）",str(len(_second)))
 chk("原典はこれを実際に描く" in open("docs/p58_to_tiles.py",encoding="utf-8").read(),
     "2コマ目は原典が描くものだと書いてある")
 
@@ -1309,7 +1309,7 @@ def _rgba(path):
         out.append(bytes(line)); prev=line
     return w,h,ct,out
 _tiles=sorted(q for q in glob.glob("Assets/Sprites/Tiles/*.png") if not q.endswith("_b.png"))
-chk(len(_tiles)==105,"タイルは105枚（1コマ目）",str(len(_tiles)))
+chk(len(_tiles)==106,"タイルは106枚（1コマ目。できごと用の妖精ID23を含む）",str(len(_tiles)))
 # 敵と人の絵は必ず背景が抜けている。抜く色は種別で決まる（0xabe6 の 0x11 / 0x88 ＝ 索引1 / 8）。
 # 左上の1点で背景を決めていたころ、そこに絵が来ている赤スライム(ID63)だけ
 # 透過が付かず灰色の四角が残っていた。
@@ -1535,15 +1535,28 @@ _objids={}
 for _l in open("Assets/Resources/ObjectIds.txt",encoding="utf-8"):
     _m=re.match(r"^(\S+)\s*\|\s*(\d+)\s*$",_l.strip())
     if _m: _objids["ID"+_m.group(2)]=_m.group(1)
-_terrainwords={"床","壁","隠し壁","門","上り","下り","マグマ"}
+_terrainwords={"床","壁","隠し壁","門","上り","下り","マグマ","表駆動","封印"}
+# **できごとの表を全部**見る。場面の表しか見ていなかったため、解錠で現れる
+# マトック(ID41)・ドラゴンスレイヤー(ID46)・雪のクリスタル(ID47)・妖精(ID23) が
+# 登録簿から漏れていて、15階と35階のボスの褒美が出なかった。
 _miss=[]
-for _l in open("Assets/Resources/Cutscenes.txt",encoding="utf-8"):
-    if _l.lstrip().startswith("#"): continue
-    for _k in re.findall(r"地図\s*\([^)]*\)\s*=\s*(\S+)",_l):
-        _n=_objids.get(_k,_k)
-        if _n in _terrainwords or _n in _regkeys: continue
-        _miss.append(f"{_k}→{_n}")
-chk(not _miss,"場面が地図に書き込む物体はすべて登録簿にある",str(sorted(set(_miss))))
+for _f in ("Cutscenes.txt","SealedDoors.txt","PositionEvents.txt",
+           "ArrivalEvents.txt","HiddenOccupants.txt","ThiefEvents.txt"):
+    _p="Assets/Resources/"+_f
+    if not os.path.exists(_p): continue
+    for _l in open(_p,encoding="utf-8"):
+        if _l.lstrip().startswith("#"): continue
+        for _k in re.findall(r"\(\s*[+-]?\d+\s*,\s*[+-]?\d+\s*\)\s*=\s*([^\s;|]+)",_l):
+            _n=_objids.get(_k,_k)
+            if _n in _terrainwords or _n in _regkeys: continue
+            _miss.append(f"{_f}:{_k}→{_n}")
+chk(not _miss,"できごとが地図に書き込む物体はすべて登録簿にある",str(sorted(set(_miss))))
+# 15階と35階のボスの褒美（原典 0x4762 の結果）
+for _k,_why in (("Matock","15階の大ダコの褒美"),("Crystal_Snow","35階のドラゴンの褒美"),
+                ("Sword_Dragon","ドラゴンスレイヤー"),("Fairy","10階の妖精")):
+    if _k not in _regkeys: chk(False,f"{_why}（{_k}）が登録簿にある"); break
+else:
+    chk(True,"解錠で現れる4つ（マトック・雪のクリスタル・竜殺し・妖精）が登録簿にある")
 
 # 3階のゼノとの初対面（原典 0x6ae0）は**ゼノ1体と魔導師4体を盤面に出す**。
 # 魔導師は主人公の立つ (-1,-3) の上下左右で、囲まれる形になる。
@@ -1567,7 +1580,7 @@ chk(len(_zeno)==1 and _zeno[0].index("=床")<_zeno[0].index("奪われる"),
 _tg2=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("MapBefore" in _tg2 and "pendingMap" in _tg2,
     "場面の地図の書き換えはページごとに当てる")
-chk(len(_second)==36,"2コマ目36枚も Assets に置く（原典 0x92a4 が実際に描く）")
+chk(len(_second)==39,"2コマ目39枚も Assets に置く（原典 0x92a4 が実際に描く）")
 # 2の冪でない絵は nPOTScale を 0 にしないと Sprite として取り込めない（3x3のボスが消えていた）
 for _m in ("900_Boss_Dragon","901_Boss_GiantOctopus","902_Shop_Altar",
            "900_Boss_Dragon_b","901_Boss_GiantOctopus_b"):
@@ -1950,7 +1963,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=665
+MIN_CHECKS=666
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

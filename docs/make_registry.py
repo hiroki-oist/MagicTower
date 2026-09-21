@@ -59,11 +59,21 @@ for _l in open(os.path.join(ROOT,"Assets/Resources/ObjectIds.txt"),encoding="utf
     _m=re.match(r"^(\S+)\s*\|\s*(\d+)\s*$",_l.strip())
     if _m: _ids["ID"+_m.group(2)]=_m.group(1)
 _TERRAIN_WORDS={"床","壁","隠し壁","門","上り","下り","マグマ"}
-for _l in open(os.path.join(ROOT,"Assets/Resources/Cutscenes.txt"),encoding="utf-8"):
-    if _l.lstrip().startswith("#"): continue
-    for _k in re.findall(r"地図\s*\([^)]*\)\s*=\s*(\S+)",_l):
-        _k=_ids.get(_k,_k)
-        if _k not in _TERRAIN_WORDS: used[_k]+=1
+# できごとの表（場面・解錠・立ち入り・階段の到着・隠れているもの・盗賊）で
+# 盤面に書き込まれる物体を全部拾う。**マスの書き方は "(x,y)=種別" で共通**。
+#   ここを場面の表しか見ていなかったため、解錠で現れる
+#   マトック(ID41)・ドラゴンスレイヤー(ID46)・雪のクリスタル(ID47)・妖精(ID23) が
+#   登録簿から漏れていて、15階と35階のボスの褒美が出なかった。
+_EVENT_FILES=("Cutscenes.txt","SealedDoors.txt","PositionEvents.txt",
+              "ArrivalEvents.txt","HiddenOccupants.txt","ThiefEvents.txt")
+for _f in _EVENT_FILES:
+    _p=os.path.join(ROOT,"Assets/Resources",_f)
+    if not os.path.exists(_p): continue
+    for _l in open(_p,encoding="utf-8"):
+        if _l.lstrip().startswith("#"): continue
+        for _k in re.findall(r"\(\s*[+-]?\d+\s*,\s*[+-]?\d+\s*\)\s*=\s*([^\s;|]+)",_l):
+            _k=_ids.get(_k,_k)
+            if _k not in _TERRAIN_WORDS: used[_k]+=1
 # 地形用のプレハブも登録
 TERRAIN={"Wall":"Wall_Field","SecretWall":"Wall_Secret","Magma":"Magma","Floor":"road",
          "StairsUp":"Stairs_Up","StairsDown":"Stairs_Down",

@@ -153,9 +153,80 @@ def composite(sp, base, cols, rows):
     return out
 
 
+# 盤面のデータ（INITIAL.DAT）には一度も出ないが、**できごとで現れる**ので絵が要るもの。
+# 動画にも写らないので切り出しが無く、ここで原典から直に書き出す。
+#   ID23 妖精 … 10階の解錠で現れて、その場で採点して消える
+#   ID41 マトック / ID46 ドラゴンスレイヤー / ID47 雪のクリスタル … 解錠の褒美
+EXTRA = {23: "Fairy", 41: "Matock", 46: "Sword_Dragon", 47: "Crystal_Snow"}
+
+
+def write_missing(sp, ks_all):
+    """EXTRA のうちファイルが無いものを作る（.meta も添える）。"""
+    import hashlib
+    made = []
+    for oid, name in sorted(EXTRA.items()):
+        path = f"{ROOT}/Assets/Sprites/Tiles/{oid:03d}_{name}.png"
+        if os.path.exists(path) or oid not in sp:
+            continue
+        write_rgba(path, sp[oid], transparent_border(sp[oid], transparent_index(ks_all.get(oid))))
+        guid = hashlib.md5(f"MagicTower/tile/{oid}".encode()).hexdigest()
+        open(path + ".meta", "w").write(TILE_META.format(guid=guid))
+        made.append(os.path.basename(path))
+    return made
+
+
+TILE_META = """fileFormatVersion: 2
+guid: {guid}
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {{}}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+  isReadable: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 0
+    wrapV: 0
+    wrapW: 0
+  nPOTScale: 0
+  lightmap: 0
+  spriteMode: 1
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {{x: 0.5, y: 0.5}}
+  spritePixelsToUnits: 32
+  spriteBorder: {{x: 0, y: 0, z: 0, w: 0}}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  spriteSheet:
+    serializedVersion: 2
+    sprites: []
+    outline: []
+    spriteID: 5e97eb03825dee720800000000000000
+    internalID: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+"""
+
+
 def main():
     sp = sprites()
     ks_all = kinds()
+    made = write_missing(sp, ks_all)
+    if made:
+        print(f"できごと用に {len(made)} 枚を新たに書き出した: {made}")
     done = skipped = 0
     for p in sorted(glob.glob(f"{ROOT}/Assets/Sprites/Tiles/*.png")):
         name = os.path.basename(p)[:-4]

@@ -97,6 +97,7 @@
     <Compile Include="Assets/Tests/Editor/GameOverTests.cs" />
     <Compile Include="Assets/Tests/Editor/BlinkTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerNpcTests.cs" />
+    <Compile Include="Assets/Tests/Editor/EventSweepTests.cs" />
     <Compile Include="Assets/Tests/Editor/KnightChargeTests.cs" />
     <Compile Include="Assets/Tests/Editor/StoryWalkTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerSaveTests.cs" />
