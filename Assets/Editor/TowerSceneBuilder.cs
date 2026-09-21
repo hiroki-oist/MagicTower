@@ -302,7 +302,12 @@ public static class TowerSceneBuilder
         BuildDialogueWindow(screen, font, controller);
         BuildMenuWindow(screen, font, controller);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
-                        "TitleScreen", "Assets/Sprites/Screens/Title_Art.png",
+                        // 題名の絵は MTMOJI（「魔法の塔」）のほう。原典はこの上に
+                        // 「Ｔｏｗｅｒ　ｏｆ　ｔｈｅ　Ｓｏｒｃｅｒｅｒ」(144,160) と
+                        // 「（Ｃ）１９９６　Ｎ．Ｗ」(144,190) を書く（0x6db2/0x6dcd）。
+                        // 絵のほうには1995年の行が焼き込まれていて、**その上に1996年で書き直す**。
+                        // Title_Art（MTOPSTR＝渦巻き）は題名ではなく**序章の1枚絵**。
+                        "TitleScreen", "Assets/Sprites/Screens/Title_Text.png",
                         TitleScreen.Title,   TitleScreen.TitleDot,
                         TitleScreen.Copyright, TitleScreen.CopyrightDot);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.FinalScreen,
