@@ -274,3 +274,41 @@ public class QuitMenuTests
             StringAssert.Contains($"TowerMenu.Entry.{e}", src, $"{e} の枝が無い");
     }
 }
+
+/// <summary>選ばせている窓を決めずに閉じたときの後始末。</summary>
+public class ChoiceCleanupTests
+{
+    [Test]
+    public void 決めずに閉じたらいいえと同じ()
+    {
+        var data = FloorData.Load(7);
+        foreach (var o in data.Objects)
+        {
+            if (o.Prefab != "Merchant") continue;
+            var p = new PlayerState
+            {
+                Hp = 1000, Attack = 100, Defense = 100, Gold = 5000,
+                Floor = 7, HighestFloor = 7, Position = o.Pos + Vector2Int.down,
+            };
+            var g = new TowerGame(p);
+            g.Floor.Clear(o.Pos + Vector2Int.down);
+            g.Step(Vector2Int.up);
+            Assert.IsTrue(g.IsChoosing);
+
+            g.NextPage();                       // 決めずに送る
+            Assert.IsFalse(g.IsChoosing, "印が残らない");
+            Assert.AreEqual(5000, g.Player.Gold, "買っていない");
+            return;
+        }
+        Assert.Fail("7階に商人が居ない");
+    }
+
+    [Test]
+    public void 通しの自動プレイは聞かれたら答える()
+    {
+        // 答えないと商人からも祭壇からも何も得られないまま進んでしまう
+        var src = System.IO.File.ReadAllText("Assets/Editor/TowerPlaythrough.cs");
+        StringAssert.Contains("game.IsChoosing", src);
+        StringAssert.Contains("game.ConfirmChoice()", src);
+    }
+}

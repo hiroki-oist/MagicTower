@@ -2070,6 +2070,10 @@ _noarm=[v for v in _names if f"TowerMenu.Entry.{v}" not in _tg4]
 chk(not _noarm,"メニューの項目はどれも本線に枝がある",str(_noarm))
 chk("public bool Quitting" in _tg4 and "if (Game.Quitting) QuitGame();" in _ctrl,
     "「ゲーム終了」が遊びを閉じるところまで繋がっている")
+chk("if (pages.Count == 0 && IsChoosing) Choice = ChoiceKind.None;" in _tg4,
+    "選ばせている窓を決めずに閉じたら印を残さない")
+chk("game.IsChoosing" in open("Assets/Editor/TowerPlaythrough.cs",encoding="utf-8").read(),
+    "自動プレイも聞かれたら答える")
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("SpecialItems.Kind.Elixir,          // special_1" in _tm,
     "アイテムの並びは原典（special_1〜8）そのまま")
@@ -2087,7 +2091,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=701
+MIN_CHECKS=703
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

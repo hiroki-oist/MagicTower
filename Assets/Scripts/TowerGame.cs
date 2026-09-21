@@ -115,6 +115,9 @@ public class TowerGame
     {
         if (pages.Count > 0) { pages.Dequeue(); frontMapDone = false; }
         ResolveEffects();
+        // 選ばせている窓を**決めずに閉じた**ら「いいえ」と同じ扱いにする。
+        // 決めないまま印だけ残ると、次に何を押しても選び直しになってしまう。
+        if (pages.Count == 0 && IsChoosing) Choice = ChoiceKind.None;
         return pages.Count > 0;
     }
 

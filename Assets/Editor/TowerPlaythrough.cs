@@ -103,6 +103,24 @@ public static class TowerPlaythrough
     /// 鍵やアイテムを取り残していると上で詰まるので、人が遊ぶときと同じ手筋を入れる。
     /// 何か持ち物が増えて戻ってこられたら true。
     /// </summary>
+    /// <summary>
+    /// 出ている窓を送り切る。**「◎はい／◎いいえ」を聞かれたら答える**
+    /// （商人からは買う、祭壇では攻撃力を上げる）。
+    /// ここで答えないと、商人からも祭壇からも何も得られない。
+    /// </summary>
+    static void Drain(TowerGame game)
+    {
+        for (int i = 0; i < 200 && game.IsShowingPage; i++)
+        {
+            if (game.IsChoosing)
+            {
+                if (game.Choice == TowerGame.ChoiceKind.Altar) game.MoveChoice(1);  // 攻撃力
+                game.ConfirmChoice();
+            }
+            game.NextPage();
+        }
+    }
+
     /// <summary>下り階段まで歩いて降りる。降りられたら true。</summary>
     static bool Descend(TowerGame game)
     {
@@ -114,7 +132,7 @@ public static class TowerPlaythrough
         foreach (var step in path)
         {
             game.Step(step - game.Player.Position);
-            while (game.IsShowingPage) game.NextPage();
+            Drain(game);
             if (game.Player.Floor != from) break;
         }
         return game.Player.Floor < from;
@@ -285,7 +303,7 @@ public static class TowerPlaythrough
         {
             if (game.Player.Floor != startFloor) return "";
             if (game.Player.Hp <= 0) return "生命力が尽きた";
-            while (game.IsShowingPage) game.NextPage();
+            Drain(game);
 
             if (KeySum(game.Player) != keysBefore)
             {
