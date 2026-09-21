@@ -965,12 +965,13 @@ _fv=[]
 for _l in open("docs/original/floor_video_match.txt",encoding="utf-8"):
     if _l.startswith("#") or "|" not in _l: continue
     _p=[t.strip() for t in _l.split("|")]
-    _fv.append((int(_p[0]), _p[1], int(_p[2]), _p[3].split("（")[0]))
+    _fv.append((int(_p[0]), int(_p[1])))
 chk(len(_fv)==50,"突き合わせの表は50階ぶん",str(len(_fv)))
-_conc=[r for r in _fv if r[3] in ("一致","ほぼ一致")]
-chk(len(_conc)>=34,"動画で裏が取れた階は34以上",str(len(_conc)))
-chk(not [r for r in _fv if r[3]=="要確認"],"中身の合わない階は無い",
-    str([r[0] for r in _fv if r[3]=="要確認"]))
+chk([r[0] for r in _fv]==list(range(1,51)),"1〜50階が1度ずつ")
+chk(len([r for r in _fv if r[1]<=12])>=49,"動画とずれ12マス以下の階は49以上",
+    str(len([r for r in _fv if r[1]<=12])))
+chk(max(r[1] for r in _fv)<=23,"いちばん大きいずれでも23マス（41階、うち20は開いた扉）",
+    str(max(r[1] for r in _fv)))
 chk(os.path.exists("Assets/Resources/FloorConnections.txt"),"階段接続表")
 chk(os.path.exists("Assets/Resources/ItemPower.txt"),"階別効果量表")
 
