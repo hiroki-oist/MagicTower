@@ -959,6 +959,18 @@ chk(_msgs.get("mode_fast")=="高速モードに切り替えます"
     and _msgs.get("mode_normal")=="標準モードに切り替えます","切り替えの知らせは原典の文言")
 chk(_flg[32]["意味"]=="妖精回数" and _flg[33]["意味"]=="装備剣"
     and _flg[34]["意味"]=="装備盾","32〜34は妖精の回数・装備剣・装備盾")
+# 原典の動画との突き合わせ（docs/cmp_video_floors.py の結果）。
+# 「見分けが付く階」でずれが小さいことが、盤面データの**画面からの裏付け**になる。
+_fv=[]
+for _l in open("docs/original/floor_video_match.txt",encoding="utf-8"):
+    if _l.startswith("#") or "|" not in _l: continue
+    _p=[t.strip() for t in _l.split("|")]
+    _fv.append((int(_p[0]), _p[1], int(_p[2]), _p[3].split("（")[0]))
+chk(len(_fv)==50,"突き合わせの表は50階ぶん",str(len(_fv)))
+_conc=[r for r in _fv if r[3] in ("一致","ほぼ一致")]
+chk(len(_conc)>=34,"動画で裏が取れた階は34以上",str(len(_conc)))
+chk(not [r for r in _fv if r[3]=="要確認"],"中身の合わない階は無い",
+    str([r[0] for r in _fv if r[3]=="要確認"]))
 chk(os.path.exists("Assets/Resources/FloorConnections.txt"),"階段接続表")
 chk(os.path.exists("Assets/Resources/ItemPower.txt"),"階別効果量表")
 
@@ -1602,7 +1614,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=590
+MIN_CHECKS=593
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
