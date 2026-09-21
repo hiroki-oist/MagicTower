@@ -849,6 +849,30 @@ for _n in range(0,51):
     _mm=re.search(r"meta=\[(\d+), (\d+), (\d+)\]",_t)
     if not _mm or int(_mm.group(1))!=_n: _metabad.append(_n)
 chk(not _metabad,"どの階もメタの先頭が自分の階の番号",str(_metabad))
+# セーブに入るフラグ120個（0x1e〜0x95）の数え上げ。docs/dump_flags.py が作る。
+_flg={}
+for _l in open("docs/original/flags.txt",encoding="utf-8"):
+    if _l.startswith("#") or "|" not in _l: continue
+    _p=[t.strip() for t in _l.split("|")]
+    _flg[int(_p[0].split()[1])]={"読":int(_p[1]),"書":int(_p[2]),"階":_p[3],"意味":_p[4]}
+chk(len(_flg)==66,"番号で直に引くフラグは66個",str(len(_flg)))
+# 35〜49 の15個は持ち物。原典の注記とリメイクの品揃えが同じ顔ぶれか
+_items={35:"勇者オーブ",36:"知恵オーブ",37:"飛翔オーブ",38:"十字架",39:"エリクサー",
+        40:"マトック",41:"破壊の玉",42:"空間転移",43:"昇華の翼",44:"降臨の翼",
+        45:"ドラゴンスレイヤー",46:"雪の結晶",47:"魔法の鍵",48:"スーパーマトック",
+        49:"幸運の金貨"}
+chk(all(_n in _flg and _items[_n] in _flg[_n]["意味"] for _n in _items),
+    "持ち物のフラグは35〜49の15個")
+_spi=open("Assets/Scripts/Items/SpecialItems.cs",encoding="utf-8").read()
+chk(len(re.findall(r"=\s*1 <<\s*\d+,",_spi))==15,"リメイクの持ち物も15種",
+    str(len(re.findall(r"=\s*1 <<\s*\d+,",_spi))))
+# 87〜132 の46個は「一度きり」のフラグ。階と結びついていて、どれも読み1・書き1が基本
+_once=[n for n in _flg if 0x57<=n<=0x84]
+chk(len(_once)==46 and sorted(_once)==list(range(0x57,0x85)),
+    "一度きりのフラグは 0x57〜0x84 の46個が連番",str(len(_once)))
+chk(all(_flg[_n]["階"]!="-" for _n in _once),"一度きりのフラグはどれも階と結びついている")
+chk(_flg[32]["意味"]=="妖精回数" and _flg[33]["意味"]=="装備剣"
+    and _flg[34]["意味"]=="装備盾","32〜34は妖精の回数・装備剣・装備盾")
 chk(os.path.exists("Assets/Resources/FloorConnections.txt"),"階段接続表")
 chk(os.path.exists("Assets/Resources/ItemPower.txt"),"階別効果量表")
 
@@ -1466,7 +1490,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=556
+MIN_CHECKS=562
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
