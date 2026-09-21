@@ -410,6 +410,21 @@ _dis=open("docs/MTE_disasm.txt",encoding="utf-8").read()
 chk(_dis.count("lcall   0x10da, 0x20b")==61,"原典が音を鳴らすのは61か所",
     str(_dis.count("lcall   0x10da, 0x20b")))
 
+print("\n【9D】金騎士の突撃の道順（原典 0x325e の向きの表）")
+import make_knight_charge as _kc
+_path=_kc.path()
+_rows=[l.split("#")[0].split() for l in
+       open("Assets/Resources/KnightCharge.txt",encoding="utf-8") if l[:1].isdigit()]
+chk(len(_path)==89,"向きは89バイト",str(len(_path)))
+chk(_path.count(5)==14,"区切りは14個",str(_path.count(5)))
+chk(sum(len(r) for r in _rows)==89-14,"データの歩数は区切りを除いた75歩",
+    str(sum(len(r) for r in _rows)))
+chk(len(_rows)==14,"データも14まとまり",str(len(_rows)))
+_flat=[int(x) for r in _rows for x in r]
+chk(_flat==[v for v in _path if v!=5],"データが EXE の並びと一致する")
+chk(_rows[-1]==["4"]*5,"最後のまとまりは上へ5歩",str(_rows[-1]))
+chk(_rows[-2]==["3"]*4,"その前はまっすぐ下へ4歩",str(_rows[-2]))
+
 print("\n【9C】物語が頭から終わりまで繋がっている")
 _sw=open("Assets/Tests/Editor/StoryWalkTests.cs",encoding="utf-8").read()
 for _n in ("序章はゼノに会って二階の牢から始まる","関門の場面はそれぞれの場所で始まる",
@@ -1239,7 +1254,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=476
+MIN_CHECKS=483
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
