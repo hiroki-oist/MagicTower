@@ -841,6 +841,14 @@ _g1=[l.split("|")[1] for l in _f1.split("\n") if re.match(r"\s*[+-]\d\s*\|",l)]
 chk(not any("<" in _r for _r in _g1),"1階に下り階段が無い（0階へは行けない）")
 chk("mov     word ptr es:[0x9e], 0   ; 現在階" not in _dis,
     "現在階に0を書く所は原典に無い")
+# 1ブロックは [3ワードのメタ][121マス]。メタの先頭は階の番号そのもの。
+# 以前は次の階のメタを見出しに書いていた（マスの並びは正しかったが名札がずれていた）。
+_metabad=[]
+for _n in range(0,51):
+    _t=open(f"Assets/Resources/Floors/Floor_{_n}.txt",encoding="utf-8").read().split("\n")[2]
+    _mm=re.search(r"meta=\[(\d+), (\d+), (\d+)\]",_t)
+    if not _mm or int(_mm.group(1))!=_n: _metabad.append(_n)
+chk(not _metabad,"どの階もメタの先頭が自分の階の番号",str(_metabad))
 chk(os.path.exists("Assets/Resources/FloorConnections.txt"),"階段接続表")
 chk(os.path.exists("Assets/Resources/ItemPower.txt"),"階別効果量表")
 
@@ -1458,7 +1466,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=555
+MIN_CHECKS=556
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

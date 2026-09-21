@@ -1,6 +1,6 @@
 # Floor 42
 grid: 11x11  x:-5..5  y:-5..5
-# 出典: PC98版 INITIAL.DAT（原典）word offset 5283 / meta=[43, 11, 99]
+# 出典: PC98版 INITIAL.DAT（原典）word offset 5283 / meta=[42, 104, 1]
 
 terrain:  . 床  # 壁  % 隠し壁  ~ マグマ  > 上り  < 下り  * 星空
           y/b/r 黄紫赤の扉  s 封印扉  x 特殊扉  O 物体
