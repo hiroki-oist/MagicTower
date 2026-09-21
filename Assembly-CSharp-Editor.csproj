@@ -63,6 +63,7 @@
     <Compile Include="Assets/Tests/Editor/ScreenLayoutTests.cs" />
     <Compile Include="Assets/Tests/Editor/CutsceneTests.cs" />
     <Compile Include="Assets/Tests/Editor/DialogueFlowTests.cs" />
+    <Compile Include="Assets/Tests/Editor/RuntimeSmokeTests.cs" />
     <Compile Include="Assets/Tests/Editor/StatCapTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerItemUseTests.cs" />
     <Compile Include="Assets/Tests/Editor/TitleScreenTests.cs" />

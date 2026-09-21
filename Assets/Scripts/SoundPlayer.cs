@@ -21,8 +21,15 @@ public class SoundPlayer : MonoBehaviour
     /// <summary>今流れている曲の番号。無ければ -1。</summary>
     public int PlayingMusic { get; private set; }
 
-    void Awake()
+    void Awake() { EnsureSources(); }
+
+    /// <summary>
+    /// 鳴らす口を用意する。`Awake` が走っていない場面（エディタから直に使うときや、
+    /// 足したその場で鳴らすとき）でも困らないよう、鳴らす前にも必ず通す。
+    /// </summary>
+    void EnsureSources()
     {
+        if (musicSource != null && effectSource != null) return;
         PlayingMusic = -1;
         if (musicSource == null)
         {
@@ -50,6 +57,7 @@ public class SoundPlayer : MonoBehaviour
     /// <summary>音番号で鳴らす。曲なら流しっぱなしにする。</summary>
     public void Play(int number)
     {
+        EnsureSources();
         var clip = ClipOf(number);
         if (clip == null) return;
         if (SoundBank.Instance.IsMusic(number))

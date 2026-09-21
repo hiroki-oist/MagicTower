@@ -627,6 +627,12 @@ chk(all(f"case {i}:" in _syn for i in range(7)),"つなぎ方（ALG）を8通り
 chk("Feedback" in _syn and "Envelope" in _syn,"自己帰還と包絡も使っている")
 _rs=open("docs/render_sound.py",encoding="utf-8").read()
 chk("class Fm" in _rs and "ALG_OUT" in _rs,"WAV 書き出しも同じ組み方")
+_sp=open("Assets/Scripts/SoundPlayer.cs",encoding="utf-8").read()
+chk("EnsureSources" in _sp and _sp.count("EnsureSources()")>=3,
+    "鳴らす口は Awake を待たずに用意する（足したその場で鳴らせる）")
+_rst=open("Assets/Tests/Editor/RuntimeSmokeTests.cs",encoding="utf-8").read()
+chk("SoundSynth.Clip" in _rst and "AddComponent<SoundPlayer>" in _rst,
+    "Unity の API を実際に叩く検査がある")
 
 print("\n【9w】できごとと音の結び付き（Resources/SoundCues.txt）")
 _cue={}
@@ -1264,7 +1270,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=489
+MIN_CHECKS=491
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
