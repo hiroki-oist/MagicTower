@@ -66,7 +66,6 @@
     <Compile Include="Assets/Scripts/Floor/FloorTransition.cs" />
     <Compile Include="Assets/Scripts/Battle/TowerBattle.cs" />
     <Compile Include="Assets/Scripts/UI/DialogueWindow.cs" />
-    <Compile Include="Assets/Scripts/MainCamera.cs" />
     <Compile Include="Assets/Scripts/UI/BossAppearView.cs" />
     <Compile Include="Assets/Scripts/Floor/ObjectIds.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextEventHandler.cs" />

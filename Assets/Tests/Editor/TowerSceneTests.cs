@@ -98,6 +98,44 @@ public class TowerSceneTests
     }
 
     [Test]
+    public void 扉とボスの動きの役もシーンに組まれている()
+    {
+        // 鍵の扉と門が開く9コマ（原典 0x7be6 / 0x7a68）
+        var door = Object.FindObjectOfType<DoorOpenView>(true);
+        Assert.IsNotNull(door, "DoorOpenView が無い");
+        var dso = new UnityEditor.SerializedObject(door);
+        Assert.IsNotNull(dso.FindProperty("controller").objectReferenceValue, "controller が未設定");
+        var colors = dso.FindProperty("colors");
+        var frames = dso.FindProperty("frames");
+        CollectionAssert.AreEqual(new[] { "Yellow", "Purple", "Red", "Sealed" },
+            Names(colors), "黄・紫・赤・門の4色");
+        Assert.AreEqual(colors.arraySize * DoorAnimation.Frames, frames.arraySize,
+                        "4色 x 9コマ");
+        for (int i = 0; i < frames.arraySize; i++)
+            Assert.IsNotNull(frames.GetArrayElementAtIndex(i).objectReferenceValue,
+                             $"扉のコマ {i} が未設定");
+
+        // 20階のボスが現れる10コマ（原典 0x3044）
+        var boss = Object.FindObjectOfType<BossAppearView>(true);
+        Assert.IsNotNull(boss, "BossAppearView が無い");
+        var bso = new UnityEditor.SerializedObject(boss);
+        Assert.IsNotNull(bso.FindProperty("controller").objectReferenceValue, "controller が未設定");
+        var bf = bso.FindProperty("frames");
+        Assert.AreEqual(BossAppear.Frames, bf.arraySize, "10コマ");
+        for (int i = 0; i < bf.arraySize; i++)
+            Assert.IsNotNull(bf.GetArrayElementAtIndex(i).objectReferenceValue,
+                             $"ボスのコマ {i} が未設定");
+    }
+
+    static string[] Names(UnityEditor.SerializedProperty arr)
+    {
+        var outp = new string[arr.arraySize];
+        for (int i = 0; i < arr.arraySize; i++)
+            outp[i] = arr.GetArrayElementAtIndex(i).stringValue;
+        return outp;
+    }
+
+    [Test]
     public void 入力を受ける側にも参照が繋がっている()
     {
         var c = Object.FindObjectOfType<TowerController>();

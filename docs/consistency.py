@@ -1337,6 +1337,21 @@ for _g in ("decode_pc98.py","p58_to_tiles.py","p58_to_direct.py","lcg_to_doors.p
 else:
     chk(True,"作り直しの手順に生成器が10本とも入っている")
 chk("Dialogue.png" in _rb,"作り直せないもの（作者の枠の絵）を手順に明記してある")
+# 退役した経路の置き土産が残っていないか（誰からも参照されない MonoBehaviour）
+_dead=[]
+for _cs in glob.glob("Assets/Scripts/**/*.cs",recursive=True):
+    _n=os.path.basename(_cs)[:-3]
+    if not re.search(r"class\s+"+re.escape(_n)+r"\s*:\s*MonoBehaviour",
+                     open(_cs,encoding="utf-8").read()): continue
+    _mt=_cs+".meta"
+    if not os.path.exists(_mt): continue
+    _g=re.search(r"^guid: ([0-9a-f]{32})",open(_mt,encoding="utf-8").read(),re.M)
+    if not _g: continue
+    _hit=False
+    for _u in glob.glob("Assets/Scenes/*.unity")+glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
+        if _g.group(1) in open(_u,encoding="utf-8",errors="replace").read(): _hit=True; break
+    if not _hit: _dead.append(_n)
+chk(not _dead,"シーンにもプレハブにも載らない MonoBehaviour は残さない",str(_dead))
 # 敵と人の絵は必ず背景が抜けている。抜く色は種別で決まる（0xabe6 の 0x11 / 0x88 ＝ 索引1 / 8）。
 # 左上の1点で背景を決めていたころ、そこに絵が来ている赤スライム(ID63)だけ
 # 透過が付かず灰色の四角が残っていた。
@@ -1990,7 +2005,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=674
+MIN_CHECKS=675
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
