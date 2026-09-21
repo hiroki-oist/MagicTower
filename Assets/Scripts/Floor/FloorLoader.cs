@@ -123,7 +123,9 @@ public class FloorLoader : MonoBehaviour
             var c = parent.GetChild(i);
             if (!c.name.EndsWith(suffix)) continue;
             if (c.name.StartsWith("Floor_")) continue;   // 下地の床は残す
-            Destroy(c.gameObject);
+            // 遊んでいる最中と、エディタから触るときとで消し方が違う（Clear と同じ）
+            if (Application.isPlaying) Destroy(c.gameObject);
+            else DestroyImmediate(c.gameObject);
         }
         if (!string.IsNullOrEmpty(kind)) Spawn(kind, pos.x, pos.y);
     }

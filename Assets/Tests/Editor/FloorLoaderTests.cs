@@ -54,6 +54,62 @@ public class FloorLoaderTests
         Assert.IsEmpty(problems, string.Join(" / ", problems));
     }
 
+    /// <summary>
+    /// 組み立ての警告（プレハブ未登録）を拾う。**警告はテストを落とさない**ので、
+    /// 自分で受け取って確かめないと「見えない物が置かれている」のに気づけない。
+    /// </summary>
+    [Test]
+    public void 全50階を組み立てても未登録のプレハブが出ない()
+    {
+        var warnings = new List<string>();
+        Application.LogCallback catcher = (msg, stack, type) =>
+        {
+            if (type == LogType.Warning && msg.Contains("プレハブ未登録")) warnings.Add(msg);
+        };
+        Application.logMessageReceived += catcher;
+        try
+        {
+            for (int n = 1; n <= 50; n++)
+            {
+                var data = FloorData.Load(n);
+                if (data == null) continue;
+                loader.Build(data);
+                loader.Clear();
+            }
+        }
+        finally { Application.logMessageReceived -= catcher; }
+
+        Assert.IsEmpty(warnings, string.Join(" / ", warnings.ToArray()));
+    }
+
+    /// <summary>
+    /// マス1つの作り直し。盤面の記号（"#" や ">"）は
+    /// <see cref="FloorState.ViewKeyOf"/> で見た目の鍵に直してから渡す約束。
+    /// </summary>
+    [Test]
+    public void マスの作り直しは地形の記号でも通る()
+    {
+        loader.Build(FloorData.Load(1));
+        var at = new Vector2Int(0, 0);
+
+        var warnings = new List<string>();
+        Application.LogCallback catcher = (msg, stack, type) =>
+        {
+            if (type == LogType.Warning && msg.Contains("プレハブ未登録")) warnings.Add(msg);
+        };
+        Application.logMessageReceived += catcher;
+        try
+        {
+            foreach (var cell in new[] { "#", "%", ">", "<", "y", "b", "r", "s", "x", "*", "~" })
+                loader.Refresh(at, FloorState.ViewKeyOf(cell));
+            loader.Refresh(at, FloorState.ViewKeyOf(FloorState.Floor));   // 床に戻す
+        }
+        finally { Application.logMessageReceived -= catcher; }
+
+        Assert.IsEmpty(warnings, "地形の記号は全部プレハブに直せる: "
+                                 + string.Join(" / ", warnings.ToArray()));
+    }
+
     [Test]
     public void 三マス占有のボスは中心に1体だけ出る()
     {

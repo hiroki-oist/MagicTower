@@ -633,6 +633,11 @@ chk("EnsureSources" in _sp and _sp.count("EnsureSources()")>=3,
 _rst=open("Assets/Tests/Editor/RuntimeSmokeTests.cs",encoding="utf-8").read()
 chk("SoundSynth.Clip" in _rst and "AddComponent<SoundPlayer>" in _rst,
     "Unity の API を実際に叩く検査がある")
+_fl=open("Assets/Scripts/Floor/FloorLoader.cs",encoding="utf-8").read()
+chk(_fl.count("Application.isPlaying")>=2,
+    "マスの作り直しも片付けも、遊び中とエディタで消し方を分ける")
+_flt=open("Assets/Tests/Editor/FloorLoaderTests.cs",encoding="utf-8").read()
+chk("プレハブ未登録" in _flt,"組み立ての警告（未登録プレハブ）を拾う検査がある")
 
 print("\n【9w】できごとと音の結び付き（Resources/SoundCues.txt）")
 _cue={}
@@ -1270,7 +1275,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=491
+MIN_CHECKS=493
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
