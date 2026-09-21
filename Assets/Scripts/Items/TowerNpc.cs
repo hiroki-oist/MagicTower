@@ -7,7 +7,8 @@ using UnityEngine;
 /// 盤面に置かれている物体の対応（原典 INITIAL.DAT より）:
 /// <code>
 ///   Merchant(ID19)    … 商人。2/6/7/12/15/28/31/38/39/45/47階
-///   Shop_Altar(ID16,17) と Vendor(ID15) … 祭壇。4/12/32/46階（3マスで1つの絵）
+///   Vendor(ID15) / Shop_Altar(ID16) / Shop_Altar_R(ID17) … 祭壇。4/12/32/46階。
+///   3マスで1つの絵だが**マスごとに絵が違う**ので、1マスずつ別の絵を置く。
 ///   Master(ID25)      … 仙人。2/3/4/6/16/18/21/27/31/33/36/37/39/42/45/46/48階（16階は2人）
 ///   Mikata(ID21)      … 盗賊。2/15/29階（物語に出てくる味方）
 ///   妖精              … 盤面には無く、ブロックをクリアすると現れる
@@ -18,7 +19,7 @@ public static class TowerNpc
     public static bool IsMerchant(string name) { return name == "Merchant"; }
     public static bool IsAltar(string name)
     {
-        return name == "Shop_Altar" || name == "Vendor";
+        return name == "Shop_Altar" || name == "Shop_Altar_R" || name == "Vendor";
     }
     public static bool IsMaster(string name) { return name == "Master"; }
     public static bool IsThief(string name)  { return name == "Mikata"; }

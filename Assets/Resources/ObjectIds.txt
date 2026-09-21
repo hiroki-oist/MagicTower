@@ -6,7 +6,7 @@
 # 形式: プレハブ名 | ID
 Vendor | 15
 Shop_Altar | 16
-Shop_Altar | 17
+Shop_Altar_R | 17
 Merchant | 19
 Mikata | 21
 Fairy | 23

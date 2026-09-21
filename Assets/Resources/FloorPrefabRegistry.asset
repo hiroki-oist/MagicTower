@@ -153,6 +153,8 @@ MonoBehaviour:
     prefab: {fileID: 229563309977680104, guid: c8fed71c2bdf8cc09b83a4bcf8832781, type: 3}
   - key: Shop_Altar
     prefab: {fileID: 614990742389561087, guid: a9773fc83492d9db0671e3d43e92d089, type: 3}
+  - key: Shop_Altar_R
+    prefab: {fileID: 1019876656962668822, guid: 792beb3381ceb90ce697e43940f55552, type: 3}
   - key: Sword_1
     prefab: {fileID: 417030703006161096, guid: f0c921d34584de95422e61176f6d14b2, type: 3}
   - key: Sword_2

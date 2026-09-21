@@ -82,6 +82,43 @@ public class BattleBandTests
     }
 
     [Test]
+    public void 枠の中に中身が収まっている()
+    {
+        // 旧版は枠の絵（Assets/Images/Dialogue.png）を
+        // 第Nターン・左右の絵と名前・左右の能力値 の5枚に分けて貼っていた。
+        Contains(AuthorStyle.TurnPanel, AuthorStyle.TurnBox, "第Nターン");
+        foreach (var cx in new[] { AuthorStyle.PlayerCenterX, AuthorStyle.EnemyCenterX })
+        {
+            Contains(AuthorStyle.SidePanel(cx), AuthorStyle.Icon(cx), "絵");
+            Contains(AuthorStyle.SidePanel(cx), AuthorStyle.Name(cx), "名前");
+            for (int i = 0; i < AuthorStyle.StatTops.Length; i++)
+                Contains(AuthorStyle.StatPanel(cx), AuthorStyle.Stat(cx, i), $"能力値{i}");
+        }
+        // 枠どうしは重ならない
+        Assert.LessOrEqual(AuthorStyle.SidePanel(AuthorStyle.PlayerCenterX).yMax,
+                           AuthorStyle.StatPanel(AuthorStyle.PlayerCenterX).yMin);
+        Assert.LessOrEqual(AuthorStyle.TurnPanel.yMax,
+                           AuthorStyle.SidePanel(AuthorStyle.PlayerCenterX).yMin);
+    }
+
+    static void Contains(RectInt outer, RectInt inner, string what)
+    {
+        Assert.GreaterOrEqual(inner.xMin, outer.xMin, what);
+        Assert.LessOrEqual(inner.xMax, outer.xMax, what);
+        Assert.GreaterOrEqual(inner.yMin, outer.yMin, what);
+        Assert.LessOrEqual(inner.yMax, outer.yMax, what);
+    }
+
+    [Test]
+    public void 枠の絵は旧版と同じものを使う()
+    {
+        Assert.AreEqual("Assets/Images/Dialogue.png", AuthorStyle.PanelSpritePath);
+        Assert.IsTrue(System.IO.File.Exists(AuthorStyle.PanelSpritePath), "絵が無い");
+        var src = System.IO.File.ReadAllText("Assets/Editor/TowerSceneBuilder.cs");
+        StringAssert.Contains("AuthorStyle.PanelSpritePath", src, "セリフの枠にも使う");
+    }
+
+    [Test]
     public void 左が自分で右が相手で重ならない()
     {
         // 旧版 BattleUI も PlayerImage が左（x=-125）、EnemyImage が右（x=+125）だった

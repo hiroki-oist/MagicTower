@@ -79,14 +79,39 @@ public static class AuthorStyle
 
     // ------------------------------------------------------------------ 戦闘の帯
 
-    /// <summary>黒い帯。画面いっぱいの横幅で、上下の中心に出す。</summary>
+    /// <summary>
+    /// 枠の絵。**旧版がそのまま使っていたもの**（`Assets/Images/Dialogue.png`、
+    /// 32x32 の9スライス・border 6/6/6/5・中身は真っ黒）。
+    /// 旧版はこの1枚をセリフの枠にも戦闘の枠にも使っていた
+    /// （Dialogue / Turns / PlayerImage / EnemyImage / PlayerStats / EnemyStats すべて
+    ///   `m_Sprite: {guid: 8a21752aa0a2a47d19be1cd65397ae9f}`）。
+    /// **作者の言う「黒い帯」はこの絵**なので、こちらでも同じものを貼る。
+    /// </summary>
+    public const string PanelSpritePath = "Assets/Images/Dialogue.png";
+
+    /// <summary>枠の絵に掛ける色。絵がもともと黒なので白（＝そのまま）。</summary>
+    public static readonly Color BandFill = Color.white;
+
+    /// <summary>帯の占める範囲（中の枠はこの中に収める）。</summary>
     public static RectInt Band { get { return new RectInt(0, 96, 640, 208); } }
 
-    /// <summary>帯の色。旧版の EarnedCoinBG と同じく、下が透ける黒。</summary>
-    public static readonly Color BandFill = new Color(0f, 0f, 0f, 0.85f);
+    /// <summary>「第 N ターン」の枠（旧版 Turns）。</summary>
+    public static RectInt TurnPanel { get { return new RectInt(160, 96, 320, 28); } }
 
-    /// <summary>「第 N ターン」の欄（旧版 Turns）。</summary>
-    public static RectInt TurnBox { get { return new RectInt(0, 104, 640, 22); } }
+    /// <summary>絵と名前の枠（旧版 PlayerImage / EnemyImage）。</summary>
+    public static RectInt SidePanel(int centerX)
+    {
+        return new RectInt(centerX - 144, 124, 288, 98);
+    }
+
+    /// <summary>能力値の枠（旧版 PlayerStats / EnemyStats）。</summary>
+    public static RectInt StatPanel(int centerX)
+    {
+        return new RectInt(centerX - 144, 222, 288, 82);
+    }
+
+    /// <summary>「第 N ターン」の文字（枠の中）。</summary>
+    public static RectInt TurnBox { get { return new RectInt(160, 99, 320, 22); } }
 
     /// <summary>左半分が自分、右半分が相手（旧版は PlayerImage が左、EnemyImage が右）。</summary>
     public const int PlayerCenterX = 160, EnemyCenterX = 480;

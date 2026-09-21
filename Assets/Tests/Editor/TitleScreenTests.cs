@@ -37,8 +37,17 @@ public class TitleScreenTests
         {
             var line = raw.Trim();
             if (!line.StartsWith("ゼノとの初対面")) continue;
-            var seq = line.Split('|')[2];
-            StringAssert.Contains("111 ; 閃光 ; 題名 ; 序章の絵 ; 奪われる ; 112", seq.Replace("  ", " "));
+            // 地図の書き換えは途中に挟まるので、それを除いた並びで見る
+            var seq = new System.Collections.Generic.List<string>();
+            foreach (var s in line.Split('|')[2].Split(';'))
+            {
+                var t = s.Trim();
+                if (t.Length > 0 && !t.StartsWith("地図 ")) seq.Add(t);
+            }
+            int i = seq.IndexOf("111");
+            CollectionAssert.AreEqual(
+                new[] { "111", "閃光", "題名", "序章の絵", "奪われる", "112" },
+                seq.GetRange(i, 6));
             return;
         }
         Assert.Fail("ゼノとの初対面の行が見つからない");

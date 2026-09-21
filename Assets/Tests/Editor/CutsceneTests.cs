@@ -25,7 +25,12 @@ public class CutsceneTests
             new[] { "地図 (-1,-1)=ID91", "110",
                     "地図 (-1,-2)=ID93", "地図 (-1,-4)=ID93",
                     "地図 (-2,-3)=ID93", "地図 (+0,-3)=ID93",
-                    "111", "閃光", "題名", "序章の絵", "奪われる",
+                    "111", "閃光", "題名", "序章の絵",
+                    // 終わりに同じ5マスを床へ戻す（原典 0x6ebd〜0x6f0f）。
+                    // これが抜けていて「3階に戻るとまだ魔導師がいる」と報告された。
+                    "地図 (-1,-1)=床", "地図 (-1,-2)=床", "地図 (-1,-4)=床",
+                    "地図 (-2,-3)=床", "地図 (+0,-3)=床",
+                    "奪われる",
                     "112", "113", "114", "115", "牢が開く" },
             steps);
     }
@@ -91,14 +96,30 @@ public class CutsceneTests
         Assert.AreEqual(13, g.PendingPages, "場面がそのまま積まれる（序章の絵3枚を含む）");
         StringAssert.Contains("ようこそ", g.CurrentPage);
 
-        // 原典 0x6ae0 は盤面にゼノ1体と魔導師4体を書き込む。
+        // 原典 0x6ae0 は盤面にゼノ1体と魔導師4体を**順に**書き込む。
         // ここが抜けていて「ゼノも魔導師も現れない」と報告された。
-        Assert.AreEqual("Boss_Zeno", g.Floor.At(new Vector2Int(-1, -1)), "ゼノ");
-        foreach (var at in new[] { new Vector2Int(-1, -2), new Vector2Int(-1, -4),
-                                   new Vector2Int(-2, -3), new Vector2Int(0, -3) })
+        var mages = new[] { new Vector2Int(-1, -2), new Vector2Int(-1, -4),
+                            new Vector2Int(-2, -3), new Vector2Int(0, -3) };
+        Assert.AreEqual("Boss_Zeno", g.Floor.At(new Vector2Int(-1, -1)),
+                        "セリフ110の前にゼノが出る");
+        foreach (var at in mages)
+            Assert.AreNotEqual("Enemy_ID93", g.Floor.At(at),
+                               $"魔導師はまだ出ていない {at}");
+
+        g.NextPage();                                   // 110 を読み終える
+        foreach (var at in mages)
             Assert.AreEqual("Enemy_ID93", g.Floor.At(at), $"魔導師 {at}");
         // 魔導師に囲まれても、場面の最中は魔法攻撃を受けない（原典は場面が画面を持つ）
         Assert.AreEqual(9990, g.Player.Hp, "場面の最中に魔法攻撃を受けない");
+
+        // 原典 0x6ebd〜0x6f0f は奪われる直前に同じ5マスを床へ戻す。
+        // これが抜けていて「3階に戻るとまだ魔導師がいて先に進めない」と報告された。
+        var f3 = g.FloorAt(3);
+        for (int i = 0; i < 200 && g.PendingPages > 0; i++) g.NextPage();
+        Assert.AreEqual(2, g.Player.Floor, "2階の牢に移っている");
+        Assert.AreEqual(".", f3.At(new Vector2Int(-1, -1)), "ゼノは片付いている");
+        foreach (var at in mages)
+            Assert.AreEqual(".", f3.At(at), $"魔導師が片付いている {at}");
     }
 
     [Test]

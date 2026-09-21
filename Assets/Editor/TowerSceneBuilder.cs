@@ -294,6 +294,10 @@ public static class TowerSceneBuilder
         // 戦闘中は同じ枠に相手の絵と能力値を出す（原典 0x9626）。
         var battleView = BuildBattleView(controller);
         vso.FindProperty("battleView").objectReferenceValue = battleView;
+        // 戦闘の演出が終わるまで入力を止めるので、入力の側からも見えるようにする
+        var bso = new SerializedObject(controller);
+        bso.FindProperty("battle").objectReferenceValue = battleView;
+        bso.ApplyModifiedPropertiesWithoutUndo();
         vso.FindProperty("registry").objectReferenceValue =
             Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
         BuildMonsterPanel(screen, font, vso);
@@ -408,7 +412,14 @@ public static class TowerSceneBuilder
         rt.sizeDelta = DialogueWindow.SizeOnCanvas(r);
 
         var img = panelGo.GetComponent<UnityEngine.UI.Image>();
-        img.color = DialogueWindowView.Fill;
+        if (AuthorStyle.Enabled)
+        {
+            // 旧版のセリフの枠はこの絵そのもの（9スライス・中身は黒）
+            img.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(AuthorStyle.PanelSpritePath);
+            img.type = UnityEngine.UI.Image.Type.Sliced;
+            img.color = DialogueWindowView.AuthorFill;
+        }
+        else img.color = DialogueWindowView.Fill;
 
         var tmp = WindowBody(panelGo, font, AuthorStyle.Enabled);
 
@@ -488,8 +499,13 @@ public static class TowerSceneBuilder
         holder.anchoredPosition = Vector2.zero;
         holder.sizeDelta = Vector2.zero;
 
-        var band = Icon(holder, "Band", AuthorStyle.Band);
-        band.color = AuthorStyle.BandFill;
+        // 旧版と同じ枠の絵を、旧版と同じ並び（第Nターン・左右の絵と名前・左右の能力値）で貼る。
+        var panelSprite = AssetDatabase.LoadAssetAtPath<Sprite>(AuthorStyle.PanelSpritePath);
+        var band = Panel(holder, "TurnPanel", AuthorStyle.TurnPanel, panelSprite);
+        Panel(holder, "PlayerPanel", AuthorStyle.SidePanel(AuthorStyle.PlayerCenterX), panelSprite);
+        Panel(holder, "EnemyPanel",  AuthorStyle.SidePanel(AuthorStyle.EnemyCenterX),  panelSprite);
+        Panel(holder, "PlayerStatsPanel", AuthorStyle.StatPanel(AuthorStyle.PlayerCenterX), panelSprite);
+        Panel(holder, "EnemyStatsPanel",  AuthorStyle.StatPanel(AuthorStyle.EnemyCenterX),  panelSprite);
 
         var view = screen.gameObject.AddComponent<BattleBandView>();
         var so = new SerializedObject(view);
@@ -508,6 +524,16 @@ public static class TowerSceneBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
 
         holderGo.SetActive(false);
+    }
+
+    /// <summary>旧版の枠の絵（9スライス・中身は黒）を1枚貼る。</summary>
+    static UnityEngine.UI.Image Panel(RectTransform parent, string name, RectInt r, Sprite sprite)
+    {
+        var img = Icon(parent, name, r);
+        img.sprite = sprite;
+        img.type = UnityEngine.UI.Image.Type.Sliced;
+        img.color = AuthorStyle.BandFill;
+        return img;
     }
 
     /// <summary>帯の片側（絵・名前・HP/ATK/DEF の3行）。</summary>

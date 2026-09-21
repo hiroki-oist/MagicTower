@@ -75,6 +75,13 @@ public class TowerGame
         public int Record;
         /// <summary>起こすできごとの名前（Kind が Effect のときだけ）。</summary>
         public string Effect;
+        /// <summary>
+        /// **このページを出す前に**地図へ書き込むもの（マスと種別）。
+        /// 原典の場面はセリフの合間に地図を書き換える（3階の 0x6ae0 は
+        /// ゼノを出す → セリフ110 → 魔導師を出す → セリフ111 の順）ので、
+        /// 場面を積むときにまとめて書いてしまうと**順番が崩れる**。
+        /// </summary>
+        public List<KeyValuePair<Vector2Int, string>> MapBefore;
     }
 
     readonly Queue<Page> pages = new Queue<Page>();
@@ -100,12 +107,26 @@ public class TowerGame
         get { return pages.Count > 0 ? pages.Peek().Kind : (PageKind?)null; }
     }
 
+    /// <summary>先頭のページの地図の書き換えを済ませたか。</summary>
+    bool frontMapDone;
+
     /// <summary>今のページを読み終えた。まだ続きがあれば true。</summary>
     public bool NextPage()
     {
-        if (pages.Count > 0) pages.Dequeue();
+        if (pages.Count > 0) { pages.Dequeue(); frontMapDone = false; }
         ResolveEffects();
         return pages.Count > 0;
+    }
+
+    /// <summary>地図の書き換えをまとめて当てる。</summary>
+    void ApplyMap(List<KeyValuePair<Vector2Int, string>> writes)
+    {
+        if (writes == null || Floor == null) return;
+        foreach (var w in writes)
+        {
+            if (w.Value == "床") Floor.Clear(w.Key);
+            else Floor.Put(w.Key, FloorState.SymbolOfKind(w.Value));
+        }
     }
 
     /// <summary>
@@ -114,9 +135,13 @@ public class TowerGame
     /// </summary>
     void ResolveEffects()
     {
-        while (pages.Count > 0 && pages.Peek().Kind == PageKind.Effect)
+        while (pages.Count > 0)
         {
+            // そのページを出す前に地図を書き換える（原典も場面の途中で書いている）
+            if (!frontMapDone) { ApplyMap(pages.Peek().MapBefore); frontMapDone = true; }
+            if (pages.Peek().Kind != PageKind.Effect) break;
             var e = pages.Dequeue();
+            frontMapDone = false;
             if (e.Effect == Cutscenes.ZenoTakesStep)
             {
                 Player.ApplyZenoEvent();
@@ -158,73 +183,84 @@ public class TowerGame
     {
         var steps = Cutscenes.Instance.Steps(name);
         if (steps == null) return false;
+        // 地図の書き換えは**次に出すページの直前**に当てる。原典の場面は
+        // 「ゼノを出す → セリフ110 → 魔導師を出す → セリフ111 → …
+        //   → 5マスを床に戻す → 奪われる」の順に書いているので、
+        // ここでまとめて当ててしまうと出す順も消す順も崩れる。
+        List<KeyValuePair<Vector2Int, string>> pendingMap = null;
+        System.Func<Page, Page> withMap = page =>
+        {
+            page.MapBefore = pendingMap; pendingMap = null; return page;
+        };
         foreach (var step in steps)
         {
             if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
                 || step == Cutscenes.ClimbStep || step == Cutscenes.FlashStep
                 || step == Cutscenes.ChargeStep)
             {
-                pages.Enqueue(new Page
+                pages.Enqueue(withMap(new Page
                 {
                     Kind = PageKind.Effect, Text = null, Record = -1, Effect = step
-                });
+                }));
                 continue;
             }
             if (step == Cutscenes.FinalScreenStep)
             {
-                pages.Enqueue(new Page
+                pages.Enqueue(withMap(new Page
                 {
                     Kind = PageKind.FinalScreen,
                     Text = Ending.TitleLine + "\n" + Ending.AnyKeyLine,
                     Record = -1
-                });
+                }));
                 continue;
             }
             if (step == Cutscenes.EndingTowerStep)
             {
-                pages.Enqueue(new Page
+                pages.Enqueue(withMap(new Page
                 {
                     Kind = PageKind.EndingTower, Text = "", Record = 1
-                });
+                }));
                 continue;
             }
             if (step == Cutscenes.EndingTextStep)
             {
                 // 終わりの言葉は段落が1つずつ現れる
                 for (int shown = 1; shown <= Cutscenes.EndingTextParagraphs; shown++)
-                    pages.Enqueue(new Page
+                    pages.Enqueue(withMap(new Page
                     {
                         Kind = PageKind.EndingText, Text = "", Record = shown
-                    });
+                    }));
                 continue;
             }
             if (step == Cutscenes.PrologueStep)
             {
                 // 序章の1枚絵。行が1つずつ現れるので、行数ぶんページを積む。
                 for (int shown = 1; shown <= Cutscenes.PrologueLines; shown++)
-                    pages.Enqueue(new Page
+                    pages.Enqueue(withMap(new Page
                     {
                         Kind = PageKind.Prologue,
                         Text = "",
                         Record = shown           // 何行目まで出すか
-                    });
+                    }));
                 continue;
             }
             if (step == Cutscenes.TitleStep)
             {
-                pages.Enqueue(new Page
+                pages.Enqueue(withMap(new Page
                 {
                     Kind = PageKind.Title,
                     Text = TitleScreen.Title + "\n" + TitleScreen.Copyright,
                     Record = -1
-                });
+                }));
                 continue;
             }
             Vector2Int mapAt; string mapKind;
             if (Cutscenes.TryParseMap(step, out mapAt, out mapKind))
             {
-                // 場面の中の地図の書き換え。原典も場面の関数の中で直に書いている。
-                if (Floor != null) Floor.Put(mapAt, FloorState.SymbolOfKind(mapKind));
+                // 場面の中の地図の書き換え。当てるのは**次のページの直前**。
+                if (pendingMap == null)
+                    pendingMap = new List<KeyValuePair<Vector2Int, string>>();
+                pendingMap.Add(new KeyValuePair<Vector2Int, string>(mapAt, mapKind));
                 continue;
             }
             int id;
@@ -233,8 +269,11 @@ public class TowerGame
             if (!line.HasValue) continue;
             log.Add(line.Value.Body);
             foreach (var t in DialogueBox.Paginate(line.Value.Body))
-                pages.Enqueue(new Page { Kind = PageKind.Dialogue, Text = t, Record = id });
+                pages.Enqueue(withMap(new Page
+                    { Kind = PageKind.Dialogue, Text = t, Record = id }));
         }
+        // 最後まで残った書き換え（ページが続かないもの）はその場で当てる
+        if (pendingMap != null) { ApplyMap(pendingMap); pendingMap = null; }
         ResolveEffects();
         return true;
     }

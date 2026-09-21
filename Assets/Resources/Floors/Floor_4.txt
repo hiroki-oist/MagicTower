@@ -21,7 +21,7 @@ objects:  (x, y, prefab, note)
   -4 +5  Key_Blue                   ID31
   -1 +5  Vendor                     ID15
   +0 +5  Shop_Altar                 ID16
-  +1 +5  Shop_Altar                 ID17
+  +1 +5  Shop_Altar_R               ID17
   +4 +5  Master                     ID25
   -5 +4  Potion_Red                 ID32
   -3 +4  Key_Yellow                 ID29

@@ -1207,8 +1207,9 @@ chk("結果が出ていない" in open("docs/run_tests.sh",encoding="utf-8").rea
     "結果が出ていなければ落ちたと分かるようにする")
 # 場面の中の地図の書き換え（原典 0x3044 の三つ組の表から取った）
 _cs_map=[n for n in _cs_steps if n.startswith("地図 ")]
-chk(len(_cs_map)==17,
-    "場面の中の地図の書き換えは17件（3階のゼノ5・20階のボス登場10・40階の金騎士2）",
+chk(len(_cs_map)==22,
+    "場面の中の地図の書き換えは22件"
+    "（3階のゼノ5＋片付け5・20階のボス登場10・40階の金騎士2）",
     len(_cs_map))
 chk(all(re.match(r"^地図 \([-+]?\d+,[-+]?\d+\)=.+$",n) for n in _cs_map),
     "場面の地図の段は「地図 (x,y)=種別」の形")
@@ -1361,6 +1362,39 @@ for _pf in glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
         _oldart.append(os.path.basename(_pf))
 chk(not _oldart,"盤面に出るプレハブは原典のタイルを指している",str(_oldart))
 
+# 盤面に置くものは **絵の大きさ = マスの数** でなければならない。
+# 作者の古いプレハブは旧アトラス（1枚0.4ユニット）向けに m_LocalScale 2.5 で
+# 組まれていて、原典のタイル（32px・PPU32 = 1ユニット）に差し替えたら
+# **2.5マスの大きさ**で出てしまった（黄色の鍵・赤いクリスタル・檻）。
+def _cell_size_check():
+    import struct
+    def png(path):
+        return struct.unpack(">II", open(path,"rb").read(24)[16:24])
+    am={}
+    for f in glob.glob("Assets/**/*.meta",recursive=True):
+        try: txt=open(f,encoding="utf-8",errors="replace").read()
+        except Exception: continue
+        g=re.search(r"^guid: ([0-9a-f]{32})",txt,re.M)
+        if g: am[g.group(1)]=(f[:-5],txt)
+    bad=[]
+    for key,pg in re.findall(
+            r"- key: (\S+)\n    prefab: \{fileID: -?\d+, guid: ([0-9a-f]{32})",_reg):
+        if pg not in am: bad.append(key+":プレハブ無し"); continue
+        pt=open(am[pg][0],encoding="utf-8",errors="replace").read()
+        sp=re.search(r"m_Sprite: \{fileID: -?\d+, guid: ([0-9a-f]{32})",pt)
+        if not sp or sp.group(1) not in am: bad.append(key+":絵無し"); continue
+        spath,stxt=am[sp.group(1)]
+        pm=re.search(r"spritePixelsToUnits: (\d+)",stxt)
+        ppu=int(pm.group(1)) if pm else 100
+        sm=re.search(r"m_LocalScale: \{x: ([\d.-]+)",pt)
+        sc=float(sm.group(1)) if sm else 1.0
+        w,h=png(spath)
+        if abs(w/ppu*sc-w/32)>0.01 or abs(h/ppu*sc-h/32)>0.01:
+            bad.append(f"{key}({w}px/PPU{ppu}x{sc})")
+    return bad
+_cellbad=_cell_size_check()
+chk(not _cellbad,"盤面のプレハブは 絵32ドット=1マス の大きさで出る",str(_cellbad[:5]))
+
 # 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
 # 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
 # 3階のゼノとの初対面と20階のボス登場で何も現れなかった。
@@ -1390,6 +1424,17 @@ chk(len(_zeno)==1 and all(f"地図 ({x:+d},{y:+d})=ID93" in _zeno[0]
     "魔導師(ID93)4体は主人公 (-1,-3) の上下左右に現れる（原典 X4Y7/X4Y9/X3Y8/X5Y8）")
 chk(len(_zeno)==1 and _zeno[0].index("=ID91")<_zeno[0].index("110")
     <_zeno[0].index("=ID93"),"順番は ゼノ → セリフ110 → 魔導師（原典どおり）")
+# 原典 0x6ebd〜0x6f0f は同じ5マスを床(6)に戻してから 0x6f11 で装備と能力値を奪う。
+# これが抜けていて「3階に戻るとまだ魔導師がいて先に進めない」と報告された。
+chk(len(_zeno)==1 and all(f"地図 ({x:+d},{y:+d})=床" in _zeno[0]
+                          for x,y in [(-1,-1),(-1,-2),(-1,-4),(-2,-3),(0,-3)]),
+    "場面の終わりに同じ5マスを床へ戻す（原典 0x6ebd）")
+chk(len(_zeno)==1 and _zeno[0].index("=床")<_zeno[0].index("奪われる"),
+    "片付けは奪われるより前（原典 0x6ebd → 0x6f11）")
+# 地図の書き換えは「次に出すページの直前」に当てる（まとめて当てると順番が崩れる）
+_tg2=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("MapBefore" in _tg2 and "pendingMap" in _tg2,
+    "場面の地図の書き換えはページごとに当てる")
 chk(len(_second)==36,"2コマ目36枚も Assets に置く（原典 0x92a4 が実際に描く）")
 # 2の冪でない絵は nPOTScale を 0 にしないと Sprite として取り込めない（3x3のボスが消えていた）
 for _m in ("900_Boss_Dragon","901_Boss_GiantOctopus","902_Shop_Altar",
@@ -1620,8 +1665,14 @@ for _off,_want in ((0x113c,"Ｔｏｗｅｒ"),(0x1167,"（Ｃ）１９９６")):
 chk("AfterRecord = 111" in _ts and "NextRecord = 112" in _ts,
     "題名は序章の111と112の間に入る")
 _cs2=open("Assets/Resources/Cutscenes.txt",encoding="utf-8").read()
-chk("111 ; 閃光 ; 題名 ; 序章の絵 ; 奪われる ; 112" in _cs2,
-    "111のあと閃光→題名→奪われるの順（原典 0x6d09→0x6db2→0x06f1b）")
+_order=[x.strip() for x in
+        [l for l in _cs2.splitlines() if l.startswith("ゼノとの初対面")][0]
+        .split("|")[2].split(";")]
+_order=[x for x in _order if not x.startswith("地図 ")]
+chk(_order[_order.index("111"):_order.index("111")+5]
+    ==["111","閃光","題名","序章の絵","奪われる"],
+    "111のあと閃光→題名→序章の絵→奪われるの順（原典 0x6d09→0x6db2→0x06f1b）",
+    str(_order))
 chk("起動直後ではない" in open("Assets/Scripts/Prologue.cs",encoding="utf-8").read(),
     "序章が位置イベント由来だと明記してある")
 _tg2=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
@@ -1767,7 +1818,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=621
+MIN_CHECKS=625
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

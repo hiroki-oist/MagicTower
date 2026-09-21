@@ -20,6 +20,12 @@ public class DialogueWindowView : MonoBehaviour
     public static readonly Color Fill = new Color32(0x44, 0x44, 0x44, 0xff);
     public static readonly Color Text = new Color32(0xff, 0xff, 0xff, 0xff);
 
+    /// <summary>
+    /// 作者の見せ方のときの枠の色。枠の絵（`Assets/Images/Dialogue.png`）が
+    /// もともと黒いので、色は掛けない（白＝そのまま）。
+    /// </summary>
+    public static readonly Color AuthorFill = Color.white;
+
     /// <summary>今出ている窓。出ていなければ null。</summary>
     public string Showing { get; private set; }
 
@@ -39,7 +45,8 @@ public class DialogueWindowView : MonoBehaviour
         {
             Showing = page;
             if (body != null) { body.text = page; body.color = Text; }
-            if (background != null) background.color = Fill;
+            if (background != null)
+                background.color = AuthorStyle.Enabled ? AuthorFill : Fill;
             Layout(page);
             StartOpening(page);
         }

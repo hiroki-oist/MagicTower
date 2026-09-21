@@ -13,6 +13,7 @@ public class TowerController : MonoBehaviour
     [SerializeField] Sprite playerSprite;
     [SerializeField] MonsterAnimator monsters;
     [SerializeField] SoundPlayer sound;
+    [SerializeField] BattleView battle;
 
     /// <summary>勇者の絵。戦闘の帯（<see cref="BattleBandView"/>）も同じ絵を使う。</summary>
     public Sprite PlayerSprite { get { return playerSprite; } }
@@ -38,6 +39,9 @@ public class TowerController : MonoBehaviour
     {
         if (Game == null) return;
         if (sliding || drawing) return;   // 演出の最中は入力を受けない（原典も同じ）
+        // 戦闘の演出が終わるまで次の一手を受けない。原典の戦闘処理（0x6082）は
+        // 斬り合いが片付くまで**その場で回り続ける**ので、途中で動くことはできない。
+        if (battle != null && battle.IsPlaying) return;
 
         int floorBefore = Game.Player.Floor;
         var posBefore = Game.Player.Position;

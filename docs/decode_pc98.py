@@ -30,7 +30,10 @@ SPECIAL_MARKERS={7:"床と同じ見た目の特殊マス（F48 の左上隅に1�
                  10:"隠し壁と見た目が同じ「何かが隠れている」マス"}
 TERRAIN={6:".",7:".",8:"#",9:"%",10:"%",11:">",12:"<",13:"~",14:"*",
          1:"y",2:"b",3:"r",4:"s",5:"x"}
-OBJ={15:"Vendor",16:"Shop_Altar",17:"Shop_Altar",19:"Merchant",21:"Mikata",23:"Fairy",
+# 祭壇は3マスで1つの絵。**マスごとに絵が違う**（015 左・016 中・017 右）ので、
+# 3マスとも別の名前にして1マスぶんずつ置く。
+# （以前は16も17も "Shop_Altar" で、3マス幅の絵を2回重ねて置いていた）
+OBJ={15:"Vendor",16:"Shop_Altar",17:"Shop_Altar_R",19:"Merchant",21:"Mikata",23:"Fairy",
      25:"Master",27:"Princess",29:"Key_Yellow",30:"Key_Red",31:"Key_Blue",
      32:"Potion_Red",33:"Potion_Blue",34:"Gem_Attack",35:"Gem_Defense",
      # --- 装備。段階は **物体IDの昇順** に一致する（動画で4例を実測して確定）---

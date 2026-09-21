@@ -73,7 +73,10 @@ SPEC=[
  ("Enemy","Enemy_ID157","Enemy_ID157","Enemy",157,1,1,True),
  ("Enemy","Boss_Dragon","Enemy_Dragon","Enemy","900_Boss_Dragon",3,3,True),
  ("Enemy","Boss_GiantOctopus","Enemy_GiantOctopus","Enemy","901_Boss_GiantOctopus",3,3,True),
- ("FieldObstacle","Shop_Altar","Shop_Altar","People","902_Shop_Altar",3,1,False),
+ # 祭壇は3マスで1つの絵だが、**マスごとに絵が違う**ので1マスずつ置く。
+ # （3マス幅の 902_Shop_Altar を2マスに置いて重なっていた）
+ ("FieldObstacle","Shop_Altar","Shop_Altar","People",16,1,1,False),
+ ("FieldObstacle","Shop_Altar_R","Shop_Altar","People",17,1,1,False),
 ]
 TPL="""%YAML 1.1
 %TAG !u! tag:unity3d.com,2011:

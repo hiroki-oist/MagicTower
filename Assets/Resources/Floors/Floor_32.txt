@@ -42,5 +42,5 @@ objects:  (x, y, prefab, note)
   -3 -4  Enemy_GreatGuardian        ID75
   +3 -4  Vendor                     ID15
   +4 -4  Shop_Altar                 ID16
-  +5 -4  Shop_Altar                 ID17
+  +5 -4  Shop_Altar_R               ID17
   +2 -5  Enemy_GreatZombie          ID141

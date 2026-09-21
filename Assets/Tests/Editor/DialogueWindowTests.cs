@@ -123,9 +123,13 @@ public class DialogueWindowTests
     }
 
     [Test]
-    public void 高い位置に開くセリフは三件だけ()
+    public void 高い位置に開くセリフは原典の表どおり十件()
     {
-        CollectionAssert.AreEquivalent(new[] { 107, 159, 156 }, DialogueWindowView.HighRecords);
+        // 出どころは docs/original/dialogue_windows.txt（原典の呼び出しを全部拾った表）。
+        // 場面の中から呼ばれるもの（110・130・131・150・151・155）が抜けていた。
+        CollectionAssert.AreEquivalent(
+            new[] { 53, 107, 110, 130, 131, 150, 151, 155, 156, 159 },
+            DialogueWindowView.HighRecords);
         foreach (var id in DialogueWindowView.HighRecords)
             Assert.IsTrue(DialogueWindowView.HighFor(
                 GameText.Instance.Dialogue(id).Value.Body), $"セリフ{id}");
