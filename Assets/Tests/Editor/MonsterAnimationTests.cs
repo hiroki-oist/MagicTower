@@ -225,9 +225,52 @@ public class SlideTests
     }
 
     [Test]
-    public void 滑らせている間は入力を受けない()
+    public void 演出の間は入力を受けない()
     {
         var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
-        StringAssert.Contains("if (sliding) return;", src);
+        StringAssert.Contains("if (sliding || drawing) return;", src);
+    }
+}
+
+/// <summary>
+/// 階に入ったときの描き出し（原典 0xafa6 の渦巻き）。
+/// </summary>
+public class FloorDrawOrderTests
+{
+    [Test]
+    public void 百二十一マスを一度ずつ渦巻きの順に描く()
+    {
+        var cells = FloorDrawOrder.Instance.Cells;
+        Assert.AreEqual(121, cells.Count);
+        Assert.AreEqual(121, new System.Collections.Generic.HashSet<Vector2Int>(cells).Count,
+                        "同じマスが2度出ている");
+        Assert.AreEqual(new Vector2Int(-5, 5), cells[0], "左上から始まる");
+        Assert.AreEqual(new Vector2Int(0, 0), cells[120], "中央で終わる");
+        for (int i = 0; i + 1 < cells.Count; i++)
+        {
+            var d = cells[i + 1] - cells[i];
+            Assert.AreEqual(1, Mathf.Abs(d.x) + Mathf.Abs(d.y), $"{i}→{i + 1} が隣ではない");
+        }
+    }
+
+    [Test]
+    public void 待ちの間隔は原典どおり()
+    {
+        Assert.AreEqual(3, FloorDrawOrder.CellsPerWait);
+        Assert.AreEqual(10, FloorDrawOrder.FastCellsPerWait);
+        // 121マスなら ふつう40回 ≒ 0.67秒、高速12回 ≒ 0.2秒
+        Assert.AreEqual(40 * MonsterAnimation.FrameSeconds,
+                        FloorDrawOrder.Seconds(121, false), 1e-5f);
+        Assert.AreEqual(12 * MonsterAnimation.FrameSeconds,
+                        FloorDrawOrder.Seconds(121, true), 1e-5f);
+    }
+
+    [Test]
+    public void 描き出しの間は入力を受けない()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
+        StringAssert.Contains("IEnumerator DrawFloor()", src);
+        StringAssert.Contains("if (sliding || drawing) return;", src);
+        StringAssert.Contains("FloorDrawOrder.Instance.Cells", src);
     }
 }

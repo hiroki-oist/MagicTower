@@ -34,7 +34,7 @@ public class TowerController : MonoBehaviour
     void Update()
     {
         if (Game == null) return;
-        if (sliding) return;              // 移動の演出の最中は入力を受けない（原典も同じ）
+        if (sliding || drawing) return;   // 演出の最中は入力を受けない（原典も同じ）
 
         int floorBefore = Game.Player.Floor;
         var posBefore = Game.Player.Position;
@@ -121,6 +121,56 @@ public class TowerController : MonoBehaviour
     /// <summary>移動の演出の最中か。</summary>
     bool sliding;
 
+    /// <summary>階を描き出している最中か。</summary>
+    bool drawing;
+
+    /// <summary>
+    /// 階に入ったときの描き出し。原典（0xafa6）は盤面を一度に出さず、
+    /// **121マスを渦巻きの順に1つずつ**描き、**3マスごとに縦帰線を1回待つ**
+    /// （高速モードなら10マスごと）。表は <see cref="FloorDrawOrder"/>。
+    /// </summary>
+    System.Collections.IEnumerator DrawFloor()
+    {
+        drawing = true;
+        var byCell = new System.Collections.Generic.Dictionary<Vector2Int,
+                         System.Collections.Generic.List<SpriteRenderer>>();
+        foreach (Transform child in loader.Container)
+        {
+            var name = child.name;
+            int cut = name.LastIndexOf('_');
+            if (cut <= 0) continue;
+            int cut2 = name.LastIndexOf('_', cut - 1);
+            if (cut2 <= 0) continue;
+            int x, y;
+            if (!int.TryParse(name.Substring(cut2 + 1, cut - cut2 - 1), out x)) continue;
+            if (!int.TryParse(name.Substring(cut + 1), out y)) continue;
+            var sr = child.GetComponent<SpriteRenderer>();
+            if (sr == null) continue;
+            var key = new Vector2Int(x, y);
+            if (!byCell.ContainsKey(key))
+                byCell[key] = new System.Collections.Generic.List<SpriteRenderer>();
+            byCell[key].Add(sr);
+            sr.enabled = false;
+        }
+        if (playerView != null) playerView.gameObject.SetActive(false);
+
+        int per = Game.Player.FastMode
+                  ? FloorDrawOrder.FastCellsPerWait : FloorDrawOrder.CellsPerWait;
+        int n = 0;
+        foreach (var cell in FloorDrawOrder.Instance.Cells)
+        {
+            System.Collections.Generic.List<SpriteRenderer> here;
+            if (byCell.TryGetValue(cell, out here))
+                foreach (var sr in here) if (sr != null) sr.enabled = true;
+            n++;
+            if (n % per == 0) yield return new WaitForSeconds(MonsterAnimation.FrameSeconds);
+        }
+        foreach (var list in byCell.Values)
+            foreach (var sr in list) if (sr != null) sr.enabled = true;
+        if (playerView != null) playerView.gameObject.SetActive(true);
+        drawing = false;
+    }
+
     /// <summary>
     /// 1マスぶん主人公を滑らせる。原典（0xa276）は**どの向きも16コマ**、
     /// 高速モード（旗31）なら8コマで、**1コマごとに敵と人の絵を1回動かす**（0x92a4）。
@@ -193,6 +243,9 @@ public class TowerController : MonoBehaviour
 
         Game.Floor.ConsumeDirty();     // 作り直したので差分は無かったことにする
         PlacePlayerView();
+
+        // 原典は階に入ると盤面を渦巻きの順に1マスずつ描く（0xafa6）
+        if (isActiveAndEnabled) StartCoroutine(DrawFloor());
     }
 
     /// <summary>変わったマスだけ作り直す。</summary>
