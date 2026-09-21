@@ -624,11 +624,13 @@ for _l in open("docs/original/p58_map.txt",encoding="utf-8"):
 _pairs=[(_t[_i],_t[_i+1]) for _i in range(len(_t)-1)
         if _kind.get(_t[_i]) in (8,10) and _kind.get(_t[_i+1]) in (9,11)]
 # ふつうの敵は +1、3x3のボス（大ダコ 97〜105 / ドラゴン 115〜123）は +9 が2コマ目
+# 2コマ目は「並べた表で隣」。種別（8/9・10/11）で見分けると、種別が同じ組
+# （137/138 のような後半の敵）を取りこぼす。
 chk(all(_b in (_a+1,_a+9) for _a,_b in _pairs) and len(_pairs)>=20,
     "敵の1コマ目と2コマ目は表で隣り合う（ふつうは+1、3x3のボスは+9）",
     str([p for p in _pairs if p[1] not in (p[0]+1,p[0]+9)]))
 _second=[q for q in glob.glob("Assets/Sprites/Tiles/*.png") if q.endswith("_b.png")]
-chk(len(_second)==24,"2コマ目の絵が24枚ある（ふつう22＋3x3のボス2）",str(len(_second)))
+chk(len(_second)==35,"2コマ目の絵が35枚ある（ふつう33＋3x3のボス2）",str(len(_second)))
 chk("原典はこれを実際に描く" in open("docs/p58_to_tiles.py",encoding="utf-8").read(),
     "2コマ目は原典が描くものだと書いてある")
 
@@ -1208,7 +1210,7 @@ for _pf in glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
         if _m2 and _m2.group(1) not in _guids:
             _dangling.append(os.path.basename(_pf))
 chk(not _dangling,"プレハブの絵の参照先が全部ある",str(_dangling))
-chk(len(_second)==24,"2コマ目24枚も Assets に置く（原典 0x92a4 が実際に描く）")
+chk(len(_second)==35,"2コマ目35枚も Assets に置く（原典 0x92a4 が実際に描く）")
 # 2の冪でない絵は nPOTScale を 0 にしないと Sprite として取り込めない（3x3のボスが消えていた）
 for _m in ("900_Boss_Dragon","901_Boss_GiantOctopus","902_Shop_Altar",
            "900_Boss_Dragon_b","901_Boss_GiantOctopus_b"):

@@ -34,6 +34,20 @@ def sprites():
     return out
 
 
+def anim_table():
+    """動くものを VRAM に並べた順の表（原典 DS:0x80a、150件）。
+
+    **2コマ目がどれかは、この表で隣に並んでいるか**で決まる。
+    種別（8/9・10/11）で見分けると、種別が同じ組（137/138 のような後半の敵）を
+    取りこぼす。
+    """
+    import struct
+    exe = open(f"{ROOT}/docs/original/disk/MTE.EXE", "rb").read()
+    dg = 4608 + 0x12340
+    return [struct.unpack("<H", exe[dg + 0x80a + 2 * i:dg + 0x80a + 2 * i + 2])[0]
+            for i in range(150)]
+
+
 def kinds():
     """物体ID → 原典の種別。8/10 が敵の1コマ目、9/11 が2コマ目。"""
     out = {}
@@ -136,6 +150,13 @@ def main():
     for base, cols, rows in COMPOSITE.values():
         boss_parts.update(range(base, base + cols * rows))
 
+    tbl = anim_table()
+    tbl_index = {v: i for i, v in enumerate(tbl)}
+    # 盤面に出る物（タイルがある物）は「誰かの2コマ目」ではない
+    tbl_placed = {int(os.path.basename(q)[:3])
+                  for q in glob.glob(f"{ROOT}/Assets/Sprites/Tiles/*.png")
+                  if not os.path.basename(q)[:-4].endswith("_b")}
+
     for p in sorted(glob.glob(f"{ROOT}/Assets/Sprites/Tiles/*.png")):
         name = os.path.basename(p)[:-4]
         if name.endswith("_b"):
@@ -154,11 +175,15 @@ def main():
             continue
         if oid in boss_parts:
             continue
-        if ks.get(oid) not in (7, 8, 10):
+        # 2コマ目は「並べた表で隣」。種別では見分けられない組がある（137/138 など）。
+        if oid not in tbl_index:
             continue
-        nxt = oid + 1
-        if ks.get(nxt) not in (7, 9, 11) or nxt not in sp:
+        i = tbl_index[oid]
+        if i + 1 >= len(tbl):
             continue
+        nxt = tbl[i + 1]
+        if nxt not in sp or nxt in tbl_placed:
+            continue          # 隣が盤面に出る物なら、それは対ではなく別の物
         px = sp[nxt]
         out = f"{ROOT}/Assets/Sprites/Tiles/{nxt:03d}_{name[4:]}_b.png"
         write_rgba(out, px, transparent_border(px))
