@@ -43,15 +43,37 @@ public class DialogueWindowView : MonoBehaviour
             panel.gameObject.SetActive(show);
         if (!show) { Showing = null; return; }
 
-        if (page != Showing)
+        // 選ばせている間は、選んでいる行に印を出す（印の絵は原典で未同定なので「→」で代用）
+        var shownText = controller.Game.IsChoosing ? WithMark(page, controller.Game) : page;
+        if (page != Showing || (body != null && body.text != shownText))
         {
             Showing = page;
-            if (body != null) { body.text = page; body.color = Text; }
+            if (body != null) { body.text = shownText; body.color = Text; }
             if (background != null)
                 background.color = AuthorStyle.Enabled ? AuthorFill : Fill;
             Layout(page);
             StartOpening(page);
         }
+    }
+
+    /// <summary>
+    /// 選んでいる行の頭に印を置く。原典（0x9e78）は行の高さ16ドットぶんずつ
+    /// 印を動かすが、**印そのものの絵はまだ同定できていない**ので「→」で代用している。
+    /// 文言の「◎」は原典の文字列にもともと入っているもの。
+    /// </summary>
+    static string WithMark(string page, TowerGame game)
+    {
+        if (string.IsNullOrEmpty(page)) return page;
+        var lines = page.Split('\n');
+        int seen = 0;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].IndexOf('◎') < 0) continue;
+            if (seen == game.ChoiceIndex)
+                lines[i] = "→" + lines[i].TrimStart('　');
+            seen++;
+        }
+        return string.Join("\n", lines);
     }
 
     /// <summary>開いている途中のコルーチン。出し直すときは止める。</summary>

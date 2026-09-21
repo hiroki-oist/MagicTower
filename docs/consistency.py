@@ -2040,6 +2040,25 @@ chk(all(_kb_k[_c]<_kb_d[_c] for _c in ("yellow","purple","red")),
     "どの色も鍵より扉が多い（開ける扉を選ぶのが遊びの骨）")
 chk(os.path.exists("docs/key_budget.py"),"鍵の出入りを数える道具がある")
 chk(os.path.exists("docs/floor_keys.py"),"階ごとに要る鍵を見積もる道具がある")
+# 商人は買っても・もらっても・売っても、済んだら覚え書きを立てる。
+# 立て忘れると同じ商人から何度でも受け取れる（2階の1000GOLDが取り放題だった）。
+_npc=open("Assets/Scripts/Items/TowerNpc.cs",encoding="utf-8").read()
+chk("何度でも受け取れてしまう" in _npc,"商人の覚え書きは買う・もらう・売るのどれでも立てる")
+# 「◎はい／◎いいえ」と祭壇の望みを選ばせる仕掛け（原典 0x9e78）。
+# ここが繋がっていなくて、**商人から何も買えず祭壇にも寄進できなかった**。
+_tg4=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("public bool IsChoosing" in _tg4 and "public void ConfirmChoice()" in _tg4,
+    "本線が選ばせる口を持つ")
+chk("BeginChoice(ChoiceKind.Merchant" in _tg4 and "BeginChoice(ChoiceKind.Altar" in _tg4,
+    "商人と祭壇のどちらも選ばせる")
+chk("TowerNpc.Buy(Player, choiceOffer)" in _tg4 and "TowerNpc.Donate(Player, wish)" in _tg4,
+    "選んだ結果が買う・寄進するに繋がっている")
+_ctrl=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
+chk("Game.IsChoosing" in _ctrl and "Game.MoveChoice" in _ctrl and "Game.ConfirmChoice" in _ctrl,
+    "入力の側が選ばせに繋がっている（原典 0x9e78 は上下とリターン／スペース）")
+chk(re.search(r"^2 +\| - +\| gift +\| gold:1000 +\| 1000 \| 29 \| - +\| 50",
+              open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read(),re.M) is not None,
+    "2階のもらいものには覚え書き50が付いている（原典は 0x32 直書き）")
 # 遅い階ほど扉が多い。41階の黄の扉19枚が最多で、ここは12階の鍵屋が無いと回らない。
 _f41=[l for l in open("Assets/Resources/Floors/Floor_41.txt",encoding="utf-8")]
 _f41d=sum(l.split("|")[1].count("y") for l in _f41 if re.match(r"\s*[+-]\d+ \| ",l))
@@ -2048,7 +2067,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=688
+MIN_CHECKS=694
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

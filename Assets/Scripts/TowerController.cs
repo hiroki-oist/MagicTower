@@ -68,12 +68,24 @@ public class TowerController : MonoBehaviour
             // 会話や演出が出ている間は、どのキーでも1つ送るだけ（原典もキー待ち）。
             // **送った拍子に階が変わることがある**（序章でゼノに奪われて2階の牢に移る、
             // 終幕で50階まで駆け上がる）ので、送ったあとも必ず見た目を合わせ直す。
-            acted = Input.anyKeyDown;
-            if (acted)
+            if (Game.IsChoosing)
             {
-                // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
-                if (Game.IsGameOver) { StartNewGame(); return; }
-                Game.NextPage();
+                // 「◎はい／◎いいえ」や祭壇の望み。原典 0x9e78 は
+                // 上下で印を動かし、リターンかスペースで決める。
+                var move = ReadInputOnce();
+                if (move.y != 0) { Game.MoveChoice(move.y > 0 ? -1 : 1); acted = true; }
+                else if (MenuKeyDown()) { Game.ConfirmChoice(); Game.NextPage(); acted = true; }
+                else acted = false;
+            }
+            else
+            {
+                acted = Input.anyKeyDown;
+                if (acted)
+                {
+                    // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
+                    if (Game.IsGameOver) { StartNewGame(); return; }
+                    Game.NextPage();
+                }
             }
         }
         else if (Game.IsMenuOpen)

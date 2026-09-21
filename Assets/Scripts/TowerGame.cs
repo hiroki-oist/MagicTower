@@ -793,6 +793,61 @@ public class TowerGame
         });
     }
 
+    // ---------------------------------------------------------------- 選ばせる
+    //
+    // 原典 `0x9e78` が「◎はい／◎いいえ」や祭壇の望みを選ばせる仕掛け。
+    //   上（0x43 / 0x3a）で印を1つ上へ、リターン(0x1c)かスペース(0x34)で決める。
+    // 印は行の高さ16ドットぶんずつ動く。
+    //
+    // ⚠ **印そのものの絵はまだ同定できていない**ので、選んでいる行の頭に「→」を置く形で
+    //   代用している（文言の「◎」は原典の文字列にもともと入っている）。
+
+    /// <summary>何を選ばせているか。</summary>
+    public enum ChoiceKind { None, Merchant, Altar }
+
+    public ChoiceKind Choice { get; private set; }
+    public int ChoiceIndex { get; private set; }
+    public int ChoiceCount { get; private set; }
+    Shop.Offer choiceOffer;
+
+    /// <summary>選んでいる最中か。</summary>
+    public bool IsChoosing { get { return Choice != ChoiceKind.None; } }
+
+    void BeginChoice(ChoiceKind kind, int count, Shop.Offer offer)
+    {
+        Choice = kind; ChoiceCount = count; ChoiceIndex = 0; choiceOffer = offer;
+    }
+
+    /// <summary>印を動かす。</summary>
+    public void MoveChoice(int delta)
+    {
+        if (!IsChoosing) return;
+        ChoiceIndex = Mathf.Clamp(ChoiceIndex + delta, 0, ChoiceCount - 1);
+    }
+
+    /// <summary>決める。選んだ結果の一言を積む。</summary>
+    public void ConfirmChoice()
+    {
+        if (!IsChoosing) return;
+        var kind = Choice; int at = ChoiceIndex;
+        Choice = ChoiceKind.None;
+
+        if (kind == ChoiceKind.Merchant)
+        {
+            if (at != 0) return;                       // 「いいえ」
+            var said = TowerNpc.Buy(Player, choiceOffer);
+            if (!string.IsNullOrEmpty(said)) Say(said);
+            return;
+        }
+        // 祭壇。並びは 生命力 / 攻撃力 / 防御力 / やめる
+        var wish = at == 0 ? TowerNpc.Wish.Hp
+                 : at == 1 ? TowerNpc.Wish.Attack
+                 : at == 2 ? TowerNpc.Wish.Defense
+                 : TowerNpc.Wish.Cancel;
+        var text = TowerNpc.Donate(Player, wish);
+        if (!string.IsNullOrEmpty(text)) Say(text);
+    }
+
     /// <summary>ゲームオーバーの画面を出している最中か。</summary>
     public bool IsGameOver
     {
@@ -968,12 +1023,22 @@ public class TowerGame
             PlaySound(SoundCues.TalkShop);
             foreach (var o in Shop.Instance.ForFloor(Player.Floor, Player.Position.x + 5))
             {
-                Speak(TowerNpc.TalkToMerchant(Player, o).Text);
+                var talk = TowerNpc.TalkToMerchant(Player, o);
+                Speak(talk.Text);
+                // 「◎はい／◎いいえ」を聞かれたら**選ばせる**（原典 0x9e78）。
+                // ここが繋がっていなくて、**商人から何も買えなかった**。
+                if (talk.AskYesNo) BeginChoice(ChoiceKind.Merchant, 2, o);
                 return;
             }
             return;
         }
-        if (TowerNpc.IsAltar(what)) { Speak(TowerNpc.AltarMenu(Player)); return; }
+        if (TowerNpc.IsAltar(what))
+        {
+            Speak(TowerNpc.AltarMenu(Player));
+            // 祭壇も同じで、望みを選ばせないと寄進できない
+            BeginChoice(ChoiceKind.Altar, 4, default(Shop.Offer));
+            return;
+        }
         if (TowerNpc.IsFairy(what)) { Speak(FairyText()); return; }
     }
 

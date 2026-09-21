@@ -72,18 +72,22 @@ public static class TowerNpc
             if (p.YellowKeys <= 0) return GameText.Instance.Message("shop_no_key");
             p.YellowKeys--;
             p.Gold += offer.Price;
-            return GameText.Instance.Message("shop_thanks");
         }
-        if (offer.Mode == "gift")
+        else if (offer.Mode == "gift")
         {
+            // ⚠ ここで覚え書きを立て忘れていて、**2階の1000GOLDを何度でももらえた**。
+            //   原典は2階だけ表に無く 0x32（＝50）を直に立てる。
             p.Gold += offer.Price;
-            return GameText.Instance.Message("shop_thanks");
         }
-        if (p.Gold < price) return GameText.Instance.Message("shop_no_money");
-
-        p.Gold -= price;
-        ApplyGoods(p, offer.Goods);
+        else
+        {
+            if (p.Gold < price) return GameText.Instance.Message("shop_no_money");
+            p.Gold -= price;
+            ApplyGoods(p, offer.Goods);
+        }
         p.ClampStats();
+        // 買っても、もらっても、売っても、**済んだら覚え書きを立てる**
+        // （立てないと同じ商人から何度でも受け取れてしまう）。
         if (offer.BuyFlag >= 0) p.EventFlags.Add(offer.BuyFlag);
         return GameText.Instance.Message("shop_thanks");
     }
