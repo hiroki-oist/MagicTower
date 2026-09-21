@@ -66,13 +66,16 @@ public class SoundCueTests
     }
 
     [Test]
-    public void 扉を開けると音6が鳴る()
+    public void 扉を開けると音11が鳴る()
     {
+        // 原典 0x23ee 自身は鳴らさず、扉が開く動き 0x7be6 の中で 0xb(11) を鳴らす。
+        // 0x23ee の 6 は「拾う」（鍵29/30/31 は 0x2586）と「39階の仕掛け」のもの。
         var g = Game(1, new Vector2Int(0, 0));
         g.Floor.Put(new Vector2Int(0, 1), "y");
         g.ConsumeSounds();
         g.Step(Up);
-        Assert.Contains(6, g.ConsumeSounds(), "扉＝音6");
+        Assert.Contains(11, g.ConsumeSounds(), "扉＝音11");
+        Assert.AreEqual(1, g.ConsumeDoorOpens().Count, "開いた扉が積まれる");
     }
 
     [Test]

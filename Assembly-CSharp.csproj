@@ -87,6 +87,7 @@
     <Compile Include="Assets/Scripts/Items/Shop.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorConnections.cs" />
     <Compile Include="Assets/Scripts/UI/GameOverScreen.cs" />
+    <Compile Include="Assets/Scripts/UI/DoorOpenView.cs" />
     <Compile Include="Assets/Scripts/Battle/Battlers/Battler.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_TextSelector_A.cs" />
     <Compile Include="Assets/Scripts/Floor/HiddenOccupants.cs" />
@@ -150,6 +151,7 @@
     <Compile Include="Assets/Scripts/Prologue.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/CameraController.cs" />
     <Compile Include="Assets/Scripts/Floor/MonsterAnimator.cs" />
+    <Compile Include="Assets/Scripts/Floor/DoorAnimation.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark03.cs" />
     <Compile Include="Assets/Scripts/GameRules.cs" />
     <Compile Include="Assets/Scripts/UI/ScreenLayout.cs" />

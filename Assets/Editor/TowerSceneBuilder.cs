@@ -306,6 +306,25 @@ public static class TowerSceneBuilder
         // 作者の旧版の見せ方（黒い帯）。AuthorStyle.Enabled が false なら出ない。
         BuildBattleBand(screen, font, controller, battleView);
 
+        // 鍵で扉を開けたときの9コマの動き（原典 0x7be6）。絵は LCG.P58 の #2〜#5。
+        var doorGo = new GameObject("DoorOpenView");
+        doorGo.transform.SetParent(controller.transform, false);
+        var doorView = doorGo.AddComponent<DoorOpenView>();
+        var dso = new SerializedObject(doorView);
+        dso.FindProperty("controller").objectReferenceValue = controller;
+        var doorColors = new List<string> { "Yellow", "Purple", "Red", "Sealed" };
+        var doorFrames = new List<Sprite>();
+        foreach (var c in doorColors)
+            for (int f = 0; f < DoorAnimation.Frames; f++)
+            {
+                var sp = AssetDatabase.LoadAssetAtPath<Sprite>(DoorAnimation.SpritePath(c, f));
+                if (sp == null) Debug.LogWarning($"TowerSceneBuilder: 扉の絵が無い {c}_{f}");
+                doorFrames.Add(sp);
+            }
+        Fill(dso.FindProperty("colors"), doorColors);
+        Fill(dso.FindProperty("frames"), doorFrames);
+        dso.ApplyModifiedPropertiesWithoutUndo();
+
         // 場面でものが現れるときの点滅（原典 0x6ae0）。会話の窓はこれが終わってから出す。
         var blinkGo = new GameObject("BlinkView");
         blinkGo.transform.SetParent(controller.transform, false);

@@ -1466,6 +1466,25 @@ _bv=open("Assets/Scripts/UI/BlinkView.cs",encoding="utf-8").read()
 chk("速さは原典と同じにできない" in _bv,"点滅の速さが原典と違うことを明記してある")
 chk("ConsumeBlinks" in _tg3,"点滅は本線が積み、描くのは見た目の層")
 
+# 鍵で扉を開けたときの9コマの動き（原典 0x7be6）。
+_da=open("Assets/Scripts/Floor/DoorAnimation.cs",encoding="utf-8").read()
+chk("Frames = 9" in _da,"扉の動きは9コマ（0x48 から 0xa00 きざみで 0x5a48 まで）")
+chk("TailFrames = 8" in _da,"そのあと盤面の動きを8コマ（原典 0x9288(8)）")
+chk("Sound = 11" in _da,"扉の音は11（原典 0x7be6 の中の 0xb）")
+_doorpng=sorted(glob.glob("Assets/Sprites/Doors/*.png"))
+chk(len(_doorpng)==36,"扉のコマは4色x9枚",str(len(_doorpng)))
+for _c in ("Yellow","Purple","Red","Sealed"):
+    if not all(os.path.exists(f"Assets/Sprites/Doors/{_c}_{i}.png") for i in range(9)):
+        chk(False,f"{_c} の9コマが揃っている"); break
+else:
+    chk(True,"黄・紫・赤・門の4色とも9コマ揃っている")
+chk("ConsumeDoorOpens" in _tg3 and "doorOpens.Add" in _tg3,
+    "開いた扉は本線が積み、描くのは見た目の層")
+# 音の表の直し（以前 6 と書いていた）
+_sc=open("Assets/Resources/SoundCues.txt",encoding="utf-8").read()
+chk("扉を開ける       | 11 | 0x7be6" in _sc,
+    "扉を開ける音は 0x7be6 の 11（0x23ee の 6 は「拾う」と39階の仕掛け）")
+
 # 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
 # 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
 # 3階のゼノとの初対面と20階のボス登場で何も現れなかった。
@@ -1889,7 +1908,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=639
+MIN_CHECKS=646
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

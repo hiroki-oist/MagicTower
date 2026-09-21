@@ -340,6 +340,29 @@ public class TowerGame
     /// </summary>
     public List<Vector2Int> LastKnightCharge { get; private set; }
 
+    /// <summary>開いた扉ひとつぶん。</summary>
+    public struct DoorOpen
+    {
+        /// <summary>扉のあったマス。</summary>
+        public Vector2Int At;
+        /// <summary>扉の記号（"y" / "b" / "r"）。<see cref="DoorAnimation.ColorOf"/> で絵を選ぶ。</summary>
+        public string Cell;
+    }
+
+    /// <summary>
+    /// 開いた扉。原典（0x7be6）はそのマスに9コマの動きを貼る。
+    /// 音や閃光と同じで、ここは積むだけにして描くのは見た目の層に任せる。
+    /// </summary>
+    readonly List<DoorOpen> doorOpens = new List<DoorOpen>();
+
+    /// <summary>積んだ扉を取り出して空にする。</summary>
+    public List<DoorOpen> ConsumeDoorOpens()
+    {
+        var copy = new List<DoorOpen>(doorOpens);
+        doorOpens.Clear();
+        return copy;
+    }
+
     /// <summary>閃光を出す場所を積む。</summary>
     public void PlayEffect(Vector2Int at) { effects.Add(at); }
 
@@ -635,7 +658,10 @@ public class TowerGame
         switch (r.Outcome)
         {
             case TowerPlayer.Outcome.OpenedDoor:
+                // 原典 0x023ee は地図を床にしてから 0x7be6（扉が開く9コマ）を呼ぶ。
+                // 音もその中で鳴るので、ここでは**場所と色を積むだけ**にする。
                 PlaySound(SoundCues.OpenDoor);
+                doorOpens.Add(new DoorOpen { At = r.Target, Cell = r.What });
                 break;
 
             case TowerPlayer.Outcome.Talk:
