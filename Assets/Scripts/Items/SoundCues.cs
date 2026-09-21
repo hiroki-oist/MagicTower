@@ -73,7 +73,7 @@ public class SoundCues
     public const string Slash      = "斬りかかる";
     public const string Hit        = "命中";
     public const string Magic      = "魔法攻撃";
-    public const string Position   = "位置イベント";
+    public const string SnowMelt   = "雪の結晶";
     public const string Unlock     = "解錠";
     public const string BigUnlock  = "大きな解錠";
     public const string UseSpecial = "特殊アイテム";

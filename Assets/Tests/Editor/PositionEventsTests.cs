@@ -5,15 +5,17 @@ using UnityEngine;
 public class PositionEventsTests
 {
     [Test]
-    public void 表は十五件で原典の並びどおり()
+    public void 表は十六件で原典の並びどおり()
     {
         var e = PositionEvents.Instance;
-        Assert.AreEqual(15, e.Count, "物語の引き金13件＋終わりの2件");
+        Assert.AreEqual(16, e.Count, "物語の引き金14件＋終わりの2件");
 
         var seq = new System.Collections.Generic.List<string>();
         foreach (var x in e.All) seq.Add($"{x.Floor}:{x.FlagId}");
         CollectionAssert.AreEqual(
-            new[] { "3:89", "10:91", "10:94", "15:95", "20:103", "25:105", "30:109",
+            new[] { "3:89", "10:91", "10:94",
+                    // 13階の雪の結晶だけは一度きりの印を持たない（原典 0x1fd5）
+                    "13:-1", "15:95", "20:103", "25:105", "30:109",
                     "32:111", "33:114", "33:113", "38:119", "40:121", "42:123",
                     // 物語の終わり（原典 0x2277 と 0x22cc〜0x23e5）
                     "49:130", "24:131" }, seq);

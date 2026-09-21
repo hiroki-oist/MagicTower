@@ -46,6 +46,28 @@ public static class SpecialItemEffects
     }
 
     /// <summary>
+    /// 使ったときの知らせの文言の鍵（Resources/Messages.txt）。
+    /// メニューから使うものは <see cref="TowerGame.UseItem"/> が直に書いているが、
+    /// 立ち入って使うもの（13階の雪の結晶）はここを通す。
+    /// </summary>
+    public static string UseMessageKey(SpecialItems.Kind k)
+    {
+        switch (k)
+        {
+            case SpecialItems.Kind.Elixir:         return "elixir_use";
+            case SpecialItems.Kind.Matock:         return "matock_use";
+            case SpecialItems.Kind.SuperMatock:    return "super_matock_use";
+            case SpecialItems.Kind.DestructionOrb: return "destruction_use";
+            case SpecialItems.Kind.TeleportRelic:  return "teleport_use";
+            case SpecialItems.Kind.WingUp:         return "wing_up_use";
+            case SpecialItems.Kind.WingDown:       return "wing_down_use";
+            case SpecialItems.Kind.MagicKey:       return "magic_key_use";
+            case SpecialItems.Kind.SnowCrystal:    return "snow_use";
+            default:                               return "";
+        }
+    }
+
+    /// <summary>
     /// エリクサーの回復量。原典は
     /// <c>ax = 攻撃力×2 + 防御力 ; 回復量 = ax×5</c>。
     /// 原典の説明「その時の攻撃力と防御力に応じた値だけ生命力が回復する。

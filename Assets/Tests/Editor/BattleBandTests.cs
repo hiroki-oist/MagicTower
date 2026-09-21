@@ -156,6 +156,51 @@ public class AuthorDialogueTests
     }
 
     [Test]
+    public void 窓の横幅は本文に合わせて中央に置く()
+    {
+        // 18文字の行なら、文字のぶん＋左右の余白ちょうど
+        var wide = new string('あ', DialogueBox.CharsPerLine);
+        var r = AuthorStyle.DialogueFor(wide);
+        Assert.AreEqual(AuthorStyle.DialogueWidth, r.width, "折り返しの幅いっぱい");
+        Assert.AreEqual(DialogueWindow.ScreenWidth - r.xMax, r.xMin, "左右の余白が同じ＝中央");
+
+        // 短いセリフは窓も狭くなる（報告: 窓が広すぎて文字が左に寄る）
+        var narrow = AuthorStyle.DialogueFor("はい");
+        Assert.Less(narrow.width, r.width, "短い本文は窓も狭い");
+        Assert.AreEqual(DialogueWindow.ScreenWidth - narrow.xMax, narrow.xMin, "こちらも中央");
+        Assert.IsTrue(DialogueWindow.Fits(narrow), narrow.ToString());
+    }
+
+    [Test]
+    public void 本文の幅は一番長い行で決まる()
+    {
+        Assert.AreEqual(5f, DialogueBox.MaxLineChars("あい\nあいうえお\nあ"), 1e-4f);
+        Assert.AreEqual(1f, DialogueBox.MaxLineChars("ＡＢ".Substring(0, 1)), 1e-4f);
+        Assert.AreEqual(1f, DialogueBox.MaxLineChars("ab"), 1e-4f, "半角は半分");
+    }
+
+    [Test]
+    public void 実際のセリフでも文字が窓に収まる()
+    {
+        int seen = 0;
+        for (int id = 100; id <= 170; id++)
+        {
+            var line = GameText.Instance.Dialogue(id);
+            if (!line.HasValue) continue;
+            foreach (var page in DialogueBox.Pages(line.Value))
+            {
+                var r = AuthorStyle.DialogueFor(page);
+                Assert.IsTrue(DialogueWindow.Fits(r), $"{id}: {r}");
+                float w = AuthorStyle.DialogueTextLeft * 2
+                        + DialogueBox.MaxLineChars(page) * AuthorStyle.DialogueTextDots;
+                Assert.LessOrEqual(w, r.width + 1f, $"{id} の文字が窓に収まる");
+                seen++;
+            }
+        }
+        Assert.Greater(seen, 20, "セリフが読めている");
+    }
+
+    [Test]
     public void どの行数でも画面からはみ出さない()
     {
         for (int n = 1; n <= 11; n++)

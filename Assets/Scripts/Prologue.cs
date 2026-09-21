@@ -42,6 +42,37 @@ public static class Prologue
         new Vector2Int(-4, -1), new Vector2Int(-3, -1),
     };
 
+    /// <summary>牢に居た盗賊（Mikata, ID21）。</summary>
+    public const string ThiefPrefab = "Mikata";
+
+    /// <summary>盗賊が最初に居るマス（Floor_2.txt の ID21）。</summary>
+    public static readonly Vector2Int ThiefStart = new Vector2Int(-3, -1);
+
+    /// <summary>
+    /// 牢が開いたあと、盗賊が歩いていく道順（原典 0x070dc〜0x07129）。
+    ///
+    /// 原典は **向きを1バイトずつ並べた表**（<see cref="KnightCharge"/> と同じ決まり）を
+    /// 関数の頭（0x6b04〜0x6b10）に積んでいる:
+    /// <code>
+    ///   [bp-4]=2 [bp-3]=2 [bp-2]=3 [bp-1]=5   ; 2=X-1（左） 3=Y+1（画面の下） 5=区切り
+    /// </code>
+    /// 始まりは X=2, Y=6（0x70b5 / 0x70d4）＝盤面の (-3,-1)。1歩ごとに
+    /// **主人公と同じ1マス滑らせる処理（0xa276）**を呼ぶので、歩く速さも同じ。
+    /// 歩き終えると 0x07153 が最後のマスに ID21(0x15) を書く＝**そこに立ったまま残る**。
+    /// </summary>
+    public static readonly Vector2Int[] ThiefWalk =
+    {
+        new Vector2Int(-4, -1),    // 左
+        new Vector2Int(-5, -1),    // 左
+        new Vector2Int(-5, -2),    // 下
+    };
+
+    /// <summary>
+    /// 歩き終えて盗賊が立つマス。ここで話すとセリフ116 が出て、
+    /// そのマスが床になる（ThiefEvents.txt の1行目 `2 | フラグ94=0 | 116 | - | 2:(-5,-2)=床`）。
+    /// </summary>
+    public static Vector2Int ThiefGoal { get { return ThiefWalk[ThiefWalk.Length - 1]; } }
+
     /// <summary>ゼノに会うまでに出るセリフ（Dialogue.txt のレコード番号）。</summary>
     public static readonly int[] BeforeFall = { 110, 111 };
 

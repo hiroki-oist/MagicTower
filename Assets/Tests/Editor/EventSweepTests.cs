@@ -38,9 +38,11 @@ public class EventSweepTests
             if (e.NeedsFlag > 0) g.Player.EventFlags.Add(e.NeedsFlag);
             if (e.NeedsCleared.HasValue) g.Floor.Clear(e.NeedsCleared.Value);
             if (e.NeedsGate.HasValue) g.Floor.Put(e.NeedsGate.Value, "s");
+            if (e.NeedsItem != SpecialItems.Kind.None) g.Player.Give(e.NeedsItem);
 
             var hit = PositionEvents.Instance.At(e.Floor, at, g.Player.EventFlags,
-                                                g.Floor.IsCleared, p => g.Floor.At(p) == "s");
+                                                g.Floor.IsCleared, p => g.Floor.At(p) == "s",
+                                                k => g.Player.Has(k));
             Assert.IsTrue(hit.HasValue, $"F{e.Floor} {at} の旗{e.FlagId} が発火しない");
             fired++;
 

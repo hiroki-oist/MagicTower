@@ -354,8 +354,22 @@ public static class TowerSceneBuilder
             controller.GetComponent<FloorLoader>();
         blso.ApplyModifiedPropertiesWithoutUndo();
 
-        BuildDialogueWindow(screen, font, controller, blinkView, bossView);
+        // 場面の中で人が歩いていく動き（原典 0x070dc の盗賊）。
+        var walkGo = new GameObject("NpcWalkView");
+        walkGo.transform.SetParent(controller.transform, false);
+        var walkView = walkGo.AddComponent<NpcWalkView>();
+        var wkso = new SerializedObject(walkView);
+        wkso.FindProperty("controller").objectReferenceValue = controller;
+        wkso.FindProperty("loader").objectReferenceValue =
+            controller.GetComponent<FloorLoader>();
+        wkso.FindProperty("registry").objectReferenceValue =
+            Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
+        wkso.ApplyModifiedPropertiesWithoutUndo();
+
+        // **メニューの窓を先に置く**。あとに置いたものが前に出るので、
+        // メニューを開いたまま開く会話の窓（飛翔のオーブの断り）が隠れないようにする。
         BuildMenuWindow(screen, font, controller);
+        BuildDialogueWindow(screen, font, controller, blinkView, bossView);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
                         // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
                         // 真っ黒な画面に

@@ -34,8 +34,13 @@ public class PositionEvents
         /// 終幕の引き金（24階の時空の門）だけがこれを使う（原典 0x2307 の `cmp …, 4`）。
         /// </summary>
         public Vector2Int? NeedsGate;
-        /// <summary>発火したら立てるフラグ。</summary>
+        /// <summary>発火したら立てるフラグ。無ければ -1（原典に一度きりの印が無いもの）。</summary>
         public int FlagId;
+        /// <summary>
+        /// 持っていないと発火しないアイテム。無ければ <see cref="SpecialItems.Kind.None"/>。
+        /// 発火すると**使ってしまう**（原典 13階の雪の結晶 0x2002〜0x2022）。
+        /// </summary>
+        public SpecialItems.Kind NeedsItem;
         public List<Change> Changes;
         /// <summary>その場で出る会話。無ければ -1。</summary>
         public int Record;
@@ -73,11 +78,14 @@ public class PositionEvents
 
             int floor, flag;
             if (!int.TryParse(p[0].Trim(), out floor)) continue;
-            if (!int.TryParse(p[3].Trim(), out flag)) continue;
+            // フラグ欄が "-" のものは原典にも一度きりの印が無い（13階の雪の結晶）。
+            // 持ち物を使い切ることが二度目を防いでいる。
+            if (!int.TryParse(p[3].Trim(), out flag)) flag = -1;
 
             var ev = new Event
             {
                 Floor = floor, FlagId = flag, NeedsFlag = -1, Record = -1,
+                NeedsItem = SpecialItems.Kind.None,
                 Spots = new List<Vector2Int>(), Changes = new List<Change>()
             };
             foreach (var s in p[1].Split(';'))
@@ -108,6 +116,11 @@ public class PositionEvents
         {
             int n;
             if (int.TryParse(s.Substring("フラグ:".Length), out n)) ev.NeedsFlag = n;
+        }
+        else if (s.StartsWith("持ち物:"))
+        {
+            // 名前はほかのデータと同じくプレハブ名で書く（例: Crystal_Snow）
+            ev.NeedsItem = SpecialItems.FromPrefabName(s.Substring("持ち物:".Length).Trim());
         }
     }
 
@@ -161,18 +174,21 @@ public class PositionEvents
     /// <summary>そのマスで起きること。無ければ null。</summary>
     public Event? At(int floor, Vector2Int pos, HashSet<int> flags,
                      System.Func<Vector2Int, bool> isCleared,
-                     System.Func<Vector2Int, bool> isGate = null)
+                     System.Func<Vector2Int, bool> isGate = null,
+                     System.Func<SpecialItems.Kind, bool> has = null)
     {
         foreach (var ev in events)
         {
             if (ev.Floor != floor) continue;
             if (!ev.Spots.Contains(pos)) continue;
-            if (flags != null && flags.Contains(ev.FlagId)) continue;
+            if (ev.FlagId >= 0 && flags != null && flags.Contains(ev.FlagId)) continue;
             if (ev.NeedsFlag >= 0 && (flags == null || !flags.Contains(ev.NeedsFlag))) continue;
             if (ev.NeedsCleared.HasValue &&
                 (isCleared == null || !isCleared(ev.NeedsCleared.Value))) continue;
             if (ev.NeedsGate.HasValue &&
                 (isGate == null || !isGate(ev.NeedsGate.Value))) continue;
+            if (ev.NeedsItem != SpecialItems.Kind.None &&
+                (has == null || !has(ev.NeedsItem))) continue;
             return ev;
         }
         return null;

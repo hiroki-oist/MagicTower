@@ -46,6 +46,29 @@ public static class DialogueBox
     /// </summary>
     public const int HighTopEdge = 50;
 
+    /// <summary>
+    /// 本文の一番長い行の幅（全角いくつぶんか）。窓の横幅を本文に合わせるのに使う。
+    /// 原典の文字は全角だけだが、置き換えた数字などで半角が混じることがあるので、
+    /// 半角は 0.5 として数える。
+    /// </summary>
+    public static float MaxLineChars(string body)
+    {
+        float max = 0f;
+        foreach (var line in Wrap(body))
+        {
+            float w = 0f;
+            foreach (var ch in line) w += IsHalfWidth(ch) ? 0.5f : 1f;
+            if (w > max) max = w;
+        }
+        return max;
+    }
+
+    /// <summary>半角の文字か（ASCII と半角カナ）。</summary>
+    public static bool IsHalfWidth(char c)
+    {
+        return c < 0x100 || (c >= 0xff61 && c <= 0xff9f);
+    }
+
     /// <summary>そのセリフを出すのに要る窓の行数＝原典の第1引数。</summary>
     public static int WindowLines(string body)
     {

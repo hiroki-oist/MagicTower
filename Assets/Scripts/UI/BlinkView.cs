@@ -24,16 +24,43 @@ public class BlinkView : MonoBehaviour
     [SerializeField] FloorLoader loader;
 
     /// <summary>点滅の最中か。会話の窓はこれが終わるまで待つ（原典も点滅のあとに出す）。</summary>
-    public bool IsPlaying { get { return running > 0; } }
+    public bool IsPlaying { get { return running > 0 || queue.Count > 0; } }
 
     int running;
+
+    /// <summary>
+    /// これから点滅させるものの待ち行列。**1つずつ順に**出す。
+    ///
+    /// 原典（0x6ae0）は魔導師4体を「1体ぶん点滅させて 0xa 待つ」を4回くり返すので、
+    /// **4体が同時に現れることはない**。ここで一斉に走らせていたため
+    /// 「魔導師も一個ずつ順番に現れてほしい」と報告された。
+    /// </summary>
+    readonly Queue<Cutscenes.MapStep> queue = new Queue<Cutscenes.MapStep>();
+
+    bool draining;
 
     void LateUpdate()
     {
         if (controller == null || controller.Game == null || loader == null) return;
         var list = controller.Game.ConsumeBlinks();
         for (int i = 0; i < list.Count; i++)
-            if (isActiveAndEnabled) StartCoroutine(Play(list[i]));
+        {
+            // 順番が来るまで**見せない**。原典は点滅を始めるときに初めて地図へ書くので、
+            // 待っている間は床のまま（先に4体とも見えてしまってはいけない）。
+            var waiting = loader.ObjectAt(list[i].Pos);
+            if (waiting != null) waiting.SetActive(false);
+            queue.Enqueue(list[i]);
+        }
+        if (!draining && queue.Count > 0 && isActiveAndEnabled)
+            StartCoroutine(Drain());
+    }
+
+    /// <summary>待ち行列を頭から1つずつ。</summary>
+    IEnumerator Drain()
+    {
+        draining = true;
+        while (queue.Count > 0) yield return Play(queue.Dequeue());
+        draining = false;
     }
 
     IEnumerator Play(Cutscenes.MapStep step)

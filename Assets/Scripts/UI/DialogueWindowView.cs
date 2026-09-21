@@ -45,7 +45,12 @@ public class DialogueWindowView : MonoBehaviour
         bool dialogue = controller.Game.CurrentKind == TowerGame.PageKind.Dialogue;
         bool show = dialogue && !string.IsNullOrEmpty(page);
         if (panel != null && panel.gameObject.activeSelf != show)
+        {
             panel.gameObject.SetActive(show);
+            // **メニューの窓より前に出す**。飛翔のオーブを断られたときのように、
+            // メニューを開いたまま窓が開くことがあり、後ろに隠れると読めない。
+            if (show) panel.SetAsLastSibling();
+        }
         if (!show) { Showing = null; return; }
 
         PlaceCursor(page);
@@ -204,7 +209,7 @@ public class DialogueWindowView : MonoBehaviour
     /// </summary>
     public static RectInt Rect(string page)
     {
-        if (AuthorStyle.Enabled) return AuthorStyle.DialogueFor(DialogueBox.WindowLines(page));
+        if (AuthorStyle.Enabled) return AuthorStyle.DialogueFor(page);
         return DialogueWindow.ForBody(page, high: HighFor(page));
     }
 

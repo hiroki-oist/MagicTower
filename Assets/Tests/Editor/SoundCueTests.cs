@@ -39,7 +39,7 @@ public class SoundCueTests
         foreach (var name in new[] { SoundCues.TakeItem, SoundCues.OpenDoor, SoundCues.Stairs,
                                      SoundCues.TalkMaster, SoundCues.TalkShop, SoundCues.Reveal,
                                      SoundCues.Slash, SoundCues.Hit, SoundCues.Magic,
-                                     SoundCues.Position, SoundCues.Unlock, SoundCues.BigUnlock,
+                                     SoundCues.SnowMelt, SoundCues.Unlock, SoundCues.BigUnlock,
                                      SoundCues.UseSpecial, SoundCues.SceneBeat,
                                      SoundCues.FieldMusic, SoundCues.TitleMusic })
             Assert.Greater(SoundCues.Instance.Number(name), 0, name);

@@ -105,6 +105,7 @@
     <Compile Include="Assets/Tests/Editor/KnightChargeTests.cs" />
     <Compile Include="Assets/Tests/Editor/StoryWalkTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerSaveTests.cs" />
+    <Compile Include="Assets/Tests/Editor/SnowCrystalTests.cs" />
     <Compile Include="Assets/Tests/Editor/OriginalDataTests.cs" />
     <Compile Include="Assets/Tests/Editor/FlightOrbTests.cs" />
     <Compile Include="Assets/Tests/Editor/BattleBandTests.cs" />
@@ -113,6 +114,7 @@
     <Compile Include="Assets/Tests/Editor/KeyIconTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerPlayerTests.cs" />
     <Compile Include="Assets/Tests/Editor/AssetLinkTests.cs" />
+    <Compile Include="Assets/Tests/Editor/PrisonBarsTests.cs" />
     <Compile Include="Assets/Tests/Editor/SoundCueTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerGameTests.cs" />
     <Compile Include="Assets/Tests/Editor/EndingTowerTests.cs" />

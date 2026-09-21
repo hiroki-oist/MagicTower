@@ -368,7 +368,13 @@ public static class TowerPlaythrough
             {
                 if (TowerNpc.IsMerchant(what)) traded = BuyAll(game);
                 else if (TowerNpc.IsAltar(what)) traded = DonateSome(game);
-                if (TowerNpc.IsPerson(what)) { done.Add(target); giveUp.Add(target); }
+                if (TowerNpc.IsPerson(what))
+                {
+                    done.Add(target);
+                    // **話すと居なくなる人**（2階の盗賊は (-5,-2) が床になる）は
+                    // そのまま道になるので、避ける所には入れない。
+                    if (game.Floor.At(target) == what) giveUp.Add(target);
+                }
             }
 
             // 原典は行き先が床のときだけ進むので、「動かなかった＝何も起きなかった」ではない。

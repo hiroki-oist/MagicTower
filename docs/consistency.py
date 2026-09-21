@@ -883,6 +883,18 @@ _tg=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk(_tg.count("PlaySound(")>=10,"本線が合図で音を鳴らしている",str(_tg.count("PlaySound(")))
 chk("ConsumeSounds" in _tg,"鳴らした音を見た目の層が引ける")
 
+# 盤面のプレハブの描画順。床（road）が 0 で、その上に置くものは必ずそれより大きい。
+# **Lock_Special が床と同じ 0 だったせいで、2階の牢の格子が床に隠れて消えていた。**
+_orders={}
+for _pf2 in glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
+    _m2=re.search(r"^  m_SortingOrder: (-?\d+)$",open(_pf2,encoding="utf-8").read(),re.M)
+    if _m2: _orders[os.path.basename(_pf2)[:-7]]=int(_m2.group(1))
+chk(_orders.get("road")==0,"床（road）の描画順は0",str(_orders.get("road")))
+_under=sorted(k for k,v in _orders.items() if k!="road" and v<=0)
+chk(not _under,"床以外はどれも床より前に出る（同じ順だと隠れることがある）",str(_under))
+chk(_orders.get("Lock_Special",0)>0,"2階の牢の格子（特殊扉）が床より前",
+    str(_orders.get("Lock_Special")))
+
 print("\n【10】商店と妖精")
 _sh2=[l.strip() for l in open("Assets/Resources/ShopOffers.txt",encoding="utf-8") if l[:1].isdigit()]
 chk(len(_sh2)==12,"商人の品揃えが12件",f"{len(_sh2)}件")
@@ -969,6 +981,7 @@ def _rowflags(path, col, hexcol=False):
     for _l in open(path,encoding="utf-8"):
         if not re.match(r"^\s*\d+\s*\|",_l): continue
         _t=_l.split("|")[col].strip()
+        if _t=="-": continue          # 一度きりの印を持たない行（13階の雪の結晶）
         out.add(int(_t,16) if hexcol else int(_t))
     return out
 _sd=_rowflags("Assets/Resources/SealedDoors.txt",1,True)
@@ -980,7 +993,7 @@ _union=_sd|_pe|_ar|_th
 chk(_union==set(_once),"4つの表の旗の合併が一度きりの旗46個とぴったり合う",
     f"足りない={sorted(set(_once)-_union)} 余計={sorted(_union-set(_once))}")
 chk(len(_sd)==29 and len(_pe)==15 and len(_ar)==1,
-    "表の件数（門29 / 座標15 / 階段1）",f"{len(_sd)}/{len(_pe)}/{len(_ar)}")
+    "表の件数（門29 / 座標の旗15 / 階段1）",f"{len(_sd)}/{len(_pe)}/{len(_ar)}")
 chk({_n for _n in _once if _flg[_n]["持ち主"]=="盗賊"}<=_th,
     "盗賊が立てる旗3つは盗賊の表に出てくる")
 # 50 = 2階で一度だけ 1000 GOLD もらう贈り物（0x14e4〜0x1524、セリフ29）
@@ -1171,14 +1184,20 @@ print("\n【9h】立ち入ると起きることの表")
 _pe=[[c.strip() for c in l.split("|")] for l in
      open("Assets/Resources/PositionEvents.txt",encoding="utf-8").read().split("\n")
      if l.strip() and not l.strip().startswith("#")]
-chk([(int(r[0]),int(r[3])) for r in _pe]==
-    [(3,89),(10,91),(10,94),(15,95),(20,103),(25,105),(30,109),
+chk([(int(r[0]),int(r[3]) if r[3]!="-" else -1) for r in _pe]==
+    [(3,89),(10,91),(10,94),(13,-1),(15,95),(20,103),(25,105),(30,109),
      (32,111),(33,114),(33,113),(38,119),(40,121),(42,123),
      (49,130),(24,131)],
     "階とフラグの並びが原典どおり（最後の2つが物語の終わり）")
-_pf=[int(r[3]) for r in _pe]
-chk(len(_pe)==15,"位置イベントは15件（原典 0x1588 の分岐13＋物語の終わり2）",str(len(_pe)))
+_pf=[int(r[3]) for r in _pe if r[3]!="-"]
+chk(len(_pe)==16,"位置イベントは16件（原典 0x1588 の分岐14＋物語の終わり2）",str(len(_pe)))
 chk(len(_pf)==len(set(_pf)),"フラグ番号が重複しない")
+# 13階の雪の結晶。原典 0x1fd5 は一度きりの印を持たず、持ち物を使い切ることで二度目を防ぐ。
+_snow=[r for r in _pe if r[0]=="13"]
+chk(len(_snow)==1 and _snow[0][2]=="持ち物:Crystal_Snow" and _snow[0][3]=="-",
+    "13階は雪の結晶を持っていると発火し、一度きりの印は持たない")
+chk(_snow and _snow[0][4].count("=床")==4,
+    "溶けるのは4マス（X=5 の Y=5〜8 ＝ (0,0)(0,-1)(0,-2)(0,-3)）")
 chk(any(r[0]=="49" and "大魔導師" in r[4] for r in _pe),
     "49階の中央で大魔導師の口上（原典 0x2277）")
 chk(any(r[0]=="24" and "マスが門" in r[2] and "終幕" in r[4] for r in _pe),
@@ -1513,6 +1532,23 @@ chk("点滅" not in _zn.split("序章の絵")[1],"片付け（床へ戻す）は
 _bv=open("Assets/Scripts/UI/BlinkView.cs",encoding="utf-8").read()
 chk("速さは原典と同じにできない" in _bv,"点滅の速さが原典と違うことを明記してある")
 chk("ConsumeBlinks" in _tg3,"点滅は本線が積み、描くのは見た目の層")
+# 魔導師4体は**1体ずつ**現れる（原典 0x6c20 は1体ぶん点滅して 0xa 待つのを4回）
+chk("Queue<Cutscenes.MapStep> queue" in _bv and "IEnumerator Drain()" in _bv,
+    "点滅は待ち行列で1つずつ出す（4体が同時に現れない）")
+chk("waiting.SetActive(false)" in _bv,"順番が来るまでその絵は見せない")
+
+# 序章の盗賊が牢を出て歩いていく（原典 0x070dc の向きの表 {2,2,3} と 0x07153）
+_pro=open("Assets/Scripts/Prologue.cs",encoding="utf-8").read()
+chk("ThiefWalk" in _pro and "ThiefGoal" in _pro,"盗賊の道順が控えてある")
+chk("new Vector2Int(-5, -2)" in _pro,"歩き終えて立つのは (-5,-2)")
+chk("ConsumeWalks" in _tg3 and "walks.Add" in _tg3,
+    "歩きは本線が積み、動かすのは見た目の層")
+_nw=open("Assets/Scripts/UI/NpcWalkView.cs",encoding="utf-8").read()
+chk("MonsterAnimation.TicksPerStep" in _nw,"歩く速さは主人公と同じ16コマ（原典 0xa276）")
+_th=[l for l in open("Assets/Resources/ThiefEvents.txt",encoding="utf-8")
+     if l.strip().startswith("2 |")]
+chk(any("116" in l and "(-5,-2)=床" in l for l in _th),
+    "(-5,-2) の盗賊に話すとセリフ116 が出てそのマスが床になる")
 
 # 鍵で扉を開けたときの9コマの動き（原典 0x7be6）。
 _da=open("Assets/Scripts/Floor/DoorAnimation.cs",encoding="utf-8").read()
@@ -2098,6 +2134,23 @@ chk(os.path.exists("Assets/Sprites/Hud/Cursor_0.png")
 chk(-0x337 == -0x381 + 74,"印の変位は紫の鍵の次（-0x381 + 74）")
 _mvw=open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read()
 chk("Image cursor" in _mvw and "PlaceCursor" in _mvw,"メニューの窓が印の絵を置く")
+# 印は**文字が変わらなくても**動かす。印の絵を使うと文字の側は変わらないので、
+# 「文字が変わったときだけ置き直す」書き方だと上下キーに反応しなかった。
+_mbody=_mvw.split("void LateUpdate()")[1]
+chk(_mbody.index("PlaceCursor(g)")<_mbody.index("if (text == shown) return;"),
+    "メニューの印は毎コマ置き直す（上下キーで動く）")
+# 会話の窓はメニューより前に出す（飛翔のオーブを断られたときに後ろに隠れていた）
+_dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
+chk("panel.SetAsLastSibling()" in _dwv,"会話の窓はメニューより前に出す")
+_tsb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
+chk(_tsb.index("BuildMenuWindow(screen")<_tsb.index("BuildDialogueWindow(screen"),
+    "組み立ての順もメニューが先（あとに置いたものが前に出る）")
+# 会話の窓の横幅は本文に合わせる（広すぎて文字が左に寄ると報告された）
+_as=open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
+chk("DialogueFor(string page)" in _as and "WidthFor" in _as,
+    "会話の窓は本文の一番長い行に合わせて広さを決める")
+chk("MaxLineChars" in open("Assets/Scripts/UI/DialogueBox.cs",encoding="utf-8").read(),
+    "本文の幅を数える所がある")
 _dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
 chk("Image cursor" in _dwv and "static int ChoiceLine(" in _dwv,
     "セリフの窓も同じ印の絵を置く（「◎」の行を数えて合わせる）")
@@ -2128,7 +2181,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=713
+MIN_CHECKS=730
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

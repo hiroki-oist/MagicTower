@@ -34,8 +34,18 @@ public static class AuthorStyle
 
     // ------------------------------------------------------------------ 会話
 
-    /// <summary>会話の窓の左端と横幅（ドット）。旧版は画面いっぱいに近かった。</summary>
-    public const int DialogueLeft = 16, DialogueWidth = 608;
+    /// <summary>
+    /// 会話の窓の横幅（ドット）。**本文の一番長い行に合わせて決める**。
+    ///
+    /// 以前はここを 608（画面いっぱい近く）で固定していたが、折り返しは
+    /// <see cref="DialogueBox.CharsPerLine"/>（18文字）のままなので、
+    /// 右側に 170 ドット余って**文字が左に寄って見える**と報告された。
+    /// 窓を文字の幅に合わせ、画面の中央に置く。
+    /// </summary>
+    public static readonly int DialogueWidth = Even(MaxDialogueChars);
+
+    /// <summary>窓に入れられる一番長い行（全角の数）。原典の折り返しと同じ。</summary>
+    public const int MaxDialogueChars = DialogueBox.CharsPerLine;
 
     /// <summary>窓の中心の高さ。旧版は画面の下から42%（1200中の500）＝上から58%。</summary>
     public const int DialogueCenterY = 232;
@@ -72,9 +82,40 @@ public static class AuthorStyle
     /// <summary>行数から窓の位置と大きさ。画面の中心に寄せる。</summary>
     public static RectInt DialogueFor(int lines)
     {
+        return DialogueFor(lines, DialogueWidth);
+    }
+
+    /// <summary>
+    /// そのセリフを出す窓。**横幅は本文の一番長い行に合わせる**（報告: 窓が広すぎて
+    /// 文字が左に寄る）。折り返しの位置は原典のままなので、行の中身は変わらない。
+    /// </summary>
+    public static RectInt DialogueFor(string page)
+    {
+        return DialogueFor(DialogueBox.WindowLines(page), WidthFor(page));
+    }
+
+    /// <summary>本文の一番長い行に合う窓の横幅（ドット）。</summary>
+    public static int WidthFor(string page)
+    {
+        float chars = DialogueBox.MaxLineChars(page);
+        if (chars <= 0f) chars = 1f;
+        if (chars > MaxDialogueChars) chars = MaxDialogueChars;   // 折り返しの幅で頭打ち
+        return Even(chars);
+    }
+
+    /// <summary>その文字数ぶんの横幅（ドット）。**偶数に丸める**と左右の余白が揃う。</summary>
+    static int Even(float chars)
+    {
+        int w = Mathf.CeilToInt(chars * DialogueTextDots) + 2 * DialogueTextLeft;
+        return (w & 1) == 0 ? w : w + 1;
+    }
+
+    static RectInt DialogueFor(int lines, int width)
+    {
         int h = DialogueHeight(lines);
         int top = Mathf.Clamp(DialogueCenterY - h / 2, 0, DialogueWindow.ScreenHeight - h);
-        return new RectInt(DialogueLeft, top, DialogueWidth, h);
+        int left = (DialogueWindow.ScreenWidth - width) / 2;      // 画面の真ん中に置く
+        return new RectInt(left, top, width, h);
     }
 
     // ------------------------------------------------------------------ 戦闘の帯

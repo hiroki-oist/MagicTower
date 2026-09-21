@@ -193,10 +193,20 @@ public class TowerGame
             }
             else if (e.Effect == Cutscenes.PrisonOpensStep)
             {
-                // 原典 0x070c8〜0x070d7。盗賊が去って牢の壁が開く
+                // 原典 0x070c8〜0x07153。盗賊が去って牢の壁が開き、
+                // **盗賊は左・左・下と歩いて (-5,-2) に立ったまま残る**。
                 var f2 = FloorAt(Prologue.PrisonFloor);
                 if (f2 != null)
+                {
                     foreach (var c in Prologue.PrisonOpens) f2.Clear(c);
+                    f2.Put(Prologue.ThiefGoal, Prologue.ThiefPrefab);
+                    walks.Add(new NpcWalk
+                    {
+                        Prefab = Prologue.ThiefPrefab,
+                        From = Prologue.ThiefStart,
+                        Path = new List<Vector2Int>(Prologue.ThiefWalk)
+                    });
+                }
             }
         }
     }
@@ -382,6 +392,32 @@ public class TowerGame
     {
         var copy = new List<Vector2Int>(bossAppears);
         bossAppears.Clear();
+        return copy;
+    }
+
+    /// <summary>人が1マスずつ歩いていく動き。</summary>
+    public class NpcWalk
+    {
+        /// <summary>歩く人のプレハブ名。</summary>
+        public string Prefab;
+        /// <summary>歩き始めのマス。</summary>
+        public Vector2Int From;
+        /// <summary>通っていくマス（最後が立ち止まる所）。</summary>
+        public List<Vector2Int> Path;
+    }
+
+    /// <summary>
+    /// これから歩かせる人。原典は場面の中で**主人公と同じ1マス滑らせる処理（0xa276）**を
+    /// 向きの表どおりに呼ぶ（序章の盗賊 0x070dc）。
+    /// 音や点滅と同じで、ここは積むだけにして動かすのは見た目の層に任せる。
+    /// </summary>
+    readonly List<NpcWalk> walks = new List<NpcWalk>();
+
+    /// <summary>積んだ歩きを取り出して空にする。</summary>
+    public List<NpcWalk> ConsumeWalks()
+    {
+        var copy = new List<NpcWalk>(walks);
+        walks.Clear();
         return copy;
     }
 
@@ -1006,18 +1042,32 @@ public class TowerGame
     {
         var hit = PositionEvents.Instance.At(Player.Floor, Player.Position,
                                              Player.EventFlags, Floor.IsCleared,
-                                             p => Floor.At(p) == "s");
+                                             p => Floor.At(p) == "s",
+                                             k => Player.Has(k));
         if (!hit.HasValue) return false;
         var ev = hit.Value;
 
-        Player.EventFlags.Add(ev.FlagId);
-        PlaySound(SoundCues.Position);
+        if (ev.FlagId >= 0) Player.EventFlags.Add(ev.FlagId);
+        // 持ち物が要るできごとは、その持ち物を使い切る（原典 13階 0x2022 が所持を 0 に戻す）。
+        // 二度目が起きないのは**持ち物がもう無いから**で、一度きりの印は持っていない。
+        if (ev.NeedsItem != SpecialItems.Kind.None)
+        {
+            Player.Consume(ev.NeedsItem);
+            Note(GameText.Instance.Message(SpecialItemEffects.UseMessageKey(ev.NeedsItem)));
+        }
+        // ⚠ ここで音を鳴らしてはいけない。原典 0x1588 の中の音6は3か所とも
+        //   **その場の仕掛け**（13階の雪の結晶・47階の左の列）のもので、
+        //   立ち入って場面が始まるだけでは鳴らない。3階のゼノとの初対面
+        //   （0x68b:0x230 ＝ 0x6ae0）も、鳴るのは閃光の音7だけ。
+        //   「ゼノの出るマスに入ると扉が開く音がする」という報告がこれだった。
         foreach (var c in ev.Changes)
         {
             var st = FloorAt(c.Floor);
             if (st == null) continue;
             if (c.Kind == "床") st.Clear(c.Pos);
             else st.Put(c.Pos, FloorState.SymbolOfKind(c.Kind));
+            // 持ち物で溶かすものは**1マスずつ**音が鳴る（原典 0x2079 が1周ごとに音6）
+            if (ev.NeedsItem != SpecialItems.Kind.None) PlaySound(SoundCues.SnowMelt);
         }
         if (ev.Record >= 0)
         {

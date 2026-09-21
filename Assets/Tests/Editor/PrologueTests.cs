@@ -128,13 +128,25 @@ public class PrologueTests
         g.Step(Vector2Int.down);
         while (g.IsShowingPage) g.NextPage();
 
-        // (-3,-2) → (-3,-1) → (-4,-1) → (-5,-1) → 左端を下って (-5,-5) の上り階段
-        var route = new[]
-        {
-            new Vector2Int(-3, -1), new Vector2Int(-4, -1), new Vector2Int(-5, -1),
-            new Vector2Int(-5, -2), new Vector2Int(-5, -3), new Vector2Int(-5, -4),
-        };
-        foreach (var c in route)
+        // (-3,-2) → (-3,-1) → (-4,-1) → (-5,-1) → 左端を下って (-5,-5) の上り階段。
+        // ただし (-5,-2) には**歩いていった盗賊が立っている**（原典 0x07153）ので、
+        // まず話しかける。話すとセリフ116 が出てそのマスが床になる
+        // （ThiefEvents.txt の1行目 `2 | フラグ94=0 | 116 | - | 2:(-5,-2)=床`）。
+        foreach (var c in new[]
+                 {
+                     new Vector2Int(-3, -1), new Vector2Int(-4, -1), new Vector2Int(-5, -1),
+                 })
+            Assert.IsTrue(g.Floor.IsCleared(c), $"{c} を通れる");
+        Assert.AreEqual(Prologue.ThiefPrefab, g.Floor.At(Prologue.ThiefGoal), "盗賊が立っている");
+
+        g.Player.Position = new Vector2Int(-5, -1);
+        g.Step(Vector2Int.down);                       // 話しかける
+        while (g.IsShowingPage) g.NextPage();
+
+        foreach (var c in new[]
+                 {
+                     new Vector2Int(-5, -2), new Vector2Int(-5, -3), new Vector2Int(-5, -4),
+                 })
             Assert.IsTrue(g.Floor.IsCleared(c), $"{c} を通れる");
         Assert.AreEqual(">", g.Floor.At(new Vector2Int(-5, -5)), "その先が上り階段");
     }

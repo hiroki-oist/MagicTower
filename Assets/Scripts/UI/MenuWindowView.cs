@@ -68,6 +68,12 @@ public class MenuWindowView : MonoBehaviour
             panel.gameObject.SetActive(show);
         if (!show) { shown = null; return; }
 
+        // ⚠ 印を置き直すのは**文字が変わったときだけ**にしていたので、
+        //   上下キーで選ぶ場所を動かしても印が動かなかった（印の絵を使うときは
+        //   文字の側が変わらないため）。印と点滅は毎コマ見る。
+        Layout();
+        PlaceCursor(g);
+
         var text = cursor != null ? g.MenuStageText : Compose(g);
         if (text == shown) return;
         shown = text;
@@ -77,8 +83,6 @@ public class MenuWindowView : MonoBehaviour
             body.color = DialogueWindowView.Text;
         }
         if (background != null) background.color = DialogueWindowView.Fill;
-        Layout();
-        PlaceCursor(g);
     }
 
     /// <summary>選んでいる行の先頭2文字を印に置き換える。</summary>
