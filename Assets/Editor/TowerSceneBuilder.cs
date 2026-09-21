@@ -86,6 +86,9 @@ public static class TowerSceneBuilder
         cso.FindProperty("sound").objectReferenceValue = sound;
         var sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Effects/Player_0.png");
         if (sprite != null) cso.FindProperty("playerSprite").objectReferenceValue = sprite;
+        // 2コマ目（PLAYER2.P58）。左右に動くときだけ入れ替える（原典 0xa276）
+        var sprite2 = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Effects/Player_1.png");
+        if (sprite2 != null) cso.FindProperty("playerSprite2").objectReferenceValue = sprite2;
         cso.ApplyModifiedPropertiesWithoutUndo();
 
         BuildHud(tower, controller);

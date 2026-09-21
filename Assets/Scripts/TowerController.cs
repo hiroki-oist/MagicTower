@@ -11,6 +11,12 @@ public class TowerController : MonoBehaviour
 {
     [SerializeField] FloorLoader loader;
     [SerializeField] Sprite playerSprite;
+    /// <summary>
+    /// 主人公の2コマ目（PLAYER2.P58）。原典の移動の演出（0xa276）は
+    /// **左右に動くときだけ**途中で絵を入れ替える（向き1/2 は元の行 0x100 → 0x120、
+    /// 上下の向き3/4 は 0x140 のまま）。
+    /// </summary>
+    [SerializeField] Sprite playerSprite2;
     [SerializeField] MonsterAnimator monsters;
     [SerializeField] SoundPlayer sound;
     [SerializeField] BattleView battle;
@@ -268,13 +274,19 @@ public class TowerController : MonoBehaviour
         int n = fast ? MonsterAnimation.FastTicksPerStep : MonsterAnimation.TicksPerStep;
         var a = new Vector3(from.x, from.y, -1f);
         var b = new Vector3(to.x, to.y, -1f);
+        // 左右に動くときは途中で2コマ目に入れ替える（原典 0xa276 の 0x100 → 0x120）。
+        bool sideways = from.y == to.y && from.x != to.x;
+        var sr = playerView != null ? playerView.GetComponent<SpriteRenderer>() : null;
         PlacePlayerView();
         for (int i = 1; i <= n; i++)
         {
             playerView.position = Vector3.Lerp(a, b, i / (float)n);
+            if (sr != null && sideways && playerSprite2 != null)
+                sr.sprite = i * 2 <= n ? playerSprite : playerSprite2;
             if (monsters != null) monsters.TickOnce();
             yield return new WaitForSeconds(MonsterAnimation.SlideFrameSeconds);
         }
+        if (sr != null && playerSprite != null) sr.sprite = playerSprite;   // 立ち姿へ戻す
         PlacePlayerView();
         sliding = false;
         slidingRoutine = null;

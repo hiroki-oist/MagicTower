@@ -47,3 +47,43 @@ public class SoundCoverageTests
         Assert.AreEqual(6, SoundCues.Instance.Number(SoundCues.SceneBeat2), "場面のできごと（0x3d1c）");
     }
 }
+
+/// <summary>
+/// 書き出してあるのに誰も使っていない絵が無いか。
+/// 主人公の2コマ目（PLAYER2.P58）が実際そうなっていて、**歩いても絵が変わらなかった**。
+/// </summary>
+public class SpriteCoverageTests
+{
+    [Test]
+    public void 主人公は二コマ持っていて左右に歩くと入れ替わる()
+    {
+        Assert.IsTrue(System.IO.File.Exists("Assets/Sprites/Effects/Player_0.png"));
+        Assert.IsTrue(System.IO.File.Exists("Assets/Sprites/Effects/Player_1.png"));
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
+        StringAssert.Contains("playerSprite2", src);
+        // 原典 0xa276 は向き1/2（左右）だけ 0x100 → 0x120 と行を変える
+        StringAssert.Contains("sideways", src);
+        StringAssert.Contains("from.y == to.y && from.x != to.x", src);
+    }
+
+    [Test]
+    public void シーンに二コマとも繋がっている()
+    {
+        var path = "Assets/Scenes/Tower.unity";
+        if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            var c = UnityEngine.Object.FindObjectOfType<TowerController>();
+            Assert.IsNotNull(c);
+            var so = new UnityEditor.SerializedObject(c);
+            foreach (var n in new[] { "playerSprite", "playerSprite2" })
+                Assert.IsNotNull(so.FindProperty(n).objectReferenceValue, $"{n} が未設定");
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+}
