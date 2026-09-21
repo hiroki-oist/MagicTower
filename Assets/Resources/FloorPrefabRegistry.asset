@@ -43,6 +43,8 @@ MonoBehaviour:
     prefab: {fileID: 911995691013459804, guid: ce2e32d1e86bcfa49532fe71942bf7d6, type: 3}
   - key: Boss_GiantOctopus
     prefab: {fileID: 515342546905771489, guid: 1544f066734f22f1d0bbdf786f5d58c3, type: 3}
+  - key: Coin_Lucky
+    prefab: {fileID: 171350041369563071, guid: eef2404271104373275a143393079f23, type: 3}
   - key: Cross
     prefab: {fileID: 175948141230503966, guid: f2fbc100334b5cf2a803d90704b7f0da, type: 3}
   - key: Enemy_Apprentice
