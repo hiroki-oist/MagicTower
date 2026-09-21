@@ -110,6 +110,32 @@ public class FloorState
         return cell;      // 物体はプレハブ名がそのまま鍵
     }
 
+    /// <summary>
+    /// 元の階データと違うマスだけを並べる。セーブに使う。
+    ///
+    /// 原典のセーブ（0x9b4e）は **52ブロックぶんの地図をまるごと**書き出している
+    /// （`DS:0x1ae8` から 0x1930 ワード）。つまり倒した敵・開けた扉・拾った物は
+    /// セーブに含まれる。こちらは元のデータとの差だけを持たせて同じ結果にする。
+    /// </summary>
+    public List<KeyValuePair<Vector2Int, string>> Diff(FloorData data)
+    {
+        var outp = new List<KeyValuePair<Vector2Int, string>>();
+        if (data == null) return outp;
+        var basis = new FloorState(data);
+        foreach (var kv in cells)
+            if (basis.At(kv.Key) != kv.Value)
+                outp.Add(new KeyValuePair<Vector2Int, string>(kv.Key, kv.Value));
+        outp.Sort((a, b) => a.Key.y != b.Key.y ? b.Key.y - a.Key.y : a.Key.x - b.Key.x);
+        return outp;
+    }
+
+    /// <summary>差を当てる（ロードで使う）。</summary>
+    public void Apply(IEnumerable<KeyValuePair<Vector2Int, string>> diff)
+    {
+        if (diff == null) return;
+        foreach (var kv in diff) Put(kv.Key, kv.Value);
+    }
+
     public string At(Vector2Int p)
     {
         string v;

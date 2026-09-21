@@ -609,16 +609,25 @@ public class TowerGame
         int slot = SlotIndex + 1;               // 原典もスロットは1から
         if (Stage == MenuStage.SaveSlots)
         {
-            TowerSave.Save(slot, Player);
+            // 原典（0x9b4e）は地図もまるごと書き出すので、こちらも組み立て済みの階を渡す。
+            TowerSave.Save(slot, Player, floors);
             Stage = MenuStage.Root;
             return true;
         }
         if (Stage == MenuStage.LoadSlots)
         {
-            var loaded = TowerSave.Load(slot);
+            var snap = TowerSave.Read(slot);
             Stage = MenuStage.Root;
-            if (loaded == null) return false;
-            Player = loaded;
+            if (snap == null || snap.Player == null) return false;
+            Player = snap.Player;
+            // 倒した敵・開けた扉・拾った物を戻す。**組み立て直してから**差を当てる
+            // （そうしないと今の盤面が残ってしまう）。
+            floors.Clear();
+            foreach (var kv in snap.Floors)
+            {
+                var st = FloorAt(kv.Key);
+                if (st != null) st.Apply(kv.Value);
+            }
             EnterFloor(Player.Floor, Player.Position);
             CloseMenu();
             return true;

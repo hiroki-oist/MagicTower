@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
@@ -14,6 +15,14 @@ using UnityEngine;
 ///
 /// リメイクでは装備の段階・特殊アイテム・寄進回数も要るので、
 /// 原典の並びのうしろに足す形にした。
+///
+/// **地図も一緒に保存する**。原典のセーブ（0x9b4e）は
+/// `DS:0x1ae8` から 0x1930 ワード＝**52ブロックぶんの地図をまるごと**書き出していて、
+/// 倒した敵・開けた扉・拾った物がセーブに含まれる。こちらは元の階データとの
+/// **差だけ**を持たせて同じ結果にする（4つ目の区画）。
+///
+/// ファイルの形: `値,…|行った階,…|旗,…|階:x,y=記号;…/階:…`
+/// 4つ目が無い古いファイルも読めるようにしてある。
 /// </summary>
 public static class TowerSave
 {
@@ -38,7 +47,19 @@ public static class TowerSave
         return slot >= 1 && slot <= SlotCount && File.Exists(PathOf(slot));
     }
 
-    public static void Save(int slot, PlayerState p)
+    /// <summary>セーブから読み出したもの。地図の差も持つ。</summary>
+    public class Snapshot
+    {
+        public PlayerState Player;
+        /// <summary>階 → 元のデータと違うマス。</summary>
+        public readonly System.Collections.Generic.Dictionary<
+            int, System.Collections.Generic.List<KeyValuePair<Vector2Int, string>>> Floors =
+            new System.Collections.Generic.Dictionary<
+                int, System.Collections.Generic.List<KeyValuePair<Vector2Int, string>>>();
+    }
+
+    public static void Save(int slot, PlayerState p,
+        System.Collections.Generic.IDictionary<int, FloorState> floors = null)
     {
         if (p == null || slot < 1 || slot > SlotCount) return;
         System.IO.Directory.CreateDirectory(Dir);
@@ -56,13 +77,38 @@ public static class TowerSave
         // 一度きりのできごと（仙人と話した等）も残す
         var flags = new System.Collections.Generic.List<int>(p.EventFlags);
         flags.Sort();
+        // 地図の差（原典は地図をまるごと書き出している）
+        var maps = new System.Collections.Generic.List<string>();
+        if (floors != null)
+        {
+            var nums = new System.Collections.Generic.List<int>(floors.Keys);
+            nums.Sort();
+            foreach (var n in nums)
+            {
+                var data = FloorData.Load(n);
+                if (data == null || floors[n] == null) continue;
+                var diff = floors[n].Diff(data);
+                if (diff.Count == 0) continue;
+                var one = new System.Collections.Generic.List<string>();
+                foreach (var kv in diff) one.Add($"{kv.Key.x},{kv.Key.y}={kv.Value}");
+                maps.Add(n + ":" + string.Join(";", one));
+            }
+        }
         File.WriteAllText(PathOf(slot),
             string.Join(",", fields) + "|" + string.Join(",", visited)
-                                     + "|" + string.Join(",", flags));
+                                     + "|" + string.Join(",", flags)
+                                     + "|" + string.Join("/", maps));
     }
 
-    /// <summary>読み込む。スロットが空なら null。</summary>
+    /// <summary>読み込む。スロットが空なら null（地図の差は捨てる）。</summary>
     public static PlayerState Load(int slot)
+    {
+        var s = Read(slot);
+        return s != null ? s.Player : null;
+    }
+
+    /// <summary>地図の差も含めて読み込む。スロットが空なら null。</summary>
+    public static Snapshot Read(int slot)
     {
         if (!Exists(slot)) return null;
         var text = File.ReadAllText(PathOf(slot));
@@ -96,7 +142,29 @@ public static class TowerSave
                 int f;
                 if (int.TryParse(v, out f)) state.EventFlags.Add(f);
             }
-        return state;
+
+        var snap = new Snapshot { Player = state };
+        if (halves.Length > 3 && halves[3].Length > 0)
+            foreach (var one in halves[3].Split('/'))
+            {
+                int colon = one.IndexOf(':');
+                int floor;
+                if (colon <= 0 || !int.TryParse(one.Substring(0, colon), out floor)) continue;
+                var list = new System.Collections.Generic.List<KeyValuePair<Vector2Int, string>>();
+                foreach (var c in one.Substring(colon + 1).Split(';'))
+                {
+                    int eq = c.IndexOf('=');
+                    if (eq <= 0) continue;
+                    var xy = c.Substring(0, eq).Split(',');
+                    int x, y;
+                    if (xy.Length != 2 || !int.TryParse(xy[0], out x)
+                        || !int.TryParse(xy[1], out y)) continue;
+                    list.Add(new KeyValuePair<Vector2Int, string>(
+                        new Vector2Int(x, y), c.Substring(eq + 1)));
+                }
+                if (list.Count > 0) snap.Floors[floor] = list;
+            }
+        return snap;
     }
 
     static int Field(string[] parts, int i)

@@ -1510,6 +1510,18 @@ chk("直線で近似" in _en,"濃さの変わり方は近似だと明記して�
 _fs=open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read()
 chk("Ending.TowerSteps" in _fs and "scrollTower" in _fs,"見た目の側が塔の絵を流す")
 
+# セーブは地図も一緒に保存する（原典 0x9b4e は 52ブロックぶんの地図を書き出す）
+_sv=open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read()
+chk("public static Snapshot Read(int slot)" in _sv,"地図の差も読み出す口がある")
+chk("floors[n].Diff(data)" in _sv,"元の階データとの差だけを書き出す")
+chk("0x9b4e" in _sv,"原典のセーブ処理の出どころを書いてある")
+_fst=open("Assets/Scripts/Floor/FloorState.cs",encoding="utf-8").read()
+chk("public List<KeyValuePair<Vector2Int, string>> Diff(" in _fst
+    and "public void Apply(" in _fst,"盤面が差の出し入れを持つ")
+chk("TowerSave.Save(slot, Player, floors)" in _tg3,"セーブに地図を渡している")
+chk("var snap = TowerSave.Read(slot)" in _tg3 and "floors.Clear()" in _tg3,
+    "ロードは階を組み直してから差を当てる")
+
 # 場面の「地図 (x,y)=種別」で盤面に書き込まれる物体は、**登録簿に載っていないと
 # 姿が出ない**。ゼノ(ID91)とバンパイア(ID95)がこれで漏れていて、
 # 3階のゼノとの初対面と20階のボス登場で何も現れなかった。
@@ -1933,7 +1945,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=658
+MIN_CHECKS=664
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
