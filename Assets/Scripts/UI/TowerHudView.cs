@@ -6,7 +6,7 @@ using UnityEngine;
 ///
 /// 原典の画面は左右に細い帯があり、中央が盤面という構成:
 ///   左  「塔　Ｎ階」／生命力／攻撃力／防御力／所持金
-///   右  WEAPON 欄／SHIELD 欄／鍵の本数／モンスター情報とメッセージを兼ねる枠
+///   右  WEAPON 欄／SHIELD 欄／鍵の絵／モンスター情報とメッセージを兼ねる枠
 /// </summary>
 public class TowerHudView : MonoBehaviour
 {
@@ -22,8 +22,28 @@ public class TowerHudView : MonoBehaviour
     [SerializeField] TextMeshProUGUI gold;
     [SerializeField] TextMeshProUGUI weapon;
     [SerializeField] TextMeshProUGUI shield;
-    [SerializeField] TextMeshProUGUI keys;
     [SerializeField] TextMeshProUGUI messageBox;
+
+    /// <summary>
+    /// 装備の絵。原典（0x9b80 付近）は欄を塗ってから、
+    /// **剣は物体ID 50+段位、盾は 55+段位**の絵をそのまま貼る
+    /// （属性表 es:[bx+0x3b2] / es:[bx+0x3d0] ＝ 表の +4 の絵の位置）。
+    /// 段位が0のときは塗ったまま何も貼らない。
+    /// </summary>
+    [SerializeField] UnityEngine.UI.Image weaponIcon;
+    [SerializeField] UnityEngine.UI.Image shieldIcon;
+    [SerializeField] Sprite[] swordIcons = new Sprite[5];
+    [SerializeField] Sprite[] shieldIcons = new Sprite[5];
+
+    /// <summary>鍵の絵を並べる入れ物。原典は数字ではなく絵を本数ぶん出す（0x9ff8）。</summary>
+    [SerializeField] RectTransform keyIcons;
+    [SerializeField] Sprite keyRed;
+    [SerializeField] Sprite keyPurple;
+    [SerializeField] Sprite keyYellow;
+
+    /// <summary>いま並べている絵。使い回す。</summary>
+    readonly System.Collections.Generic.List<UnityEngine.UI.Image> keyImages =
+        new System.Collections.Generic.List<UnityEngine.UI.Image>();
 
     /// <summary>原典の右下の欄は履歴が積み上がる。表示する行数。</summary>
     const int LogLines = 8;
@@ -38,15 +58,65 @@ public class TowerHudView : MonoBehaviour
         Set(attack,  TowerHud.Attack(p));
         Set(defense, TowerHud.Defense(p));
         Set(gold,    TowerHud.Gold(p));
-        Set(weapon,  "WEAPON\n" + TowerHud.WeaponName(p));
-        Set(shield,  "SHIELD\n" + TowerHud.ShieldName(p));
-        Set(keys, $"鍵 {GameText.Num(p.YellowKeys)}\n"
-                + $"紫 {GameText.Num(p.PurpleKeys)}\n"
-                + $"赤 {GameText.Num(p.RedKeys)}");
+        // WEAPON / SHIELD の見出しは枠の絵（LCG.P58 の1枚目）に入っているので、
+        // ここで書くのは名前だけ。
+        Set(weapon,  TowerHud.WeaponName(p));
+        Set(shield,  TowerHud.ShieldName(p));
         Set(messageBox, Tail(controller.Game.Log, LogLines));
+        ShowIcon(weaponIcon, swordIcons,  p.SwordRank);
+        ShowIcon(shieldIcon, shieldIcons, p.ShieldRank);
+        ShowKeys(p);
     }
 
     static void Set(TextMeshProUGUI t, string s) { if (t != null) t.text = s; }
+
+    /// <summary>装備の絵。段位が0なら何も出さない。</summary>
+    static void ShowIcon(UnityEngine.UI.Image img, Sprite[] icons, int rank)
+    {
+        if (img == null) return;
+        var ok = rank >= 1 && rank <= icons.Length && icons[rank - 1] != null;
+        img.enabled = ok;
+        if (ok) img.sprite = icons[rank - 1];
+    }
+
+    /// <summary>鍵の絵を本数ぶん並べる。並べ方は <see cref="ScreenLayout.KeyIcons"/>。</summary>
+    void ShowKeys(PlayerState p)
+    {
+        if (keyIcons == null) return;
+        var icons = ScreenLayout.KeyIcons(p.RedKeys, p.PurpleKeys, p.YellowKeys);
+
+        while (keyImages.Count < icons.Count)
+        {
+            var go = new GameObject("Key" + keyImages.Count,
+                                    typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            go.transform.SetParent(keyIcons, false);
+            var r = go.GetComponent<RectTransform>();
+            r.anchorMin = r.anchorMax = r.pivot = new Vector2(0f, 1f);
+            keyImages.Add(go.GetComponent<UnityEngine.UI.Image>());
+        }
+
+        for (int i = 0; i < keyImages.Count; i++)
+        {
+            var img = keyImages[i];
+            if (i >= icons.Count) { img.gameObject.SetActive(false); continue; }
+            img.gameObject.SetActive(true);
+            img.sprite = SpriteOf(icons[i].Color);
+            var r = img.rectTransform;
+            // 入れ物は画面の左上に置いてあるので、原典の座標をそのまま使える。
+            r.anchoredPosition = ScreenLayout.ToCanvas(icons[i].Rect);
+            r.sizeDelta = ScreenLayout.SizeOnCanvas(icons[i].Rect);
+        }
+    }
+
+    Sprite SpriteOf(ScreenLayout.KeyColor c)
+    {
+        switch (c)
+        {
+            case ScreenLayout.KeyColor.Red:    return keyRed;
+            case ScreenLayout.KeyColor.Purple: return keyPurple;
+            default:                           return keyYellow;
+        }
+    }
 
     static string Tail(System.Collections.Generic.IReadOnlyList<string> log, int n)
     {

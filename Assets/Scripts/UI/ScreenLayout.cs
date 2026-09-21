@@ -119,13 +119,66 @@ public static class ScreenLayout
     public static readonly RectInt BattleNumberA = new RectInt(552, 296, 64, 16);
     public static readonly RectInt BattleNumberB = new RectInt(568, 296, 48, 16);
 
-    /// <summary>
-    /// 鍵は本数ぶんの絵を横に並べて出す（原典 0x9ff8）。赤い鍵の1つ目がここ。
-    /// 変位 0x2d00 + 0x42 = 行144・バイト列66 → (528,144)。
-    /// 並べる数は6つまで（`cmp ax,0x18` を 4 きざみで見ている）。
-    /// </summary>
+    // ---- 鍵の絵（原典 0x9ff8）----
+    //
+    // 鍵は数字ではなく **絵を本数ぶん並べて** 出す。0x9ff8 を読むとこうなっている:
+    //   si = 0x42（バイト列66 → x=528）、[bp-6] = 0x90（144ドット）から始める
+    //   1本ごとに si += 2（＝16ドット右）
+    //   di が 6 になったら di=0、si を 0x42 に戻し、[bp-1] += 5（＝0x500 = 16行ぶん下）
+    //   [bp-4]（それまでの行で描いた本数）+ di が 0x18 になったら打ち切る
+    //   色の順は 赤(es:[0xa0]) → 紫(es:[0x9a]) → 黄(es:[0x1c]) で、
+    //   **色が変わっても位置は続き**（di と行を持ち越す）、通しで 24 本まで。
+    //
+    // 絵は PICTURE.P58 の1〜3枚目。原典は絵の置き場の頭から**引いた**番地で指していて
+    // （黄 -0x40c / 赤 -0x3cb / 紫 -0x381）、その差 0x41=65・0x4a=74 が
+    // PICTURE.P58 の各絵の大きさとぴったり合う。属性表からは一度も指されない。
+
+    /// <summary>鍵の絵の1本目の位置。</summary>
     public static readonly Vector2Int KeyIconOrigin = new Vector2Int(528, 144);
-    public const int KeyIconMax = 6;
+
+    /// <summary>鍵の絵の大きさ（ドット）。</summary>
+    public const int KeyIconSize = 16;
+
+    /// <summary>隣の鍵との間隔（横・縦とも16ドット）。</summary>
+    public const int KeyIconStep = 16;
+
+    /// <summary>1行に並べる本数。</summary>
+    public const int KeyIconsPerRow = 6;
+
+    /// <summary>出せる本数の上限（3色ぜんぶで）。</summary>
+    public const int KeyIconMax = 24;
+
+    public enum KeyColor { Red, Purple, Yellow }
+
+    public struct KeyIcon
+    {
+        public KeyColor Color;
+        public RectInt Rect;
+    }
+
+    /// <summary>
+    /// 鍵の絵の並びを出す。赤→紫→黄の順に詰めて並べ、6本で折り返し、24本で打ち切る。
+    /// </summary>
+    public static System.Collections.Generic.List<KeyIcon> KeyIcons(int red, int purple, int yellow)
+    {
+        var list = new System.Collections.Generic.List<KeyIcon>();
+        var counts = new int[] { red, purple, yellow };
+        for (int c = 0; c < counts.Length; c++)
+        {
+            for (int i = 0; i < counts[c]; i++)
+            {
+                if (list.Count >= KeyIconMax) return list;
+                int col = list.Count % KeyIconsPerRow, row = list.Count / KeyIconsPerRow;
+                list.Add(new KeyIcon {
+                    Color = (KeyColor)c,
+                    Rect = new RectInt(KeyIconOrigin.x + col * KeyIconStep,
+                                       KeyIconOrigin.y + row * KeyIconStep,
+                                       KeyIconSize, KeyIconSize)
+                });
+            }
+        }
+        return list;
+    }
 
     /// <summary>原典の矩形を Canvas の左上基準の位置に直す。</summary>
     public static Vector2 ToCanvas(RectInt r)

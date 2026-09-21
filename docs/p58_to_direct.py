@@ -34,6 +34,14 @@ HIT_OFFSET = 0x87a          # 原典が足している変位
 PLAYERS = [("PLAYER1", 32000, f"{ROOT}/Assets/Sprites/Effects/Player_0.png"),
            ("PLAYER2", 32400, f"{ROOT}/Assets/Sprites/Effects/Player_1.png")]
 
+# 鍵の絵（16x16）。画面の右の欄に**本数ぶん並べて**出す（原典 0x9ff8）。
+# 原典は buffer の頭から **引き算**した番地で指していて（黄 -0x40c / 赤 -0x3cb / 紫 -0x381）、
+# 差が PICTURE.P58 の各絵の大きさ（65 / 74 バイト）とぴったり合う。
+# つまり PICTURE は buffer の**手前**に読まれている。属性表からは一度も指されない。
+KEYS = [(0, f"{ROOT}/Assets/Sprites/Hud/Key_Yellow.png"),
+        (1, f"{ROOT}/Assets/Sprites/Hud/Key_Red.png"),
+        (2, f"{ROOT}/Assets/Sprites/Hud/Key_Purple.png")]
+
 def images(data):
     """(変位, 絵) の並び。"""
     out, i = [], 0
@@ -76,6 +84,12 @@ def main():
     png(OUT, idx, {idx[0][0]})
     print(f"当たりの絵 GROUND #{[o for o, _ in imgs].index(HIT_OFFSET)}"
           f"（変位 {HIT_OFFSET} = 0x{HIT_OFFSET:x}）→ {OUT}")
+
+    pic = images(open(f"{ROOT}/docs/original/disk/PICTURE.P58", "rb").read())
+    for k, out in KEYS:
+        idx = to_indices(*pic[k][1])
+        png(out, idx, {idx[0][0]})      # まわりの欄の灰色は透過にする
+        print(f"鍵の絵 PICTURE #{k} → {out}")
 
     for name, addr, out in PLAYERS:
         raw = open(f"{ROOT}/docs/original/disk/{name}.P58", "rb").read()

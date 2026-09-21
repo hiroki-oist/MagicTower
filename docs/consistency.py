@@ -543,7 +543,44 @@ chk(_dis.count("mov     ax, 0x7d00")==10 and _dis.count("mov     ax, 0x7e90")==1
     f"{_dis.count('mov     ax, 0x7d00')}/{_dis.count('mov     ax, 0x7e90')}")
 chk([_j for _j,_ in _unused["MONSTER"]]==[30,31,84,85],
     "使われないモンスターの絵は2体ぶん（30/31と84/85）",str(_unused["MONSTER"]))
-chk(len(_unused["PICTURE"])==5,"PICTURE の5枚はどこからも使われない")
+# PICTURE は属性表からは一度も指されないが、**鍵の絵として 0x9ff8 が番地で直に貼る**。
+# 原典は絵の置き場の頭から**引いた**番地で指していて（黄 -0x40c / 赤 -0x3cb / 紫 -0x381）、
+# 差が PICTURE.P58 の各絵の大きさ（65 / 74）と一致する。以前ここを
+# 「5枚とも未使用」と書いていたのは、置き場 64500 からの足し算しか探していなかったため。
+chk(len(_unused["PICTURE"])==5,"PICTURE は属性表からは指されない（番地で直に貼る）")
+_pd=open("docs/original/disk/PICTURE.P58","rb").read()
+_po=[]; _k=0
+while _k+6<=len(_pd) and _pd[_k]==_pd[_k+1]:
+    _po.append(_k); _pl,_c2,_r2,_k=_p58x.decode(_pd,_k)
+chk(_po[:3]==[0,65,139],"PICTURE の1〜3枚目の位置",str(_po))
+for _nm,_sub,_idx in (("黄",0x40c,0),("赤",0x3cb,1),("紫",0x381,2)):
+    chk(_dis.count(f"sub     ax, 0x{_sub:x}")==1,f"鍵の絵（{_nm}）を指す番地が1か所")
+    chk(0x40c-_sub==_po[_idx],f"鍵の絵（{_nm}）は PICTURE の{_idx+1}枚目",
+        f"{0x40c-_sub} vs {_po[_idx]}")
+# 装備の絵（0x9b80 付近）。欄を塗ってから 剣=物体ID 50+段位 / 盾=55+段位 の絵を貼る。
+chk(0x3b2==0x282+6*50+4 and 0x3d0==0x282+6*55+4,
+    "装備の絵は属性表の物体ID 50+段位 / 55+段位 の欄から引く")
+_oid={}
+for _l in open("Assets/Resources/ObjectIds.txt",encoding="utf-8"):
+    if _l.startswith("#") or "|" not in _l: continue
+    _a,_b=_l.split("|"); _oid[_a.strip()]=int(_b.strip())
+chk(all(_oid.get(f"Sword_{_r}")==50+_r and _oid.get(f"Shield_{_r}")==55+_r
+        for _r in range(1,6)),"剣と盾の物体IDが 51〜55 / 56〜60")
+chk(_dis.count("mov     cx, 0xf4a")==1 and _dis.count("mov     cx, 0x1e4a")==1,
+    "装備の絵の欄を塗るのは剣・盾それぞれ1か所")
+_bld=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
+chk("weaponIcon" in _bld and "shieldIcon" in _bld and "TileById" in _bld,
+    "装備の絵をシーンに繋いである")
+chk(all(os.path.exists(f"Assets/Sprites/Hud/Key_{_c}.png")
+        for _c in ("Red","Purple","Yellow")),"鍵の絵3色が Assets にある")
+_slx=open("Assets/Scripts/UI/ScreenLayout.cs",encoding="utf-8").read()
+chk("KeyIconsPerRow = 6" in _slx and "KeyIconMax = 24" in _slx,
+    "鍵は1行6本・通しで24本まで（0x9ff8 の cmp di,6 / cmp ax,0x18）")
+_hvx=open("Assets/Scripts/UI/TowerHudView.cs",encoding="utf-8").read()
+chk('"WEAPON' not in _hvx and '"SHIELD' not in _hvx,
+    "WEAPON/SHIELD の見出しは枠の絵にあるので文字では書かない")
+chk("keys" not in _hvx.split("void LateUpdate")[1].split("static void Set")[0],
+    "鍵は数字ではなく絵で出す")
 chk(os.path.exists("Assets/Sprites/Effects/Player_0.png"),"主人公の絵が Assets にある")
 chk(_dis.count("add     ax, 0x87a")==7,"原典は7か所で同じ当たりの絵を貼る",
     str(_dis.count("add     ax, 0x87a")))
@@ -1299,7 +1336,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=506
+MIN_CHECKS=521
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

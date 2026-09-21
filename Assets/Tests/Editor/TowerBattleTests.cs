@@ -129,6 +129,7 @@ public class TowerBattleTests
         Assert.AreEqual(new RectInt(568, 296, 48, 16), BattlePresentation.DamageBox);
         Assert.AreEqual(new Vector2Int(528, 144), ScreenLayout.KeyIconOrigin,
                         "鍵は絵を並べて出す");
-        Assert.AreEqual(6, ScreenLayout.KeyIconMax);
+        Assert.AreEqual(6, ScreenLayout.KeyIconsPerRow, "1行に6本");
+        Assert.AreEqual(24, ScreenLayout.KeyIconMax, "通しで24本まで");
     }
 }

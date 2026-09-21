@@ -42,7 +42,8 @@ public class TowerSceneTests
         var so = new UnityEditor.SerializedObject(view);
         foreach (var name in new[] { "controller", "floorLabel", "hp", "attack",
                                      "defense", "gold", "weapon", "shield",
-                                     "keys", "messageBox" })
+                                     "messageBox", "keyIcons", "weaponIcon", "shieldIcon",
+                                     "keyRed", "keyPurple", "keyYellow" })
             Assert.IsNotNull(so.FindProperty(name).objectReferenceValue, $"{name} が未設定");
 
         // 日本語が出せるフォントが割り当たっているか

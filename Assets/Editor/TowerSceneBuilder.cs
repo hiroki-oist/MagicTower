@@ -135,7 +135,7 @@ public static class TowerSceneBuilder
         // 欄の位置は原典（docs/original/screen_layout.txt）そのまま。
         // 数字だけを出す欄なので、見出しの文字は原典の枠の絵側にある（まだ同定できていない）。
         vso.FindProperty("floorLabel").objectReferenceValue =
-            Box(screen, font, "FloorLabel", new RectInt(0, 48, 144, 16), 26f, TextAlignmentOptions.Left);
+            Box(screen, font, "FloorLabel", ScreenLayout.FloorBox, 24f, TextAlignmentOptions.Left);
         vso.FindProperty("hp").objectReferenceValue =
             Box(screen, font, "Hp", ScreenLayout.HpBox, 24f, TextAlignmentOptions.Right);
         vso.FindProperty("attack").objectReferenceValue =
@@ -145,12 +145,40 @@ public static class TowerSceneBuilder
         vso.FindProperty("gold").objectReferenceValue =
             Box(screen, font, "Gold", ScreenLayout.GoldBox, 24f, TextAlignmentOptions.Right);
 
+        // WEAPON / SHIELD の見出しは枠の絵に入っているので、欄には名前だけを出す。
         vso.FindProperty("weapon").objectReferenceValue =
-            Box(screen, font, "Weapon", new RectInt(496, 48, 96, 32), 20f, TextAlignmentOptions.TopRight);
+            Box(screen, font, "Weapon", ScreenLayout.WeaponBox, 24f, TextAlignmentOptions.Left);
         vso.FindProperty("shield").objectReferenceValue =
-            Box(screen, font, "Shield", new RectInt(496, 96, 96, 32), 20f, TextAlignmentOptions.TopRight);
-        vso.FindProperty("keys").objectReferenceValue =
-            Box(screen, font, "Keys", new RectInt(528, 168, 96, 48), 20f, TextAlignmentOptions.TopLeft);
+            Box(screen, font, "Shield", ScreenLayout.ShieldBox, 24f, TextAlignmentOptions.Left);
+
+        // 装備の絵。原典は 剣=物体ID 50+段位 / 盾=55+段位 の絵をそのまま貼る（0x9b80 付近）。
+        vso.FindProperty("weaponIcon").objectReferenceValue =
+            Icon(screen, "WeaponIcon", ScreenLayout.WeaponIcon);
+        vso.FindProperty("shieldIcon").objectReferenceValue =
+            Icon(screen, "ShieldIcon", ScreenLayout.ShieldIcon);
+        for (int rank = 1; rank <= 5; rank++)
+        {
+            vso.FindProperty("swordIcons").GetArrayElementAtIndex(rank - 1)
+               .objectReferenceValue = TileById(50 + rank);
+            vso.FindProperty("shieldIcons").GetArrayElementAtIndex(rank - 1)
+               .objectReferenceValue = TileById(55 + rank);
+        }
+
+        // 鍵は絵を本数ぶん並べる（原典 0x9ff8）。入れ物を画面の左上に合わせておけば、
+        // 中の絵は原典の座標をそのまま使える。
+        var keyGo = new GameObject("Keys", typeof(RectTransform));
+        keyGo.transform.SetParent(screen, false);
+        var keyRt = keyGo.GetComponent<RectTransform>();
+        keyRt.anchorMin = keyRt.anchorMax = keyRt.pivot = new Vector2(0f, 1f);
+        keyRt.anchoredPosition = Vector2.zero;
+        keyRt.sizeDelta = Vector2.zero;
+        vso.FindProperty("keyIcons").objectReferenceValue = keyRt;
+        vso.FindProperty("keyRed").objectReferenceValue =
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Key_Red.png");
+        vso.FindProperty("keyPurple").objectReferenceValue =
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Key_Purple.png");
+        vso.FindProperty("keyYellow").objectReferenceValue =
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Key_Yellow.png");
         vso.FindProperty("messageBox").objectReferenceValue =
             Box(screen, font, "Message", ScreenLayout.MessageBox, 16f, TextAlignmentOptions.TopLeft);
         vso.ApplyModifiedPropertiesWithoutUndo();
@@ -342,6 +370,30 @@ public static class TowerSceneBuilder
     }
 
     /// <summary>原典の画面座標（640x400）のまま欄を置く。</summary>    /// <summary>原典の画面座標（640x400）のまま欄を置く。</summary>
+    /// <summary>絵を貼るだけの欄。位置は原典の座標そのまま。</summary>
+    static UnityEngine.UI.Image Icon(RectTransform screen, string name, RectInt r)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(screen, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = ScreenLayout.ToCanvas(r);
+        rt.sizeDelta = ScreenLayout.SizeOnCanvas(r);
+        return go.GetComponent<UnityEngine.UI.Image>();
+    }
+
+    /// <summary>
+    /// 物体IDのタイル絵。書き出した絵は `051_Sword_1.png` のように頭にIDが付いている。
+    /// </summary>
+    static Sprite TileById(int id)
+    {
+        foreach (var path in System.IO.Directory.GetFiles("Assets/Sprites/Tiles", "*.png"))
+            if (System.IO.Path.GetFileName(path).StartsWith($"{id:000}_"))
+                return AssetDatabase.LoadAssetAtPath<Sprite>(path.Replace('\\', '/'));
+        Debug.LogWarning($"TowerSceneBuilder: 物体ID {id} の絵が見つからない");
+        return null;
+    }
+
     static TextMeshProUGUI Box(RectTransform screen, TMP_FontAsset font, string name,
                                RectInt r, float size, TextAlignmentOptions align)
     {
