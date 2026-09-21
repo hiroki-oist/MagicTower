@@ -320,6 +320,18 @@ public static class TowerSceneBuilder
                                 "Assets/Sprites/Screens/Prologue_1.png",
                                 "Assets/Sprites/Screens/Prologue_2.png",
                                 "Assets/Sprites/Screens/Prologue_3.png" });
+        // 終幕の塔の絵（MTOWER2）と、終わりの言葉（MTENDMJ、段落が1つずつ）
+        BuildFullScreen(screen, font, controller, TowerGame.PageKind.EndingTower,
+                        "EndingTowerScreen", "Assets/Sprites/Screens/Ending_Tower2.png",
+                        "", Ending.TitleDot, "", Ending.AnyKeyDot);
+        BuildFullScreen(screen, font, controller, TowerGame.PageKind.EndingText,
+                        "EndingTextScreen", "Assets/Sprites/Screens/Ending_Text_0.png",
+                        "", Ending.TitleDot, "", Ending.AnyKeyDot,
+                        new[] { "Assets/Sprites/Screens/Ending_Text_0.png",
+                                "Assets/Sprites/Screens/Ending_Text_1.png",
+                                "Assets/Sprites/Screens/Ending_Text_2.png",
+                                "Assets/Sprites/Screens/Ending_Text_3.png",
+                                "Assets/Sprites/Screens/Ending_Text_4.png" });
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.FinalScreen,
                         "EndingScreen", "Assets/Sprites/Screens/Ending_Art.png",
                         Ending.TitleLine,  Ending.TitleDot,

@@ -128,7 +128,7 @@ public class ScreenFlowTests
                                      v.name + " に本線が繋がっていない");
                     wired++;
                 }
-            Assert.AreEqual(3, wired, "題名・序章の絵・終幕の3つ");
+            Assert.AreEqual(5, wired, "題名・序章の絵・塔の絵・終わりの言葉・最後の画面の5つ");
         }
         finally
         {

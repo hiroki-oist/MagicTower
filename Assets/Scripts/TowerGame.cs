@@ -63,7 +63,8 @@ public class TowerGame
     }
 
     /// <summary>出すものの種類。</summary>
-    public enum PageKind { Dialogue, Title, Effect, FinalScreen, Prologue }
+    public enum PageKind { Dialogue, Title, Effect, FinalScreen, Prologue,
+                           EndingTower, EndingText }
 
     /// <summary>出すもの1つぶん。</summary>
     public struct Page
@@ -177,6 +178,24 @@ public class TowerGame
                     Text = Ending.TitleLine + "\n" + Ending.AnyKeyLine,
                     Record = -1
                 });
+                continue;
+            }
+            if (step == Cutscenes.EndingTowerStep)
+            {
+                pages.Enqueue(new Page
+                {
+                    Kind = PageKind.EndingTower, Text = "", Record = 1
+                });
+                continue;
+            }
+            if (step == Cutscenes.EndingTextStep)
+            {
+                // 終わりの言葉は段落が1つずつ現れる
+                for (int shown = 1; shown <= Cutscenes.EndingTextParagraphs; shown++)
+                    pages.Enqueue(new Page
+                    {
+                        Kind = PageKind.EndingText, Text = "", Record = shown
+                    });
                 continue;
             }
             if (step == Cutscenes.PrologueStep)

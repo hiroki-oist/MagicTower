@@ -24,6 +24,21 @@ public class Cutscenes
     /// <summary>序章の絵の行数（3行）。</summary>
     public const int PrologueLines = 3;
 
+    /// <summary>
+    /// 終幕の塔の絵（MTOWER1/2）。原典はパレットでうっすら→はっきりと出す
+    /// （0xcd2e〜、`lcall 0xf5f,0x416` を回数ぶん）。
+    /// </summary>
+    public const string EndingTowerStep = "塔の絵";
+
+    /// <summary>
+    /// 終わりの言葉（MTENDMJ）。白地に黒の1枚絵で、**段落が1つずつ現れる**
+    /// （動画 Part2 t≈1810〜1825）。
+    /// </summary>
+    public const string EndingTextStep = "終わりの言葉";
+
+    /// <summary>終わりの言葉の段落の数。</summary>
+    public const int EndingTextParagraphs = 4;
+
     /// <summary>ゼノに全てを奪われる処理を表す行（原典 0x06f1b）。</summary>
     public const string ZenoTakesStep = "奪われる";
 
