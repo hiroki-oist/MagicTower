@@ -124,34 +124,52 @@ def read_png(path):
     return w, h, px
 
 
+# マスは**4x4に割って**それぞれの平均色を採る（1マスにつき16個）。
+# 真ん中1点の平均だけだと、床と星空ばかりの階どうし（21〜25階など）が
+# 見分けられなかった。4x4にすると全50階が互いに15マス以上ちがうようになる。
+SUB = 4
+
+
 def cell_means_frame(px, w, h):
-    """コマの盤面を11x11に割って、マスの真ん中16x16の平均色を出す。"""
+    """コマの盤面を11x11に割り、さらに各マスを4x4に割って平均色を出す。"""
     out = {}
     for row in range(11):
         for col in range(11):
-            cx = MAP_X + int((col + 0.5) * MAP_W / 11)
-            cy = MAP_Y + int((row + 0.5) * MAP_H / 11)
-            r = g = b = n = 0
-            for dy in range(-8, 8):
-                for dx in range(-8, 8):
-                    y, x = cy + dy, cx + dx
-                    if 0 <= y < h and 0 <= x < w:
-                        p = px[y][x]; r += p[0]; g += p[1]; b += p[2]; n += 1
-            out[(col - 5, 5 - row)] = (r // n, g // n, b // n)
+            sig = []
+            for by in range(SUB):
+                for bx in range(SUB):
+                    y0 = MAP_Y + int((row + by / SUB) * MAP_H / 11)
+                    y1 = MAP_Y + int((row + (by + 1) / SUB) * MAP_H / 11)
+                    x0 = MAP_X + int((col + bx / SUB) * MAP_W / 11)
+                    x1 = MAP_X + int((col + (bx + 1) / SUB) * MAP_W / 11)
+                    r = g = b = n = 0
+                    for y in range(y0, y1):
+                        for x in range(x0, x1):
+                            if 0 <= y < h and 0 <= x < w:
+                                p = px[y][x]; r += p[0]; g += p[1]; b += p[2]; n += 1
+                    n = max(n, 1)
+                    sig.append((r // n, g // n, b // n))
+            out[(col - 5, 5 - row)] = sig
     return out
 
 
 def cell_means_render(img):
     out = {}
+    step = 32 // SUB
     for row in range(11):
         for col in range(11):
-            r = g = b = 0
-            for dy in range(8, 24):
-                for dx in range(8, 24):
-                    p = GAME_PALETTE[img[row * 32 + dy][col * 32 + dx]]
-                    r += p[0]; g += p[1]; b += p[2]
-            n = 16 * 16
-            out[(col - 5, 5 - row)] = (r // n, g // n, b // n)
+            sig = []
+            for by in range(SUB):
+                for bx in range(SUB):
+                    r = g = b = 0
+                    for dy in range(step):
+                        for dx in range(step):
+                            p = GAME_PALETTE[img[row * 32 + by * step + dy]
+                                                [col * 32 + bx * step + dx]]
+                            r += p[0]; g += p[1]; b += p[2]
+                    n = step * step
+                    sig.append((r // n, g // n, b // n))
+            out[(col - 5, 5 - row)] = sig
     return out
 
 
@@ -160,7 +178,8 @@ def compare(frame_means, n, sp, limit=60):
     bad = []
     for key, got in frame_means.items():
         want = mine[key]
-        d = max(abs(got[0] - want[0]), abs(got[1] - want[1]), abs(got[2] - want[2]))
+        d = max(max(abs(p[0] - q[0]), abs(p[1] - q[1]), abs(p[2] - q[2]))
+                for p, q in zip(got, want))
         if d > limit:
             bad.append((key, d))
     return bad
