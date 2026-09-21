@@ -103,34 +103,67 @@ public static class TowerPlaythrough
     /// 鍵やアイテムを取り残していると上で詰まるので、人が遊ぶときと同じ手筋を入れる。
     /// 何か持ち物が増えて戻ってこられたら true。
     /// </summary>
-    static bool GoBackAndReturn(TowerGame game, StringBuilder sb, int floor)
+    /// <summary>下り階段まで歩いて降りる。降りられたら true。</summary>
+    static bool Descend(TowerGame game)
     {
+        int from = game.Player.Floor;
         var down = FindStairs(game.Floor, "<");
         if (!down.HasValue) return false;
-
-        int before = Wealth(game.Player);
         var path = Route(game.Floor, game.Player.Position, down.Value, null, game);
         if (path == null) return false;
-
         foreach (var step in path)
         {
-            var d = step - game.Player.Position;
-            game.Step(d);
+            game.Step(step - game.Player.Position);
             while (game.IsShowingPage) game.NextPage();
-            if (game.Player.Floor != floor) break;
+            if (game.Player.Floor != from) break;
         }
-        if (game.Player.Floor >= floor) return false;      // 下りられなかった
+        return game.Player.Floor < from;
+    }
 
-        int lower = game.Player.Floor;
+    /// <summary>上り階段まで歩いて上がる。上がれたら true。</summary>
+    static bool Ascend(TowerGame game)
+    {
+        int from = game.Player.Floor;
         var up = FindStairs(game.Floor, ">");
         if (!up.HasValue) return false;
-        ExploreFloor(game, up.Value, 3000);                 // 下の階を拾い直す
+        ExploreFloor(game, up.Value, 3000);
+        return game.Player.Floor > from;
+    }
 
-        if (game.Player.Floor == lower) return false;        // 上がれなかった
-        int after = Wealth(game.Player);
-        sb.AppendLine($"F{floor}: 行き詰まったので F{lower} へ戻った "
+    /// <summary>
+    /// 行き詰まったとき、下へ何階ぶん戻って探し直すか。
+    /// 商人（鍵を売ってくれる）は2階と11階にしか居ないので、**そこまで届く深さ**が要る。
+    /// </summary>
+    const int MaxBacktrack = 12;
+
+    static bool GoBackAndReturn(TowerGame game, StringBuilder sb, int floor)
+    {
+        int before = Wealth(game.Player);
+        int keysBefore = KeySum(game.Player);
+        int deepest = floor;
+
+        // **1階ぶんだけ戻っても足りないことがある**（そこが拾い尽くされていると何も増えない）。
+        // 増えるまで下へ降り続けて、降りた先はいちいち拾い直す。
+        for (int k = 0; k < MaxBacktrack && game.Player.Floor > 1; k++)
+        {
+            if (!Descend(game)) break;
+            deepest = game.Player.Floor;
+            ExploreFloor(game, null, 3000);        // 行き先を決めずに触れるだけ触る
+            // **鍵が増えたら戻る**。詰まる理由はたいてい鍵なので、金や生命力が増えても
+            // 戻ってしまうと同じ所でまた詰まる（商人は2階と11階にしか居ない）。
+            if (KeySum(game.Player) > keysBefore) break;
+            if (Wealth(game.Player) > before && KeySum(game.Player) >= keysBefore) break;
+        }
+        if (deepest >= floor) return false;         // 一度も降りられなかった
+
+        // 元の階まで上がり直す
+        while (game.Player.Floor < floor)
+            if (!Ascend(game)) break;
+
+        sb.AppendLine($"F{floor}: 行き詰まったので F{deepest} まで戻った "
                     + $"（{Describe(game)}）");
-        return after > before;
+        return (Wealth(game.Player) > before || KeySum(game.Player) > keysBefore)
+            && game.Player.Floor == floor;
     }
 
     /// <summary>持ち物の量。戻った甲斐があったかを見るのに使う。</summary>
@@ -173,7 +206,22 @@ public static class TowerPlaythrough
             var goal = FindStairs(game.Floor, ">");
             if (!goal.HasValue)
             {
+                // ブロックの関門（F10/F20/F30/F40/F49）は**最初から上り階段を持たない**。
+                // ボスを倒すと解錠されて出るので、行き先を決めずに触りきってから探し直す。
+                ExploreFloor(game, null, 3000);
+                goal = FindStairs(game.Floor, ">");
+            }
+            if (!goal.HasValue && GoBackAndReturn(game, sb, floor))
+            {
+                // 関門のボスに手が届かないのは、たいてい鍵が足りないから。
+                // 下から拾い直して（商人で買って）戻ってきたら、もう一度触りきってみる。
+                ExploreFloor(game, null, 3000);
+                goal = FindStairs(game.Floor, ">");
+            }
+            if (!goal.HasValue)
+            {
                 sb.AppendLine($"F{floor}: 上り階段が無いので終わり（{Describe(game)}）");
+                sb.AppendLine($"        {Describe(game)}");
                 break;
             }
 
