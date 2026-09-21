@@ -1557,6 +1557,7 @@ chk("0fff 1fff 2fff" in _en,"パレットの表（原典 0x0c4d8 の8本）を�
 chk("15, 11, 9, 7, 5, 3, 1, 0" in _en,"番号0の濃さの段が原典どおり")
 chk("TowerWhiteMix" in open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read(),
     "見た目の側が白への寄せ具合を使う")
+
 _fs=open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read()
 chk("Ending.TowerSteps" in _fs and "scrollTower" in _fs,"見た目の側が塔の絵を流す")
 
@@ -2008,7 +2009,24 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=677
+
+MIN_CHECKS=680
+
+# 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
+# （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。
+_plan=open("docs/REMAKE_PLAN.md",encoding="utf-8").read()
+_head=_plan[:_plan.index("## 手で遊んでもらって出た不具合")]
+_m=re.search(r"突き合わせ \*\*(\d+)項目\*\*",_head)
+chk(_m is not None and int(_m.group(1))==MIN_CHECKS,
+    "サマリに書いた検査の数が実物と合う",
+    f"サマリ={_m.group(1) if _m else 'なし'} 実物={MIN_CHECKS}")
+_t=re.search(r"EditMode テスト \*\*(\d+)本\*\*",_head)
+_actual=sum(len(re.findall(r"\[Test\]",open(q,encoding="utf-8").read()))
+            for q in glob.glob("Assets/Tests/Editor/*.cs"))
+chk(_t is not None and abs(int(_t.group(1))-_actual)<=15,
+    "サマリに書いたテストの数が実物とおおむね合う",
+    f"サマリ={_t.group(1) if _t else 'なし'} [Test]の数={_actual}")
+chk("原典から読める未確定はもう無い" in _head,"サマリが未確定の有無を言い切っている")
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
