@@ -45,8 +45,6 @@ public class TowerHudView : MonoBehaviour
     readonly System.Collections.Generic.List<UnityEngine.UI.Image> keyImages =
         new System.Collections.Generic.List<UnityEngine.UI.Image>();
 
-    /// <summary>原典の右下の欄は履歴が積み上がる。表示する行数。</summary>
-    const int LogLines = 8;
 
     void LateUpdate()
     {
@@ -62,7 +60,8 @@ public class TowerHudView : MonoBehaviour
         // ここで書くのは名前だけ。
         Set(weapon,  TowerHud.WeaponName(p));
         Set(shield,  TowerHud.ShieldName(p));
-        Set(messageBox, Tail(controller.Game.Log, LogLines));
+        // 原典は欄を塗り直して**その時のメッセージ1つだけ**を6桁で折り返して書く。
+        Set(messageBox, TowerHud.InfoBox(Last(controller.Game.Log)));
         ShowIcon(weaponIcon, swordIcons,  p.SwordRank);
         ShowIcon(shieldIcon, shieldIcons, p.ShieldRank);
         ShowKeys(p);
@@ -118,16 +117,9 @@ public class TowerHudView : MonoBehaviour
         }
     }
 
-    static string Tail(System.Collections.Generic.IReadOnlyList<string> log, int n)
+    static string Last(System.Collections.Generic.IReadOnlyList<string> log)
     {
-        if (log == null || log.Count == 0) return "";
-        var sb = new System.Text.StringBuilder();
-        for (int i = Mathf.Max(0, log.Count - n); i < log.Count; i++)
-        {
-            if (sb.Length > 0) sb.Append('\n');
-            sb.Append(log[i]);
-        }
-        return sb.ToString();
+        return log == null || log.Count == 0 ? "" : log[log.Count - 1];
     }
 
     /// <summary>

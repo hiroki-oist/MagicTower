@@ -135,21 +135,21 @@ public static class TowerSceneBuilder
         // 欄の位置は原典（docs/original/screen_layout.txt）そのまま。
         // 数字だけを出す欄なので、見出しの文字は原典の枠の絵側にある（まだ同定できていない）。
         vso.FindProperty("floorLabel").objectReferenceValue =
-            Box(screen, font, "FloorLabel", ScreenLayout.FloorBox, 24f, TextAlignmentOptions.Left);
+            Box(screen, font, "FloorLabel", ScreenLayout.FloorBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Left);
         vso.FindProperty("hp").objectReferenceValue =
-            Box(screen, font, "Hp", ScreenLayout.HpBox, 24f, TextAlignmentOptions.Right);
+            Box(screen, font, "Hp", ScreenLayout.HpBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
         vso.FindProperty("attack").objectReferenceValue =
-            Box(screen, font, "Attack", ScreenLayout.AttackBox, 24f, TextAlignmentOptions.Right);
+            Box(screen, font, "Attack", ScreenLayout.AttackBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
         vso.FindProperty("defense").objectReferenceValue =
-            Box(screen, font, "Defense", ScreenLayout.DefenseBox, 24f, TextAlignmentOptions.Right);
+            Box(screen, font, "Defense", ScreenLayout.DefenseBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
         vso.FindProperty("gold").objectReferenceValue =
-            Box(screen, font, "Gold", ScreenLayout.GoldBox, 24f, TextAlignmentOptions.Right);
+            Box(screen, font, "Gold", ScreenLayout.GoldBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
 
         // WEAPON / SHIELD の見出しは枠の絵に入っているので、欄には名前だけを出す。
         vso.FindProperty("weapon").objectReferenceValue =
-            Box(screen, font, "Weapon", ScreenLayout.WeaponBox, 24f, TextAlignmentOptions.Left);
+            Box(screen, font, "Weapon", ScreenLayout.WeaponBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Left);
         vso.FindProperty("shield").objectReferenceValue =
-            Box(screen, font, "Shield", ScreenLayout.ShieldBox, 24f, TextAlignmentOptions.Left);
+            Box(screen, font, "Shield", ScreenLayout.ShieldBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Left);
 
         // 装備の絵。原典は 剣=物体ID 50+段位 / 盾=55+段位 の絵をそのまま貼る（0x9b80 付近）。
         vso.FindProperty("weaponIcon").objectReferenceValue =
@@ -180,7 +180,7 @@ public static class TowerSceneBuilder
         vso.FindProperty("keyYellow").objectReferenceValue =
             AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Key_Yellow.png");
         vso.FindProperty("messageBox").objectReferenceValue =
-            Box(screen, font, "Message", ScreenLayout.MessageBox, 16f, TextAlignmentOptions.TopLeft);
+            Box(screen, font, "Message", ScreenLayout.MessageBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.TopLeft);
         vso.ApplyModifiedPropertiesWithoutUndo();
 
         BuildBattleView(controller);
@@ -409,7 +409,10 @@ public static class TowerSceneBuilder
         t.fontSize = size;
         t.color = Color.white;
         t.alignment = align;
-        t.enableWordWrapping = true;
+        // 折り返しは原典の規則で自前でやる（TowerHud.InfoBox）ので、TMP 側では折らない。
+        t.enableWordWrapping = false;
+        // 原典の行送りは文字の高さと同じ16ドット。TMP の既定より詰める。
+        t.lineSpacing = TowerHud.InfoLineSpacing;
         return t;
     }
 

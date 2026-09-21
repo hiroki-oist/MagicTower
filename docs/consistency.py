@@ -590,6 +590,16 @@ chk("NumRight" in open("Assets/Scripts/UI/TowerHud.cs",encoding="utf-8").read(),
 chk(_dis.count("call    0xb8d6")>=5,"数値を書く所は左の帯の5か所以上",
     str(_dis.count("call    0xb8d6")))
 
+# 右下の情報欄（0x9d80）。6桁×8行に折り返して、**その時のメッセージ1つだけ**を出す。
+chk("96 | 128" in open("docs/original/screen_fills.txt",encoding="utf-8").read().replace("  "," ")
+    or (528,224,96,128) in _fills,"情報欄は 96x128 ＝ 全角6文字×8行")
+_hud=open("Assets/Scripts/UI/TowerHud.cs",encoding="utf-8").read()
+_hvw=open("Assets/Scripts/UI/TowerHudView.cs",encoding="utf-8").read()
+chk("InfoColumns = 6" in _hud and "InfoLines = 8" in _hud,"情報欄は6桁×8行")
+chk("Tail(" not in _hvw,"情報欄に履歴を積まない（原典は毎回塗り直して1つだけ）")
+chk("InfoBox(" in _hvw,"情報欄は原典の折り返しを通す")
+chk(_dis.count("cmp     word ptr [bp - 2], 6")>=1,"折り返しは6桁（0x9de0）")
+
 # 装備の絵（0x9b80 付近）。欄を塗ってから 剣=物体ID 50+段位 / 盾=55+段位 の絵を貼る。
 chk(0x3b2==0x282+6*50+4 and 0x3d0==0x282+6*55+4,
     "装備の絵は属性表の物体ID 50+段位 / 55+段位 の欄から引く")
@@ -1369,7 +1379,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=526
+MIN_CHECKS=531
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

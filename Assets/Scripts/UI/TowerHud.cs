@@ -29,6 +29,48 @@ public static class TowerHud
                                          GameText.NumRight(floor, FloorDigits));
     }
 
+    /// <summary>情報欄の桁数と行数（96x128 ＝ 全角6文字 × 8行）。</summary>
+    public const int InfoColumns = 6, InfoLines = 8;
+
+    /// <summary>
+    /// 行の間隔の調整。原典の行送りは文字の高さと同じ16ドット（欄 128 ＝ 16×8）だが、
+    /// TextMeshPro の既定の行送りはフォントの指定ぶんだけ広い（実測 31.22 ＝ 1.084em）。
+    /// 単位は文字の大きさの1%で、効くのは**行と行の間**（8行なら7か所）なので
+    ///   31.22 + 7×(31.22 + 0.288×spacing) = 230.4  →  spacing = -9.6
+    /// 実測して確かめているのは <c>TextMetricsTests</c>。
+    /// </summary>
+    public const float InfoLineSpacing = -9.6f;
+
+    /// <summary>
+    /// 右下の情報欄に出す形に折り返す。原典 0x9d80 の作りをそのまま写した:
+    ///
+    ///   ・1行は **6桁**。全角1文字＝1桁、半角の空白も1桁
+    ///   ・改行(0x0a)が来たらその行はそこで終わり
+    ///   ・タブ(0x09)は桁を使わずに読み飛ばす
+    ///   ・行数は常に8行（足りない分は空行）
+    ///
+    /// 原典は欄を塗り直してから**その時のメッセージ1つだけ**を書くので、
+    /// 履歴は積み上がらない。
+    /// </summary>
+    public static string InfoBox(string message)
+    {
+        var src = message ?? "";
+        var sb = new System.Text.StringBuilder();
+        int i = 0;
+        for (int line = 0; line < InfoLines; line++)
+        {
+            if (line > 0) sb.Append('\n');
+            for (int col = 0; col < InfoColumns && i < src.Length; )
+            {
+                var c = src[i];
+                if (c == '\t') { i++; continue; }           // 桁を使わない
+                if (c == '\n') { i++; break; }              // ここで行を切る
+                sb.Append(c); i++; col++;
+            }
+        }
+        return sb.ToString().TrimEnd('\n');
+    }
+
     /// <summary>左側に並ぶ4つの数値。全角。</summary>
     public static string Hp(PlayerState p)      { return GameText.Num(p.Hp); }
     public static string Attack(PlayerState p)  { return GameText.Num(p.Attack); }

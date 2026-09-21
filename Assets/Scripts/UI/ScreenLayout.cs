@@ -59,8 +59,15 @@ public static class ScreenLayout
         return new Vector2Int(xBytes * 8, yDots);
     }
 
-    /// <summary>全角1文字の幅（ドット）。原典は1文字ごとに2バイト進む。</summary>
+    /// <summary>
+    /// 全角1文字の幅（ドット）。原典は1文字ごとに2バイト進む。
+    /// PC98 の全角は 16x16 ドットで、画面の欄の大きさもすべてその倍数になっている
+    /// （能力値 64x16 ＝ 4文字、情報欄 96x128 ＝ 6文字×8行、武器名 64x16 ＝ 4文字）。
+    /// </summary>
     public const int TextCharWidth = 16;
+
+    /// <summary>文字の大きさ（Canvas 上）。原典の 16 ドットを 1.8 倍したもの。</summary>
+    public const float TextSizeOnCanvas = TextCharWidth * DialogueWindow.CanvasScale;
 
     /// <summary>原典の VRAM 変位（1行80バイト）。</summary>
     public static int VramOffset(int X, int Y)
