@@ -877,21 +877,32 @@ chk(all(_flg[_n]["階"]!="-" for _n in _once),"一度きりのフラグはどれ
 _own=Counter(_flg[_n]["持ち主"] for _n in _once)
 chk(dict(_own)=={"門の解錠":28,"座標のできごと":14,"盗賊":3,"階段で着いたとき":1},
     "一度きりのフラグ46個の持ち主の内訳",str(dict(_own)))
-chk(_own["門の解錠"]+1==len([l for l in open("Assets/Resources/SealedDoors.txt",encoding="utf-8")
-                            if re.match(r"^\s*\d+\s*\|",l)]),
-    "門の解錠は28件＋手で足したF40の1件")
-chk(_own["座標のできごと"]+1==len([l for l in open("Assets/Resources/PositionEvents.txt",encoding="utf-8")
-                                  if re.match(r"^\s*\d+\s*\|",l)]),
-    "座標のできごとは14件＋旗を使わない1件")
-chk(_own["階段で着いたとき"]==len([l for l in open("Assets/Resources/ArrivalEvents.txt",encoding="utf-8")
-                                  if re.match(r"^\s*\d+\s*\|",l)]),
-    "階段で着いたときのできごとは1件")
-# 盗賊の表が使う旗が、盗賊が持ち主の旗と座標のできごとの旗だけでできているか
-_thief=set(int(m) for m in re.findall(r"フラグ(\d+)",
-           open("Assets/Resources/ThiefEvents.txt",encoding="utf-8").read()))
-chk(_thief<=set(_once),"盗賊の表が使う旗はどれも一度きりの旗",str(sorted(_thief-set(_once))))
-chk({_n for _n in _once if _flg[_n]["持ち主"]=="盗賊"}<=_thief,
+# 4つの表が使う旗の**合併が、一度きりの旗46個ぴったり**になるか。
+# 取りこぼしても余計に足しても、ここで落ちる。
+def _rowflags(path, col, hexcol=False):
+    out=set()
+    for _l in open(path,encoding="utf-8"):
+        if not re.match(r"^\s*\d+\s*\|",_l): continue
+        _t=_l.split("|")[col].strip()
+        out.add(int(_t,16) if hexcol else int(_t))
+    return out
+_sd=_rowflags("Assets/Resources/SealedDoors.txt",1,True)
+_pe=_rowflags("Assets/Resources/PositionEvents.txt",3)
+_ar=_rowflags("Assets/Resources/ArrivalEvents.txt",2)
+_th=set(int(m) for m in re.findall(r"フラグ(\d+)",
+        open("Assets/Resources/ThiefEvents.txt",encoding="utf-8").read()))
+_union=_sd|_pe|_ar|_th
+chk(_union==set(_once),"4つの表の旗の合併が一度きりの旗46個とぴったり合う",
+    f"足りない={sorted(set(_once)-_union)} 余計={sorted(_union-set(_once))}")
+chk(len(_sd)==29 and len(_pe)==15 and len(_ar)==1,
+    "表の件数（門29 / 座標15 / 階段1）",f"{len(_sd)}/{len(_pe)}/{len(_ar)}")
+chk({_n for _n in _once if _flg[_n]["持ち主"]=="盗賊"}<=_th,
     "盗賊が立てる旗3つは盗賊の表に出てくる")
+# 50 = 2階で一度だけ 1000 GOLD もらう贈り物（0x14e4〜0x1524、セリフ29）
+chk("gift" in open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read(),
+    "2階の贈り物（旗50）が品揃えの表にある")
+chk(_dis.count("add     word ptr es:[0xa2], 0x3e8")==1,
+    "1000GOLD もらうのは原典でも1か所だけ")
 # 31 = 高速モード。原典は鍵0x70 で反転し、右下の欄に知らせを出す（0xa922〜0xa95f）
 chk(_dis.count("mov     byte ptr es:[0x1f], 1")==1
     and _dis.count("mov     byte ptr es:[0x1f], 0")==1,"高速モードは1か所で入り切りする")

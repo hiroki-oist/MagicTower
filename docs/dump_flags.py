@@ -27,6 +27,10 @@ LINES = open(f"{ROOT}/docs/MTE_disasm.txt", encoding="utf-8").read().split("\n")
 
 LOW, HIGH = 0x1e, 0x95
 
+# 番号で直に引いているのに注記が付かないもの。読んで分かった意味を手で足す。
+EXTRA = {0x1f: "高速モード（鍵0x70で入り切り、0xa922〜0xa95f）",
+         0x32: "2階で一度だけ 1000GOLD もらう贈り物（0x14e4〜0x1524、セリフ29）"}
+
 def floor_before(i):
     """直前の 40 行に `現在階 == N` があればその N。"""
     for j in range(i - 1, max(0, i - 40), -1):
@@ -83,7 +87,7 @@ out = ["# セーブに入るフラグ（docs/dump_flags.py が生成）",
 for off in sorted(found):
     d = found[off]
     fl = ",".join(str(x) for x in sorted(d["階"])) or "-"
-    note = " / ".join(sorted(d["note"])) or ""
+    note = " / ".join(sorted(d["note"])) or EXTRA.get(off, "")
     own = " / ".join(sorted(d.get("持ち主", set()))) or "-"
     out.append(f"0x{off:02x} {off:3d} | {len(d['読']):2d} | {len(d['書']):2d} | {fl:>10}"
                f" | {own:<16} | {note}")
