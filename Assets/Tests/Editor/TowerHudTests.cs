@@ -83,3 +83,61 @@ public class TowerHudTests
         Assert.IsFalse(TowerHud.Inspect(player, "Wall_Field").Valid);
     }
 }
+
+/// <summary>
+/// 高速モード（原典の旗31 / `es:[0x1f]`）。
+/// </summary>
+public class FastModeTests
+{
+    [Test]
+    public void 旗の番号は原典と同じ三十一()
+    {
+        Assert.AreEqual(31, PlayerState.FastModeFlag);
+    }
+
+    [Test]
+    public void 切り替えると旗が反転して知らせが出る()
+    {
+        var g = new TowerGame(new PlayerState { Hp = 1000, Floor = 1 });
+        Assert.IsFalse(g.Player.FastMode, "はじめは標準モード");
+
+        g.ToggleFastMode();
+        Assert.IsTrue(g.Player.FastMode);
+        Assert.AreEqual(GameText.Instance.Message("mode_fast"), g.Log[g.Log.Count - 1]);
+
+        g.ToggleFastMode();
+        Assert.IsFalse(g.Player.FastMode);
+        Assert.AreEqual(GameText.Instance.Message("mode_normal"), g.Log[g.Log.Count - 1]);
+    }
+
+    [Test]
+    public void 知らせは窓を開かない()
+    {
+        // 原典は右下の欄に書くだけで会話の窓は出さない
+        var g = new TowerGame(new PlayerState { Hp = 1000, Floor = 1 });
+        g.ToggleFastMode();
+        Assert.IsFalse(g.IsShowingPage, "窓が開いてしまっている");
+    }
+
+    [Test]
+    public void 旗はセーブに残る()
+    {
+        var dir = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "mt_fast_test");
+        if (System.IO.Directory.Exists(dir)) System.IO.Directory.Delete(dir, true);
+        TowerSave.Directory = dir;
+        try
+        {
+            var p = new PlayerState { Hp = 100, Floor = 1 };
+            p.FastMode = true;
+            TowerSave.Save(1, p);
+            var q = TowerSave.Load(1);
+            Assert.IsNotNull(q);
+            Assert.IsTrue(q.FastMode, "高速モードが残っていない");
+        }
+        finally
+        {
+            TowerSave.Directory = null;
+            if (System.IO.Directory.Exists(dir)) System.IO.Directory.Delete(dir, true);
+        }
+    }
+}

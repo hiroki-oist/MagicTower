@@ -49,6 +49,12 @@ public class TowerController : MonoBehaviour
         {
             acted = StepMenu();
         }
+        else if (FastModeKeyDown())
+        {
+            // 原典は鍵 0x70（PC98のシフト）で高速モードを入り切りする（0xa927）
+            Game.ToggleFastMode();
+            acted = true;
+        }
         else if (MenuKeyDown())
         {
             // 原典は鍵 0x1c(リターン) と 0x34(スペース) のどちらでもメニューに入る
@@ -102,6 +108,12 @@ public class TowerController : MonoBehaviour
     }
 
     /// <summary>メニューの開け閉めに使う鍵（原典 0x1c / 0x34）。</summary>
+    /// <summary>高速モードの切り替え鍵。原典は 0x70 ＝ PC98 のシフト。</summary>
+    static bool FastModeKeyDown()
+    {
+        return Input.GetKeyDown(KeyCode.LeftShift) || Input.GetKeyDown(KeyCode.RightShift);
+    }
+
     static bool MenuKeyDown()
     {
         return Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter)

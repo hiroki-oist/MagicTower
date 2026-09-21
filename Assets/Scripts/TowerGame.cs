@@ -280,6 +280,25 @@ public class TowerGame
             pages.Enqueue(new Page { Kind = PageKind.Dialogue, Text = t, Record = -1 });
     }
 
+    /// <summary>
+    /// 右下の欄にだけ出す。窓は開かない（原典は 0x9d80 を直に呼ぶ形）。
+    /// </summary>
+    void Note(string s)
+    {
+        if (!string.IsNullOrEmpty(s)) log.Add(s);
+    }
+
+    /// <summary>
+    /// 高速モードの切り替え。原典は主処理の中で鍵 0x70（PC98のシフト）を見て
+    /// 旗31 を反転し、右下の欄に切り替えの知らせを出す（0xa922〜0xa95f）。
+    /// 窓は開かず、旗はセーブにも入る。
+    /// </summary>
+    public void ToggleFastMode()
+    {
+        Player.FastMode = !Player.FastMode;
+        Note(GameText.Instance.Message(Player.FastMode ? "mode_fast" : "mode_normal"));
+    }
+
     /// <summary>メニューが開いているか。</summary>
     public bool IsMenuOpen { get; private set; }
 

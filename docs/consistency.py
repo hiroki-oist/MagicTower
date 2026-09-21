@@ -892,6 +892,17 @@ _thief=set(int(m) for m in re.findall(r"フラグ(\d+)",
 chk(_thief<=set(_once),"盗賊の表が使う旗はどれも一度きりの旗",str(sorted(_thief-set(_once))))
 chk({_n for _n in _once if _flg[_n]["持ち主"]=="盗賊"}<=_thief,
     "盗賊が立てる旗3つは盗賊の表に出てくる")
+# 31 = 高速モード。原典は鍵0x70 で反転し、右下の欄に知らせを出す（0xa922〜0xa95f）
+chk(_dis.count("mov     byte ptr es:[0x1f], 1")==1
+    and _dis.count("mov     byte ptr es:[0x1f], 0")==1,"高速モードは1か所で入り切りする")
+chk("cmp     byte ptr [bp - 1], 0x70" in _dis,"高速モードの鍵は 0x70（PC98のシフト）")
+_ps=open("Assets/Scripts/PlayerState.cs",encoding="utf-8").read()
+chk("FastModeFlag = 31" in _ps,"リメイクも旗31を使う")
+chk("ToggleFastMode" in open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+    and "ToggleFastMode" in open("Assets/Scripts/TowerController.cs",encoding="utf-8").read(),
+    "高速モードの切り替えが繋がっている")
+chk(_msgs.get("mode_fast")=="高速モードに切り替えます"
+    and _msgs.get("mode_normal")=="標準モードに切り替えます","切り替えの知らせは原典の文言")
 chk(_flg[32]["意味"]=="妖精回数" and _flg[33]["意味"]=="装備剣"
     and _flg[34]["意味"]=="装備盾","32〜34は妖精の回数・装備剣・装備盾")
 chk(os.path.exists("Assets/Resources/FloorConnections.txt"),"階段接続表")
@@ -1511,7 +1522,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=568
+MIN_CHECKS=573
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

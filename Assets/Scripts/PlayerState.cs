@@ -56,6 +56,21 @@ public class PlayerState
     /// </summary>
     public readonly HashSet<int> EventFlags = new HashSet<int>();
 
+    /// <summary>
+    /// 高速モードの旗。原典もこれをフラグ置き場の **31番**（`es:[0x1f]`）に持っていて、
+    /// セーブにもそのまま入る（0xa92d〜0xa956 が切り替える）。
+    /// 立っているあいだ、原典は窓の開け閉めの待ち（0x9478 / 0x9546）と
+    /// 1マス動くときの滑らかな移動（0xa29a）を飛ばし、数字を数え上げる回数を
+    /// 10回から3回に減らす（0xb3bf / 0xb519）。
+    /// </summary>
+    public const int FastModeFlag = 31;
+
+    public bool FastMode
+    {
+        get { return EventFlags.Contains(FastModeFlag); }
+        set { if (value) EventFlags.Add(FastModeFlag); else EventFlags.Remove(FastModeFlag); }
+    }
+
     /// <summary>原典の生命力の上限（マニュアル「上限は９９９０ポイントです」）。</summary>
     public const int MaxHp = 9990;
 
