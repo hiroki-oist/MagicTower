@@ -648,6 +648,12 @@ chk("ItemPanelSlots = 15" in _sl and "ItemPanelColumns = 3" in _sl,
 _missing_item=[_i for _i in range(36,51)
                if not glob.glob(f"Assets/Sprites/Tiles/{_i:03d}_*.png")]
 chk(not _missing_item,"持ち物15種の絵が揃っている",str(_missing_item))
+_hv2=open("Assets/Scripts/UI/TowerHudView.cs",encoding="utf-8").read()
+chk("itemSlots" in _hv2 and "ShowItems" in _hv2,"持ち物の欄を画面に出している")
+chk("PanelKind" in open("Assets/Scripts/Items/SpecialItems.cs",encoding="utf-8").read(),
+    "欄の番号と持ち物が結び付いている")
+chk("Orb_Hero | 36" in open("Assets/Resources/ObjectIds.txt",encoding="utf-8").read(),
+    "勇者のオーブ(ID36)が登録してある（盤面には出ないが欄の1つ目）")
 
 # 戦闘中の相手の欄（0x9626）。戦闘 0x6082 の中から1か所だけ呼ばれる。
 chk(_dis.count("mov     cx, 0x110")>=1 and _dis.count("mov     cx, 0x128")>=1,
@@ -1662,7 +1668,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=602
+MIN_CHECKS=605
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

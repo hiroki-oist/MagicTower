@@ -47,6 +47,12 @@ public class TowerHudView : MonoBehaviour
     [SerializeField] Sprite[] swordIcons = new Sprite[5];
     [SerializeField] Sprite[] shieldIcons = new Sprite[5];
 
+    /// <summary>
+    /// 持ち物の欄（原典 0x2f8c）。左の帯の下の箱に、持っている道具の絵を3列で並べる。
+    /// 15マスぶんで、順番は物体ID 36〜50。持っていないマスは何も出さない。
+    /// </summary>
+    [SerializeField] UnityEngine.UI.Image[] itemSlots = new UnityEngine.UI.Image[0];
+
     /// <summary>鍵の絵を並べる入れ物。原典は数字ではなく絵を本数ぶん出す（0x9ff8）。</summary>
     [SerializeField] RectTransform keyIcons;
     [SerializeField] Sprite keyRed;
@@ -81,6 +87,7 @@ public class TowerHudView : MonoBehaviour
         ShowIcon(weaponIcon, swordIcons,  p.SwordRank);
         ShowIcon(shieldIcon, shieldIcons, p.ShieldRank);
         ShowKeys(p);
+        ShowItems(p);
     }
 
     static void Set(TextMeshProUGUI t, string s) { if (t != null) t.text = s; }
@@ -121,6 +128,18 @@ public class TowerHudView : MonoBehaviour
         if (prefab == null) return null;
         var sr = prefab.GetComponent<SpriteRenderer>();
         return sr != null ? sr.sprite : null;
+    }
+
+    /// <summary>持ち物の欄。持っている道具だけ絵を出す（原典 0x2f8c）。</summary>
+    void ShowItems(PlayerState p)
+    {
+        for (int i = 0; i < itemSlots.Length; i++)
+        {
+            var img = itemSlots[i];
+            if (img == null) continue;
+            var kind = SpecialItems.PanelKind(i);
+            img.enabled = kind != SpecialItems.Kind.None && p.Has(kind);
+        }
     }
 
     /// <summary>装備の絵。段位が0なら何も出さない。</summary>

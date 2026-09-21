@@ -257,6 +257,19 @@ public static class TowerSceneBuilder
                .objectReferenceValue = TileById(55 + rank);
         }
 
+        // 持ち物の欄（原典 0x2f8c）。物体ID 36〜50 の絵を3列で並べる。
+        var slots = vso.FindProperty("itemSlots");
+        slots.arraySize = ScreenLayout.ItemPanelSlots;
+        for (int i = 0; i < ScreenLayout.ItemPanelSlots; i++)
+        {
+            var id = ScreenLayout.ItemPanelObjectId(i);
+            var img = Icon(screen, $"Item{id}", ScreenLayout.ItemPanelSlot(i));
+            var sprite = TileById(id);
+            if (sprite != null) img.sprite = sprite;
+            img.enabled = false;                      // 持っていない間は出さない
+            slots.GetArrayElementAtIndex(i).objectReferenceValue = img;
+        }
+
         // 鍵は絵を本数ぶん並べる（原典 0x9ff8）。入れ物を画面の左上に合わせておけば、
         // 中の絵は原典の座標をそのまま使える。
         var keyGo = new GameObject("Keys", typeof(RectTransform));
@@ -535,8 +548,12 @@ public static class TowerSceneBuilder
     static Sprite TileById(int id)
     {
         foreach (var path in System.IO.Directory.GetFiles("Assets/Sprites/Tiles", "*.png"))
-            if (System.IO.Path.GetFileName(path).StartsWith($"{id:000}_"))
-                return AssetDatabase.LoadAssetAtPath<Sprite>(path.Replace('\\', '/'));
+        {
+            var file = System.IO.Path.GetFileNameWithoutExtension(path);
+            if (file.EndsWith("_b", System.StringComparison.Ordinal)) continue;   // 2コマ目
+            if (file.StartsWith($"{id:000}_"))
+                return LoadSprite(path);
+        }
         Debug.LogWarning($"TowerSceneBuilder: 物体ID {id} の絵が見つからない");
         return null;
     }

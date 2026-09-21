@@ -117,4 +117,15 @@ public class SpecialItems
         if (name.StartsWith("Crystal_Snow"))    return Kind.SnowCrystal;    // ID47
         return Kind.None;
     }
+
+    /// <summary>
+    /// 持ち物の欄（原典 0x2f8c）の番号（0〜14）に出る道具。
+    /// 原典の表 DS:0x35a は **物体ID 36〜50 の順**に並んでいる。
+    /// </summary>
+    public static Kind PanelKind(int slot)
+    {
+        var id = ScreenLayout.ItemPanelObjectId(slot);
+        var name = ObjectIds.Instance.NameOf(id);
+        return string.IsNullOrEmpty(name) ? Kind.None : FromPrefabName(name);
+    }
 }

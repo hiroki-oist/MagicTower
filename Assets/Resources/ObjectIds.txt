@@ -19,6 +19,9 @@ Potion_Red | 32
 Potion_Blue | 33
 Gem_Attack | 34
 Gem_Defense | 35
+# 勇者のオーブ(ID36) は盤面には一度も置かれず、仙人から受け取る。
+# 持ち物の欄（原典 0x2f8c、物体ID 36〜50 の並び）の1つ目なので登録しておく。
+Orb_Hero | 36
 Orb_Wisdom | 37
 Orb_Flight | 38
 Ball_Destruction | 42

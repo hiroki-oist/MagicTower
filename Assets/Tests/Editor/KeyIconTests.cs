@@ -108,3 +108,80 @@ public class EquipIconTests
         }
     }
 }
+
+/// <summary>
+/// 持ち物の欄（原典 0x2f8c）。左の帯の下の箱に3列で並べる。
+/// </summary>
+public class ItemPanelTests
+{
+    [Test]
+    public void 並べ方が原典どおり()
+    {
+        Assert.AreEqual(new Vector2Int(16, 192), ScreenLayout.ItemPanelOrigin,
+                        "0x3c02 = 行192・バイト列2");
+        Assert.AreEqual(3, ScreenLayout.ItemPanelColumns);
+        Assert.AreEqual(32, ScreenLayout.ItemPanelStep);
+        Assert.AreEqual(15, ScreenLayout.ItemPanelSlots, "表は 6バイト×15件");
+
+        Assert.AreEqual(new RectInt(16, 192, 32, 32), ScreenLayout.ItemPanelSlot(0));
+        Assert.AreEqual(new RectInt(80, 192, 32, 32), ScreenLayout.ItemPanelSlot(2));
+        Assert.AreEqual(new RectInt(16, 224, 32, 32), ScreenLayout.ItemPanelSlot(3),
+                        "4つ目で折り返して32ドット下");
+        Assert.AreEqual(new RectInt(80, 320, 32, 32), ScreenLayout.ItemPanelSlot(14));
+    }
+
+    [Test]
+    public void 並ぶ順は物体ID三十六から五十()
+    {
+        for (int i = 0; i < ScreenLayout.ItemPanelSlots; i++)
+            Assert.AreEqual(36 + i, ScreenLayout.ItemPanelObjectId(i));
+    }
+
+    [Test]
+    public void どのマスも持ち物に結び付いている()
+    {
+        for (int i = 0; i < ScreenLayout.ItemPanelSlots; i++)
+            Assert.AreNotEqual(SpecialItems.Kind.None, SpecialItems.PanelKind(i),
+                               $"{i}番目（ID{ScreenLayout.ItemPanelObjectId(i)}）が結び付いていない");
+    }
+
+    [Test]
+    public void 十五種がすべて別の持ち物()
+    {
+        var seen = new System.Collections.Generic.HashSet<SpecialItems.Kind>();
+        for (int i = 0; i < ScreenLayout.ItemPanelSlots; i++)
+            Assert.IsTrue(seen.Add(SpecialItems.PanelKind(i)), $"{i}番目が重複");
+        Assert.AreEqual(15, seen.Count);
+    }
+
+    [Test]
+    public void 欄はぜんぶ左の帯の箱の中にある()
+    {
+        // 枠の絵の灰色の箱は (13,190) 102x164
+        for (int i = 0; i < ScreenLayout.ItemPanelSlots; i++)
+        {
+            var r = ScreenLayout.ItemPanelSlot(i);
+            Assert.GreaterOrEqual(r.xMin, 13);
+            Assert.LessOrEqual(r.xMax, 13 + 102);
+            Assert.GreaterOrEqual(r.yMin, 190);
+            Assert.LessOrEqual(r.yMax, 190 + 164);
+        }
+    }
+
+    [Test]
+    public void シーンに十五マスぶん繋がっている()
+    {
+        UnityEditor.SceneManagement.EditorSceneManager.OpenScene("Assets/Scenes/Tower.unity");
+        var view = Object.FindObjectOfType<TowerHudView>();
+        var so = new UnityEditor.SerializedObject(view);
+        var slots = so.FindProperty("itemSlots");
+        Assert.AreEqual(15, slots.arraySize);
+        for (int i = 0; i < slots.arraySize; i++)
+        {
+            var img = (UnityEngine.UI.Image)slots.GetArrayElementAtIndex(i).objectReferenceValue;
+            Assert.IsNotNull(img, $"{i}番目が未設定");
+            Assert.IsNotNull(img.sprite, $"{i}番目の絵が無い");
+            Assert.IsFalse(img.enabled, "持っていない間は出さない");
+        }
+    }
+}
