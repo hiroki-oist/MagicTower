@@ -69,6 +69,15 @@ public static class ScreenLayout
     /// <summary>文字の大きさ（Canvas 上）。原典の 16 ドットを 1.8 倍したもの。</summary>
     public const float TextSizeOnCanvas = TextCharWidth * DialogueWindow.CanvasScale;
 
+    /// <summary>
+    /// 改行1回でどれだけ下がるか（ドット）。文字は16ドットなので**4ドットの空き**が付く。
+    ///
+    /// 文字描画の仕掛けは `lcall 0x107e, 0`（linear 0x107e0）で設定していて、
+    /// 第1引数が行送り。ゲームは起動時（0x66ed）と 0xc47e の2か所で **0x14 = 20** を渡す。
+    /// 改行(0x0a)を見たときに `cs:[0x96] += cs:[0x9b]`（0x108b5）で効く。
+    /// </summary>
+    public const int LineAdvance = 20;
+
     /// <summary>原典の VRAM 変位（1行80バイト）。</summary>
     public static int VramOffset(int X, int Y)
     {

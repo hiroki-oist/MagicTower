@@ -14,9 +14,19 @@ using UnityEngine;
 /// PC98 の画面は 640x400、1行 80バイト。上の式から
 ///   左端  = 0x14 バイト = 160 ドット
 ///   横幅  = 0x14 ワード = 40 バイト = 320 ドット（帯 LCG#1 の幅と一致）
-///   高さ  = (0x14 * 行数 / 4 + 1) * 4 行 = 20 * 行数 + 4 ドット
 /// となる。上端は <see cref="DialogueBox.TopEdge"/>（120）、
 /// 姿の見えない相手の声だけ <see cref="DialogueBox.HighTopEdge"/>（50）。
+///
+/// **高さ**は塗りの届く範囲で決まる。本体の塗りは「16行ぶんを4行ずつずらして
+/// 回数ぶん」なので、届くのは 上端+0x10 から
+///   16 + 4 * (回数 - 1) = 16 + 20 * 行数 ドット
+/// ＝ 上端+32+20*行数 まで。帯は 上端から32行なので、合わせて
+///   **高さ = 20 * 行数 + 32 ドット**。
+/// （以前ここを「繰り返し回数×4 ＝ 20*行数+4」と書いていたが、
+///   それは塗りの**進む量**で、最後の塗りの16行ぶんが抜けていた。）
+///
+/// 文字は窓の中の (176, 上端+12) から。x=0x16 バイト＝176 で左端から16ドット内側、
+/// y は 上端+0xc（原典 0x9563〜0x9571）。行送りは <see cref="ScreenLayout.LineAdvance"/>。
 /// </summary>
 public static class DialogueWindow
 {
@@ -32,11 +42,21 @@ public static class DialogueWindow
     /// <summary>本体の塗りの単位（原典は4行ずつ進む）。</summary>
     public const int RowStep = 4;
 
-    /// <summary>行数から窓の高さ（ドット）を出す。原典 = 20 * 行数 + 4。</summary>
+    /// <summary>本体の塗り1回ぶんの高さ（原典は16行を4行ずつずらして塗る）。</summary>
+    public const int FillHeight = 16;
+
+    /// <summary>窓の中の文字の位置（窓の左上からのずれ、ドット）。</summary>
+    public const int TextLeft = 16, TextTop = 12;
+
+    /// <summary>行数から窓の高さ（ドット）を出す。原典 = 20 * 行数 + 32。</summary>
     public static int Height(int lines)
     {
         if (lines < 1) lines = 1;
-        return (0x14 * lines / RowStep + 1) * RowStep;
+        // 本体は 上端+16 から、16行ぶんの塗りを4行ずつずらして times 回。
+        // 届く下端 = 16 + (16 + 4*(times-1)) = 32 + 20*行数。帯（上端から32行）も含む。
+        int times = 0x14 * lines / RowStep + 1;
+        int body = FillHeight + FillHeight + RowStep * (times - 1);
+        return Mathf.Max(StripHeight, body);
     }
 
     /// <summary>窓の位置と大きさ。原典の画面座標（左上が原点）。</summary>

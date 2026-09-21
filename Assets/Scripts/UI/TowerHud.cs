@@ -33,13 +33,12 @@ public static class TowerHud
     public const int InfoColumns = 6, InfoLines = 8;
 
     /// <summary>
-    /// 行の間隔の調整。原典の行送りは文字の高さと同じ16ドット（欄 128 ＝ 16×8）だが、
-    /// TextMeshPro の既定の行送りはフォントの指定ぶんだけ広い（実測 31.22 ＝ 1.084em）。
-    /// 単位は文字の大きさの1%で、効くのは**行と行の間**（8行なら7か所）なので
-    ///   31.22 + 7×(31.22 + 0.288×spacing) = 230.4  →  spacing = -9.6
+    /// 行の間隔の調整。原典の行送りは <see cref="ScreenLayout.LineAdvance"/>＝20ドット
+    /// （Canvas では 36）だが、TextMeshPro の既定はフォント任せ（実測 31.22）なので、
+    /// その差を足して 36 にする。単位は文字の大きさの1%（0.288）。
     /// 実測して確かめているのは <c>TextMetricsTests</c>。
     /// </summary>
-    public const float InfoLineSpacing = -9.6f;
+    public const float InfoLineSpacing = 16.6f;
 
     /// <summary>
     /// 右下の情報欄に出す形に折り返す。原典 0x9d80 の作りをそのまま写した:

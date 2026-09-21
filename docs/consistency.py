@@ -1177,11 +1177,19 @@ chk("PendingPages" in _tg and "NextPage" in _tg,"ページ送りの口が用意�
 _dwin=open("Assets/Scripts/UI/DialogueWindow.cs",encoding="utf-8").read()
 chk("Left = 160" in _dwin and "Width = 320" in _dwin,"窓は x=160 幅320（原典 0x14 バイト / 0x14 ワード）")
 chk("ScreenWidth = 640" in _dwin and "ScreenHeight = 400" in _dwin,"画面は 640x400")
-# 高さの式が原典どおりか（20*行数+4）
+# 高さの式が原典どおりか（塗りは16行ぶんを4行ずつずらして 5*行数+1 回 → 32+20*行数）
 for _n in (1,2,6,8,9):
-    if (0x14*_n//4+1)*4 != 20*_n+4: chk(False,"高さの式"); break
+    _t=0x14*_n//4+1
+    if max(32, 16+16+4*(_t-1)) != 20*_n+32: chk(False,"高さの式"); break
 else:
-    chk(True,"窓の高さ = 20×行数+4（原典の塗り回数から）")
+    chk(True,"窓の高さ = 20×行数+32（原典の塗りが届く範囲）")
+chk("TextLeft = 16" in _dwin and "TextTop = 12" in _dwin,
+    "窓の文字は (176, 上端+12) から（原典 0x9563〜0x9571）")
+chk("LineAdvance = 20" in open("Assets/Scripts/UI/ScreenLayout.cs",encoding="utf-8").read(),
+    "行送りは20ドット（lcall 0x107e,0 の第1引数 0x14）")
+chk("WindowBody" in _sb and "TextLeft" in _sb,
+    "会話とメニューの文字を原典の内側の位置で置いている")
+chk("lineSpacing" in _sb,"行送りを原典の20ドットに合わせている")
 chk("CanvasScale = 1.8f" in _dwin,"Canvas 基準1152x720 は原典640x400 のちょうど1.8倍")
 _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
 chk("1152f, 720f" in _sb,"シーンの基準解像度が 1152x720")
@@ -1390,7 +1398,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=536
+MIN_CHECKS=540
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

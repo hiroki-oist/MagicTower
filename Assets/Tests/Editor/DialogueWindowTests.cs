@@ -15,13 +15,44 @@ public class DialogueWindowTests
     }
 
     [Test]
-    public void 高さは行数の二十倍足す四()
+    public void 高さは行数の二十倍足す三十二()
     {
-        Assert.AreEqual(24, DialogueWindow.Height(1));
-        Assert.AreEqual(44, DialogueWindow.Height(2));
-        Assert.AreEqual(124, DialogueWindow.Height(6));
-        Assert.AreEqual(164, DialogueWindow.Height(8));
-        Assert.AreEqual(184, DialogueWindow.Height(9));
+        // 本体の塗りは「16行ぶんを4行ずつずらして 5*行数+1 回」なので、
+        // 届く下端は 32 + 20*行数。帯（上端から32行）も含めた大きさ。
+        Assert.AreEqual(52, DialogueWindow.Height(1));
+        Assert.AreEqual(72, DialogueWindow.Height(2));
+        Assert.AreEqual(152, DialogueWindow.Height(6));
+        Assert.AreEqual(192, DialogueWindow.Height(8));
+        Assert.AreEqual(212, DialogueWindow.Height(9));
+    }
+
+    [Test]
+    public void 文字は窓の左上から十六と十二の内側に出る()
+    {
+        // 原典 0x9563〜0x9571: x=0x16 バイト＝176（左端160の16ドット内側）、y=上端+0xc
+        Assert.AreEqual(16, DialogueWindow.TextLeft);
+        Assert.AreEqual(12, DialogueWindow.TextTop);
+        Assert.AreEqual(176, DialogueWindow.Left + DialogueWindow.TextLeft);
+    }
+
+    [Test]
+    public void 行送りは二十ドット()
+    {
+        // lcall 0x107e,0 の第1引数が 0x14（0x66ed / 0xc47e）
+        Assert.AreEqual(20, ScreenLayout.LineAdvance);
+        // 文字は16ドットなので4ドットの空きが付く
+        Assert.AreEqual(4, ScreenLayout.LineAdvance - ScreenLayout.TextCharWidth);
+    }
+
+    [Test]
+    public void 一番下の行は窓の中に収まる()
+    {
+        for (int n = 1; n <= 11; n++)
+        {
+            int bottom = DialogueWindow.TextTop
+                       + ScreenLayout.LineAdvance * (n - 1) + ScreenLayout.TextCharWidth;
+            Assert.LessOrEqual(bottom, DialogueWindow.Height(n), $"{n}行");
+        }
     }
 
     [Test]
@@ -47,7 +78,7 @@ public class DialogueWindowTests
         var body = GameText.Instance.Dialogue(107).Value.Body;
         var r = DialogueWindow.ForBody(body, high: true);
         Assert.AreEqual(9, DialogueBox.WindowLines(body));
-        Assert.AreEqual(new RectInt(160, 50, 320, 184), r);
+        Assert.AreEqual(new RectInt(160, 50, 320, 212), r);
         Assert.IsTrue(DialogueWindow.Fits(r));
     }
 
@@ -56,7 +87,7 @@ public class DialogueWindowTests
     {
         var body = GameText.Instance.Dialogue(156).Value.Body;
         Assert.AreEqual(1, DialogueBox.WindowLines(body), "「うっ……この陣形は……まずいっ！」");
-        Assert.AreEqual(new RectInt(160, 50, 320, 24),
+        Assert.AreEqual(new RectInt(160, 50, 320, 52),
                         DialogueWindow.ForBody(body, high: true));
     }
 
@@ -88,7 +119,7 @@ public class DialogueWindowTests
     {
         var r = DialogueWindow.For(6);                 // (160,120,320,124)
         Assert.AreEqual(new Vector2(288f, -216f), DialogueWindow.ToCanvas(r));
-        Assert.AreEqual(new Vector2(576f, 223.2f), DialogueWindow.SizeOnCanvas(r));
+        Assert.AreEqual(new Vector2(576f, 273.6f), DialogueWindow.SizeOnCanvas(r));
     }
 
     [Test]

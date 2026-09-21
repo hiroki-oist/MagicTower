@@ -202,6 +202,28 @@ public static class TowerSceneBuilder
                         Ending.AnyKeyLine, Ending.AnyKeyDot);
     }
 
+    /// <summary>
+    /// 窓の中の文字。原典は窓の左上から (16,12) の内側に、行送り20ドットで書く
+    /// （x=0x16 バイト＝176、y=上端+0xc、行送りは lcall 0x107e,0 の 0x14）。
+    /// </summary>
+    static TextMeshProUGUI WindowBody(GameObject panelGo, TMP_FontAsset font)
+    {
+        var textGo = new GameObject("Body", typeof(RectTransform));
+        textGo.transform.SetParent(panelGo.transform, false);
+        var trt = textGo.GetComponent<RectTransform>();
+        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
+        trt.offsetMin = new Vector2(DialogueWindow.TextLeft * DialogueWindow.CanvasScale, 0f);
+        trt.offsetMax = new Vector2(0f, -DialogueWindow.TextTop * DialogueWindow.CanvasScale);
+        var tmp = textGo.AddComponent<TextMeshProUGUI>();
+        if (font != null) tmp.font = font;
+        tmp.fontSize = ScreenLayout.TextSizeOnCanvas;
+        tmp.lineSpacing = TowerHud.InfoLineSpacing;
+        tmp.color = DialogueWindowView.Text;
+        tmp.alignment = TextAlignmentOptions.TopLeft;
+        tmp.enableWordWrapping = false;
+        return tmp;
+    }
+
     /// <summary>メニューの窓。11行・上端50 で固定（原典 0x0d1e）。</summary>
     static void BuildMenuWindow(RectTransform screen, TMP_FontAsset font, TowerController controller)
     {
@@ -217,18 +239,7 @@ public static class TowerSceneBuilder
         var img = panelGo.GetComponent<UnityEngine.UI.Image>();
         img.color = DialogueWindowView.Fill;
 
-        var textGo = new GameObject("Body", typeof(RectTransform));
-        textGo.transform.SetParent(panelGo.transform, false);
-        var trt = textGo.GetComponent<RectTransform>();
-        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-        trt.offsetMin = new Vector2(12f, 8f);
-        trt.offsetMax = new Vector2(-12f, -8f);
-        var tmp = textGo.AddComponent<TextMeshProUGUI>();
-        if (font != null) tmp.font = font;
-        tmp.fontSize = 22f;
-        tmp.color = DialogueWindowView.Text;
-        tmp.alignment = TextAlignmentOptions.TopLeft;
-        tmp.enableWordWrapping = false;
+        var tmp = WindowBody(panelGo, font);
 
         var win = screen.gameObject.AddComponent<MenuWindowView>();
         var wso = new SerializedObject(win);
@@ -257,18 +268,7 @@ public static class TowerSceneBuilder
         var img = panelGo.GetComponent<UnityEngine.UI.Image>();
         img.color = DialogueWindowView.Fill;
 
-        var textGo = new GameObject("Body", typeof(RectTransform));
-        textGo.transform.SetParent(panelGo.transform, false);
-        var trt = textGo.GetComponent<RectTransform>();
-        trt.anchorMin = Vector2.zero; trt.anchorMax = Vector2.one;
-        trt.offsetMin = new Vector2(12f, 8f);
-        trt.offsetMax = new Vector2(-12f, -8f);
-        var tmp = textGo.AddComponent<TextMeshProUGUI>();
-        if (font != null) tmp.font = font;
-        tmp.fontSize = 22f;
-        tmp.color = DialogueWindowView.Text;
-        tmp.alignment = TextAlignmentOptions.TopLeft;
-        tmp.enableWordWrapping = false;
+        var tmp = WindowBody(panelGo, font);
 
         var win = screen.gameObject.AddComponent<DialogueWindowView>();
         var wso = new SerializedObject(win);

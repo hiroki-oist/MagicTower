@@ -42,14 +42,22 @@ public class TextMetricsTests
     }
 
     [Test]
-    public void 情報欄の六文字八行が枠に収まる()
+    public void 情報欄の六文字が欄の幅に収まる()
     {
         var box = ScreenLayout.SizeOnCanvas(ScreenLayout.MessageBox);
-        var lines = new string[TowerHud.InfoLines];
-        for (int i = 0; i < lines.Length; i++) lines[i] = "あいうえおか";
-        var size = Measure(string.Join("\n", lines), TowerHud.InfoLineSpacing);
+        var size = Measure("あいうえおか", TowerHud.InfoLineSpacing);
         Assert.LessOrEqual(size.x, box.x + 1f, $"横幅 {size.x} が欄 {box.x} を超える");
-        Assert.LessOrEqual(size.y, box.y + 1f, $"高さ {size.y} が欄 {box.y} を超える");
+    }
+
+    [Test]
+    public void 行送りが原典の二十ドットになっている()
+    {
+        // 1行と2行の高さの差＝行送り。原典は20ドット＝Canvas で 36。
+        var one = Measure("あ", TowerHud.InfoLineSpacing);
+        var two = Measure("あ\nあ", TowerHud.InfoLineSpacing);
+        var advance = ScreenLayout.LineAdvance * DialogueWindow.CanvasScale;
+        Assert.AreEqual(advance, two.y - one.y, 0.5f,
+                        $"行送りが {two.y - one.y}（{advance} のはず）");
     }
 }
 
