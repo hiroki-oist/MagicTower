@@ -233,3 +233,44 @@ public class SpecialItemMenuTests
         StringAssert.Contains("破壊の玉", g.MenuStageText.Split('\n')[3]);
     }
 }
+
+/// <summary>
+/// メニューの「ゲーム終了」。原典はここで DOS へ戻る。
+/// 本線は印を立てるだけにして、実際に閉じるのは入力の側。
+/// </summary>
+public class QuitMenuTests
+{
+    [Test]
+    public void ゲーム終了を選ぶと終わりたいと言う()
+    {
+        var g = new TowerGame(new PlayerState
+        {
+            Hp = 1000, Attack = 10, Defense = 10, Floor = 2,
+            Position = new Vector2Int(0, 0),
+        });
+        g.OpenMenu();
+        Assert.IsFalse(g.Quitting, "開いただけでは終わらない");
+        while (g.MenuCurrent != TowerMenu.Entry.Quit) g.MenuMove(1);
+        g.MenuConfirm();
+        Assert.IsTrue(g.Quitting, "終わりたいと言う");
+        Assert.IsFalse(g.IsMenuOpen, "メニューは閉じる");
+    }
+
+    [Test]
+    public void 入力の側が終わりを受け取る()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
+        StringAssert.Contains("if (Game.Quitting) QuitGame();", src);
+        StringAssert.Contains("Application.Quit()", src);
+    }
+
+    [Test]
+    public void メニューの項目に空の枝が無い()
+    {
+        // 「出しているのに何も起きない」項目を作らない。
+        // 商人・祭壇・アイテム・終了は、この形で3つ見落としていた。
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerGame.cs");
+        foreach (TowerMenu.Entry e in System.Enum.GetValues(typeof(TowerMenu.Entry)))
+            StringAssert.Contains($"TowerMenu.Entry.{e}", src, $"{e} の枝が無い");
+    }
+}

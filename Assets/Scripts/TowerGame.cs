@@ -562,9 +562,22 @@ public class TowerGame
                 break;
             case TowerMenu.Entry.Load: Stage = MenuStage.LoadSlots; SlotIndex = 0; break;
             case TowerMenu.Entry.Save: Stage = MenuStage.SaveSlots; SlotIndex = 0; break;
+            case TowerMenu.Entry.Quit:
+                // 原典はここで DOS へ戻る。こちらは**入力の側**が受け取って
+                // 遊びを閉じる（本線は「終わりたい」と言うだけにして、
+                // 画面や実行の後始末は見た目の層に任せる）。
+                Quitting = true;
+                CloseMenu();
+                break;
         }
         return e;
     }
+
+    /// <summary>
+    /// 「ゲーム終了」が選ばれたか。原典（メニューの最後の項目）は DOS へ戻る。
+    /// 本線はここで印を立てるだけで、実際に閉じるのは入力の側。
+    /// </summary>
+    public bool Quitting { get; private set; }
 
     /// <summary>アイテムの一覧で今選んでいるもの。</summary>
     public int ItemIndex { get; private set; }

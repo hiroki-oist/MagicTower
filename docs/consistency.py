@@ -2062,6 +2062,14 @@ chk("case TowerMenu.Entry.SpecialItems:" in _tg4 and "MenuStage.Items" in _tg4,
 chk("public bool ConfirmItem()" in _tg4 and "UseItem(TowerMenu.Usable[ItemIndex])" in _tg4,
     "選んだアイテムが UseItem に繋がっている")
 chk("Game.ItemMove" in _ctrl,"入力の側がアイテムの選び直しに繋がっている")
+# メニューの項目に「出しているのに何も起きない」枝を作らない（3つ見落とした形）
+_entries=re.search(r"public enum Entry\s*\{([^}]*)\}",
+                   open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read(),re.S)
+_names=[v.strip() for v in _entries.group(1).replace("\n"," ").split(",") if v.strip()]
+_noarm=[v for v in _names if f"TowerMenu.Entry.{v}" not in _tg4]
+chk(not _noarm,"メニューの項目はどれも本線に枝がある",str(_noarm))
+chk("public bool Quitting" in _tg4 and "if (Game.Quitting) QuitGame();" in _ctrl,
+    "「ゲーム終了」が遊びを閉じるところまで繋がっている")
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("SpecialItems.Kind.Elixir,          // special_1" in _tm,
     "アイテムの並びは原典（special_1〜8）そのまま")
@@ -2079,7 +2087,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=699
+MIN_CHECKS=701
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

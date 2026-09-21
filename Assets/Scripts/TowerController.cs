@@ -146,7 +146,14 @@ public class TowerController : MonoBehaviour
             }
             return true;
         }
-        if (MenuKeyDown()) { Game.MenuConfirm(); return true; }
+        if (MenuKeyDown())
+        {
+            Game.MenuConfirm();
+            // 「ゲーム終了」。原典は DOS へ戻るので、こちらは遊びを閉じる
+            // （エディタで試している間は再生を止める）。
+            if (Game.Quitting) QuitGame();
+            return true;
+        }
         return false;
     }
 
@@ -169,6 +176,16 @@ public class TowerController : MonoBehaviour
         else PlacePlayerView();
 
         if (sound != null) sound.Flush(Game);      // 本線が積んだ音を鳴らす
+    }
+
+    /// <summary>遊びを閉じる。原典のメニューの「ゲーム終了」（DOS へ戻る）に当たる。</summary>
+    static void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 
     /// <summary>移動の演出の最中か。</summary>
