@@ -1200,6 +1200,11 @@ chk(all(os.path.exists(f"Assets/Sprites/Screens/Ending_Text_{_i}.png") for _i in
     "終わりの言葉が5枚ある（段落が0〜4つ出た状態）")
 chk("塔の絵" in _cs_steps and "終わりの言葉" in _cs_steps,
     "終幕に塔の絵と終わりの言葉の段がある")
+# 走らせ直しの取り違えを防ぐ（Unity が落ちると前回の結果が残る）
+chk("rm -f \"$OUT/results.xml\"" in open("docs/run_tests.sh",encoding="utf-8").read(),
+    "テストを走らせる前に前回の結果を消す")
+chk("結果が出ていない" in open("docs/run_tests.sh",encoding="utf-8").read(),
+    "結果が出ていなければ落ちたと分かるようにする")
 # 場面の中の地図の書き換え（原典 0x3044 の三つ組の表から取った）
 _cs_map=[n for n in _cs_steps if n.startswith("地図 ")]
 chk(len(_cs_map)==12,"場面の中の地図の書き換えは12件（20階のボス登場10・40階の金騎士2）",len(_cs_map))
@@ -1703,7 +1708,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=613
+MIN_CHECKS=615
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

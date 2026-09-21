@@ -157,3 +157,75 @@ public class CutsceneTests
         Assert.AreNotEqual(before, g.Player.Position);
     }
 }
+
+/// <summary>
+/// 場面を最後まで送り切れるか。段を足したときに途中で止まらないかを見る。
+/// </summary>
+public class ScenePlaythroughTests
+{
+    static TowerGame Game(int floor, Vector2Int at)
+    {
+        return new TowerGame(new PlayerState
+        {
+            Hp = 9990, Attack = 999, Defense = 999, Floor = floor, Position = at
+        });
+    }
+
+    /// <summary>その場面を最後まで送って、出たページの種類を並べて返す。</summary>
+    static System.Collections.Generic.List<TowerGame.PageKind> Drain(TowerGame g, string scene)
+    {
+        Assert.IsTrue(g.PlayScene(scene), $"{scene} が流れない");
+        var kinds = new System.Collections.Generic.List<TowerGame.PageKind>();
+        int guard = 0;
+        while (g.Current.HasValue && guard++ < 200)
+        {
+            kinds.Add(g.Current.Value.Kind);
+            g.NextPage();
+        }
+        Assert.Less(guard, 200, "終わらない");
+        return kinds;
+    }
+
+    [Test]
+    public void 終幕を最後まで送れる()
+    {
+        var g = Game(50, new Vector2Int(0, -1));
+        var kinds = Drain(g, "終幕");
+
+        // 駆け上がる → セリフ161〜170 → 塔の絵 → 終わりの言葉×4 → 最後の画面
+        Assert.AreEqual(10, kinds.FindAll(k => k == TowerGame.PageKind.Dialogue).Count,
+                        "ゼノとの最後のやりとりは10ページ");
+        Assert.AreEqual(1, kinds.FindAll(k => k == TowerGame.PageKind.EndingTower).Count,
+                        "塔の絵は1枚");
+        Assert.AreEqual(Cutscenes.EndingTextParagraphs,
+                        kinds.FindAll(k => k == TowerGame.PageKind.EndingText).Count,
+                        "終わりの言葉は段落の数だけ");
+        Assert.AreEqual(TowerGame.PageKind.FinalScreen, kinds[kinds.Count - 1],
+                        "いちばん最後は最後の画面");
+    }
+
+    [Test]
+    public void 序章を最後まで送れる()
+    {
+        var g = Game(3, new Vector2Int(-1, -3));
+        var kinds = Drain(g, "ゼノとの初対面");
+
+        Assert.AreEqual(1, kinds.FindAll(k => k == TowerGame.PageKind.Title).Count,
+                        "題名は1枚");
+        Assert.AreEqual(Cutscenes.PrologueLines,
+                        kinds.FindAll(k => k == TowerGame.PageKind.Prologue).Count,
+                        "序章の絵は行の数だけ");
+        Assert.AreEqual(2, g.Player.Floor, "送り終わると2階にいる");
+    }
+
+    [Test]
+    public void どの場面も最後まで送れる()
+    {
+        foreach (var name in Cutscenes.Instance.Names)
+        {
+            var g = Game(50, new Vector2Int(0, -1));
+            var kinds = Drain(g, name);
+            Assert.Greater(kinds.Count, 0, $"{name} でページが出ない");
+        }
+    }
+}

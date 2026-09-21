@@ -10,11 +10,19 @@ set -e
 UNITY=/Applications/Unity/Hub/Editor/2022.3.11f1/Unity.app/Contents/MacOS/Unity
 OUT="${1:-/tmp/mt_tests}"
 mkdir -p "$OUT"
+# 前回の結果を消しておく。**Unity が落ちると結果ファイルが古いまま残り、
+# それを読んで「前回の失敗」を今回の結果だと思い込む**ことがあった（Bus error）。
+rm -f "$OUT/results.xml"
 "$UNITY" -batchmode -nographics \
   -projectPath "$HOME/Code/MagicTower" \
   -runTests -testPlatform EditMode \
   -testResults "$OUT/results.xml" \
   -logFile "$OUT/unity.log" || true
+if [ ! -f "$OUT/results.xml" ]; then
+  echo "結果が出ていない（Unity が落ちたか、コンパイルできていない）"
+  grep -i "error CS" "$OUT/unity.log" | head -5
+  exit 1
+fi
 python3 - "$OUT/results.xml" <<'PY'
 import sys, xml.etree.ElementTree as ET
 r = ET.parse(sys.argv[1]).getroot()
