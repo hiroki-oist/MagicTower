@@ -81,6 +81,18 @@ public class DialogueWindowView : MonoBehaviour
     /// <summary>
     /// 印の絵を選んでいる行へ置く。原典（0x9e78）は行の高さぶんずつ印を動かす。
     /// </summary>
+
+    /// <summary>印の絵を2枚で切り替える（原典 0x9e78 の数え。規則は <see cref="ChoiceCursor"/>）。</summary>
+    [SerializeField] Sprite cursorFrame2;
+
+    void Blink()
+    {
+        if (cursor == null || cursorFrame2 == null) return;
+        if (cursorFirst == null) cursorFirst = cursor.sprite;      // 組み立て器が入れた1枚目
+        cursor.sprite = ChoiceCursor.FrameAt(Time.time) == 0 ? cursorFirst : cursorFrame2;
+    }
+
+    Sprite cursorFirst;
     void PlaceCursor(string page)
     {
         if (cursor == null) return;
@@ -88,6 +100,7 @@ public class DialogueWindowView : MonoBehaviour
         bool show = line >= 0;
         if (cursor.enabled != show) cursor.enabled = show;
         if (!show) return;
+        Blink();
         int left    = AuthorStyle.Enabled ? AuthorStyle.DialogueTextLeft : DialogueWindow.TextLeft;
         int top     = AuthorStyle.Enabled ? AuthorStyle.DialogueTextTop  : DialogueWindow.TextTop;
         int advance = AuthorStyle.Enabled ? AuthorStyle.DialogueLineAdvance

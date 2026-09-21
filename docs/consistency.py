@@ -2101,6 +2101,16 @@ chk("Image cursor" in _mvw and "PlaceCursor" in _mvw,"メニューの窓が印�
 _dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
 chk("Image cursor" in _dwv and "static int ChoiceLine(" in _dwv,
     "セリフの窓も同じ印の絵を置く（「◎」の行を数えて合わせる）")
+# 印は2枚で切り替わる。PICTURE.P58 の5枚は実際の大きさを足すと原典の変位に一致する。
+_cc=open("Assets/Scripts/UI/ChoiceCursor.cs",encoding="utf-8").read()
+chk("StepsPerFrame = 0x15" in _cc,"印の切り替えは 0〜0x14 / 0x15〜0x28（原典 0x9f7f / 0x9fae）")
+chk("読み切れていない" in _cc,"切り替えの速さが読み切れていないと明記してある")
+_at=-0x40c
+for _sz,_want in zip((65,74,74,111,112),(-0x40c,-0x3cb,-0x381,-0x337,-0x2c8)):
+    if _at!=_want: chk(False,"PICTURE.P58 の5枚が変位とぴったり並ぶ",f"{_at:#x}≠{_want:#x}"); break
+    _at+=_sz
+else:
+    chk(True,"PICTURE.P58 の5枚（鍵3枚＋印2枚）が変位とぴったり並ぶ")
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("SpecialItems.Kind.Elixir,          // special_1" in _tm,
     "アイテムの並びは原典（special_1〜8）そのまま")
@@ -2118,7 +2128,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=710
+MIN_CHECKS=713
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

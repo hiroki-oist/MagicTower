@@ -178,3 +178,42 @@ public class DialogueCursorTests
         StringAssert.Contains("ScreenLayout.LineAdvance", src);
     }
 }
+
+/// <summary>
+/// 印は2枚で切り替わる。原典 `0x9e78` の数え（0〜0x14 で PICTURE #3、
+/// 0x15〜0x28 で #4、そのあと0へ戻る）。
+/// </summary>
+public class ChoiceCursorTests
+{
+    [Test]
+    public void 変位が五枚ぴったり並ぶ()
+    {
+        // 実際の大きさ 65 / 74 / 74 / 111 / 112 バイトを足すと原典の変位に一致する
+        int[] size = { 65, 74, 74, 111, 112 };
+        int at = -0x40c;
+        var want = new[] { -0x40c, -0x3cb, -0x381, -0x337, -0x2c8 };
+        for (int i = 0; i < size.Length; i++)
+        {
+            Assert.AreEqual(want[i], at, $"PICTURE #{i} の変位");
+            at += size[i];
+        }
+    }
+
+    [Test]
+    public void 二枚が順に出る()
+    {
+        Assert.AreEqual(0x15, ChoiceCursor.StepsPerFrame);
+        Assert.AreEqual(11f / 60f, ChoiceCursor.StepSeconds, 1e-6f);
+        Assert.AreEqual(0, ChoiceCursor.FrameAt(0f));
+        Assert.AreEqual(0, ChoiceCursor.FrameAt(ChoiceCursor.FrameSeconds * 0.9f));
+        Assert.AreEqual(1, ChoiceCursor.FrameAt(ChoiceCursor.FrameSeconds * 1.1f));
+        Assert.AreEqual(0, ChoiceCursor.FrameAt(ChoiceCursor.FrameSeconds * 2.1f));
+    }
+
+    [Test]
+    public void 速さが読み切れていないことを明記してある()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/UI/ChoiceCursor.cs");
+        StringAssert.Contains("読み切れていない", src);
+    }
+}

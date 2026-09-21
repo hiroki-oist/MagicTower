@@ -27,12 +27,25 @@ public class MenuWindowView : MonoBehaviour
     [SerializeField] UnityEngine.UI.Image cursor;
 
     /// <summary>印を置く行へ動かす。</summary>
+
+    /// <summary>印の絵を2枚で切り替える（原典 0x9e78 の数え。規則は <see cref="ChoiceCursor"/>）。</summary>
+    [SerializeField] Sprite cursorFrame2;
+
+    void Blink()
+    {
+        if (cursor == null || cursorFrame2 == null) return;
+        if (cursorFirst == null) cursorFirst = cursor.sprite;      // 組み立て器が入れた1枚目
+        cursor.sprite = ChoiceCursor.FrameAt(Time.time) == 0 ? cursorFirst : cursorFrame2;
+    }
+
+    Sprite cursorFirst;
     void PlaceCursor(TowerGame g)
     {
         if (cursor == null) return;
         bool show = g.IsMenuOpen;
         if (cursor.enabled != show) cursor.enabled = show;
         if (!show) return;
+        Blink();
         int line = g.MenuStageIndex + 1;                 // 1行目は見出し
         var rt = cursor.rectTransform;
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);

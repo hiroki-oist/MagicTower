@@ -472,6 +472,8 @@ public static class TowerSceneBuilder
         wso.FindProperty("background").objectReferenceValue = img;
         wso.FindProperty("body").objectReferenceValue = tmp;
         wso.FindProperty("cursor").objectReferenceValue = cur;
+        wso.FindProperty("cursorFrame2").objectReferenceValue =
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Cursor_1.png");
         wso.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);
@@ -521,6 +523,8 @@ public static class TowerSceneBuilder
         dcur.raycastTarget = false;
         dcur.enabled = false;
         wso.FindProperty("cursor").objectReferenceValue = dcur;
+        wso.FindProperty("cursorFrame2").objectReferenceValue =
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Cursor_1.png");
         wso.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);
