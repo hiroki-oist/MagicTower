@@ -61,6 +61,7 @@
   <ItemGroup>
     <Compile Include="Assets/Tests/Editor/NpcTouchTests.cs" />
     <Compile Include="Assets/Tests/Editor/ScreenLayoutTests.cs" />
+    <Compile Include="Assets/Tests/Editor/ViewMatchesBoardTests.cs" />
     <Compile Include="Assets/Tests/Editor/CutsceneTests.cs" />
     <Compile Include="Assets/Tests/Editor/DialogueFlowTests.cs" />
     <Compile Include="Assets/Tests/Editor/RuntimeSmokeTests.cs" />

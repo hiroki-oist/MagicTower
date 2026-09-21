@@ -656,6 +656,9 @@ _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
 chk("AudioListener" in _sb,"音を聴く耳をシーンに置く")
 chk("matchWidthOrHeight = 1f" in _sb,"画布は縦を基準に合わせる")
 chk('GameObject("Screen"' in _sb,"画面の中身は中央に置いた入れ物に入れる")
+_vmb=open("Assets/Tests/Editor/ViewMatchesBoardTests.cs",encoding="utf-8").read()
+chk("AssertMatches" in _vmb and _vmb.count("AssertMatches(g,")>=4,
+    "一手ごとに画面と盤面を突き合わせる検査がある")
 for _m in ("Assets/Sprites/Effects/Player_0.png.meta","Assets/Sprites/Effects/Hit.png.meta"):
     chk("spritePixelsToUnits: 32" in open(_m,encoding="utf-8").read(),
         f"{_os.path.basename(_m)} は1マス32ドットで取り込む")
@@ -1296,7 +1299,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=505
+MIN_CHECKS=506
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
