@@ -98,6 +98,47 @@ public static class TowerPlaythrough
         return sb.ToString();
     }
 
+    /// <summary>
+    /// 行き詰まった階から**一度下へ戻り、下の階を探し直してからまた上がる**。
+    /// 鍵やアイテムを取り残していると上で詰まるので、人が遊ぶときと同じ手筋を入れる。
+    /// 何か持ち物が増えて戻ってこられたら true。
+    /// </summary>
+    static bool GoBackAndReturn(TowerGame game, StringBuilder sb, int floor)
+    {
+        var down = FindStairs(game.Floor, "<");
+        if (!down.HasValue) return false;
+
+        int before = Wealth(game.Player);
+        var path = Route(game.Floor, game.Player.Position, down.Value, null, game);
+        if (path == null) return false;
+
+        foreach (var step in path)
+        {
+            var d = step - game.Player.Position;
+            game.Step(d);
+            while (game.IsShowingPage) game.NextPage();
+            if (game.Player.Floor != floor) break;
+        }
+        if (game.Player.Floor >= floor) return false;      // 下りられなかった
+
+        int lower = game.Player.Floor;
+        var up = FindStairs(game.Floor, ">");
+        if (!up.HasValue) return false;
+        ExploreFloor(game, up.Value, 3000);                 // 下の階を拾い直す
+
+        if (game.Player.Floor == lower) return false;        // 上がれなかった
+        int after = Wealth(game.Player);
+        sb.AppendLine($"F{floor}: 行き詰まったので F{lower} へ戻った "
+                    + $"（{Describe(game)}）");
+        return after > before;
+    }
+
+    /// <summary>持ち物の量。戻った甲斐があったかを見るのに使う。</summary>
+    static int Wealth(PlayerState p)
+    {
+        return KeySum(p) * 100 + p.Attack + p.Defense + p.Gold / 10;
+    }
+
     /// <summary>その階で立てる場所（下り階段の隣、無ければ床のどこか）。</summary>
     static Vector2Int? StartCell(TowerGame game)
     {
@@ -139,6 +180,10 @@ public static class TowerPlaythrough
             var why = ExploreFloor(game, goal.Value, 4000);
             if (game.Player.Floor == floor)
             {
+                // 行き詰まったら**下の階へ戻って取り残しを拾う**。
+                // 原典でも階段は上下どちらにも使えるので、人が遊ぶときの手筋に合わせる。
+                if (GoBackAndReturn(game, sb, floor)) continue;
+
                 sb.AppendLine($"F{floor}: 階段({goal.Value.x:+#;-#;0},{goal.Value.y:+#;-#;0}) に届かない — {why}");
                 sb.AppendLine($"        {Describe(game)}");
                 break;
@@ -179,6 +224,7 @@ public static class TowerPlaythrough
         var goal = goalOrNull ?? Vector2Int.zero;
         bool hasGoal = goalOrNull.HasValue;
         int startFloor = game.Player.Floor;
+        desperate = false;
         var giveUp = new HashSet<Vector2Int>();
         // 用の済んだ人。商人は買うたびに鍵の数が変わるので、
         // 諦めた扉と同じ扱いにすると「買う→諦めを忘れる→また買う」を延々くり返す。
@@ -201,6 +247,18 @@ public static class TowerPlaythrough
             }
 
             var next = NearestTarget(game, giveUp);
+            if (next == null && hasGoal
+                && Route(game.Floor, game.Player.Position, goal, giveUp, game) == null)
+            {
+                // 触れるものが無く階段へも行けない＝手詰まり。
+                // ここで初めて「避けていた戦い」を受けにいく。
+                if (!desperate)
+                {
+                    desperate = true;
+                    next = NearestTarget(game, giveUp);
+                }
+            }
+            else if (next != null) desperate = false;
             if (!hasGoal && next == null) return "触れるものが残っていない";
             // 扉しか残っていないのに階段へは行けるなら、鍵を使わずに上がる。
             // 原典の遊び方に近く、次の階へ鍵を持ち越せる（4階は鍵1本が要る）。
@@ -340,6 +398,12 @@ public static class TowerPlaythrough
     }
 
     /// <summary>その敵と戦うと痛すぎるか。</summary>
+    /// <summary>
+    /// 手詰まりのときだけ立てる。**生き残れる戦いなら受けて立つ**ようになる。
+    /// ふだんは「受けるダメージが生命力の1/4以上なら避ける」で温存する。
+    /// </summary>
+    static bool desperate;
+
     static bool TooCostly(TowerGame game, string enemy)
     {
         var e = TowerBattle.LoadEnemy(enemy);
@@ -350,7 +414,9 @@ public static class TowerPlaythrough
         var r = BattleRules.Predict(p.Attack, p.Defense, e.MaxHP, e.Attack, e.Defense,
                                     e.Coin, kind, charms);
         if (!r.CanWin) return true;
-        // 隣の魔術士からの魔法攻撃は読み切れないので、余裕をもって避ける。
+        // 手詰まりのときは「死なない戦い」なら受ける（余力を残す意味が無いので）。
+        if (desperate) return r.DamageTaken >= p.Hp - 1;
+        // ふだんは隣の魔術士からの魔法攻撃も読めないので、余裕をもって避ける。
         return r.DamageTaken * 4 >= p.Hp;
     }
 
