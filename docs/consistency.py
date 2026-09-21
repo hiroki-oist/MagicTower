@@ -1065,7 +1065,19 @@ def _rgba(path):
         out.append(bytes(line)); prev=line
     return w,h,ct,out
 _tiles=sorted(q for q in glob.glob("Assets/Sprites/Tiles/*.png") if not q.endswith("_b.png"))
-chk(len(_tiles)==93,"タイルは93枚（1コマ目）",str(len(_tiles)))
+chk(len(_tiles)==96,"タイルは96枚（1コマ目）",str(len(_tiles)))
+# 参照が外れていると何も言わずに消えるので、プレハブの絵の参照先を全部確かめる
+_guids=set()
+for _m in glob.glob("Assets/**/*.meta",recursive=True):
+    for _l in open(_m,encoding="utf-8",errors="ignore"):
+        if _l.startswith("guid: "): _guids.add(_l.split()[1]); break
+_dangling=[]
+for _pf in glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
+    for _l in open(_pf,encoding="utf-8",errors="ignore"):
+        _m2=re.search(r"m_Sprite: \{fileID: \d+, guid: ([0-9a-f]{32})",_l)
+        if _m2 and _m2.group(1) not in _guids:
+            _dangling.append(os.path.basename(_pf))
+chk(not _dangling,"プレハブの絵の参照先が全部ある",str(_dangling))
 chk(len(_second)==24,"2コマ目24枚も Assets に置く（原典 0x92a4 が実際に描く）")
 # 2の冪でない絵は nPOTScale を 0 にしないと Sprite として取り込めない（3x3のボスが消えていた）
 for _m in ("900_Boss_Dragon","901_Boss_GiantOctopus","902_Shop_Altar",
@@ -1429,7 +1441,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=548
+MIN_CHECKS=549
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
