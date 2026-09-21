@@ -778,6 +778,12 @@ chk("if (sliding) return;" in _tc and "IEnumerator Slide(" in _tc,
     "1マスの移動を滑らかに出し、その間は入力を止める")
 chk("MonsterAnimation.FastTicksPerStep : MonsterAnimation.TicksPerStep" in _tc,
     "コマ数は高速モードで半分になる")
+# 窓が開く様子（0x94ba / 0x9412）。1きざみごとに縦帰線を1回待つ（高速モードは待たない）
+chk(_dis.count("lcall   0xf5f, 0x3d9")>=2,"窓の塗り広げは縦帰線を待つ")
+_dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
+chk("IEnumerator Open(" in _dwv and "if (!fast) yield return" in _dwv,
+    "窓は塗り広げながら開き、高速モードでは待たない")
+chk("body.enabled = false" in _dwv,"文字は塗り終わってから出す（原典も塗りのあと）")
 chk("TickOnce" in open("Assets/Scripts/Floor/MonsterAnimator.cs",encoding="utf-8").read()
     and "monsters.TickOnce()" in _tc,
     "コマごとに敵と人の絵も1回ずつ動かす（原典は移動の演出の中から 0x92a4 を呼ぶ）")
@@ -1547,7 +1553,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=577
+MIN_CHECKS=580
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

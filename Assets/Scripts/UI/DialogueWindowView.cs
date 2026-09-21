@@ -41,8 +41,53 @@ public class DialogueWindowView : MonoBehaviour
             if (body != null) { body.text = page; body.color = Text; }
             if (background != null) background.color = Fill;
             Layout(page);
+            StartOpening(page);
         }
     }
+
+    /// <summary>開いている途中のコルーチン。出し直すときは止める。</summary>
+    Coroutine opening;
+
+    void StartOpening(string page)
+    {
+        if (panel == null) return;
+        if (opening != null) StopCoroutine(opening);
+        if (!isActiveAndEnabled) return;
+        opening = StartCoroutine(Open(page));
+    }
+
+    /// <summary>
+    /// 窓が開く様子。原典（0x94ba / 0x9412）は
+    /// **上の帯（32行）を貼ってから、本体を16行ぶんずつ4行きざみで下へ塗り広げる**。
+    /// 1枚塗るごとに縦帰線を1回待つ（`lcall 0xf5f, 0x3d9`）ので、
+    /// **1きざみ = 1/60秒**。塗る回数は 5×行数+1 で、届く下端は 32+4×きざみ。
+    /// 高速モード（旗31）のときは待ちを入れない（0x9478 / 0x9546）。
+    /// 文字は塗り終わってから書く（原典 0x9563 も塗りのあと）。
+    /// </summary>
+    System.Collections.IEnumerator Open(string page)
+    {
+        var r = DialogueWindow.ForBody(page, high: HighFor(page));
+        int lines = DialogueBox.WindowLines(page);
+        int times = 0x14 * lines / DialogueWindow.RowStep + 1;
+        bool fast = controller != null && controller.Game != null
+                    && controller.Game.Player.FastMode;
+
+        if (body != null) body.enabled = false;
+        for (int i = 0; i <= times - 1; i++)
+        {
+            int h = Mathf.Min(DialogueWindow.StripHeight + DialogueWindow.RowStep * i,
+                              r.height);
+            panel.sizeDelta = new Vector2(r.width * DialogueWindow.CanvasScale,
+                                          h * DialogueWindow.CanvasScale);
+            if (!fast) yield return new WaitForSeconds(MonsterAnimation.FrameSeconds);
+        }
+        panel.sizeDelta = DialogueWindow.SizeOnCanvas(r);
+        if (body != null) body.enabled = true;
+        opening = null;
+    }
+
+    /// <summary>開いている途中か（テストから見る）。</summary>
+    public bool IsOpening { get { return opening != null; } }
 
     /// <summary>原典の寸法で窓を置き直す。</summary>
     void Layout(string page)

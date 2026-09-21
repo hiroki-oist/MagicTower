@@ -141,3 +141,41 @@ public class WindowViewTests
         finally { Object.DestroyImmediate(root); Object.DestroyImmediate(host); }
     }
 }
+
+/// <summary>
+/// 窓が開く様子（原典 0x94ba / 0x9412 の塗り広げ）。
+/// </summary>
+public class WindowOpenTests
+{
+    [Test]
+    public void 塗る回数と届く下端が原典の式どおり()
+    {
+        foreach (var lines in new[] { 1, 2, 6, 9, 11 })
+        {
+            int times = 0x14 * lines / DialogueWindow.RowStep + 1;
+            Assert.AreEqual(5 * lines + 1, times, $"{lines}行の塗る回数");
+            int last = DialogueWindow.StripHeight + DialogueWindow.RowStep * (times - 1);
+            Assert.AreEqual(DialogueWindow.Height(lines), last, $"{lines}行の下端");
+        }
+    }
+
+    [Test]
+    public void 一きざみは一フレーム()
+    {
+        // 原典は1枚塗るごとに縦帰線を1回待つ（lcall 0xf5f, 0x3d9）
+        Assert.AreEqual(1f / 60f, MonsterAnimation.FrameSeconds, 1e-6f);
+        // 6行の窓なら 31 きざみ ≒ 0.52 秒
+        int times = 0x14 * 6 / DialogueWindow.RowStep + 1;
+        Assert.AreEqual(31, times);
+    }
+
+    [Test]
+    public void 高速モードでは待たずに開く()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/UI/DialogueWindowView.cs");
+        StringAssert.Contains("FastMode", src);
+        StringAssert.Contains("if (!fast) yield return", src);
+        // 文字は塗り終わってから出す（原典 0x9563 も塗りのあと）
+        StringAssert.Contains("body.enabled = false", src);
+    }
+}
