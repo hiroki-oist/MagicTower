@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
   m_Name: Enemy_SlimeR
   m_EditorClassIdentifier: 
-  name: "\uFF32\u30B9\u30E9\u30A4\u30E0"
+  name: " \uFF32\u30B9\u30E9\u30A4\u30E0"
   maxHP: 45
   attack: 20
   defense: 2

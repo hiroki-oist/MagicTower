@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
   m_Name: Enemy_GiantOctopus
   m_EditorClassIdentifier: 
-  name: "\u5927\u30C0\u30B3"
+  name: "\u3000 \u5927\u30C0\u30B3"
   maxHP: 1200
   attack: 180
   defense: 20

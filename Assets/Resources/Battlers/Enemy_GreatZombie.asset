@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
   m_Name: Enemy_GreatZombie
   m_EditorClassIdentifier: 
-  name: "\u6B7B\u970A\u5175\u58EB"
+  name: "\u3000\u6B7B\u970A\u5175\u58EB"
   maxHP: 220
   attack: 180
   defense: 30

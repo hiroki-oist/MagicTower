@@ -57,7 +57,8 @@ public class TowerHudTests
     {
         var i = TowerHud.Inspect(player, "Enemy_SlimeG");
         Assert.IsTrue(i.Valid);
-        Assert.AreEqual("Ｇスライム", i.Name);
+        // 原典は名前の側に中央寄せの空白を持っている（欄は全角6文字＝96ドット）
+        Assert.AreEqual(" Ｇスライム", i.Name);
         Assert.AreEqual("３５", i.Hp);
         Assert.AreEqual("１８", i.Attack);
         Assert.AreEqual("１", i.Defense);

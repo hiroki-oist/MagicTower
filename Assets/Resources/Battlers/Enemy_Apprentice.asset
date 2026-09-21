@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
   m_Name: Enemy_Apprentice
   m_EditorClassIdentifier: 
-  name: "\u50E7\u4FB6"
+  name: "\u3000\u3000\u50E7\u4FB6"
   maxHP: 60
   attack: 32
   defense: 8

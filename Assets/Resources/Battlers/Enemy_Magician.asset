@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f05a13c0f12c446f8bc085f7462f4b94, type: 3}
   m_Name: Enemy_Magician
   m_EditorClassIdentifier: 
-  name: "\u4E0A\u7D1A\u50E7\u4FB6"
+  name: "\u3000\u4E0A\u7D1A\u50E7\u4FB6"
   maxHP: 100
   attack: 95
   defense: 30

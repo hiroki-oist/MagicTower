@@ -94,24 +94,25 @@ chk("GameText.Instance.Message" in open("Assets/Scripts/TowerGame.cs",
 
 print("\n【7a2】モンスターの表示名（MTE.EXE の nameptr から直接）")
 import struct as _st
-_d=open('/private/tmp/claude-501/-Users-hirokisawada/9fcd3364-0b8e-46a3-83df-425be50eba00/scratchpad/fd/MTE.EXE','rb').read() if os.path.exists('/private/tmp/claude-501/-Users-hirokisawada/9fcd3364-0b8e-46a3-83df-425be50eba00/scratchpad/fd/MTE.EXE') else None
-if _d:
-    _HDR,_DG=4608,0x12340
-    def _nm(o):
-        p2=_HDR+_DG+o; e=_d.index(b"\0",p2); return _d[p2:e].decode("cp932").replace("\u3000","").strip()
-    _un=lambda x: re.sub(r"\\u([0-9A-Fa-f]{4})", lambda m:chr(int(m.group(1),16)), x or "")
-    _bad=[]
-    for _m in json.load(open("docs/original/monsters.json")):
-        _f=ID2.get(_m["id"])
-        if not _f: continue
-        _p=f"Assets/Resources/Battlers/{_f}.asset"
-        if not os.path.exists(_p): continue
-        _t=open(_p,encoding="utf-8").read()
-        _g=re.search(r'^  name: "(.*)"$',_t,re.M)
-        if not _g or _un(_g.group(1))!=_nm(_m["nameptr"]): _bad.append((_m["id"],_f))
-    chk(not _bad, "33体の表示名が原典と一致", f"不一致 {len(_bad)}件 {_bad[:4]}")
-else:
-    print("    ※ MTE.EXE が見つからないので表示名の検査は省略")
+_d=open("docs/original/disk/MTE.EXE","rb").read()
+_HDR,_DG=4608,0x12340
+def _nm(o):
+    p2=_HDR+_DG+o; e=_d.index(b"\0",p2); return _d[p2:e].decode("cp932")
+_un=lambda x: re.sub(r"\\u([0-9A-Fa-f]{4})", lambda m:chr(int(m.group(1),16)), x or "")
+_bad=[]
+for _m in json.load(open("docs/original/monsters.json")):
+    _f=ID2.get(_m["id"])
+    if not _f: continue
+    _p=f"Assets/Resources/Battlers/{_f}.asset"
+    if not os.path.exists(_p): continue
+    _t=open(_p,encoding="utf-8").read()
+    _g=re.search(r'^  name: "(.*)"$',_t,re.M)
+    if not _g or _un(_g.group(1))!=_nm(_m["nameptr"]): _bad.append((_m["id"],_f))
+# **空白ごとそのまま**比べる。原典は名前の側に中央寄せの空白を持っていて、
+# それを右下の欄の (528,272) にそのまま書く（0x9626）。
+# 以前ここで空白を落として比べていたので、リメイク側も落とした名前を持っていた。
+chk(not _bad, "33体の表示名が原典と一致（中央寄せの空白も込み）",
+    f"不一致 {len(_bad)}件 {_bad[:4]}")
 
 print("\n【7a3】十字架・ドラゴンスレイヤーの対象（原典 0x6101 / 0x6142）")
 _br=open("Assets/Scripts/Battle/BattleRules.cs",encoding="utf-8").read()
@@ -967,6 +968,41 @@ for _l in open("docs/original/floor_video_match.txt",encoding="utf-8"):
     _p=[t.strip() for t in _l.split("|")]
     _fv.append((int(_p[0]), int(_p[1])))
 chk(len(_fv)==50,"突き合わせの表は50階ぶん",str(len(_fv)))
+# モンスターの名前は原典の文字列そのまま（中央寄せの空白も含めて）
+import struct as _st2, codecs as _cd
+_exe3=open("docs/original/disk/MTE.EXE","rb").read(); _dg3=4608+0x12340
+_mnames={}; _b3=0x63c
+while _b3+14<=0x112c:
+    _mid=_st2.unpack("<H",_exe3[_dg3+_b3:_dg3+_b3+2])[0]
+    _off=_st2.unpack("<H",_exe3[_dg3+_b3+10:_dg3+_b3+12])[0]
+    _b3+=14
+    if _mid==0: break
+    if _mid in _mnames or _off==0: continue
+    _e3=_exe3.find(b"\x00",_dg3+_off,_dg3+_off+40)
+    if _e3<0: continue
+    try: _mnames[_mid]=_exe3[_dg3+_off:_e3].decode("cp932")
+    except UnicodeDecodeError: pass
+chk(len(_mnames)>=60,"原典から名前が60件以上取れる",str(len(_mnames)))
+_oid2={}
+for _l in open("Assets/Resources/ObjectIds.txt",encoding="utf-8"):
+    if _l.startswith("#") or "|" not in _l: continue
+    _a2,_b2=_l.split("|"); _oid2.setdefault(_a2.strip(),int(_b2.strip()))
+_nbad=[]
+for _p3 in glob.glob("Assets/Resources/Battlers/*.asset"):
+    _k3=os.path.basename(_p3)[:-6]; _o3=_oid2.get(_k3)
+    if _o3 is None or _o3 not in _mnames: continue
+    _m3=re.search(r"\n  name: (.*)",open(_p3,encoding="utf-8").read())
+    _v3=_m3.group(1).strip()
+    _cur=_cd.decode(_v3[1:-1],"unicode_escape") if _v3.startswith('"') else _v3
+    if _cur!=_mnames[_o3]: _nbad.append(_k3)
+chk(not _nbad,"モンスターの名前が原典そのまま（中央寄せの空白も）",str(_nbad[:5]))
+# 空白は中央寄せぶん。欄は96ドット、全角16・半角8で数えると (96-幅)/2 になる
+def _width(_s):
+    return sum(8 if _c==" " else 16 for _c in _s)
+_cbad=[_n for _n in _mnames.values() if _width(_n)>96 or
+       (_width(_n)<96 and _width(_n.lstrip("\u3000 "))!=96-2*(_width(_n)-_width(_n.lstrip("\u3000 "))))]
+chk(len([_n for _n in _mnames.values() if _width(_n)<=96])>=60,
+    "名前はどれも欄（96ドット）に収まる")
 chk([r[0] for r in _fv]==list(range(1,51)),"1〜50階が1度ずつ")
 chk(len([r for r in _fv if r[1]<=12])>=49,"動画とずれ12マス以下の階は49以上",
     str(len([r for r in _fv if r[1]<=12])))
@@ -1615,7 +1651,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=593
+MIN_CHECKS=597
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
