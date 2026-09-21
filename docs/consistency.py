@@ -1482,8 +1482,8 @@ chk("lineSpacing" in _sb,"行送りを原典の20ドットに合わせている"
 chk("CanvasScale = 1.8f" in _dwin,"Canvas 基準1152x720 は原典640x400 のちょうど1.8倍")
 _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
 chk("1152f, 720f" in _sb,"シーンの基準解像度が 1152x720")
-chk("Screens/Title_Text.png" in _sb,
-    "題名の絵は MTMOJI（Title_Text）。渦巻き（Title_Art）は序章の1枚絵")
+chk('"TitleScreen", ""' in _sb,
+    "題名は絵を貼らない（真っ黒に文字2行。動画 Part1 t≈31）")
 chk("cam.backgroundColor = DialogueWindowView.Fill" in _sb,
     "盤面の下地は索引0（68,68,68）。原典が階を描く前に塗る色と同じ")
 chk("BuildDialogueWindow" in _sb,"シーンに会話ウィンドウを組み込んでいる")

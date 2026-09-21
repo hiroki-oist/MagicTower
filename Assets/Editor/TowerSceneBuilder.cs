@@ -302,12 +302,14 @@ public static class TowerSceneBuilder
         BuildDialogueWindow(screen, font, controller);
         BuildMenuWindow(screen, font, controller);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
-                        // 題名の絵は MTMOJI（「魔法の塔」）のほう。原典はこの上に
-                        // 「Ｔｏｗｅｒ　ｏｆ　ｔｈｅ　Ｓｏｒｃｅｒｅｒ」(144,160) と
-                        // 「（Ｃ）１９９６　Ｎ．Ｗ」(144,190) を書く（0x6db2/0x6dcd）。
-                        // 絵のほうには1995年の行が焼き込まれていて、**その上に1996年で書き直す**。
-                        // Title_Art（MTOPSTR＝渦巻き）は題名ではなく**序章の1枚絵**。
-                        "TitleScreen", "Assets/Sprites/Screens/Title_Text.png",
+                        // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
+                        // 真っ黒な画面に
+                        //   「Ｔｏｗｅｒ　ｏｆ　ｔｈｅ　Ｓｏｒｃｅｒｅｒ」(144,160)
+                        //   「（Ｃ）１９９６　Ｎ．Ｗ」(144,190)
+                        // の2行だけが出る（原典 0x6db2 / 0x6dcd）。
+                        // MTOPSTR（渦巻き）はそのあとの**序章の1枚絵**、
+                        // MTMOJI（「魔法の塔」）はこの場面には出てこない。
+                        "TitleScreen", "",
                         TitleScreen.Title,   TitleScreen.TitleDot,
                         TitleScreen.Copyright, TitleScreen.CopyrightDot);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.FinalScreen,
@@ -480,7 +482,10 @@ public static class TowerSceneBuilder
         var artGo = new GameObject("Art", typeof(RectTransform), typeof(UnityEngine.UI.Image));
         artGo.transform.SetParent(panelGo.transform, false);
         var art = artGo.GetComponent<UnityEngine.UI.Image>();
-        art.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(artPath);
+        // 絵が無い場面（題名）は**真っ黒**。原典も何も貼らずに文字だけ書く。
+        art.sprite = string.IsNullOrEmpty(artPath)
+                     ? null : AssetDatabase.LoadAssetAtPath<Sprite>(artPath);
+        art.color = art.sprite == null ? Color.black : Color.white;
         art.raycastTarget = false;
         var art_rt = artGo.GetComponent<RectTransform>();
         art_rt.anchorMin = art_rt.anchorMax = art_rt.pivot = new Vector2(0f, 1f);
