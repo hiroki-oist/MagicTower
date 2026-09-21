@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """公式データと現在の実装の不整合を洗い出す。Unity不要。"""
 import os,re,json,glob,sys
+from collections import Counter
 os.chdir(os.path.expanduser("~/Code/MagicTower"))
 issues=[]
 checks = 0
@@ -854,7 +855,8 @@ _flg={}
 for _l in open("docs/original/flags.txt",encoding="utf-8"):
     if _l.startswith("#") or "|" not in _l: continue
     _p=[t.strip() for t in _l.split("|")]
-    _flg[int(_p[0].split()[1])]={"読":int(_p[1]),"書":int(_p[2]),"階":_p[3],"意味":_p[4]}
+    _flg[int(_p[0].split()[1])]={"読":int(_p[1]),"書":int(_p[2]),"階":_p[3],
+                                "持ち主":_p[4],"意味":_p[5]}
 chk(len(_flg)==66,"番号で直に引くフラグは66個",str(len(_flg)))
 # 35〜49 の15個は持ち物。原典の注記とリメイクの品揃えが同じ顔ぶれか
 _items={35:"勇者オーブ",36:"知恵オーブ",37:"飛翔オーブ",38:"十字架",39:"エリクサー",
@@ -871,6 +873,25 @@ _once=[n for n in _flg if 0x57<=n<=0x84]
 chk(len(_once)==46 and sorted(_once)==list(range(0x57,0x85)),
     "一度きりのフラグは 0x57〜0x84 の46個が連番",str(len(_once)))
 chk(all(_flg[_n]["階"]!="-" for _n in _once),"一度きりのフラグはどれも階と結びついている")
+# 46個は「立てている関数」で持ち主が決まり、リメイクの4つの表と過不足なく対応する
+_own=Counter(_flg[_n]["持ち主"] for _n in _once)
+chk(dict(_own)=={"門の解錠":28,"座標のできごと":14,"盗賊":3,"階段で着いたとき":1},
+    "一度きりのフラグ46個の持ち主の内訳",str(dict(_own)))
+chk(_own["門の解錠"]+1==len([l for l in open("Assets/Resources/SealedDoors.txt",encoding="utf-8")
+                            if re.match(r"^\s*\d+\s*\|",l)]),
+    "門の解錠は28件＋手で足したF40の1件")
+chk(_own["座標のできごと"]+1==len([l for l in open("Assets/Resources/PositionEvents.txt",encoding="utf-8")
+                                  if re.match(r"^\s*\d+\s*\|",l)]),
+    "座標のできごとは14件＋旗を使わない1件")
+chk(_own["階段で着いたとき"]==len([l for l in open("Assets/Resources/ArrivalEvents.txt",encoding="utf-8")
+                                  if re.match(r"^\s*\d+\s*\|",l)]),
+    "階段で着いたときのできごとは1件")
+# 盗賊の表が使う旗が、盗賊が持ち主の旗と座標のできごとの旗だけでできているか
+_thief=set(int(m) for m in re.findall(r"フラグ(\d+)",
+           open("Assets/Resources/ThiefEvents.txt",encoding="utf-8").read()))
+chk(_thief<=set(_once),"盗賊の表が使う旗はどれも一度きりの旗",str(sorted(_thief-set(_once))))
+chk({_n for _n in _once if _flg[_n]["持ち主"]=="盗賊"}<=_thief,
+    "盗賊が立てる旗3つは盗賊の表に出てくる")
 chk(_flg[32]["意味"]=="妖精回数" and _flg[33]["意味"]=="装備剣"
     and _flg[34]["意味"]=="装備盾","32〜34は妖精の回数・装備剣・装備盾")
 chk(os.path.exists("Assets/Resources/FloorConnections.txt"),"階段接続表")
@@ -1490,7 +1511,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=562
+MIN_CHECKS=568
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

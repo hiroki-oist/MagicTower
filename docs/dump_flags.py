@@ -11,6 +11,12 @@
 この数え上げには出てこない（表の値 + 0x1e が番号）。
 
 直前に `現在階 == N` を見ている場合は、その階も一緒に書き出す。
+「一度きり」の旗（87〜132 の46個）は**どの関数が立てるか**で持ち主が決まる:
+
+    0x4762 … 門の解錠（28個、SealedDoors.txt）
+    0x1588 … 座標のできごと（14個、PositionEvents.txt）
+    0x003e0 … 盗賊（3個、ThiefEvents.txt）※0x529 はその続き
+    0x023ee … 階段で着いたとき（1個、ArrivalEvents.txt）
 
   使い方: python3 docs/dump_flags.py   → docs/original/flags.txt
 """
@@ -32,6 +38,24 @@ def floor_before(i):
             return None
     return None
 
+OWNER = {0x4762: "門の解錠", 0x1588: "座標のできごと",
+         0x3e0: "盗賊", 0x529: "盗賊", 0x23ee: "階段で着いたとき"}
+
+FUNCS = []
+for i, l in enumerate(LINES):
+    m = re.match(r"===== 関数 (0x[0-9a-f]+) =====", l)
+    if m:
+        FUNCS.append((i, int(m.group(1), 16)))
+
+def func_of(i):
+    lo = None
+    for j, a in FUNCS:
+        if j < i:
+            lo = a
+        else:
+            break
+    return lo
+
 found = {}
 for i, l in enumerate(LINES):
     m = re.search(r"byte ptr es:\[(0x[0-9a-f]+)\]", l)
@@ -48,16 +72,20 @@ for i, l in enumerate(LINES):
     f = floor_before(i)
     if f is not None:
         d["階"].add(f)
+    if re.search(r"mov\s+byte ptr es:\[", l):
+        d.setdefault("持ち主", set()).add(OWNER.get(func_of(i), f"関数 {func_of(i):#x}"))
 
 out = ["# セーブに入るフラグ（docs/dump_flags.py が生成）",
        "# 番号 = 置き場の中のバイト位置。0x1e(30) 〜 0x95(149) の120個。",
        "# 商人(50〜68)と仙人(69〜86)は番号を計算して引くのでここには出ない。",
        "#",
-       "# 番号 | 読 | 書 | 階 | 意味"]
+       "# 番号 | 読 | 書 | 階 | 持ち主 | 意味"]
 for off in sorted(found):
     d = found[off]
     fl = ",".join(str(x) for x in sorted(d["階"])) or "-"
     note = " / ".join(sorted(d["note"])) or ""
-    out.append(f"0x{off:02x} {off:3d} | {len(d['読']):2d} | {len(d['書']):2d} | {fl:>10} | {note}")
+    own = " / ".join(sorted(d.get("持ち主", set()))) or "-"
+    out.append(f"0x{off:02x} {off:3d} | {len(d['読']):2d} | {len(d['書']):2d} | {fl:>10}"
+               f" | {own:<16} | {note}")
 open(f"{ROOT}/docs/original/flags.txt", "w", encoding="utf-8").write("\n".join(out) + "\n")
 print("\n".join(out))
