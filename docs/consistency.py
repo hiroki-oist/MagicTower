@@ -1407,6 +1407,40 @@ def _cell_size_check():
 _cellbad=_cell_size_check()
 chk(not _cellbad,"盤面のプレハブは 絵32ドット=1マス の大きさで出る",str(_cellbad[:5]))
 
+# 3x3のボス（15階の大ダコ・35階のドラゴン）。
+# 盤面には9マスとも同じ名前が並ぶが、絵は 96x96 の1枚なので
+# **中心のマスに1体だけ**置く（FloorLoader.MultiTileBosses）。
+# 倒したあとその絵が消えるのは、解錠の結果が**中心のマスを書き換える**から。
+# ここが噛み合っていないと、倒したのにボスが残る。
+def _boss_check():
+    out=[]
+    for n,name in ((15,"Boss_GiantOctopus"),(35,"Boss_Dragon")):
+        cells=[]; inobj=False
+        for l in open(f"Assets/Resources/Floors/Floor_{n}.txt",encoding="utf-8"):
+            if l.startswith("objects:"): inobj=True; continue
+            if not inobj: continue
+            m=re.match(r"\s*([+-]\d+) ([+-]\d+)\s+(\S+)",l)
+            if m and m.group(3)==name: cells.append((int(m.group(1)),int(m.group(2))))
+        if len(cells)!=9: out.append(f"F{n}:{len(cells)}マス"); continue
+        xs=[c[0] for c in cells]; ys=[c[1] for c in cells]
+        cx,cy=(min(xs)+max(xs))//2,(min(ys)+max(ys))//2
+        row=[l for l in open("Assets/Resources/SealedDoors.txt",encoding="utf-8")
+             if l.startswith(f"{n} |")]
+        if not row: out.append(f"F{n}:解錠表に無い"); continue
+        parts=row[0].split("|")
+        guard=tuple(int(v) for v in parts[2].strip().split(","))
+        if guard!=(cx,cy-1): out.append(f"F{n}:守護マス{guard}が下段中央でない")
+        if f"({cx:+d},{cy:+d})=" not in parts[3]:
+            out.append(f"F{n}:解錠が中心({cx:+d},{cy:+d})を書き換えない")
+    return out
+_bossbad=_boss_check()
+chk(not _bossbad,
+    "3x3のボスは中心に1体で、倒すと解錠がその中心を書き換えて絵も消える",
+    str(_bossbad))
+_fl=open("Assets/Scripts/Floor/FloorLoader.cs",encoding="utf-8").read()
+chk("MultiTileBosses" in _fl and "Boss_Dragon" in _fl and "Boss_GiantOctopus" in _fl,
+    "3x3のボスは中心の1マスにだけ置く")
+
 # ゲームオーバー（原典 0x097ac）。生命力が尽きたら必ずここへ来る。
 _gv=open("Assets/Scripts/UI/GameOverScreen.cs",encoding="utf-8").read()
 chk('Line = "ＧＡＭＥ　ＯＶＥＲ"' in _gv,"ゲームオーバーの文字は原典 DS:0x181e のまま")
@@ -1844,7 +1878,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=632
+MIN_CHECKS=634
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
