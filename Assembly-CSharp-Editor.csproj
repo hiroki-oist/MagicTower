@@ -68,6 +68,7 @@
     <Compile Include="Assets/Tests/Editor/TowerItemUseTests.cs" />
     <Compile Include="Assets/Tests/Editor/TitleScreenTests.cs" />
     <Compile Include="Assets/Tests/Editor/SoundTests.cs" />
+    <Compile Include="Assets/Tests/Editor/ViewCoroutineTests.cs" />
     <Compile Include="Assets/Tests/Editor/ItemPickupTests.cs" />
     <Compile Include="Assets/Tests/Editor/MenuSlotTests.cs" />
     <Compile Include="Assets/Tests/Editor/PrologueTests.cs" />

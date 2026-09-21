@@ -642,6 +642,9 @@ _swt=open("Assets/Tests/Editor/SceneWiringTests.cs",encoding="utf-8").read()
 chk("SerializedPropertyType.ObjectReference" in _swt,"シーンの配線の抜けを見る検査がある")
 _sceneT=open("Assets/Scenes/Tower.unity",encoding="utf-8",errors="ignore").read()
 chk("AudioSource" in _sceneT,"シーンに鳴らす口（AudioSource）が置いてある")
+_vct=open("Assets/Tests/Editor/ViewCoroutineTests.cs",encoding="utf-8").read()
+for _n in ("戦闘の演出を最後まで流せる","金騎士の突撃を最後まで流せる","駆け上がりを最後まで流せる"):
+    chk(_n in _vct,f"コルーチンの検査「{_n}」がある")
 
 print("\n【9w】できごとと音の結び付き（Resources/SoundCues.txt）")
 _cue={}
@@ -1279,7 +1282,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=495
+MIN_CHECKS=498
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")
