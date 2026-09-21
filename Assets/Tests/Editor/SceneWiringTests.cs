@@ -23,6 +23,10 @@ public class SceneWiringTests
         // 白へ寄せる板は**終幕の塔の絵だけ**が持つ（ほかの1枚絵は流れも寄せもしない）。
         // 塔の絵の側は TowerSceneTests / EndingTowerTests で別に見ている。
         "FullScreenView.whiteVeil",
+        // 鍵を**本数ぶん絵で並べる**のは原典（横長）の見せ方。縦画面の並べ方
+        // （作者の指定）では鍵の絵ひとつに数字を添えるので、こちらは使わない。
+        "TowerHudView.keyIcons",
+        "TowerHudView.keyRed", "TowerHudView.keyPurple", "TowerHudView.keyYellow",
     };
 
     /// <summary>自分たちが書いたスクリプトか（Unity や TMP のものは見ない）。</summary>
@@ -93,8 +97,8 @@ public class SceneWiringTests
                 foreach (var rt in go.GetComponentsInChildren<RectTransform>(true))
                 {
                     if (rt.name == "Screen") screen = rt;
-                    if (rt.name == "Frame" || rt.name == "Hp" || rt.name == "Message"
-                        || rt.name == "TitleScreen" || rt.name == "DialogueWindow")
+                    if (rt.name == "TitleScreen" || rt.name == "DialogueWindow"
+                        || rt.name == "MenuWindow")
                         found[rt.name] = rt;
                 }
 
@@ -103,15 +107,16 @@ public class SceneWiringTests
             Assert.AreEqual(new Vector2(0.5f, 0.5f), screen.anchorMax);
             Assert.AreEqual(new Vector2(DialogueWindow.CanvasWidth, DialogueWindow.CanvasHeight),
                             screen.sizeDelta, "原典の画面と同じ大きさ（1.8倍）");
-            Assert.AreEqual(Vector2.zero, screen.anchoredPosition);
 
             foreach (var kv in found)
                 Assert.AreSame(screen, kv.Value.parent, kv.Key + " が入れ物の外にある");
 
-            // 画布は縦で合わせる（盤面はカメラの縦で決まるので）
+            // 縦画面（作者の指定）。盤面が画面の幅いっぱいなので**幅で合わせる**。
             var scaler = screen.GetComponentInParent<UnityEngine.UI.CanvasScaler>();
             Assert.IsNotNull(scaler);
-            Assert.AreEqual(1f, scaler.matchWidthOrHeight, 0.001f, "縦を基準にする");
+            Assert.AreEqual(0f, scaler.matchWidthOrHeight, 0.001f, "幅を基準にする");
+            Assert.AreEqual(new Vector2(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight),
+                            scaler.referenceResolution, "縦画面の基準");
         }
         finally
         {

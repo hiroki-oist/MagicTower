@@ -29,7 +29,10 @@ public static class TowerSceneBuilder
         camGo.tag = "MainCamera";
         var cam = camGo.AddComponent<Camera>();
         cam.orthographic = true;
-        cam.orthographicSize = ScreenLayout.CameraSize;   // 400/32/2 = 6.25
+        // 原典の画面は縦12.5マス（<see cref="ScreenLayout.CameraSize"/>）だが、
+        // 縦画面の並べ方（作者の指定）では**正方形の枠に11マスちょうど**にする。
+        // 実際の値は PhoneLayoutView が枠の大きさに合わせて毎コマ入れ直す。
+        cam.orthographicSize = PhoneScreen.CameraSize;
         cam.transform.position = new Vector3(0f, 0f, -10f);
         // 盤面の下地。原典は階を描く前に盤面を**索引0（68,68,68）**で塗る
         // （階を移った直後のコマで実測。会話の窓の中と同じ色）。
@@ -91,7 +94,7 @@ public static class TowerSceneBuilder
         if (sprite2 != null) cso.FindProperty("playerSprite2").objectReferenceValue = sprite2;
         cso.ApplyModifiedPropertiesWithoutUndo();
 
-        BuildHud(tower, controller);
+        BuildHud(tower, controller, cam);
 
         // 盤面の敵と人は2コマで動く（原典 0x92a4）。
         BuildMonsterAnimator(tower, controller, loader);
@@ -196,7 +199,7 @@ public static class TowerSceneBuilder
     /// 左右の帯と文字を作る。原典の画面構成に合わせて、
     /// 左に階と能力値、右に装備・鍵・メッセージを置く。
     /// </summary>
-    static void BuildHud(GameObject tower, TowerController controller)
+    static void BuildHud(GameObject tower, TowerController controller, Camera cam)
     {
         var font = AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
 
@@ -208,14 +211,21 @@ public static class TowerSceneBuilder
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         var scaler = canvasGo.GetComponent<UnityEngine.UI.CanvasScaler>();
         scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
-        scaler.referenceResolution = new Vector2(1152f, 720f);   // 動画と同じ比率
-        // **縦を基準に合わせる**。盤面はカメラ（縦 12.5マス＝原典の400ドット）で写すので、
-        // 画布も縦で合わせないと、窓の幅が変わったときに枠と盤面がずれる。
-        scaler.matchWidthOrHeight = 1f;
+        // **スマホの縦画面**（作者の指定。並べ方は PhoneScreen）。
+        // 盤面が画面の幅いっぱいなので、**幅を基準**に合わせる。
+        scaler.referenceResolution =
+            new Vector2(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight);
+        scaler.matchWidthOrHeight = 0f;
+        var canvasRt = canvasGo.GetComponent<RectTransform>();
 
-        // 原典の画面（640x400 を1.8倍した 1152x720）ぴったりの入れ物。
-        // **画布の中央に置く**ので、窓の横幅が変わっても盤面（カメラ）とずれない。
-        // 中の欄はこの入れ物の左上を原点に置くので、原典の座標がそのまま使える。
+        // 盤面の枠。中身はカメラが写すので、ここは場所を決めるためだけの空の枠。
+        var mapGo = new GameObject("MapArea", typeof(RectTransform));
+        mapGo.transform.SetParent(canvasGo.transform, false);
+        var mapArea = mapGo.GetComponent<RectTransform>();
+        mapArea.anchorMin = mapArea.anchorMax = mapArea.pivot = new Vector2(0.5f, 0.5f);
+
+        // 原典の座標で置く入れ物（会話とメニューの窓・戦闘の帯・1枚絵）。
+        // 大きさと場所は PhoneLayoutView が盤面に合わせる。
         var screenGo = new GameObject("Screen", typeof(RectTransform));
         screenGo.transform.SetParent(canvasGo.transform, false);
         var screen = screenGo.GetComponent<RectTransform>();
@@ -223,38 +233,62 @@ public static class TowerSceneBuilder
         screen.anchoredPosition = Vector2.zero;
         screen.sizeDelta = new Vector2(DialogueWindow.CanvasWidth, DialogueWindow.CanvasHeight);
 
-        // 画面の枠。原典は LCG.P58 の1枚目（640x400）がそれで、中央 (144,24)-(496,376) が
-        // 空いていて そこに盤面が入る。書き出す時にその穴を透明にしてある。
-        BuildFrame(screen);
+        // 上下の帯。地は原典の枠の左右の欄と同じ石積み（作者の指定）。
+        var top = Band(canvasGo.transform, "TopPanel", true, PhoneScreen.TopHeight);
+        var bottom = Band(canvasGo.transform, "BottomPanel", false, PhoneScreen.BottomHeight);
 
         var view = canvasGo.AddComponent<TowerHudView>();
         var vso = new SerializedObject(view);
         vso.FindProperty("controller").objectReferenceValue = controller;
 
-        // 欄の位置は原典（docs/original/screen_layout.txt）そのまま。
-        // 数字だけを出す欄なので、見出しの文字は原典の枠の絵側にある（まだ同定できていない）。
-        vso.FindProperty("floorLabel").objectReferenceValue =
-            Box(screen, font, "FloorLabel", ScreenLayout.FloorBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Left);
-        vso.FindProperty("hp").objectReferenceValue =
-            Box(screen, font, "Hp", ScreenLayout.HpBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
-        vso.FindProperty("attack").objectReferenceValue =
-            Box(screen, font, "Attack", ScreenLayout.AttackBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
-        vso.FindProperty("defense").objectReferenceValue =
-            Box(screen, font, "Defense", ScreenLayout.DefenseBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
-        vso.FindProperty("gold").objectReferenceValue =
-            Box(screen, font, "Gold", ScreenLayout.GoldBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
+        // --- 上の帯（3段）。並べ方は PhoneScreen（作者の指定） ---
+        float w = PhoneScreen.ReferenceWidth, pad = PhoneScreen.Pad * 1.5f;
+        float rh = PhoneScreen.RowHeight;
 
-        // WEAPON / SHIELD の見出しは枠の絵に入っているので、欄には名前だけを出す。
-        vso.FindProperty("weapon").objectReferenceValue =
-            Box(screen, font, "Weapon", ScreenLayout.WeaponBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Left);
-        vso.FindProperty("shield").objectReferenceValue =
-            Box(screen, font, "Shield", ScreenLayout.ShieldBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Left);
+        // 1段目: 金 / 黄 / 紫 / 赤
+        float cell = (w - pad * 5f) / 4f;
+        var goldBox = Pill(top, font, "Gold", pad, 0f, cell, rh, PhoneScreen.GoldIconPath);
+        var yKeyBox = Pill(top, font, "KeyYellow", pad * 2 + cell, 0f, cell, rh,
+                           "Assets/Sprites/Hud/Key_Yellow.png");
+        var pKeyBox = Pill(top, font, "KeyPurple", pad * 3 + cell * 2, 0f, cell, rh,
+                           "Assets/Sprites/Hud/Key_Purple.png");
+        var rKeyBox = Pill(top, font, "KeyRed", pad * 4 + cell * 3, 0f, cell, rh,
+                           "Assets/Sprites/Hud/Key_Red.png");
+        vso.FindProperty("gold").objectReferenceValue = goldBox;
+        vso.FindProperty("yellowKeys").objectReferenceValue = yKeyBox;
+        vso.FindProperty("purpleKeys").objectReferenceValue = pKeyBox;
+        vso.FindProperty("redKeys").objectReferenceValue = rKeyBox;
 
-        // 装備の絵。原典は 剣=物体ID 50+段位 / 盾=55+段位 の絵をそのまま貼る（0x9b80 付近）。
-        vso.FindProperty("weaponIcon").objectReferenceValue =
-            Icon(screen, "WeaponIcon", ScreenLayout.WeaponIcon);
-        vso.FindProperty("shieldIcon").objectReferenceValue =
-            Icon(screen, "ShieldIcon", ScreenLayout.ShieldIcon);
+        // 2段目: 階の旗 / 生命 / 攻撃 / 防御
+        float flagW = 210f;
+        var floorBox = Pill(top, font, "FloorLabel", pad, rh, flagW, rh, null,
+                            PhoneScreen.FloorFill);
+        float sw = (w - pad * 5f - flagW) / 3f;
+        var hpBox  = Pill(top, font, "Hp",      pad * 2 + flagW, rh, sw, rh,
+                          PhoneScreen.HpIconPath);
+        var atkBox = Pill(top, font, "Attack",  pad * 3 + flagW + sw, rh, sw, rh,
+                          PhoneScreen.AtkIconPath);
+        var defBox = Pill(top, font, "Defense", pad * 4 + flagW + sw * 2, rh, sw, rh,
+                          PhoneScreen.DefIconPath);
+        vso.FindProperty("floorLabel").objectReferenceValue = floorBox;
+        vso.FindProperty("hp").objectReferenceValue = hpBox;
+        vso.FindProperty("attack").objectReferenceValue = atkBox;
+        vso.FindProperty("defense").objectReferenceValue = defBox;
+
+        // 3段目: 装備（剣と盾）と、押しても何も起きない飾りのボタン2つ
+        float eqW = (w - pad * 4f - rh * 2f) / 2f;
+        UnityEngine.UI.Image wIcon, sIcon;
+        var weaponBox = Equip(top, font, "Weapon", pad, rh * 2, eqW, rh, out wIcon);
+        var shieldBox = Equip(top, font, "Shield", pad * 2 + eqW, rh * 2, eqW, rh, out sIcon);
+        vso.FindProperty("weapon").objectReferenceValue = weaponBox;
+        vso.FindProperty("shield").objectReferenceValue = shieldBox;
+        vso.FindProperty("weaponIcon").objectReferenceValue = wIcon;
+        vso.FindProperty("shieldIcon").objectReferenceValue = sIcon;
+        Placeholder(top, font, "Trophy", pad * 3 + eqW * 2, rh * 2, rh, rh, "実績",
+                    PhoneScreen.RightButton);
+        Placeholder(top, font, "Help", pad * 3 + eqW * 2 + rh, rh * 2, rh, rh, "？",
+                    PhoneScreen.RightButton);
+
         for (int rank = 1; rank <= 5; rank++)
         {
             vso.FindProperty("swordIcons").GetArrayElementAtIndex(rank - 1)
@@ -263,36 +297,57 @@ public static class TowerSceneBuilder
                .objectReferenceValue = TileById(55 + rank);
         }
 
-        // 持ち物の欄（原典 0x2f8c）。物体ID 36〜50 の絵を3列で並べる。
+        // --- 下の帯: 持ち物の帯（15マス）とボタン ---
         var slots = vso.FindProperty("itemSlots");
         slots.arraySize = ScreenLayout.ItemPanelSlots;
+        float islot = (w - pad * 2f) / ScreenLayout.ItemPanelSlots;
         for (int i = 0; i < ScreenLayout.ItemPanelSlots; i++)
         {
             var id = ScreenLayout.ItemPanelObjectId(i);
-            var img = Icon(screen, $"Item{id}", ScreenLayout.ItemPanelSlot(i));
+            var img = Slot(bottom, $"Item{id}", pad + islot * i,
+                           0f, islot, PhoneScreen.ItemBarHeight);
             var sprite = TileById(id);
             if (sprite != null) img.sprite = sprite;
             img.enabled = false;                      // 持っていない間は出さない
             slots.GetArrayElementAtIndex(i).objectReferenceValue = img;
         }
 
-        // 鍵は絵を本数ぶん並べる（原典 0x9ff8）。入れ物を画面の左上に合わせておけば、
-        // 中の絵は原典の座標をそのまま使える。
-        var keyGo = new GameObject("Keys", typeof(RectTransform));
-        keyGo.transform.SetParent(screen, false);
-        var keyRt = keyGo.GetComponent<RectTransform>();
-        keyRt.anchorMin = keyRt.anchorMax = keyRt.pivot = new Vector2(0f, 1f);
-        keyRt.anchoredPosition = Vector2.zero;
-        keyRt.sizeDelta = Vector2.zero;
-        vso.FindProperty("keyIcons").objectReferenceValue = keyRt;
-        vso.FindProperty("keyRed").objectReferenceValue =
-            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Key_Red.png");
-        vso.FindProperty("keyPurple").objectReferenceValue =
-            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Key_Purple.png");
-        vso.FindProperty("keyYellow").objectReferenceValue =
-            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Key_Yellow.png");
-        vso.FindProperty("messageBox").objectReferenceValue =
-            Box(screen, font, "Message", ScreenLayout.MessageBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.TopLeft);
+        // ボタンはどれも**まだ繋がっていない**（作者の指定。移動もキーボードの矢印のまま）
+        float bw = 280f, bh = 88f, bgap = 12f;
+        int nb = PhoneScreen.LeftButtons.Length;
+        float stack = bh * nb + bgap * (nb - 1);
+        float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
+        for (int i = 0; i < nb; i++)
+        {
+            float by = btop + (bh + bgap) * i;
+            Placeholder(bottom, font, "Left" + i, pad, by, bw, bh,
+                        PhoneScreen.LeftButtons[i], PhoneScreen.LeftButton);
+            Placeholder(bottom, font, "Right" + i, w - pad - bw, by, bw, bh,
+                        PhoneScreen.RightButtons[i], PhoneScreen.RightButton);
+        }
+        // 中央の十字。**触っても動かない**（今のところ移動はキーボードの矢印）
+        float dpad = 260f;
+        Placeholder(bottom, font, "DPad", (w - dpad) / 2f,
+                    PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - dpad) / 2f,
+                    dpad, dpad, "↑\n←　→\n↓", PhoneScreen.BoxFill);
+
+        // 知らせの欄は盤面の下の端に薄く重ねる（原典の右下の欄にあたるもの）
+        var msgGo = new GameObject("Message", typeof(RectTransform));
+        msgGo.transform.SetParent(mapArea, false);
+        var msgRt = msgGo.GetComponent<RectTransform>();
+        msgRt.anchorMin = new Vector2(0f, 0f);
+        msgRt.anchorMax = new Vector2(1f, 0f);
+        msgRt.pivot = new Vector2(0.5f, 0f);
+        msgRt.sizeDelta = new Vector2(0f, 64f);
+        msgRt.anchoredPosition = Vector2.zero;
+        var msg = msgGo.AddComponent<TextMeshProUGUI>();
+        if (font != null) msg.font = font;
+        msg.fontSize = 30f;
+        msg.color = Color.white;
+        msg.alignment = TextAlignmentOptions.Center;
+        msg.enableWordWrapping = false;
+        msg.raycastTarget = false;
+        vso.FindProperty("messageBox").objectReferenceValue = msg;
 
         // 戦闘中は同じ枠に相手の絵と能力値を出す（原典 0x9626）。
         var battleView = BuildBattleView(controller);
@@ -370,7 +425,8 @@ public static class TowerSceneBuilder
         // メニューを開いたまま開く会話の窓（飛翔のオーブの断り）が隠れないようにする。
         BuildMenuWindow(screen, font, controller);
         BuildDialogueWindow(screen, font, controller, blinkView, bossView);
-        BuildHeroOrbPanel(screen, font, controller,
+        // 一覧は画面いっぱいに出すので、原典の座標の入れ物ではなく画布に直に置く
+        BuildHeroOrbPanel(canvasRt, font, controller,
                           Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry"));
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
                         // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
@@ -431,6 +487,16 @@ public static class TowerSceneBuilder
                         "EndingScreen", "Assets/Sprites/Screens/Ending_Art.png",
                         Ending.TitleLine,  Ending.TitleDot,
                         Ending.AnyKeyLine, Ending.AnyKeyDot);
+
+        // 盤面の枠へカメラを合わせ、窓の入れ物も盤面の大きさに合わせる役（縦画面）
+        var layout = canvasGo.AddComponent<PhoneLayoutView>();
+        var lso = new SerializedObject(layout);
+        lso.FindProperty("boardCamera").objectReferenceValue = cam;
+        lso.FindProperty("mapArea").objectReferenceValue = mapArea;
+        lso.FindProperty("topBand").objectReferenceValue = top;
+        lso.FindProperty("bottomBand").objectReferenceValue = bottom;
+        lso.FindProperty("screen").objectReferenceValue = screen;
+        lso.ApplyModifiedPropertiesWithoutUndo();
     }
 
     /// <summary>
@@ -924,6 +990,142 @@ public static class TowerSceneBuilder
         t.fontSizeMax = 26f;
         t.color = HeroOrbPanel.Text;
         t.alignment = align;    // TMP の Left / Right は縦は中央
+        t.enableWordWrapping = false;
+        t.raycastTarget = false;
+        return t;
+    }
+
+    // ---------------------------------------------------------------- 縦画面の部品
+    // 並べ方は PhoneScreen（作者の指定）。位置は帯の**左上からのずれ**で書く。
+
+    /// <summary>上下の帯。地は原典の枠と同じ石積みを敷き詰める。</summary>
+    static RectTransform Band(Transform parent, string name, bool atTop, float height)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(0f, atTop ? 1f : 0f);
+        rt.anchorMax = new Vector2(1f, atTop ? 1f : 0f);
+        rt.pivot = new Vector2(0.5f, atTop ? 1f : 0f);
+        rt.sizeDelta = new Vector2(0f, height);
+        rt.anchoredPosition = Vector2.zero;
+        var img = go.GetComponent<UnityEngine.UI.Image>();
+        img.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(PhoneScreen.BrickPath);
+        img.type = UnityEngine.UI.Image.Type.Tiled;
+        img.raycastTarget = false;
+        return rt;
+    }
+
+    /// <summary>帯の中の枠ひとつ。左上からのずれで置く。</summary>
+    static RectTransform Cell(Transform parent, string name, float x, float y,
+                              float w, float h, Color fill)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(x, -y - PhoneScreen.Pad);
+        rt.sizeDelta = new Vector2(w, h - PhoneScreen.Pad * 2f);
+        var img = go.GetComponent<UnityEngine.UI.Image>();
+        img.color = fill;
+        img.raycastTarget = false;
+        return rt;
+    }
+
+    /// <summary>絵ひとつぶんの小さな枠（持ち物の帯に並べる）。</summary>
+    static UnityEngine.UI.Image Slot(Transform parent, string name, float x, float y,
+                                     float w, float h)
+    {
+        var rt = Cell(parent, name, x, y, w, h, new Color(0f, 0f, 0f, 0f));
+        var go = new GameObject("Icon", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(rt, false);
+        var irt = go.GetComponent<RectTransform>();
+        irt.anchorMin = Vector2.zero; irt.anchorMax = Vector2.one;
+        irt.offsetMin = new Vector2(4f, 4f); irt.offsetMax = new Vector2(-4f, -4f);
+        var img = go.GetComponent<UnityEngine.UI.Image>();
+        img.preserveAspect = true;
+        img.raycastTarget = false;
+        return img;
+    }
+
+    /// <summary>絵ひとつと数字の枠（金・鍵・生命・攻撃・防御）。返すのは数字の欄。</summary>
+    static TextMeshProUGUI Pill(Transform parent, TMP_FontAsset font, string name,
+                                float x, float y, float w, float h,
+                                string iconPath, Color fill = default(Color))
+    {
+        var rt = Cell(parent, name, x, y, w, h,
+                      fill == default(Color) ? PhoneScreen.BoxFill : fill);
+        float left = 8f;
+        if (!string.IsNullOrEmpty(iconPath))
+        {
+            var sp = AssetDatabase.LoadAssetAtPath<Sprite>(iconPath);
+            var go = new GameObject("Icon", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            go.transform.SetParent(rt, false);
+            var irt = go.GetComponent<RectTransform>();
+            irt.anchorMin = new Vector2(0f, 0.5f); irt.anchorMax = new Vector2(0f, 0.5f);
+            irt.pivot = new Vector2(0f, 0.5f);
+            irt.anchoredPosition = new Vector2(8f, 0f);
+            irt.sizeDelta = new Vector2(h - 28f, h - 28f);
+            var img = go.GetComponent<UnityEngine.UI.Image>();
+            img.sprite = sp;
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            left += h - 20f;
+        }
+        return CellText(rt, font, left, TextAlignmentOptions.Center);
+    }
+
+    /// <summary>装備の枠（絵と名前）。</summary>
+    static TextMeshProUGUI Equip(Transform parent, TMP_FontAsset font, string name,
+                                 float x, float y, float w, float h,
+                                 out UnityEngine.UI.Image icon)
+    {
+        var rt = Cell(parent, name, x, y, w, h, PhoneScreen.BoxFill);
+        var go = new GameObject("Icon", typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(rt, false);
+        var irt = go.GetComponent<RectTransform>();
+        irt.anchorMin = new Vector2(0f, 0.5f); irt.anchorMax = new Vector2(0f, 0.5f);
+        irt.pivot = new Vector2(0f, 0.5f);
+        irt.anchoredPosition = new Vector2(10f, 0f);
+        irt.sizeDelta = new Vector2(h - 28f, h - 28f);
+        icon = go.GetComponent<UnityEngine.UI.Image>();
+        icon.preserveAspect = true;
+        icon.raycastTarget = false;
+        icon.enabled = false;
+        return CellText(rt, font, 10f + h - 20f, TextAlignmentOptions.Left);
+    }
+
+    /// <summary>
+    /// **押しても何も起きない**飾りのボタン（作者の指定）。
+    /// 下の4つ＋4つと十字、上の段の丸2つがこれ。移動は当面キーボードの矢印のまま。
+    /// </summary>
+    static void Placeholder(Transform parent, TMP_FontAsset font, string name,
+                            float x, float y, float w, float h, string label, Color fill)
+    {
+        var rt = Cell(parent, name, x, y, w, h + PhoneScreen.Pad * 2f, fill);
+        var t = CellText(rt, font, 0f, TextAlignmentOptions.Center);
+        t.text = label;
+        t.fontSizeMax = 34f;
+    }
+
+    /// <summary>枠の中の文字。左のずれだけ指定する。</summary>
+    static TextMeshProUGUI CellText(RectTransform box, TMP_FontAsset font,
+                                    float left, TextAlignmentOptions align)
+    {
+        var go = new GameObject("Text", typeof(RectTransform));
+        go.transform.SetParent(box, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+        rt.offsetMin = new Vector2(left, 0f);
+        rt.offsetMax = new Vector2(-8f, 0f);
+        var t = go.AddComponent<TextMeshProUGUI>();
+        if (font != null) t.font = font;
+        t.fontSize = 34f;
+        t.enableAutoSizing = true;
+        t.fontSizeMin = 12f;
+        t.fontSizeMax = 40f;
+        t.color = Color.white;
+        t.alignment = align;
         t.enableWordWrapping = false;
         t.raycastTarget = false;
         return t;

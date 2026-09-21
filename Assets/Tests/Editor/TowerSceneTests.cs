@@ -40,13 +40,15 @@ public class TowerSceneTests
         var view = Object.FindObjectOfType<TowerHudView>();
         Assert.IsNotNull(view, "TowerHudView が無い");
         var so = new UnityEditor.SerializedObject(view);
+        // 鍵は縦画面（作者の指定）では**絵ひとつに数字**なので、
+        // 本数ぶん絵を並べる側（keyIcons / keyRed / keyPurple / keyYellow）は使わない。
         foreach (var name in new[] { "controller", "floorLabel", "hp", "attack",
                                      "defense", "gold", "weapon", "shield",
-                                     "messageBox", "keyIcons", "weaponIcon", "shieldIcon",
+                                     "messageBox", "weaponIcon", "shieldIcon",
                                      "battleView", "registry", "monsterPanel", "monsterIcon",
                                      "monsterName", "monsterHp", "monsterAttack",
                                      "monsterDefense",
-                                     "keyRed", "keyPurple", "keyYellow" })
+                                     "yellowKeys", "purpleKeys", "redKeys" })
             Assert.IsNotNull(so.FindProperty(name).objectReferenceValue, $"{name} が未設定");
 
         // 日本語が出せるフォントが割り当たっているか

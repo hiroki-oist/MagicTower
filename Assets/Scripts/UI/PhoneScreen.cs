@@ -1,0 +1,80 @@
+using UnityEngine;
+
+/// <summary>
+/// **スマホ縦画面の並べ方**。作者の指定で、中国語版スマホゲームの画面に合わせたもの。
+/// 原典 PC98版（横長・左右に帯）の再現ではない（<see cref="AuthorStyle"/> と同じ扱い）。
+///
+/// 見せてもらった画面の並び（上から）:
+/// <code>
+///   金 / 黄の鍵 / 紫の鍵 / 赤の鍵          … 4つの小さな枠
+///   第N階 / 生命 / 攻撃 / 防御              … 階の旗と3つの枠
+///   剣の名前＋絵 / 盾の名前＋絵             … 装備
+///   盤面（11x11。画面の幅いっぱい）
+///   持ち物の帯（15マス）
+///   下のボタン（左に4つ・中央に十字・右に4つ）
+/// </code>
+///
+/// 上下の帯の地は、原典の枠の左右の欄と同じ**石積み**（`Assets/Sprites/Hud/Brick.png`。
+/// 枠の絵 LCG.P58 #1 から切り出したもの）。作者の指定。
+///
+/// 盤面はカメラが写すので、<see cref="PhoneLayoutView"/> が
+/// 「盤面の枠（MapArea）の画面上の位置」にカメラを合わせる。
+/// </summary>
+public static class PhoneScreen
+{
+    /// <summary>画布の基準（縦画面）。幅を基準に合わせるので、高さは端末で変わる。</summary>
+    public const float ReferenceWidth = 1080f, ReferenceHeight = 1920f;
+
+    /// <summary>上の帯の3段の高さ（画布の単位）。</summary>
+    public const float RowHeight = 110f;
+    public const int Rows = 3;
+    public static float TopHeight { get { return RowHeight * Rows; } }
+
+    /// <summary>
+    /// 持ち物の帯と、下のボタンの高さ。
+    /// 上の帯（330）と合わせて 840 にしてあるので、9:16 の画面では
+    /// 盤面がちょうど**幅いっぱいの正方形**（1080x1080）になる。
+    /// </summary>
+    public const float ItemBarHeight = 110f, ButtonsHeight = 400f;
+    public static float BottomHeight { get { return ItemBarHeight + ButtonsHeight; } }
+
+    /// <summary>盤面のマス数（原典と同じ11x11）。</summary>
+    public const int MapCells = ScreenLayout.MapCells;
+
+    /// <summary>盤面を写すカメラの大きさ（正方形の枠に 11 マスちょうど）。</summary>
+    public const float CameraSize = MapCells / 2f;
+
+    /// <summary>枠の中の余白（画布の単位）。</summary>
+    public const float Pad = 8f;
+
+    /// <summary>上下の帯に敷く石積みと、欄の小さな絵。</summary>
+    public const string BrickPath   = "Assets/Sprites/Hud/Brick.png";
+    public const string HpIconPath  = "Assets/Sprites/Hud/Icon_Hp.png";
+    public const string AtkIconPath = "Assets/Sprites/Hud/Icon_Attack.png";
+    public const string DefIconPath = "Assets/Sprites/Hud/Icon_Defense.png";
+    public const string GoldIconPath= "Assets/Sprites/Hud/Icon_Gold.png";
+
+    /// <summary>枠の中の色。原典の窓の中と同じ濃い灰。</summary>
+    public static readonly Color BoxFill = new Color32(0x44, 0x44, 0x44, 0xd8);
+    /// <summary>階の旗の色（見せてもらった画面の赤茶）。</summary>
+    public static readonly Color FloorFill = new Color32(0xa8, 0x32, 0x28, 0xff);
+    /// <summary>左のボタン（緑）と右のボタン（紫）。見せてもらった画面に合わせた。</summary>
+    public static readonly Color LeftButton  = new Color32(0x1e, 0x6e, 0x50, 0xff);
+    public static readonly Color RightButton = new Color32(0x4a, 0x3e, 0x7a, 0xff);
+
+    /// <summary>
+    /// 下のボタンの文字。**まだどれも繋がっていない**（押しても何も起きない）。
+    /// 作者の指定で、右の4つは課金ものの見た目だけ。移動は当面キーボードの矢印のまま。
+    /// </summary>
+    public static readonly string[] LeftButtons =
+        { "クイックセーブ", "クイックロード", "ショップ", "メニュー" };
+    public static readonly string[] RightButtons =
+        { "かんたん商店", "飛行器", "ダメージ表示", "妖精の加護" };
+
+    /// <summary>盤面の枠の、画布の中での大きさ（正方形）。高さが足りなければ縮める。</summary>
+    public static float MapSide(float canvasWidth, float canvasHeight)
+    {
+        float free = canvasHeight - TopHeight - BottomHeight;
+        return Mathf.Max(0f, Mathf.Min(canvasWidth, free));
+    }
+}

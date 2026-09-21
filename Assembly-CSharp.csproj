@@ -85,6 +85,7 @@
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/EnvMapAnimator.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorData.cs" />
     <Compile Include="Assets/Scripts/Items/Shop.cs" />
+    <Compile Include="Assets/Scripts/UI/PhoneScreen.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorConnections.cs" />
     <Compile Include="Assets/Scripts/UI/GameOverScreen.cs" />
     <Compile Include="Assets/Scripts/UI/DoorOpenView.cs" />
@@ -108,6 +109,7 @@
     <Compile Include="Assets/Scripts/Items/SoundBank.cs" />
     <Compile Include="Assets/Scripts/Items/SpecialItems.cs" />
     <Compile Include="Assets/Scripts/UI/DialogueWindowView.cs" />
+    <Compile Include="Assets/Scripts/UI/PhoneLayoutView.cs" />
     <Compile Include="Assets/Scripts/SoundPlayer.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/VertexJitter.cs" />
     <Compile Include="Assets/Scripts/UI/HeroOrbView.cs" />

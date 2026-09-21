@@ -59,6 +59,16 @@ public class TowerHudView : MonoBehaviour
     [SerializeField] Sprite keyPurple;
     [SerializeField] Sprite keyYellow;
 
+    /// <summary>
+    /// 鍵の**本数**の欄（縦画面の並べ方。作者の指定）。
+    /// 原典は本数ぶん絵を並べる（<see cref="keyIcons"/>）が、見せてもらった画面は
+    /// 鍵の絵ひとつに数字を添える形なので、そちらのときはこちらを使う。
+    /// 繋がっていなければ何もしない。
+    /// </summary>
+    [SerializeField] TextMeshProUGUI yellowKeys;
+    [SerializeField] TextMeshProUGUI purpleKeys;
+    [SerializeField] TextMeshProUGUI redKeys;
+
     /// <summary>いま並べている絵。使い回す。</summary>
     readonly System.Collections.Generic.List<UnityEngine.UI.Image> keyImages =
         new System.Collections.Generic.List<UnityEngine.UI.Image>();
@@ -87,6 +97,9 @@ public class TowerHudView : MonoBehaviour
         ShowIcon(weaponIcon, swordIcons,  p.SwordRank);
         ShowIcon(shieldIcon, shieldIcons, p.ShieldRank);
         ShowKeys(p);
+        Set(yellowKeys, GameText.Num(p.YellowKeys));
+        Set(purpleKeys, GameText.Num(p.PurpleKeys));
+        Set(redKeys,    GameText.Num(p.RedKeys));
         ShowItems(p);
     }
 

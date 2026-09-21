@@ -88,14 +88,21 @@ public class HudLayoutTests
             path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
         try
         {
-            RectTransform hp = null;
+            // 縦画面（作者の指定）では、生命の欄は上の帯の**2段目**にある。
+            RectTransform hp = null, top = null;
             foreach (var go in scene.GetRootGameObjects())
                 foreach (var rt in go.GetComponentsInChildren<RectTransform>(true))
+                {
                     if (rt.name == "Hp") hp = rt;
+                    if (rt.name == "TopPanel") top = rt;
+                }
 
             Assert.IsNotNull(hp, "Hp の欄が無い");
-            Assert.AreEqual(ScreenLayout.ToCanvas(ScreenLayout.HpBox), hp.anchoredPosition);
-            Assert.AreEqual(ScreenLayout.SizeOnCanvas(ScreenLayout.HpBox), hp.sizeDelta);
+            Assert.IsNotNull(top, "上の帯が無い");
+            Assert.AreSame(top, hp.parent, "上の帯の中にある");
+            Assert.AreEqual(-PhoneScreen.RowHeight - PhoneScreen.Pad, hp.anchoredPosition.y,
+                            0.01f, "2段目");
+            Assert.Greater(hp.anchoredPosition.x, 0f, "階の旗の右");
         }
         finally
         {
@@ -123,18 +130,86 @@ public class HudLayoutTests
             path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
         try
         {
-            RectTransform frame = null;
+            // 縦画面（作者の指定）。原典の横長の枠は敷かず、
+            // 上下の帯に**枠と同じ石積み**を敷く。
+            RectTransform top = null, bottom = null;
             foreach (var go in scene.GetRootGameObjects())
                 foreach (var rt in go.GetComponentsInChildren<RectTransform>(true))
-                    if (rt.name == "Frame") frame = rt;
+                {
+                    if (rt.name == "TopPanel") top = rt;
+                    if (rt.name == "BottomPanel") bottom = rt;
+                }
 
-            Assert.IsNotNull(frame, "Frame が無い");
-            Assert.AreEqual(0, frame.GetSiblingIndex(), "文字より後ろに置く");
-            Assert.AreEqual(new Vector2(1152f, 720f), frame.sizeDelta, "画面いっぱい");
+            Assert.IsNotNull(top, "上の帯が無い");
+            Assert.IsNotNull(bottom, "下の帯が無い");
+            // 高さは端末の縦横比で変わる（PhoneLayoutView が盤面に接するまで伸ばす）ので、
+            // ここでは**上と下に貼り付いていて厚みがある**ことだけを見る。
+            Assert.AreEqual(1f, top.anchorMin.y, 0.001f, "上に貼り付く");
+            Assert.AreEqual(0f, bottom.anchorMax.y, 0.001f, "下に貼り付く");
+            Assert.Greater(top.sizeDelta.y, 0f);
+            Assert.Greater(bottom.sizeDelta.y, 0f);
+            foreach (var band in new[] { top, bottom })
+            {
+                var img = band.GetComponent<UnityEngine.UI.Image>();
+                Assert.IsNotNull(img, "地が無い");
+                Assert.IsNotNull(img.sprite, "石積みが敷いていない");
+                StringAssert.Contains("Brick", img.sprite.name);
+            }
         }
         finally
         {
             UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
         }
+    }
+}
+
+/// <summary>
+/// スマホ縦画面の並べ方（<see cref="PhoneScreen"/>。作者の指定）。
+/// 見せてもらった中国語版の画面に合わせて、上に3段・真ん中に盤面・下に
+/// 持ち物の帯とボタン、という積み方になっているか。
+/// </summary>
+public class PhoneScreenTests
+{
+    [Test]
+    public void 盤面は幅いっぱいの正方形で上下の帯の間に入る()
+    {
+        float w = PhoneScreen.ReferenceWidth, h = PhoneScreen.ReferenceHeight;
+        float side = PhoneScreen.MapSide(w, h);
+        Assert.AreEqual(w, side, 0.01f, "9:16 の画面なら幅いっぱい");
+        Assert.LessOrEqual(PhoneScreen.TopHeight + side + PhoneScreen.BottomHeight, h,
+                           "上の帯＋盤面＋下の帯が画面に収まる");
+    }
+
+    [Test]
+    public void 縦に細い画面では盤面が縮む()
+    {
+        // 上下の帯を引いた高さのほうが狭ければ、そちらに合わせる
+        float side = PhoneScreen.MapSide(1080f, 1400f);
+        Assert.AreEqual(1400f - PhoneScreen.TopHeight - PhoneScreen.BottomHeight, side, 0.01f);
+    }
+
+    [Test]
+    public void カメラは正方形の枠に十一マス()
+    {
+        Assert.AreEqual(11, PhoneScreen.MapCells);
+        Assert.AreEqual(5.5f, PhoneScreen.CameraSize, 1e-4f, "11マス ÷ 2");
+    }
+
+    [Test]
+    public void 下のボタンは八つと十字で全部飾り()
+    {
+        Assert.AreEqual(4, PhoneScreen.LeftButtons.Length);
+        Assert.AreEqual(4, PhoneScreen.RightButtons.Length);
+        foreach (var s in PhoneScreen.LeftButtons) Assert.IsNotEmpty(s);
+        foreach (var s in PhoneScreen.RightButtons) Assert.IsNotEmpty(s);
+    }
+
+    [Test]
+    public void 上下の帯に敷く絵と欄の絵が書き出してある()
+    {
+        foreach (var path in new[] { PhoneScreen.BrickPath, PhoneScreen.HpIconPath,
+                                     PhoneScreen.AtkIconPath, PhoneScreen.DefIconPath,
+                                     PhoneScreen.GoldIconPath })
+            Assert.IsNotNull(UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(path), path);
     }
 }

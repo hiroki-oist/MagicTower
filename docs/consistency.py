@@ -856,7 +856,8 @@ chk("new FloorState(data)" in _tc,
     "階を作り直すとき、済んだこと（開けた扉・倒した敵）を盤面から反映する")
 _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
 chk("AudioListener" in _sb,"音を聴く耳をシーンに置く")
-chk("matchWidthOrHeight = 1f" in _sb,"画布は縦を基準に合わせる")
+# 縦画面（作者の指定）。盤面が画面の幅いっぱいなので**幅**を基準に合わせる。
+chk("matchWidthOrHeight = 0f" in _sb,"画布は幅を基準に合わせる（縦画面）")
 chk('GameObject("Screen"' in _sb,"画面の中身は中央に置いた入れ物に入れる")
 _vmb=open("Assets/Tests/Editor/ViewMatchesBoardTests.cs",encoding="utf-8").read()
 chk("AssertMatches" in _vmb and _vmb.count("AssertMatches(g,")>=4,
@@ -1828,7 +1829,12 @@ chk("WindowBody" in _sb and "TextLeft" in _sb,
 chk("lineSpacing" in _sb,"行送りを原典の20ドットに合わせている")
 chk("CanvasScale = 1.8f" in _dwin,"Canvas 基準1152x720 は原典640x400 のちょうど1.8倍")
 _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
-chk("1152f, 720f" in _sb,"シーンの基準解像度が 1152x720")
+chk("PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight" in _sb,
+    "シーンの基準解像度が縦画面（1080x1920）")
+_ps=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+chk("ReferenceWidth = 1080f, ReferenceHeight = 1920f" in _ps,"縦画面の基準は 1080x1920")
+chk("BrickPath" in _ps and "Assets/Sprites/Hud/Brick.png" in _ps,
+    "上下の帯に敷く石積みは原典の枠から切り出したもの")
 chk('"TitleScreen", ""' in _sb,
     "題名は絵を貼らない（真っ黒に文字2行。動画 Part1 t≈31）")
 chk("cam.backgroundColor = DialogueWindowView.Fill" in _sb,
@@ -1870,8 +1876,9 @@ chk(all(0<=int(r[2]) and int(r[2])+int(r[4])<=400 for r in _lay if r[4]!="可"),
     "どの欄も縦400に収まる")
 chk("MapArea = new RectInt(MapLeft, MapTop, MapWidth, MapHeight)" in _sl,"ScreenLayout に盤面の領域がある")
 chk("HpBox      = new RectInt(48, 80, 64, 16)" in _sl,"ScreenLayout に能力値の欄がある")
-chk("ScreenLayout.HpBox" in _sb and "ScreenLayout.MessageBox" in _sb,
-    "シーンの HUD が原典の座標で置かれている")
+# 原典の座標（横長の左右の帯）はもう使わない。縦画面の並べ方は PhoneScreen。
+chk("PhoneScreen.RowHeight" in _sb and "PhoneScreen.ItemBarHeight" in _sb,
+    "シーンの HUD が縦画面の並べ方で置かれている")
 chk("MonsterHpBox" in _sl and "KeyIconOrigin" in _sl,
     "戦闘中の相手の欄と鍵の絵の位置を区別してある")
 _bp=open("Assets/Scripts/Battle/BattlePresentation.cs",encoding="utf-8").read()
@@ -2184,7 +2191,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=730
+MIN_CHECKS=732
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。
