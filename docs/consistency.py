@@ -1482,6 +1482,8 @@ chk("lineSpacing" in _sb,"行送りを原典の20ドットに合わせている"
 chk("CanvasScale = 1.8f" in _dwin,"Canvas 基準1152x720 は原典640x400 のちょうど1.8倍")
 _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
 chk("1152f, 720f" in _sb,"シーンの基準解像度が 1152x720")
+chk("cam.backgroundColor = DialogueWindowView.Fill" in _sb,
+    "盤面の下地は索引0（68,68,68）。原典が階を描く前に塗る色と同じ")
 chk("BuildDialogueWindow" in _sb,"シーンに会話ウィンドウを組み込んでいる")
 _dv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
 chk("HighRecords = { 107, 159, 156 }" in _dv,"高い位置に開くのは107/159/156の3件")
@@ -1687,7 +1689,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=607
+MIN_CHECKS=608
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

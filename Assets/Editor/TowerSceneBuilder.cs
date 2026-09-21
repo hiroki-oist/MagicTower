@@ -31,7 +31,10 @@ public static class TowerSceneBuilder
         cam.orthographic = true;
         cam.orthographicSize = ScreenLayout.CameraSize;   // 400/32/2 = 6.25
         cam.transform.position = new Vector3(0f, 0f, -10f);
-        cam.backgroundColor = Color.black;
+        // 盤面の下地。原典は階を描く前に盤面を**索引0（68,68,68）**で塗る
+        // （階を移った直後のコマで実測。会話の窓の中と同じ色）。
+        // 渦巻きの描き出しの最中や、絵の無いマスでここが見える。
+        cam.backgroundColor = DialogueWindowView.Fill;
         cam.clearFlags = CameraClearFlags.SolidColor;
         // 音を聴く耳。**これが無いと何も鳴らない**（既定のカメラには最初から付いているが、
         // ここは手で組み立てているので自分で足す必要がある）。
