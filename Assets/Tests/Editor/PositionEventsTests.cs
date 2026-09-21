@@ -146,7 +146,8 @@ public class PositionEventsTests
             {
                 var t = r.Trim();
                 if (t == "題名" || t == "奪われる" || t == "牢が開く"
-                 || t == "最後の画面" || t == "駆け上がる" || t == "閃光") continue;   // セリフ以外の段
+                 || t == "最後の画面" || t == "駆け上がる" || t == "閃光"
+                 || t == "斬りかかる") continue;   // セリフ以外の段
                 Vector2Int at; string kind;
                 if (Cutscenes.TryParseMap(t, out at, out kind))
                 {

@@ -82,7 +82,7 @@ public class CutsceneTests
     {
         var g = Game(40, new Vector2Int(0, -1));
         Assert.IsTrue(g.PlayScene("金騎士の突撃"));
-        Assert.AreEqual(6, g.PendingPages);
+        Assert.AreEqual(7, g.PendingPages, "セリフ6つ＋斬りかかる動き");
 
         var want = new[] { 135, 136, 137, 138, 139, 140 };
         foreach (var id in want)
@@ -90,7 +90,9 @@ public class CutsceneTests
             Assert.AreEqual(id, g.Current.Value.Record);
             g.NextPage();
         }
-        Assert.IsNull(g.CurrentPage);
+        Assert.IsNull(g.CurrentPage, "セリフのあとは動きが残るだけ");
+        Assert.IsNotNull(g.LastKnightCharge, "斬りかかる道順が積まれる");
+        Assert.AreEqual(KnightCharge.Instance.StepCount, g.LastKnightCharge.Count);
     }
 
     [Test]

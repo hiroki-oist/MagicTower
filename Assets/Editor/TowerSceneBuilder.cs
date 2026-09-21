@@ -229,6 +229,9 @@ public static class TowerSceneBuilder
         // 戦闘でも魔法攻撃でも場面の節目でも、原典は同じこの絵を貼る。
         so.FindProperty("hitSprite").objectReferenceValue =
             AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Effects/Hit.png");
+        // 金騎士の絵。盤面に出る金騎士（ID133）と同じものを使う。
+        so.FindProperty("knightSprite").objectReferenceValue =
+            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Tiles/133_Enemy_Worrior.png");
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 

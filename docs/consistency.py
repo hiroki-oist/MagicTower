@@ -424,6 +424,14 @@ _flat=[int(x) for r in _rows for x in r]
 chk(_flat==[v for v in _path if v!=5],"データが EXE の並びと一致する")
 chk(_rows[-1]==["4"]*5,"最後のまとまりは上へ5歩",str(_rows[-1]))
 chk(_rows[-2]==["3"]*4,"その前はまっすぐ下へ4歩",str(_rows[-2]))
+_kcs=open("Assets/Scripts/Items/KnightCharge.cs",encoding="utf-8").read()
+chk("FirstStart" in _kcs and "0, -2" in _kcs,"1振り目は門のマス (0,-2) から（原典 0x3547/0x354f）")
+chk("RunStart" in _kcs and "RunStart = new Vector2Int(0, 0)" in _kcs,
+    "2振り目からは中央へ戻る（原典 0x35e0〜0x35e7）")
+_bvx=open("Assets/Scripts/UI/BattleView.cs",encoding="utf-8").read()
+chk("Charge(" in _bvx and "knightSprite" in _bvx,"金騎士が道順どおりに動く見た目がある")
+chk("斬りかかる" in open("Assets/Resources/Cutscenes.txt",encoding="utf-8").read(),
+    "場面の表に斬りかかる段がある")
 
 print("\n【9C】物語が頭から終わりまで繋がっている")
 _sw=open("Assets/Tests/Editor/StoryWalkTests.cs",encoding="utf-8").read()
@@ -805,7 +813,7 @@ _cs=[[c.strip() for c in l.split("|")] for l in
 chk(len(_cs)==9,"場面は9つ（七つ＋物語の終わりの2つ）",str(len(_cs)))
 _cs_steps=[n.strip() for r in _cs for n in r[2].split(";")]
 _cs_say=[n for n in _cs_steps
-         if n not in ("題名","奪われる","牢が開く","最後の画面","駆け上がる","閃光")
+         if n not in ("題名","奪われる","牢が開く","最後の画面","駆け上がる","閃光","斬りかかる")
          and not n.startswith("地図 ")]
 chk(all(int(n) in _dlg for n in _cs_say),
     "場面のセリフ番号が Dialogue.txt に実在する（「題名」「奪われる」は別仕立て）")
@@ -1254,7 +1262,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=483
+MIN_CHECKS=487
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

@@ -118,6 +118,10 @@ public class TowerGame
                 Player.ApplyZenoEvent();
                 EnterFloor(Player.Floor, Player.Position);
             }
+            else if (e.Effect == Cutscenes.ChargeStep)
+            {
+                LastKnightCharge = KnightCharge.Instance.Trace();
+            }
             else if (e.Effect == Cutscenes.FlashStep)
             {
                 // 原典は音7のあと、自分のマスに当たりの絵を貼る。
@@ -153,7 +157,8 @@ public class TowerGame
         foreach (var step in steps)
         {
             if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
-                || step == Cutscenes.ClimbStep || step == Cutscenes.FlashStep)
+                || step == Cutscenes.ClimbStep || step == Cutscenes.FlashStep
+                || step == Cutscenes.ChargeStep)
             {
                 pages.Enqueue(new Page
                 {
@@ -228,6 +233,12 @@ public class TowerGame
     /// 原典は地図を変えず**階の数字だけ**を 24→50 と上げていく。
     /// </summary>
     public List<int> LastClimb { get; private set; }
+
+    /// <summary>
+    /// 金騎士の突撃の通り道。場面が流れたときに積む。見た目の層がこれを再生する。
+    /// 原典（0x325e）は向きの表を読みながら絵を動かし、振るたびに始まりへ戻す。
+    /// </summary>
+    public List<Vector2Int> LastKnightCharge { get; private set; }
 
     /// <summary>閃光を出す場所を積む。</summary>
     public void PlayEffect(Vector2Int at) { effects.Add(at); }

@@ -15,6 +15,18 @@ using UnityEngine;
 /// </summary>
 public class KnightCharge
 {
+    /// <summary>
+    /// 最初のひと振りの始まり。原典 0x3547/0x354f が X=5, Y=7 を置く＝盤面の (0,-2)。
+    /// そこは同じ場面が門を書き込むマスで、**金騎士は退路の門から現れて斬りかかる**。
+    /// </summary>
+    public static readonly Vector2Int FirstStart = new Vector2Int(0, -2);
+
+    /// <summary>
+    /// 2振り目からの始まり。区切りのたびに原典 0x35e0〜0x35e7 が X=5, Y=5 に戻す
+    /// ＝**盤面の中央 (0,0)**。だから14回とも盤面からはみ出さない。
+    /// </summary>
+    public static readonly Vector2Int RunStart = new Vector2Int(0, 0);
+
     /// <summary>1まとまり（区切りまでの連続した動き）。</summary>
     public class Run
     {
@@ -84,13 +96,24 @@ public class KnightCharge
 
     public IEnumerable<Run> Runs { get { return runs; } }
 
-    /// <summary>始まりの場所から道順をたどったときに通るマス。</summary>
-    public List<Vector2Int> Trace(Vector2Int from)
+    /// <summary>
+    /// ひと振りぶんの通り道。原典は**振るたびに始まりへ戻す**ので、
+    /// 1振り目は門のマス、2振り目からは盤面の中央から始まる。
+    /// </summary>
+    public List<Vector2Int> TraceRun(int index)
     {
         var list = new List<Vector2Int>();
-        var at = from;
-        foreach (var r in runs)
-            foreach (var d in r.Steps) { at += d; list.Add(at); }
+        if (index < 0 || index >= runs.Count) return list;
+        var at = index == 0 ? FirstStart : RunStart;
+        foreach (var d in runs[index].Steps) { at += d; list.Add(at); }
+        return list;
+    }
+
+    /// <summary>14回ぶんを順につないだ通り道。</summary>
+    public List<Vector2Int> Trace()
+    {
+        var list = new List<Vector2Int>();
+        for (int i = 0; i < runs.Count; i++) list.AddRange(TraceRun(i));
         return list;
     }
 }

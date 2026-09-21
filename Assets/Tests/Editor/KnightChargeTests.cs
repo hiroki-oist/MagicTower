@@ -42,15 +42,28 @@ public class KnightChargeTests
         foreach (var d in beforeLast) Assert.AreEqual(new Vector2Int(0, -1), d, "その前はまっすぐ下へ");
     }
 
+    /// <summary>
+    /// 振るたびに始まりへ戻る（原典 0x35e0〜0x35e7）ので、14回とも盤面に収まる。
+    /// 1振り目だけは門のマス (0,-2) から、2振り目からは中央 (0,0) から。
+    /// </summary>
     [Test]
-    public void たどると盤面の中に収まる()
+    public void どの振りも盤面の中に収まる()
     {
-        // 40階の上のほう（(0,+4)）から始めると、下へ降りて最後に少し戻る形になる
-        var trace = KnightCharge.Instance.Trace(new Vector2Int(0, 4));
-        Assert.AreEqual(KnightCharge.Instance.StepCount, trace.Count);
-        int lowest = int.MaxValue;
-        foreach (var p in trace) lowest = Mathf.Min(lowest, p.y);
-        Assert.Less(lowest, 4, "下へ進む");
-        Assert.Greater(trace[trace.Count - 1].y, lowest, "最後は少し上へ戻る");
+        var k = KnightCharge.Instance;
+        Assert.AreEqual(new Vector2Int(0, -2), KnightCharge.FirstStart);
+        Assert.AreEqual(new Vector2Int(0, 0), KnightCharge.RunStart);
+
+        var all = k.Trace();
+        Assert.AreEqual(k.StepCount, all.Count);
+        foreach (var p in all)
+        {
+            Assert.IsTrue(p.x >= FloorData.MinX && p.x <= FloorData.MaxX, $"x={p.x}");
+            Assert.IsTrue(p.y >= FloorData.MinY && p.y <= FloorData.MaxY, $"y={p.y}");
+        }
+
+        var first = k.TraceRun(0);
+        Assert.AreEqual(new Vector2Int(0, -3), first[0], "門から一歩下へ");
+        var last = k.TraceRun(k.RunCount - 1);
+        Assert.AreEqual(new Vector2Int(0, 5), last[last.Count - 1], "最後は中央から上へ5歩");
     }
 }

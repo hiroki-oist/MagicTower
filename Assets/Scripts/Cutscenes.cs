@@ -20,6 +20,11 @@ public class Cutscenes
     public const string PrisonOpensStep = "牢が開く";
 
     /// <summary>
+    /// 金騎士が斬りかかる段（原典 0x325e の向きの表）。道順は <see cref="KnightCharge"/>。
+    /// </summary>
+    public const string ChargeStep = "斬りかかる";
+
+    /// <summary>
     /// 閃光の段。原典は音7を鳴らして**自分の立っているマス**に当たりの絵を貼る
     /// （0x6d09〜0x6d42 と 0x73b1〜0x73c6）。戦闘や魔法攻撃と同じ絵。
     /// </summary>
