@@ -119,12 +119,41 @@ public static class ScreenLayout
     /// <summary>右下の大きい欄。モンスターの情報とメッセージを兼ねる。</summary>
     public static readonly RectInt MessageBox = new RectInt(528, 224, 96, 128);
 
+    // ---- 戦闘中の相手の情報（原典 0x9626）----
+    //
+    // 戦闘（0x6082）に入るとき、右下の欄を塗り直して相手の絵と能力値を出す。
+    // 以前ここを「鍵の本数の欄」と読み違えていたが、鍵は数字ではなく絵で出る（下記）。
+    //
+    //   塗り  (528,224) 96x128        ＝ MessageBox と同じ欄
+    //   絵    (560,232) 32x32         ← 属性表の +4 の絵（色 0x11、属性が 0xa なら 0x88）
+    //   名前  (528,272)
+    //   命    (536,296) ＋ 数値 x=568・幅3
+    //   攻    (536,312) ＋ 数値 x=568・幅3
+    //   防    (536,328) ＋ 数値 x=568・幅3
+    //
+    // 相手の表は DS:0x63c から 14バイト/件・200件（+0x63e 命 / +0x640 攻 / +0x642 防 /
+    // +0x646 名前）。
+
+    public static readonly RectInt MonsterIcon = new RectInt(560, 232, 32, 32);
+    public static readonly RectInt MonsterName = new RectInt(528, 272, 96, 16);
+
+    /// <summary>「命」「攻」「防」の見出し。1文字ぶん。</summary>
+    public static readonly RectInt MonsterHpLabel      = new RectInt(536, 296, 32, 16);
+    public static readonly RectInt MonsterAttackLabel  = new RectInt(536, 312, 32, 16);
+    public static readonly RectInt MonsterDefenseLabel = new RectInt(536, 328, 32, 16);
+
     /// <summary>
-    /// 戦闘中に数を出す欄。原典の戦闘（0x62f4 / 0x639b）がここを塗って書き換える。
-    /// 以前これを「鍵の本数」と読み違えていたが、鍵は数字ではなく絵で出る（下記）。
+    /// 命の数値。最初は幅3（x=568、0x9626）で出し、戦っている間は
+    /// **幅4**（x=552、0x639b）で残りの命に書き換わる。どちらも右端は 616 なので、
+    /// 右詰めの広いほうの欄で両方を兼ねられる。
     /// </summary>
-    public static readonly RectInt BattleNumberA = new RectInt(552, 296, 64, 16);
-    public static readonly RectInt BattleNumberB = new RectInt(568, 296, 48, 16);
+    public static readonly RectInt MonsterHpBox = new RectInt(552, 296, 64, 16);
+
+    /// <summary>倒したときに 0 を書き直す欄（幅3、0x62f4）。</summary>
+    public static readonly RectInt MonsterHpZeroBox = new RectInt(568, 296, 48, 16);
+
+    public static readonly RectInt MonsterAttackBox  = new RectInt(568, 312, 48, 16);
+    public static readonly RectInt MonsterDefenseBox = new RectInt(568, 328, 48, 16);
 
     // ---- 鍵の絵（原典 0x9ff8）----
     //

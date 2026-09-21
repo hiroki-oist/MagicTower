@@ -181,9 +181,15 @@ public static class TowerSceneBuilder
             AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Key_Yellow.png");
         vso.FindProperty("messageBox").objectReferenceValue =
             Box(screen, font, "Message", ScreenLayout.MessageBox, ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.TopLeft);
+
+        // 戦闘中は同じ枠に相手の絵と能力値を出す（原典 0x9626）。
+        var battleView = BuildBattleView(controller);
+        vso.FindProperty("battleView").objectReferenceValue = battleView;
+        vso.FindProperty("registry").objectReferenceValue =
+            Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
+        BuildMonsterPanel(screen, font, vso);
         vso.ApplyModifiedPropertiesWithoutUndo();
 
-        BuildBattleView(controller);
         BuildDialogueWindow(screen, font, controller);
         BuildMenuWindow(screen, font, controller);
         BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
@@ -276,7 +282,54 @@ public static class TowerSceneBuilder
     }
 
     /// <summary>戦闘の演出を再生する役。盤面と同じ座標で絵を出すので画布の外に置く。</summary>
-    static void BuildBattleView(TowerController controller)
+    /// <summary>
+    /// 戦闘中の相手の欄（原典 0x9626）。位置は原典そのまま:
+    /// 絵 (560,232)、名前 (528,272)、命/攻/防 の見出し (536,296/312/328)、
+    /// 数値は右詰めで右端 616。
+    /// </summary>
+    static void BuildMonsterPanel(RectTransform screen, TMP_FontAsset font, SerializedObject vso)
+    {
+        var panelGo = new GameObject("MonsterPanel", typeof(RectTransform));
+        panelGo.transform.SetParent(screen, false);
+        var panel = panelGo.GetComponent<RectTransform>();
+        panel.anchorMin = panel.anchorMax = panel.pivot = new Vector2(0f, 1f);
+        panel.anchoredPosition = Vector2.zero;
+        panel.sizeDelta = Vector2.zero;
+
+        vso.FindProperty("monsterPanel").objectReferenceValue = panel;
+        vso.FindProperty("monsterIcon").objectReferenceValue =
+            Icon(panel, "MonsterIcon", ScreenLayout.MonsterIcon);
+        vso.FindProperty("monsterName").objectReferenceValue =
+            Box(panel, font, "MonsterName", ScreenLayout.MonsterName,
+                ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Left);
+
+        // 見出しは原典が毎回書く文字（命／攻／防）。
+        Label(panel, font, "HpLabel",      ScreenLayout.MonsterHpLabel,      "命");
+        Label(panel, font, "AttackLabel",  ScreenLayout.MonsterAttackLabel,  "攻");
+        Label(panel, font, "DefenseLabel", ScreenLayout.MonsterDefenseLabel, "防");
+
+        vso.FindProperty("monsterHp").objectReferenceValue =
+            Box(panel, font, "MonsterHp", ScreenLayout.MonsterHpBox,
+                ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
+        vso.FindProperty("monsterAttack").objectReferenceValue =
+            Box(panel, font, "MonsterAttack", ScreenLayout.MonsterAttackBox,
+                ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
+        vso.FindProperty("monsterDefense").objectReferenceValue =
+            Box(panel, font, "MonsterDefense", ScreenLayout.MonsterDefenseBox,
+                ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Right);
+
+        panelGo.SetActive(false);
+    }
+
+    static void Label(RectTransform parent, TMP_FontAsset font, string name,
+                      RectInt r, string text)
+    {
+        var t = Box(parent, font, name, r, ScreenLayout.TextSizeOnCanvas,
+                    TextAlignmentOptions.Left);
+        t.text = text;
+    }
+
+    static BattleView BuildBattleView(TowerController controller)
     {
         var go = new GameObject("BattleView");
         go.transform.SetParent(controller.transform, false);
@@ -291,6 +344,7 @@ public static class TowerSceneBuilder
         so.FindProperty("knightSprite").objectReferenceValue =
             AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Tiles/133_Enemy_Worrior.png");
         so.ApplyModifiedPropertiesWithoutUndo();
+        return view;
     }
 
     /// <summary>
@@ -371,10 +425,10 @@ public static class TowerSceneBuilder
 
     /// <summary>原典の画面座標（640x400）のまま欄を置く。</summary>    /// <summary>原典の画面座標（640x400）のまま欄を置く。</summary>
     /// <summary>絵を貼るだけの欄。位置は原典の座標そのまま。</summary>
-    static UnityEngine.UI.Image Icon(RectTransform screen, string name, RectInt r)
+    static UnityEngine.UI.Image Icon(RectTransform parent, string name, RectInt r)
     {
         var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
-        go.transform.SetParent(screen, false);
+        go.transform.SetParent(parent, false);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
         rt.anchoredPosition = ScreenLayout.ToCanvas(r);
@@ -394,11 +448,11 @@ public static class TowerSceneBuilder
         return null;
     }
 
-    static TextMeshProUGUI Box(RectTransform screen, TMP_FontAsset font, string name,
+    static TextMeshProUGUI Box(RectTransform parent, TMP_FontAsset font, string name,
                                RectInt r, float size, TextAlignmentOptions align)
     {
         var go = new GameObject(name, typeof(RectTransform));
-        go.transform.SetParent(screen, false);
+        go.transform.SetParent(parent, false);
         var rt = go.GetComponent<RectTransform>();
         rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
         rt.anchoredPosition = ScreenLayout.ToCanvas(r);

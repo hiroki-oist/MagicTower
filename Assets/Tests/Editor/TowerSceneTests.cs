@@ -43,6 +43,9 @@ public class TowerSceneTests
         foreach (var name in new[] { "controller", "floorLabel", "hp", "attack",
                                      "defense", "gold", "weapon", "shield",
                                      "messageBox", "keyIcons", "weaponIcon", "shieldIcon",
+                                     "battleView", "registry", "monsterPanel", "monsterIcon",
+                                     "monsterName", "monsterHp", "monsterAttack",
+                                     "monsterDefense",
                                      "keyRed", "keyPurple", "keyYellow" })
             Assert.IsNotNull(so.FindProperty(name).objectReferenceValue, $"{name} が未設定");
 

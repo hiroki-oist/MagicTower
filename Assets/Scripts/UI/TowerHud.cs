@@ -97,6 +97,10 @@ public static class TowerHud
         public bool Valid;
         public string Name;
         public string Hp, Attack, Defense;
+        /// <summary>数のままの命。戦っている間に減らして書き直すのに使う。</summary>
+        public int MaxHp;
+        /// <summary>プレーヤーの一撃で減る命。</summary>
+        public int DamagePerHit;
         /// <summary>勇者のオーブを持っているときだけ出る予想ダメージ。</summary>
         public string ExpectedDamage;
     }
@@ -112,6 +116,14 @@ public static class TowerHud
         info.Hp = GameText.Num(e.MaxHP);
         info.Attack = GameText.Num(e.Attack);
         info.Defense = GameText.Num(e.Defense);
+        info.MaxHp = e.MaxHP;
+        if (player != null)
+        {
+            var k = BattleRules.KindFromTag(enemyPrefab);
+            info.DamagePerHit = BattleRules.DamagePerHit(
+                BattleRules.EffectiveAttack(player.Attack, k, TowerBattle.CharmsOf(player)),
+                e.Defense);
+        }
 
         // 勇者のオーブを持っていれば、受けるダメージまで出してくれる
         if (player != null && player.Has(SpecialItems.Kind.HeroOrb))
@@ -125,6 +137,15 @@ public static class TowerHud
                 : GameText.Instance.Message("orb_no_attack");   // 「　　　　　攻撃不可能」
         }
         return info;
+    }
+
+    /// <summary>
+    /// 何撃か入れたあとの相手の残りの命。原典は一撃ごとにこの数字を書き換える（0x639b）。
+    /// </summary>
+    public static int MonsterHpAfter(MonsterInfo info, int hits)
+    {
+        if (info.DamagePerHit <= 0) return info.MaxHp;
+        return Mathf.Max(0, info.MaxHp - info.DamagePerHit * hits);
     }
 
     /// <summary>所持している鍵の本数。原典は本数ぶんアイコンを並べる。</summary>

@@ -25,6 +25,18 @@ public class TowerHudView : MonoBehaviour
     [SerializeField] TextMeshProUGUI messageBox;
 
     /// <summary>
+    /// 戦闘中に出す相手の欄（原典 0x9626）。メッセージと同じ枠を使う。
+    /// </summary>
+    [SerializeField] BattleView battleView;
+    [SerializeField] FloorPrefabRegistry registry;
+    [SerializeField] RectTransform monsterPanel;
+    [SerializeField] UnityEngine.UI.Image monsterIcon;
+    [SerializeField] TextMeshProUGUI monsterName;
+    [SerializeField] TextMeshProUGUI monsterHp;
+    [SerializeField] TextMeshProUGUI monsterAttack;
+    [SerializeField] TextMeshProUGUI monsterDefense;
+
+    /// <summary>
     /// 装備の絵。原典（0x9b80 付近）は欄を塗ってから、
     /// **剣は物体ID 50+段位、盾は 55+段位**の絵をそのまま貼る
     /// （属性表 es:[bx+0x3b2] / es:[bx+0x3d0] ＝ 表の +4 の絵の位置）。
@@ -60,14 +72,56 @@ public class TowerHudView : MonoBehaviour
         // ここで書くのは名前だけ。
         Set(weapon,  TowerHud.WeaponName(p));
         Set(shield,  TowerHud.ShieldName(p));
-        // 原典は欄を塗り直して**その時のメッセージ1つだけ**を6桁で折り返して書く。
-        Set(messageBox, TowerHud.InfoBox(Last(controller.Game.Log)));
+        // 右下の枠は「戦闘中は相手の欄、それ以外はメッセージ」。原典は同じ場所を塗り直す。
+        var fighting = ShowMonster(p);
+        if (messageBox != null) messageBox.enabled = !fighting;
+        if (!fighting)
+            // 原典は欄を塗り直して**その時のメッセージ1つだけ**を6桁で折り返して書く。
+            Set(messageBox, TowerHud.InfoBox(Last(controller.Game.Log)));
         ShowIcon(weaponIcon, swordIcons,  p.SwordRank);
         ShowIcon(shieldIcon, shieldIcons, p.ShieldRank);
         ShowKeys(p);
     }
 
     static void Set(TextMeshProUGUI t, string s) { if (t != null) t.text = s; }
+
+    /// <summary>
+    /// 戦っている間、右下の枠に相手の絵と能力値を出す（原典 0x9626）。
+    /// 命の数字は一撃ごとに減る（0x639b）。出したときだけ true。
+    /// </summary>
+    bool ShowMonster(PlayerState p)
+    {
+        if (monsterPanel == null) return false;
+        var fighting = battleView != null && battleView.IsPlaying
+                       && !string.IsNullOrEmpty(controller.Game.LastBattleEnemy);
+        monsterPanel.gameObject.SetActive(fighting);
+        if (!fighting) return false;
+
+        var info = TowerHud.Inspect(p, controller.Game.LastBattleEnemy);
+        if (!info.Valid) { monsterPanel.gameObject.SetActive(false); return false; }
+
+        if (monsterIcon != null)
+        {
+            var sprite = SpriteOfEnemy(controller.Game.LastBattleEnemy);
+            monsterIcon.enabled = sprite != null;
+            if (sprite != null) monsterIcon.sprite = sprite;
+        }
+        Set(monsterName, info.Name);
+        Set(monsterHp, GameText.Num(TowerHud.MonsterHpAfter(info, battleView.HitsDone)));
+        Set(monsterAttack, info.Attack);
+        Set(monsterDefense, info.Defense);
+        return true;
+    }
+
+    /// <summary>相手の絵は盤面に置くプレハブのものをそのまま使う（原典も同じ絵）。</summary>
+    Sprite SpriteOfEnemy(string prefabName)
+    {
+        if (registry == null) return null;
+        var prefab = registry.Get(prefabName);
+        if (prefab == null) return null;
+        var sr = prefab.GetComponent<SpriteRenderer>();
+        return sr != null ? sr.sprite : null;
+    }
 
     /// <summary>装備の絵。段位が0なら何も出さない。</summary>
     static void ShowIcon(UnityEngine.UI.Image img, Sprite[] icons, int rank)

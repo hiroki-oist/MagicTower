@@ -38,7 +38,7 @@ public class HudLayoutTests
     {
         foreach (var r in new[] { ScreenLayout.WeaponIcon, ScreenLayout.WeaponBox,
                                   ScreenLayout.ShieldIcon, ScreenLayout.ShieldBox,
-                                  ScreenLayout.MessageBox, ScreenLayout.BattleNumberA })
+                                  ScreenLayout.MessageBox, ScreenLayout.MonsterHpBox })
             Assert.GreaterOrEqual(r.xMin, ScreenLayout.MapLeft + ScreenLayout.MapWidth,
                                   "盤面(496まで)にかからない");
     }
@@ -59,8 +59,9 @@ public class HudLayoutTests
         foreach (var r in new[] { ScreenLayout.MapArea, ScreenLayout.FloorBox,
                                   ScreenLayout.HpBox, ScreenLayout.GoldBox,
                                   ScreenLayout.WeaponIcon, ScreenLayout.ShieldIcon,
-                                  ScreenLayout.MessageBox, ScreenLayout.BattleNumberA,
-                                  ScreenLayout.BattleNumberB })
+                                  ScreenLayout.MessageBox, ScreenLayout.MonsterHpBox,
+                                  ScreenLayout.MonsterIcon, ScreenLayout.MonsterName,
+                                  ScreenLayout.MonsterDefenseBox })
         {
             Assert.GreaterOrEqual(r.xMin, 0);
             Assert.GreaterOrEqual(r.yMin, 0);

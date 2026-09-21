@@ -28,8 +28,12 @@ public static class BattlePresentation
     /// <summary>斬る音の番号（原典 0x10da:0x20b に渡す 9）。</summary>
     public const int SlashSound = 9;
 
-    /// <summary>ダメージの数を出す欄。</summary>
-    public static RectInt DamageBox { get { return ScreenLayout.BattleNumberB; } }
+    /// <summary>
+    /// 戦っている間、相手の**残りの命**を書き換える欄（原典 0x639b は幅4で x=552）。
+    /// 以前ここを「ダメージの数」と読んでいたが、0x639b が書いているのは
+    /// `[bp-0x1a] -= [bp-0xa]`（初めの命から受けた分を引いたもの）＝ 残りの命。
+    /// </summary>
+    public static RectInt MonsterHpBox { get { return ScreenLayout.MonsterHpBox; } }
 
     /// <summary>相手の反撃の音（原典 0x10da:0x20b に渡す 10）。</summary>
     public const int CounterSound = 10;

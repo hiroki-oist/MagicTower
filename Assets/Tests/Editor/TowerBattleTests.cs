@@ -124,9 +124,14 @@ public class TowerBattleTests
     }
 
     [Test]
-    public void ダメージの欄は戦闘用で鍵の欄ではない()
+    public void 命の欄は戦闘用で鍵の欄ではない()
     {
-        Assert.AreEqual(new RectInt(568, 296, 48, 16), BattlePresentation.DamageBox);
+        // 戦っている間は幅4で残りの命を書き換える（0x639b）。最初の表示は幅3（x=568）で
+        // 右端はどちらも 616 なので、右詰めの広いほうで両方を兼ねる。
+        Assert.AreEqual(new RectInt(552, 296, 64, 16), BattlePresentation.MonsterHpBox);
+        Assert.AreEqual(new RectInt(568, 296, 48, 16), ScreenLayout.MonsterHpZeroBox);
+        Assert.AreEqual(616, ScreenLayout.MonsterHpBox.xMax);
+        Assert.AreEqual(616, ScreenLayout.MonsterHpZeroBox.xMax);
         Assert.AreEqual(new Vector2Int(528, 144), ScreenLayout.KeyIconOrigin,
                         "鍵は絵を並べて出す");
         Assert.AreEqual(6, ScreenLayout.KeyIconsPerRow, "1行に6本");

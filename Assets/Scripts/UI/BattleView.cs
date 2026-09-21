@@ -25,6 +25,12 @@ public class BattleView : MonoBehaviour
     /// <summary>今再生しているか。</summary>
     public bool IsPlaying { get; private set; }
 
+    /// <summary>
+    /// ここまでに入れた斬りの数。原典は一撃ごとに相手の残りの命を書き換える（0x639b）ので、
+    /// 右下の欄がこれを見て数字を減らす。
+    /// </summary>
+    public int HitsDone { get; private set; }
+
     List<BattlePresentation.Step> playing;
     List<Vector2Int> playingCharge;
     GameObject effect;
@@ -83,6 +89,7 @@ public class BattleView : MonoBehaviour
     IEnumerator Play(List<BattlePresentation.Step> steps)
     {
         IsPlaying = true;
+        HitsDone = 0;
         foreach (var s in steps)
         {
             switch (s.Kind)
@@ -92,6 +99,7 @@ public class BattleView : MonoBehaviour
                     break;
                 case "斬る":
                 case "反撃":
+                    if (s.Kind == "斬る") HitsDone++;
                     ShowEffect(s.At);
                     yield return new WaitForSeconds(BattlePresentation.WaitSeconds(s.Value));
                     effect.SetActive(false);

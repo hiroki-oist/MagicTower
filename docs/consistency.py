@@ -600,6 +600,17 @@ chk("Tail(" not in _hvw,"情報欄に履歴を積まない（原典は毎回塗�
 chk("InfoBox(" in _hvw,"情報欄は原典の折り返しを通す")
 chk(_dis.count("cmp     word ptr [bp - 2], 6")>=1,"折り返しは6桁（0x9de0）")
 
+# 戦闘中の相手の欄（0x9626）。戦闘 0x6082 の中から1か所だけ呼ばれる。
+chk(_dis.count("mov     cx, 0x110")>=1 and _dis.count("mov     cx, 0x128")>=1,
+    "相手の名前(y=272)と命(y=296)の位置が原典にある")
+chk(_dis.count("mov     ax, 0x48c6")==1,"相手の絵は (560,232) に1か所だけ貼る")
+chk("MonsterIcon" in _sl and "MonsterHpLabel" in _sl,"相手の欄を ScreenLayout に持っている")
+_tgx2=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("LastBattleEnemy" in _tgx2,"戦っている相手を見た目の層に渡している")
+chk("ShowMonster" in _hvw and "HitsDone" in
+    open("Assets/Scripts/UI/BattleView.cs",encoding="utf-8").read(),
+    "戦闘中は相手の欄を出し、命は一撃ごとに減らす")
+
 # 装備の絵（0x9b80 付近）。欄を塗ってから 剣=物体ID 50+段位 / 盾=55+段位 の絵を貼る。
 chk(0x3b2==0x282+6*50+4 and 0x3d0==0x282+6*55+4,
     "装備の絵は属性表の物体ID 50+段位 / 55+段位 の欄から引く")
@@ -1212,8 +1223,8 @@ chk("MapArea = new RectInt(MapLeft, MapTop, MapWidth, MapHeight)" in _sl,"Screen
 chk("HpBox      = new RectInt(48, 80, 64, 16)" in _sl,"ScreenLayout に能力値の欄がある")
 chk("ScreenLayout.HpBox" in _sb and "ScreenLayout.MessageBox" in _sb,
     "シーンの HUD が原典の座標で置かれている")
-chk("BattleNumberA" in _sl and "KeyIconOrigin" in _sl,
-    "戦闘の数値欄と鍵の絵の位置を区別してある")
+chk("MonsterHpBox" in _sl and "KeyIconOrigin" in _sl,
+    "戦闘中の相手の欄と鍵の絵の位置を区別してある")
 _bp=open("Assets/Scripts/Battle/BattlePresentation.cs",encoding="utf-8").read()
 chk("StepWait = 10" in _bp and "HitWait = 5" in _bp and "SlashSound = 9" in _bp,
     "戦闘の演出の値が原典どおり（待ち10/5・音9）")
@@ -1379,7 +1390,7 @@ chk(all(int(_r[5]) in _dlg for _r in _so if _r[5]!="-"),
 # 後続の検査群（25項目）を巻き添えで消し、
 # 「不整合0件」が“検査が走っていないだけ”になっていたことがある。
 # 検査の本数が減ったら気づけるように下限を置く。
-MIN_CHECKS=531
+MIN_CHECKS=536
 print(f"\n{'='*50}\n実行した検査 {checks} 項目（下限 {MIN_CHECKS}）")
 if checks < MIN_CHECKS:
     issues.append(f"検査の本数が {checks} に減っている（{MIN_CHECKS} 以上のはず）")

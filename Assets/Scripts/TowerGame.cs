@@ -222,6 +222,12 @@ public class TowerGame
     public List<BattlePresentation.Step> LastBattle { get; private set; }
 
     /// <summary>
+    /// 直前の戦闘の相手（プレハブ名）。原典は戦闘に入るとき右下の欄に
+    /// 相手の絵と能力値を出す（0x61e7 → 0x9626）ので、見た目の層がこれを見る。
+    /// </summary>
+    public string LastBattleEnemy { get; private set; }
+
+    /// <summary>
     /// 出すべき閃光の場所。原典は戦闘・魔法攻撃・場面の節目の**7か所すべてで
     /// 同じ絵**（GROUND.P58 の11枚目、buffer 変位 0x87a）を貼る。
     /// 音と同じで、ここは**場所を積むだけ**にして描くのは見た目の層に任せる。
@@ -537,6 +543,7 @@ public class TowerGame
                 var before2 = Player.Position;
                 var b = TowerBattle.Resolve(Player, r.What);
                 LastBattle = BattlePresentation.Steps(before2, r.Target, b.Hits);
+                LastBattleEnemy = r.What;
                 // 原典は一撃ごとに音9（自分の攻撃）、相手が生きていれば音10（反撃）。
                 // 回数は BattlePresentation.Steps の並びと同じ。
                 for (int i = 0; i < b.Hits; i++)
