@@ -168,6 +168,8 @@ public class TowerGame
             }
             else if (e.Effect == Cutscenes.ChargeStep)
             {
+                // 原典 0x3d1c は突撃の中で地図を書き換えるたびに音6を鳴らす
+                PlaySound(SoundCues.SceneBeat2);
                 LastKnightCharge = KnightCharge.Instance.Trace();
             }
             else if (e.Effect == Cutscenes.BossAppearStep)
@@ -240,6 +242,10 @@ public class TowerGame
             }
             if (step == Cutscenes.EndingTowerStep)
             {
+                // 原典 0xcd20 は塔が流れ出す前に「遠ざかる」音を鳴らし、
+                // 0xbf5b で題名の曲へ切り替える（題名と終幕は同じ曲）。
+                PlaySound(SoundCues.TitleMusic);
+                PlaySound(SoundCues.Receding);
                 pages.Enqueue(withMap(new Page
                 {
                     Kind = PageKind.EndingTower, Text = "", Record = 1
@@ -270,6 +276,8 @@ public class TowerGame
             }
             if (step == Cutscenes.TitleStep)
             {
+                // 原典 0xbf5b は題名（と終幕）でこの曲に切り替える
+                PlaySound(SoundCues.TitleMusic);
                 pages.Enqueue(withMap(new Page
                 {
                     Kind = PageKind.Title,
@@ -947,11 +955,20 @@ public class TowerGame
             }
         var fired = Floor.ApplyUnlocks(f => Player.EventFlags.Contains(f));
         foreach (var u in fired)
+        {
             PlaySound(u.Floor == 2 ? SoundCues.BigUnlock : SoundCues.Unlock);
+            // 49階で壁が書き込まれるとき（原典 0x226b）は別の音が鳴る
+            foreach (var r in u.Results)
+                if (r.Kind == "封印") { PlaySound(SoundCues.WallAppear); break; }
+        }
         if (fired.Count > 0)
             foreach (var at in gates)
                 if (Floor.At(at) != "s")
+                {
+                    // 原典 0x7a68 は門1マスごとに9コマの動きを出し、その頭で音11を鳴らす
+                    PlaySound(SoundCues.OpenGate);
                     doorOpens.Add(new DoorOpen { At = at, Cell = "s" });
+                }
     }
 
     /// <summary>

@@ -2074,6 +2074,19 @@ chk("if (pages.Count == 0 && IsChoosing) Choice = ChoiceKind.None;" in _tg4,
     "選ばせている窓を決めずに閉じたら印を残さない")
 chk("game.IsChoosing" in open("Assets/Editor/TowerPlaythrough.cs",encoding="utf-8").read(),
     "自動プレイも聞かれたら答える")
+# 鳴らす所の無い音を作らない（題名の曲・門が開く・遠ざかるが実際そうなっていた）
+_sccs=open("Assets/Scripts/Items/SoundCues.cs",encoding="utf-8").read()
+_players="".join(open(q,encoding="utf-8").read() for q in
+                 ("Assets/Scripts/TowerGame.cs","Assets/Scripts/TowerController.cs",
+                  "Assets/Scripts/UI/FullScreenView.cs","Assets/Scripts/UI/BattleView.cs"))
+_silent=[]
+for _l in open("Assets/Resources/SoundCues.txt",encoding="utf-8"):
+    if _l.startswith("#") or not _l.strip(): continue
+    _cue=_l.split("|")[0].strip()
+    if _cue == "起動時のテンポ": continue            # 音は出ない（テンポを戻すだけ）
+    _m=re.search(r'public const string (\w+)\s*=\s*"'+re.escape(_cue)+r'"',_sccs)
+    if not _m or "SoundCues."+_m.group(1) not in _players: _silent.append(_cue)
+chk(not _silent,"鳴らす所の無い音が無い",str(_silent))
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("SpecialItems.Kind.Elixir,          // special_1" in _tm,
     "アイテムの並びは原典（special_1〜8）そのまま")
@@ -2091,7 +2104,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=703
+MIN_CHECKS=704
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

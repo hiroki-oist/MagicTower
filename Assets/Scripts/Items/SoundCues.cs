@@ -80,4 +80,8 @@ public class SoundCues
     public const string SceneBeat  = "場面の節目";
     public const string FieldMusic = "本編の曲";
     public const string TitleMusic = "題名の曲";
+    public const string OpenGate   = "門が開く";
+    public const string WallAppear = "壁が現れる";
+    public const string SceneBeat2 = "場面のできごと";
+    public const string Receding   = "遠ざかる";
 }
