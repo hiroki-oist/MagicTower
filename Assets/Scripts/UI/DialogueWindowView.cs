@@ -226,8 +226,14 @@ public class DialogueWindowView : MonoBehaviour
         opening = null;
     }
 
-    /// <summary>まだ窓が出ていない（動きの終わりを待っている）か。</summary>
-    public bool IsWaiting { get { return waiting; } }
+    /// <summary>
+    /// まだ窓が出ていない（動きの終わりを待っている）か。
+    ///
+    /// **窓を出す前の段階も含める**。窓そのものを出さないようにしたので、
+    /// 開く処理（Open）に入る前は `waiting` が立たず、その隙に押した決定で
+    /// セリフが飛ばされていた（3階のゼノ・2階の会話・20階の合体）。
+    /// </summary>
+    public bool IsWaiting { get { return waiting || Waiting(); } }
     /// <summary>本文を出している途中か。</summary>
     public bool IsTyping { get { return typing; } }
 

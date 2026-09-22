@@ -1308,6 +1308,16 @@ chk("battle_gold" in _tg5,"倒した相手からの金も知らせに出す（�
 _tcw=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("TitleScreen.Title" in _tcw,
     "1枚絵の上の字も起動時に作っておく（3階だけ一瞬止まると報告された）")
+# 作者の報告（その9）
+_dwv2=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
+chk("waiting || Waiting()" in _dwv2,
+    "窓を出す前の段階も「待っている」と答える（その隙の決定でセリフが飛んでいた）")
+_dov3=open("Assets/Scripts/UI/DoorOpenView.cs",encoding="utf-8").read()
+chk("d.Delayed || d.Closing" in open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+    and "list[i].Delayed || list[i].Closing" in _dov3,
+    "描き直しを待たせるのは間をおいて開く門と閉まる門だけ（鍵の扉は待たせない）")
+chk("controller.RefreshCell(door.At)" in _dov3,
+    "動きの終わりは**盤面を合わせてから**絵を消す（一瞬扉が見えるのを防ぐ）")
 # 作者の報告（その8）
 _bv2=open("Assets/Scripts/UI/BattleView.cs",encoding="utf-8").read()
 chk("SlidePlayerViewTo" in _bv2 and "ShowActor" in _bv2,

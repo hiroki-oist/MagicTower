@@ -60,10 +60,12 @@ public class DoorOpenView : MonoBehaviour
         for (int i = 0; i < list.Count; i++)
         {
             queue.Enqueue(list[i]);
-            // 描き直しを待たせるのは**間をおいて開くもの**（解錠の門）だけ。
-            // 鍵の扉は積んだ次のコマで動き出すので待たせる必要がなく、
-            // 待たせると別の不具合の元になる（作者から「通常の扉が変」と報告）。
-            if (list[i].Delayed) held.Add(list[i].At);
+            // 描き直しを待たせるのは**間をおいて開く門**と**閉まる門**。
+            // 鍵の扉は積んだ次のコマで動き出すので待たせる必要がない
+            // （待たせると通常の扉の開き方が崩れる）。
+            // 閉まる方は待たせないと、動きの前に門がいきなり現れてしまう
+            // （33階で「2つとも突然現れてから閉まる動きが流れる」という報告）。
+            if (list[i].Delayed || list[i].Closing) held.Add(list[i].At);
         }
         if (!draining && queue.Count > 0 && isActiveAndEnabled) StartCoroutine(Drain());
     }
@@ -122,8 +124,12 @@ public class DoorOpenView : MonoBehaviour
             if (k < frames.Length) sr.sprite = frames[k];
             yield return new WaitForSeconds(DoorAnimation.FrameSeconds);
         }
+        // **先に盤面を今の地図へ合わせてから**絵を消す。順が逆だと、
+        // 絵を消してから盤面が直るまでの1コマで、開いたはずの扉が一瞬見える
+        // （「開錠の動き → 一瞬扉が現れる → 消える」という報告）。
+        held.Remove(door.At);
+        if (controller != null) controller.RefreshCell(door.At);
         cel.SetActive(false);
-        held.Remove(door.At);           // ここで初めて盤面の絵に任せる
         // 原典は9コマのあと盤面の動きだけを回す（鍵の扉は 0x9288(8)、門は 0x9288(0x14)）
         yield return new WaitForSeconds(
             DoorAnimation.TailOf(door.Cell) * DoorAnimation.FrameSeconds);

@@ -726,8 +726,8 @@ public class TowerGame
     /// </summary>
     public bool DoorPendingAt(Vector2Int at)
     {
-        // 待たせるのは**間をおいて開くもの**（解錠の門）だけ。
-        foreach (var d in doorOpens) if (d.Delayed && d.At == at) return true;
+        // 待たせるのは**間をおいて開く門**と**閉まる門**（鍵の扉は待たせない）。
+        foreach (var d in doorOpens) if ((d.Delayed || d.Closing) && d.At == at) return true;
         return false;
     }
 

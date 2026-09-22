@@ -646,6 +646,14 @@ public class TowerController : MonoBehaviour
     readonly System.Collections.Generic.List<Vector2Int> heldCells =
         new System.Collections.Generic.List<Vector2Int>();
 
+    /// <summary>そのマスを今の地図に合わせて描き直す（扉の動きが終わったときに使う）。</summary>
+    public void RefreshCell(Vector2Int at)
+    {
+        if (loader == null || Game == null) return;
+        heldCells.Remove(at);
+        loader.Refresh(at, FloorState.ViewKeyOf(Game.Floor.At(at)));
+    }
+
     void SyncChangedCells()
     {
         if (loader == null || Game == null) return;
