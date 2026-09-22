@@ -130,6 +130,37 @@ public class AmbushTests
         Assert.AreEqual(4, closing, "奥・退路・左右の4つが閉まる");
     }
 
+    /// <summary>
+    /// ボスの曲は**退路の門が閉まった時点**から（作者の指定）。
+    /// 10階は奥の門 (0,+3) が1枚目で、そこで切り替わる。
+    /// </summary>
+    [Test]
+    public void 門が閉まった時点でボスの曲になる()
+    {
+        var g = Game(10, new Vector2Int(0, -1));
+        Assert.IsFalse(g.BossMusic, "場面に入る前はその階の曲");
+        g.Step(Vector2Int.up);
+        bool closed = false;
+        for (int i = 0; i < 500 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+            g.ConsumePlayerSlide();
+            foreach (var d in g.ConsumeDoorOpens()) if (d.Closing) closed = true;
+            // 1枚目が閉まるまでは切り替わらず、閉まったあとは（扉が開いても）続く
+            Assert.AreEqual(closed, g.BossMusic, $"{i}手目");
+        }
+        Assert.IsTrue(closed, "門が閉まる場面である");
+        Assert.IsTrue(g.BossMusic, "場面が終わってもボスの曲のまま");
+
+        // 金の骸骨を倒すとその階の曲へ戻る
+        g.Player.Position = new Vector2Int(0, 4);
+        g.Floor.Clear(new Vector2Int(0, 3));
+        g.Step(Vector2Int.up);
+        Assert.AreEqual("Enemy_BossSkeleton", g.LastBattleEnemy);
+        Assert.IsFalse(g.BossMusic, "倒したら戻す");
+    }
+
     [Test]
     public void 一度に一体ずつしか歩かない()
     {

@@ -339,7 +339,12 @@ public class TowerGame
             {
                 Vector2Int at;
                 if (Cutscenes.TryParseCell(e.Effect, Cutscenes.DoorClosePrefix, out at))
+                {
                     doorOpens.Add(new DoorOpen { At = at, Cell = "s", Closing = true });
+                    // 退路を断つ門が閉まったところでボスの曲に変える（作者の指定）。
+                    // 場面の中で門が閉まるのはボス戦の入り口だけなので、これで足りる。
+                    BossMusic = true;
+                }
             }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.SoundPrefix))
             {
@@ -574,6 +579,18 @@ public class TowerGame
     /// 相手の絵と能力値を出す（0x61e7 → 0x9626）ので、見た目の層がこれを見る。
     /// </summary>
     public string LastBattleEnemy { get; private set; }
+
+    /// <summary>
+    /// ボスの曲を流している最中か（作者の指定）。
+    ///
+    /// ボス戦の場面は**どれも退路の門を閉めて**から始まる
+    /// （10階 0x3f52 の (+0,+3) と 0x4007 の (+0,-1)、20階 0x3044 の (+0,-3)、
+    /// 40階 0x3540 の (+0,-2)、49階 0xd284 の (+0,-1)）。
+    /// その**1枚目が閉まった時点**で曲を切り替え、そのボスを倒すまで続ける。
+    /// 原典 PC98版には曲が2つしか無いので、これは作者の指定で足したもの
+    /// （<see cref="JavaMusic"/>）。
+    /// </summary>
+    public bool BossMusic { get; private set; }
 
     /// <summary>
     /// 直前の戦闘の数字ひとそろい。**作者の旧版の見せ方**（黒い帯）が
@@ -1242,6 +1259,7 @@ public class TowerGame
         // 倒れたのに次の相手が歩いてきては困る。
         pages.Clear();
         walks.Clear(); doorOpens.Clear(); blinks.Clear(); vanishes.Clear();
+        BossMusic = false;
         frontMapDone = true;
         // **倒れる様子を見せてから**画面を出す（作者の指定）。
         // 相手はそのまま、主人公だけが点滅して消え、少しずつ暗くなってから
@@ -1592,6 +1610,8 @@ public class TowerGame
         // 原典は右下の欄に数字が増えるだけで、文言は持っていない。
         // 出すのは**斬り合いが終わってから**（帯が出ている間は知らせを出さない作り）。
         pendingGoldNote = b.Won ? b.GoldGained : 0;
+        // ボスを倒したらその階の曲に戻す。
+        if (b.Won && JavaMusic.IsBoss(what)) BossMusic = false;
         if (!b.Won)
         {
             Say(GameText.Instance.Message(b.MessageKey));

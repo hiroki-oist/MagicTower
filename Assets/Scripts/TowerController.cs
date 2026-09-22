@@ -657,8 +657,12 @@ public class TowerController : MonoBehaviour
         if (!JavaMusic.Enabled || sound == null || Game == null) return;
         var kind = Game.CurrentKind;
         if (kind.HasValue && PhoneLayoutView.IsFullScreen(kind.Value)) return;
-        bool boss = battle != null && battle.IsPlaying
-                    && JavaMusic.IsBoss(Game.LastBattleEnemy);
+        // ボスの曲は**退路の門が閉まった時点**から（作者の指定）。
+        // 戦いに入ってからでは遅い、という指摘によるもの。
+        // 門の閉まらない戦い（32階の金騎士）は、戦っている間だけ切り替える。
+        bool boss = Game.BossMusic
+                    || (battle != null && battle.IsPlaying
+                        && JavaMusic.IsBoss(Game.LastBattleEnemy));
         sound.PlayTrack(boss ? JavaMusic.Boss : JavaMusic.ForFloor(Game.Player.Floor));
     }
 

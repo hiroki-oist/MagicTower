@@ -126,7 +126,18 @@ public class BattleView : MonoBehaviour
         }
         // 倒れるときは**相手を残して**主人公が点滅して消える
         if (controller != null && controller.Game != null && controller.Game.ConsumeDeath())
+        {
             yield return Dying(at);
+            IsPlaying = false;
+            yield break;
+        }
+        // **場面で歩いてきた相手は、戦いが終わっても消さない。**
+        // 盤面に載っている敵は倒すとマスが床になるので消えたままでよいが、
+        // 台本で歩いてきた相手（32階の金騎士・40階の部下）は盤面に載っておらず、
+        // 片付けるのは台本の「消す」の役目。斬り合いの最後に隠したままだと、
+        // 32階で「今日はこのくらいにしておいてやる」のあと**引き上げていく姿が
+        // 見えない**（作者の報告）。原典 0x68b0 も戦闘のあとそのまま歩かせている。
+        RestoreSceneActor(at);
         IsPlaying = false;
     }
 
@@ -142,6 +153,16 @@ public class BattleView : MonoBehaviour
 
     /// <summary>場面で歩いてきた相手（盤面には載っていない立ち絵）を探すため。</summary>
     [SerializeField] NpcWalkView walkView;
+
+    /// <summary>台本で歩いてきた相手を、戦いのあと元どおり立たせる。</summary>
+    void RestoreSceneActor(Vector2Int at)
+    {
+        if (walkView == null) return;
+        var who = walkView.StandingAt(at);
+        if (who == null) return;
+        who.SetActive(true);
+        if (controller != null) controller.SetPlayerViewVisible(true);
+    }
 
     /// <summary>点滅する回数（倒れるとき）。</summary>
     public const int DeathBlinks = 6;

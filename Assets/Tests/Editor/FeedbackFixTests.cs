@@ -240,6 +240,36 @@ public class FeedbackFixTests
         Assert.IsTrue(JavaMusic.IsBoss("Enemy_Worrior"), "32階・40階の金騎士");
         Assert.IsTrue(JavaMusic.IsBoss("Boss_Zeno"), "49・50階のゼノ");
         Assert.IsFalse(JavaMusic.IsBoss("Enemy_SlimeR"), "ふつうの敵は変えない");
+        // 3x3の大物でもボス扱いにしない、という作者の指定
+        Assert.IsFalse(JavaMusic.IsBoss("Boss_GiantOctopus"), "大ダコは変えない");
+        Assert.IsFalse(JavaMusic.IsBoss("Boss_Dragon"), "ドラゴンは変えない");
+    }
+
+    /// <summary>
+    /// ボスの曲は**退路の門が閉まった時点**から（作者の指定）。
+    /// 20階・40階・49階も、それぞれの場面の中で門が閉まると切り替わる。
+    /// </summary>
+    [TestCase(20, "ボス登場")]
+    [TestCase(40, "金騎士の突撃")]
+    [TestCase(49, "大魔導師の口上")]
+    public void どのボスの場面も門が閉まると曲が変わる(int floor, string scene)
+    {
+        var g = NewGameOn(floor, new Vector2Int(0, -4));
+        g.Player.Hp = 99999; g.Player.Attack = 999; g.Player.Defense = 999;
+        Assert.IsFalse(g.BossMusic, "場面に入る前はその階の曲");
+        Assert.IsTrue(g.PlayScene(scene));
+        bool closed = false;
+        for (int i = 0; i < 800 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+            g.ConsumePlayerSlide();
+            g.ConsumeBlinks();
+            foreach (var d in g.ConsumeDoorOpens()) if (d.Closing) closed = true;
+            if (closed) break;
+        }
+        Assert.IsTrue(closed, "退路の門が閉まる場面である");
+        Assert.IsTrue(g.BossMusic, "閉まった時点でボスの曲");
     }
 
     [Test]

@@ -33,16 +33,19 @@ public static class JavaMusic
 
     /// <summary>
     /// 戦いの曲にする相手。Java版は**どの戦いでも**曲を変えるが、
-    /// 作者の指定で**ボスだけ**にしてある（10階の金の骸骨騎士・20階のヴァンパイア・
-    /// 40階と32階の金騎士・49/50階のゼノ。3x3の大物2体も入れてある）。
+    /// 作者の指定で**ボスだけ**にしてある。
+    /// 大ダコとドラゴンは（3x3の大物ではあるが）ボス扱いにしない、という指定。
+    ///
+    /// なお曲を切り替える主な合図はこの表ではなく
+    /// <see cref="TowerGame.BossMusic"/>（退路の門が閉まった時点）で、
+    /// この表は**門の閉まらない戦い**（32階の金騎士）と、
+    /// ボスを倒して曲を戻すところに使う。
     /// </summary>
     public static readonly HashSet<string> BossEnemies = new HashSet<string>
     {
         "Enemy_BossSkeleton",      // 10階
         "Enemy_ID95",              // 20階（ヴァンパイア）
-        "Boss_GiantOctopus",       // 15階
         "Enemy_Worrior",           // 32階・40階（金騎士）
-        "Boss_Dragon",             // 35階
         "Boss_Zeno",               // 49・50階
     };
 
