@@ -40,6 +40,9 @@ python3 docs/fix_board_prefabs.py
 echo "== 7. プレハブ登録簿（.floor とできごとの表から拾う）"
 python3 docs/make_registry.py
 
+echo "== 7b. 十字キーの候補（作者に選んでもらう用。原典由来ではない）"
+python3 docs/make_dpad.py
+
 echo "== 8. シーンを作り直す"
 "$UNITY" -batchmode -nographics -quit -projectPath "$PWD" \
          -executeMethod TowerSceneBuilder.Build -logFile /tmp/mt_rebuild.log >/dev/null 2>&1 || true

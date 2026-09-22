@@ -18,6 +18,44 @@ public static class TowerScreenshot
     public const string OutPath = "/tmp/mt_screen.png";
     const int Width = 1080, Height = 1920;
 
+    /// <summary>十字キーの候補を1つずつ差し替えて撮る（作者に選んでもらうため）。</summary>
+    [MenuItem("MagicTower/十字キーの候補を撮る")]
+    public static void CaptureDpads()
+    {
+        foreach (var name in new[] { "A", "B", "C", "D", "E", "F" })
+        {
+            dpad = name;
+            Capture(false);
+            System.IO.File.Copy(OutPath, $"/tmp/mt_dpad_{name}.png", true);
+        }
+        dpad = null;
+    }
+
+    static string dpad;
+
+    /// <summary>十字キーの枠に候補の絵を貼る。</summary>
+    static void ShowDpad()
+    {
+        var go = GameObject.Find("HUD/PhoneFrame/BottomPanel/DPad");
+        if (go == null) return;
+        var img = go.GetComponent<UnityEngine.UI.Image>();
+        var text = go.transform.Find("Text");
+        if (string.IsNullOrEmpty(dpad))
+        {
+            if (text != null) text.gameObject.SetActive(true);
+            return;
+        }
+        var sp = AssetDatabase.LoadAssetAtPath<Sprite>(
+            $"Assets/Sprites/Hud/DPad_{dpad}.png");
+        if (img != null && sp != null)
+        {
+            img.sprite = sp;
+            img.color = Color.white;
+            img.preserveAspect = true;
+        }
+        if (text != null) text.gameObject.SetActive(false);
+    }
+
     [MenuItem("MagicTower/画面の写しを撮る（ダメージ表示）")]
     public static void CaptureDamage() { Capture(true); }
 
@@ -40,6 +78,7 @@ public static class TowerScreenshot
         hero.transform.position = new Vector3(0f, -3f, -1f);
 
         FillSample();
+        ShowDpad();
         if (damagePanel) FillDamagePanel();
 
         var canvas = Object.FindObjectOfType<Canvas>();
