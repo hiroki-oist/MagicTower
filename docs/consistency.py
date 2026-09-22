@@ -1300,6 +1300,8 @@ chk("controller.IsWalking" in _dwv,
     "会話の窓は人が歩き終わってから出す（10階の盗賊は目の前に来てから話す）")
 chk("controller.IsDrawing" in _dwv,
     "会話の窓は盤面を描き出している間は出さない（暗転中にセリフが出ていた）")
+chk("controller.IsSettling" in _dwv,
+    "会話の窓は動きが終わってからひと呼吸おいて出す（合体の直後・暗転明けの直後は待つ）")
 chk("maxVisibleCharacters" in _dwv and "TypeCharsPerSecond" in _dwv,
     "本文は1文字ずつ出す（出し終わる前の決定は全部出しに使う）")
 _tc=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()

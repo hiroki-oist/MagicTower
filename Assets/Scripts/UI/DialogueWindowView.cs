@@ -278,6 +278,8 @@ public class DialogueWindowView : MonoBehaviour
         if (controller != null && controller.IsWalking) return true;
         // **盤面を描き出している間も待つ**。暗転中にセリフだけ浮かんでいた（同）。
         if (controller != null && controller.IsDrawing) return true;
+        // **ひと呼吸おく**。合体が終わった直後・暗転が明けた直後に喋らせない。
+        if (controller != null && controller.IsSettling) return true;
         return (blink != null && blink.IsPlaying) || (boss != null && boss.IsPlaying);
     }
 

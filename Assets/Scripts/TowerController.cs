@@ -633,6 +633,13 @@ public class TowerController : MonoBehaviour
     /// <summary>場面の中で人が歩いている最中か。</summary>
     public bool IsWalking { get { return walkView != null && walkView.IsPlaying; } }
 
+    /// <summary>
+    /// 動きが終わってからの「ひと呼吸」の最中か（<see cref="AuthorStyle.SettleSeconds"/>）。
+    /// 会話の窓もこれを待つ。合体の直後や暗転明けにすぐ喋られると落ち着かない、
+    /// という作者の指定。
+    /// </summary>
+    public bool IsSettling { get { return Time.time < settleUntil; } }
+
     /// <summary>原寸で出すときに、足元をマスに合わせるぶん上げる量。</summary>
     float HeroOffsetY
     {
