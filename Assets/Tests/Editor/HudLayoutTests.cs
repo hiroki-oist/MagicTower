@@ -258,7 +258,9 @@ public class PhoneFrameTests
             }
             // 画布は「入りきる側」に合わせる（横長の窓でも形が変わらない）
             var scaler = frame.GetComponentInParent<UnityEngine.UI.CanvasScaler>();
-            Assert.AreEqual(UnityEngine.UI.CanvasScaler.ScreenMatchMode.Shrink,
+            // Expand＝拡大率は縦横の小さいほう。これで枠が必ず画面に収まる
+            // （Shrink だと大きいほうに合わせて左右が切れる）。
+            Assert.AreEqual(UnityEngine.UI.CanvasScaler.ScreenMatchMode.Expand,
                             scaler.screenMatchMode);
         }
         finally

@@ -5,7 +5,7 @@
 # エディタでプロジェクトを開いたままだと起動できないので、先に閉じること
 # （開いていると "another Unity instance is running" で落ちる）。
 set -e
-UNITY=/Applications/Unity/Hub/Editor/2022.3.11f1/Unity.app/Contents/MacOS/Unity
+UNITY=/Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/MacOS/Unity
 LOG="${1:-/tmp/mt_play.log}"
 "$UNITY" -batchmode -nographics -quit \
   -projectPath "$HOME/Code/MagicTower" \

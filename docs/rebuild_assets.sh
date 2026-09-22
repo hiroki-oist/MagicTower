@@ -12,7 +12,7 @@
 set -e
 cd "$(dirname "$0")/.."
 DISK=docs/original/disk
-UNITY=/Applications/Unity/Hub/Editor/2022.3.11f1/Unity.app/Contents/MacOS/Unity
+UNITY=/Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/MacOS/Unity
 
 [ -f "$DISK/INITIAL.DAT" ] || { echo "★ $DISK/INITIAL.DAT が無い"; exit 1; }
 

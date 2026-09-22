@@ -135,6 +135,30 @@
 持っているだけで効くもの（十字架・ドラゴンスレイヤー・幸運の金貨）は触っても何も起きない。
 押し場所は自前で見ている（`RectTransformUtility`。組み立て器から結び先を保存しやすいため）。
 
+**実機（シミュレータ）で動かせるようにした（97:00）**。`IosBuild`（`Assets/Editor/IosBuild.cs`）で
+Xcode プロジェクトを書き出す。**Apple Silicon の Mac では、Unity が置くシミュレータ用の
+ライブラリが x86_64 なので必ず落ちる**（`symbol not found … _GC_ignore_warn_proc`）。
+書き出しの後処理で3つを arm64 版に差し替え、`ARCHS` も arm64 に書き換えている:
+
+| 差し替え | もと |
+|---|---|
+| `Libraries/libil2cpp.a` | `libil2cpp-sim-arm64-net40-wbarriers.a` |
+| `Libraries/baselib.a` | `baselib-sim-arm64.a` |
+| `Libraries/libiPhone-lib.dylib` | `libiPhone-lib-sim-arm64.dylib`（GC の実体はここ） |
+
+手順:
+```
+Unity -batchmode -quit -projectPath . -executeMethod IosBuild.BuildSimulator
+cd Build/iOS && xcodebuild -project Unity-iPhone.xcodeproj -scheme Unity-iPhone   -configuration Debug -sdk iphonesimulator -destination 'generic/platform=iOS Simulator'   -derivedDataPath /tmp/mt_dd CODE_SIGNING_ALLOWED=NO build
+xcrun simctl install booted <.app> && xcrun simctl launch booted com.magictower.remake
+```
+⚠ **Unity は 2022.3.62f3 で開く**（11f1 には simulator 用の arm64 ライブラリが無い）。
+`docs/*.sh` の版も上げてある。
+
+これで**実機の比率でしか出ない不具合**が1つ見つかって直った:
+画布の合わせ方を `Shrink`（拡大率は大きいほう＝はみ出す）にしていたため、
+1206x2622 の画面で左右が切れていた。正しくは `Expand`（小さいほう＝必ず収まる）。
+
 ⚠ 残っている見た目の粗:
 - 題名・序章・終幕の1枚絵は原典の縦横比（16:10）のまま**画面の真ん中の帯**に出る
   （縦画面いっぱいには広がらない）。
@@ -5708,3 +5732,4 @@ AR/DR/SL/SR/RR をチップに書き込むだけだからである。
 - 2026-09-22 95:30 [作者の指定] **持ち物の帯を触って使えるようにし、ダメージ表示をボタンに繋いだ** — 帯を見せてもらった画面と同じ**黒い地・左右の矢印で送る**形に（一度に8つ、`ItemBarView`）。触ると「〜を使いますか？」と聞いてから使い（`ChoiceKind.UseItem`）、**勇者のオーブだけは聞かずに一覧**を出す。下の「ダメージ表示」のボタンも同じ一覧を出す。知恵のオーブは持ち物と聞いた情報、飛翔のオーブはメニューと同じ階選び、持っているだけで効くもの（十字架など）は何もしない。あわせて作者の頼みで**ゼノのあとの鍵を30本ずつ**にした（`DebugPlay.KeysAfterZeno`。原典は0本）。写しを撮る道具で画面を確かめ、粗を3つ直した（矢印が豆腐＝PixelMplus に ◀▶ が無いので ←→ に／帯の地が透けていた／一覧の絵が小さかった）。テスト577本・検査740項目
 - 2026-09-22 96:00 [作者の選択] **十字キーは B（黒い円盤）に決まり、押すと歩くところまで繋いだ** — 6案を実際の画面にはめて撮って選んでもらった。押している間ずっと向きを入れる（`DPadView` → `TowerController.TouchDir`）ので、**押しっぱなしで歩き続ける**＝鍵を押しっぱなしにしたときと同じ扱い。斜めは、ずれの大きいほうの向きに倒す（原典も斜めには進めない）。円の外と真ん中のつまみ（半径の28%）は動かさない。繋がっている触りはこれで3つ（持ち物の帯・ダメージ表示・十字キー）で、残りのボタンは見た目だけ。テスト582本・検査743項目
 - 2026-09-22 96:30 [作者の質問] **Device Simulator の端末が iPhone 13 止まりなのは Unity のせいではない** — 端末データは `com.unity.device-simulator.devices` パッケージが持っていて、**1.0.1 が最後**（2021年ごろ＝iPhone 13 世代まで）。Unity 本体を新しくしても増えない。Device Simulator は **Assets の下の `*.device`（JSON）も読む**ので、`docs/make_devices.py` で公式の iPhone 12 を雛形に10台（iPhone 14〜16 各種・SE3・Pixel 8）を書き出すようにした（`Assets/DeviceSimulator/`）。端末の枠の絵は持っていないので画面だけ出る。⚠ **安全領域（ダイナミックアイランド／ホームバー）はまだ見ていない** — 画面は 1080x1920 の枠を中央に置いているので大崩れはしないが、上下の帯が島やバーに潜る可能性がある
+- 2026-09-22 97:00 [作者の依頼] **iOS シミュレータで動くところまで通した（実機比率の不具合を1つ発見）** — Unity→Xcode の道を `IosBuild` に用意した。**Apple Silicon の Mac では Unity がシミュレータ用に x86_64 のライブラリを置く**ので、そのままでは起動時に `symbol not found in flat namespace '_GC_ignore_warn_proc'` で落ちる。`libil2cpp.a` / `baselib.a` / **`libiPhone-lib.dylib`（GC の実体はここ）** の3つを arm64 版へ差し替え、`ARCHS` も書き換える後処理を入れて起動に成功。2022.3.11f1 には simulator 用の arm64 ライブラリが無いので **Unity は 2022.3.62f3**（同じ2022.3 LTS の後期パッチ）に上げ、`docs/*.sh` の版も合わせた。実機比率（iPhone 16 Pro = 1206x2622）で動かしたら**左右が切れて**いて、画布の合わせ方が `Shrink`（はみ出す側）だったと判明→`Expand`（必ず収まる側）に修正。テスト582本・検査743項目

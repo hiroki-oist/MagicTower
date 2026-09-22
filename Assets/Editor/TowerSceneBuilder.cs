@@ -215,9 +215,11 @@ public static class TowerSceneBuilder
         // 盤面が画面の幅いっぱいなので、**幅を基準**に合わせる。
         scaler.referenceResolution =
             new Vector2(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight);
-        // **入りきる側に合わせる**（Shrink）。窓が横長でも縦長でも、
-        // スマホの画面（1080x1920）がそのままの形で入る。
-        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.Shrink;
+        // **入りきる側に合わせる**（Expand＝拡大率は縦横の小さいほう）。
+        // 窓が横長でも縦長でも、スマホの画面（1080x1920）がそのままの形で入る。
+        // ⚠ Shrink は逆（大きいほう＝はみ出す）。実機のシミュレータ（1206x2622）で
+        //   左右が切れて気づいた。
+        scaler.screenMatchMode = UnityEngine.UI.CanvasScaler.ScreenMatchMode.Expand;
         scaler.matchWidthOrHeight = 0f;
 
         // スマホの画面ぶんの枠。中の並べ方はこの枠の中だけで決める（PhoneLayoutView）。

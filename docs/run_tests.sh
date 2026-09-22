@@ -7,7 +7,7 @@
 # 止めて Temp/UnityLockfile を消してから走らせ直すと通った。
 # 絞り込みたいときは -testFilter "クラス名" を足すと切り分けが早い。
 set -e
-UNITY=/Applications/Unity/Hub/Editor/2022.3.11f1/Unity.app/Contents/MacOS/Unity
+UNITY=/Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents/MacOS/Unity
 OUT="${1:-/tmp/mt_tests}"
 mkdir -p "$OUT"
 # 前回の結果を消しておく。**Unity が落ちると結果ファイルが古いまま残り、

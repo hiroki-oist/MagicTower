@@ -1835,7 +1835,7 @@ chk("PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight" in _sb,
     "シーンの基準解像度が縦画面（1080x1920）")
 # 窓が横長でも縦長でも、スマホの画面ぶんの枠（1080x1920）がそのままの形で入る。
 # 帯の高さだけを固定していたときは、横長の窓で盤面が10%まで潰れた。
-chk("ScreenMatchMode.Shrink" in _sb,"画布は入りきる側に合わせる（Shrink）")
+chk("ScreenMatchMode.Expand" in _sb,"画布は入りきる側に合わせる（Expand）")
 chk('GameObject("PhoneFrame"' in _sb,"スマホの画面ぶんの枠を中央に置く")
 _plv=open("Assets/Scripts/UI/PhoneLayoutView.cs",encoding="utf-8").read()
 chk("frame.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth" in _plv,

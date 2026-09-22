@@ -1,5 +1,5 @@
 #!/bin/bash
-U=/Applications/Unity/Hub/Editor/2022.3.11f1/Unity.app/Contents
+U=/Applications/Unity/Hub/Editor/2022.3.62f3/Unity.app/Contents
 P="$HOME/Code/MagicTower"
 OUT="$1"; shift
 REFS=(-r:"$U/NetStandard/ref/2.1.0/netstandard.dll")
