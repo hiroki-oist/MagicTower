@@ -60,19 +60,18 @@ public static class AuthorStyle
     };
 
     /// <summary>
-    /// Java版の絵は40ドット（原典のタイルは32ドット）。出し方を2通り用意して、
-    /// **奇数階と偶数階で出し分けて**作者に選んでもらう:
-    ///   奇数階 … 原寸のまま（1.25マス）。足元をマスに合わせて上にはみ出す
-    ///   偶数階 … 1マスに収める（32ドットに縮める）
-    /// 取り込みは 100ドット=1単位なので、40ドットの絵は 0.4単位。
-    /// 1マス（=1単位）にするには 2.5倍、1.25マスなら 3.125倍。
+    /// Java版の絵は40ドット（原典のタイルは32ドット）。**1マスに収める**。
+    /// 取り込みは 100ドット=1単位なので、40ドットの絵は 0.4単位。2.5倍で1マス。
+    ///
+    /// ⚠ 一時は「奇数階は原寸（1.25マス）／偶数階は1マス」で出し分けて見比べてもらったが、
+    /// **作者が1マスの方を選んだ**ので全部そちらにしてある。
     /// </summary>
-    public const float HeroScaleFit = 2.5f;          // 1マスに収める
-    public const float HeroScaleFull = 3.125f;       // 原寸（1.25マス）
-    public const float HeroFullOffsetY = 0.125f;     // 足元を合わせるぶん上げる
+    public const float HeroScaleFit = 2.5f;
+    public const float HeroScaleFull = HeroScaleFit;
+    public const float HeroFullOffsetY = 0f;
 
-    /// <summary>その階での出し方（奇数階は原寸、偶数階は1マス）。</summary>
-    public static bool FullSizeHeroOn(int floor) { return (floor & 1) == 1; }
+    /// <summary>原寸で出す階（いまはどの階も1マスに収めるので常に false）。</summary>
+    public static bool FullSizeHeroOn(int floor) { return false; }
 
     /// <summary>
     /// 物を拾ったとき、**そのマスへ進む**か。

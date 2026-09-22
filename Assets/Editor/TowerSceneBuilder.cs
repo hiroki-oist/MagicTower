@@ -386,10 +386,24 @@ public static class TowerSceneBuilder
         var padRt = Placeholder(bottom, font, "DPad", (w - dpad) / 2f,
                                 PhoneScreen.ItemBarHeight
                                 + (PhoneScreen.ButtonsHeight - dpad) / 2f,
-                                dpad, dpad, "", Color.white);
-        var padImg = padRt.GetComponent<UnityEngine.UI.Image>();
-        padImg.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(PhoneScreen.DPadSpritePath);
-        padImg.preserveAspect = true;
+                                dpad, dpad, "", new Color(0f, 0f, 0f, 0f));
+        // **5枚に分けて重ねる**（上・右・下・左の扇と、真ん中の決定ボタン）。
+        // 押している所だけ色を変えられるようにするため。
+        var padParts = new List<Object>();
+        foreach (var path in PhoneScreen.DPadPartPaths)
+        {
+            var go = new GameObject(System.IO.Path.GetFileNameWithoutExtension(path),
+                                    typeof(RectTransform), typeof(UnityEngine.UI.Image));
+            go.transform.SetParent(padRt, false);
+            var rt = go.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+            var img = go.GetComponent<UnityEngine.UI.Image>();
+            img.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+            img.preserveAspect = true;
+            img.raycastTarget = false;
+            padParts.Add(img);
+        }
 
         // 知らせは**画面の中央に出して薄くなって消える**（作者の指定。MessageToastView）。
         // 原典の右下の欄（TowerHudView.messageBox）は使わない。
@@ -597,7 +611,7 @@ public static class TowerSceneBuilder
         var padso = new SerializedObject(padView);
         padso.FindProperty("controller").objectReferenceValue = controller;
         padso.FindProperty("pad").objectReferenceValue = padRt;
-        padso.FindProperty("padImage").objectReferenceValue = padImg;
+        FillObjects(padso.FindProperty("parts"), padParts);
         padso.FindProperty("topBand").objectReferenceValue = top;
         padso.FindProperty("bottomBand").objectReferenceValue = bottom;
         padso.ApplyModifiedPropertiesWithoutUndo();

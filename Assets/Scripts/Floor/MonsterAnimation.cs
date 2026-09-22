@@ -73,6 +73,7 @@ public class MonsterAnimation
     /// ⚠ 作者の指定で**倍速**（1回のなめが約0.5秒）にしてある。
     public const float IdleTickSeconds = 1f / 48f;
 
+
     /// <summary>その回数ぶんの長さ（秒）。</summary>
     public static float StepSeconds(bool fast)
     {

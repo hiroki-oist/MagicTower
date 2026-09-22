@@ -73,6 +73,25 @@ public class TowerController : MonoBehaviour
         // 扉が開く動き・ゼノの登場・人の歩きが**軒並み半分の速さ**になる
         // （実機で遅くなったという報告がこれ）。60に上げてそろえる。
         Application.targetFrameRate = TargetFrameRate;
+        WarmUp();
+    }
+
+    /// <summary>
+    /// **表を先に読んでおく**。どれも「初めて要るとき」に Resources から読んで
+    /// 組み立てるので、3階のゼノの場面に踏み込んだその一手だけ時間がかかり、
+    /// **一歩手前で固まったように見えていた**（作者の報告）。
+    /// </summary>
+    static void WarmUp()
+    {
+        var unused = GameText.Instance.Message("menu_title");
+        if (Cutscenes.Instance == null || PositionEvents.Instance == null
+            || ThiefEvents.Instance == null || SealedDoors.Instance == null
+            || ObjectIds.Instance == null || Shop.Instance == null
+            || ArrivalEvents.Instance == null || SoundCues.Instance == null
+            || FloorDrawOrder.Instance == null || KnightCharge.Instance == null
+            || string.IsNullOrEmpty(unused))
+            Debug.LogWarning("表の読み込みに失敗した");
+        GameText.Instance.Dialogue(110);        // セリフの表も引いておく
     }
 
     /// <summary>出したい1秒あたりのコマ数。演出の数え方（1/60秒）と合わせる。</summary>
@@ -114,7 +133,10 @@ public class TowerController : MonoBehaviour
             }
             else
             {
-                acted = Input.anyKeyDown || TakeConfirm();
+                // **決定だけで送る**（矢印では送らない。作者の指定）。
+                // 鍵はリターン／スペース、触りは真ん中のボタンか盤面。
+                TakeStep();                       // 矢印は捨てる
+                acted = MenuKeyDown() || TakeConfirm();
                 if (acted)
                 {
                     // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から

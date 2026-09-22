@@ -43,7 +43,28 @@ public class DPadTests
     }
 
     [Test]
-    public void シーンの十字キーにその絵が貼ってある()
+    public void 十字は五枚に分かれている()
+    {
+        Assert.AreEqual(5, PhoneScreen.DPadPartPaths.Length, "上右下左と真ん中");
+        foreach (var p in PhoneScreen.DPadPartPaths)
+            Assert.IsNotNull(UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(p), p);
+        Assert.AreEqual(0, PhoneScreen.PartOf(new Vector2Int(0, 1)));
+        Assert.AreEqual(1, PhoneScreen.PartOf(new Vector2Int(1, 0)));
+        Assert.AreEqual(2, PhoneScreen.PartOf(new Vector2Int(0, -1)));
+        Assert.AreEqual(3, PhoneScreen.PartOf(new Vector2Int(-1, 0)));
+        Assert.AreEqual(4, PhoneScreen.PartOf(Vector2Int.zero), "真ん中＝決定");
+    }
+
+    [Test]
+    public void 会話は決定だけで送る()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
+        StringAssert.Contains("acted = MenuKeyDown() || TakeConfirm();", src);
+        StringAssert.DoesNotContain("acted = Input.anyKeyDown", src);
+    }
+
+    [Test]
+    public void シーンの十字キーが五枚に分かれている()
     {
         var path = "Assets/Scenes/Tower.unity";
         if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
@@ -56,9 +77,16 @@ public class DPadTests
                 foreach (var rt in go.GetComponentsInChildren<RectTransform>(true))
                     if (rt.name == "DPad") pad = rt;
             Assert.IsNotNull(pad, "十字キーが無い");
-            var img = pad.GetComponent<UnityEngine.UI.Image>();
-            Assert.IsNotNull(img.sprite, "絵が貼っていない");
-            StringAssert.Contains("DPad_B", img.sprite.name);
+            // 5枚（上・右・下・左の扇と真ん中のボタン）が重ねてある
+            int parts = 0;
+            foreach (Transform t in pad)
+            {
+                var img = t.GetComponent<UnityEngine.UI.Image>();
+                if (img == null || img.sprite == null) continue;   // 文字の枠は数えない
+                StringAssert.StartsWith("DPad_", img.sprite.name);
+                parts++;
+            }
+            Assert.AreEqual(PhoneScreen.DPadPartPaths.Length, parts, "5枚に分かれている");
         }
         finally
         {

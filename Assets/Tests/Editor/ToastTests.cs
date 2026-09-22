@@ -122,13 +122,13 @@ public class HeroSpriteTests
     }
 
     [Test]
-    public void 奇数階は原寸で偶数階は一マスに収める()
+    public void どの階も一マスに収める()
     {
-        Assert.IsTrue(AuthorStyle.FullSizeHeroOn(3), "奇数階は原寸（1.25マス）");
-        Assert.IsFalse(AuthorStyle.FullSizeHeroOn(2), "偶数階は1マス");
+        // 作者が「1マスに収める方」を選んだので、どの階も同じ
+        Assert.IsFalse(AuthorStyle.FullSizeHeroOn(3));
+        Assert.IsFalse(AuthorStyle.FullSizeHeroOn(2));
         // 40ドットの絵を 100ドット=1単位 で取り込んでいるので 0.4単位
         Assert.AreEqual(1f, 0.4f * AuthorStyle.HeroScaleFit, 1e-4f, "1マスちょうど");
-        Assert.AreEqual(1.25f, 0.4f * AuthorStyle.HeroScaleFull, 1e-4f, "1.25マス");
     }
 
     [Test]

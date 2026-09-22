@@ -1280,7 +1280,15 @@ public class TowerGame
             BeginChoice(ChoiceKind.AltarOffer, 2, default(Shop.Offer));
             return;
         }
-        if (TowerNpc.IsFairy(what)) { Speak(FairyText()); return; }
+        if (TowerNpc.IsFairy(what))
+        {
+            Speak(FairyText());
+            // 採点したら**その場から消える**。20階・25階・49階では解錠の表の最後が
+            // 妖精のマスを床に戻しており（出したその場で採点して消す）、
+            // 10階でも話したあとは残らない。
+            Floor.Clear(at);
+            return;
+        }
     }
 
     /// <summary>

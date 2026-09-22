@@ -26,7 +26,7 @@ public static class PhoneScreen
     public const float ReferenceWidth = 1080f, ReferenceHeight = 1920f;
 
     /// <summary>上の帯の3段の高さ（画布の単位）。</summary>
-    public const float RowHeight = 110f;
+    public const float RowHeight = 100f;
     public const int Rows = 3;
     public static float TopHeight { get { return RowHeight * Rows; } }
 
@@ -35,7 +35,7 @@ public static class PhoneScreen
     /// 上の帯（330）と合わせて 840 にしてあるので、9:16 の画面では
     /// 盤面がちょうど**幅いっぱいの正方形**（1080x1080）になる。
     /// </summary>
-    public const float ItemBarHeight = 110f, ButtonsHeight = 400f;
+    public const float ItemBarHeight = 110f, ButtonsHeight = 430f;
     public static float BottomHeight { get { return ItemBarHeight + ButtonsHeight; } }
 
     /// <summary>盤面のマス数（原典と同じ11x11）。</summary>
@@ -73,7 +73,7 @@ public static class PhoneScreen
         { "商店", "飛行器", "ダメージ", "妖精" };
 
     /// <summary>左右のボタンの幅と、真ん中の十字の大きさ（作者の指定で十字を大きく）。</summary>
-    public const float SideButtonWidth = 190f, DPadSize = 380f;
+    public const float SideButtonWidth = 190f, DPadSize = 430f;
 
     /// <summary>右のボタンのうち、**繋がっている**のはこれ（勇者のオーブの一覧を出す）。</summary>
     public const int DamageButtonIndex = 2;
@@ -98,6 +98,30 @@ public static class PhoneScreen
     /// 絵は `docs/make_dpad.py` が作る。色は原典の枠（LCG.P58 #1）から取ってある。
     /// </summary>
     public const string DPadSpritePath = "Assets/Sprites/Hud/DPad_B.png";
+
+    /// <summary>
+    /// 十字キーは**5枚に分けて**置く（上・右・下・左の扇と、真ん中の決定ボタン）。
+    /// 押している所だけ色を変えるため（1枚だとどこを押したのか分からない、という報告）。
+    /// 扇は45度で切ってあり、真ん中のボタンとの間にも隙間がある。
+    /// </summary>
+    public static readonly string[] DPadPartPaths =
+    {
+        "Assets/Sprites/Hud/DPad_Up.png",
+        "Assets/Sprites/Hud/DPad_Right.png",
+        "Assets/Sprites/Hud/DPad_Down.png",
+        "Assets/Sprites/Hud/DPad_Left.png",
+        "Assets/Sprites/Hud/DPad_Center.png",
+    };
+
+    /// <summary>その並びの中での向き（0=上 1=右 2=下 3=左、4=決定）。</summary>
+    public static int PartOf(Vector2Int dir)
+    {
+        if (dir == Vector2Int.zero) return 4;
+        if (dir.y > 0) return 0;
+        if (dir.x > 0) return 1;
+        if (dir.y < 0) return 2;
+        return 3;
+    }
 
     /// <summary>十字キーの真ん中の「押しても動かない」部分（半径に対する割合）。</summary>
     public const float DPadDeadZone = 0.28f;

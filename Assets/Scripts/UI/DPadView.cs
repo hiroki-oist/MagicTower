@@ -14,19 +14,31 @@ public class DPadView : MonoBehaviour
     /// <summary>上下の帯。**ここより外（盤面）を触ったら「決定・送り」**にする。</summary>
     [SerializeField] RectTransform topBand, bottomBand;
 
-    /// <summary>押している間だけ色を濃くする（どこを押しているか分かるように）。</summary>
-    [SerializeField] UnityEngine.UI.Image padImage;
-    Color padColor;
-    bool dimmed;
+    /// <summary>
+    /// 十字キーの5枚（上・右・下・左の扇と、真ん中の決定ボタン）。
+    /// **押している1枚だけ**色を濃くする（どこを押しているか分かるように）。
+    /// </summary>
+    [SerializeField] UnityEngine.UI.Image[] parts = new UnityEngine.UI.Image[5];
+    Color[] partColors;
+    int lit = -1;
 
-    void Awake() { if (padImage != null) padColor = padImage.color; }
+    void Awake()
+    {
+        if (parts == null) return;
+        partColors = new Color[parts.Length];
+        for (int i = 0; i < parts.Length; i++)
+            if (parts[i] != null) partColors[i] = parts[i].color;
+    }
 
     void Update()
     {
         if (controller == null || pad == null) return;
         var dir = Pressed();
         controller.TouchDir = dir;
-        Dim(dir != Vector2Int.zero);
+        // 押している所だけ色を変える（真ん中を押しているときは決定ボタンだけ）
+        bool onPad = Input.GetMouseButton(0)
+                     && Inside(pad, (Vector2)Input.mousePosition);
+        Light(!onPad ? -1 : PhoneScreen.PartOf(dir));
 
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
@@ -39,11 +51,15 @@ public class DPadView : MonoBehaviour
         controller.TouchConfirm = true;
     }
 
-    void Dim(bool on)
+    /// <summary>その1枚だけ濃くする。-1 なら全部もとの色に戻す。</summary>
+    void Light(int index)
     {
-        if (padImage == null || dimmed == on) return;
-        dimmed = on;
-        padImage.color = on ? PhoneScreen.Pressed(padColor) : padColor;
+        if (parts == null || partColors == null || lit == index) return;
+        if (lit >= 0 && lit < parts.Length && parts[lit] != null)
+            parts[lit].color = partColors[lit];
+        lit = index;
+        if (lit >= 0 && lit < parts.Length && parts[lit] != null)
+            parts[lit].color = PhoneScreen.Pressed(partColors[lit]);
     }
 
     void OnDisable()

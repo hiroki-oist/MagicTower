@@ -190,6 +190,55 @@ def design_f():
     return px
 
 
+# ---- 実際に使う十字キー（B を4つの扇と中央のボタンに分けたもの）----
+#
+# 押している向きだけ色を変えたいので、**1枚の絵ではなく5枚**に分ける。
+# 扇は45度のところで切り、中央のボタンとの間にも隙間をあける（作者の指定）。
+
+RING_OUTER = N // 2 - 2      # 輪の外
+RING_INNER = 64              # 輪の内（ここから内側は中央のボタンの領域）
+WEDGE_GAP = 7                # 45度の切れ目と、中央との隙間（ドット）
+
+
+def wedge(dir_):
+    """扇ひとつ（上=0 右=1 下=2 左=3）。押されたときだけ色を変えるので1枚ずつ。"""
+    px = blank()
+    c = N / 2.0
+    for y in range(N):
+        for x in range(N):
+            dx, dy = x + 0.5 - c, y + 0.5 - c
+            r = math.hypot(dx, dy)
+            if r > RING_OUTER or r < RING_INNER + WEDGE_GAP:
+                continue
+            # 45度で切る。dy は下向きが＋（画像の座標）
+            if dir_ == 0 and not (dy < 0 and abs(dx) < -dy): continue
+            if dir_ == 2 and not (dy > 0 and abs(dx) < dy): continue
+            if dir_ == 1 and not (dx > 0 and abs(dy) < dx): continue
+            if dir_ == 3 and not (dx < 0 and abs(dy) < -dx): continue
+            # 45度の切れ目に隙間をあける
+            if abs(abs(dx) - abs(dy)) < WEDGE_GAP: continue
+            px[y][x] = STONE if r < RING_OUTER - 6 else STONE_LO
+    # 矢じりは輪の帯のまん中に置き、**扇からはみ出したぶんは消す**
+    mark = blank()
+    rmid = (RING_OUTER + RING_INNER) // 2
+    cx, cy = {0: (N // 2, N // 2 - rmid), 1: (N // 2 + rmid, N // 2),
+              2: (N // 2, N // 2 + rmid), 3: (N // 2 - rmid, N // 2)}[dir_]
+    arrow(mark, cx, cy, 22, dir_, BOX)
+    for y in range(N):
+        for x in range(N):
+            if mark[y][x][3] and px[y][x][3]: px[y][x] = BOX
+    return px
+
+
+def center_button():
+    """真ん中の決定ボタン。扇との間に隙間をあける。"""
+    px = blank()
+    c = N // 2
+    disc(px, c, c, RING_INNER - WEDGE_GAP, STONE_LO)
+    disc(px, c, c, RING_INNER - WEDGE_GAP - 6, STONE_HI)
+    return px
+
+
 def png(path, px):
     raw = b""
     for row in px:
@@ -207,8 +256,11 @@ def png(path, px):
 def main():
     os.makedirs(OUT, exist_ok=True)
     made = []
+    parts = [("Up", lambda: wedge(0)), ("Right", lambda: wedge(1)),
+             ("Down", lambda: wedge(2)), ("Left", lambda: wedge(3)),
+             ("Center", center_button)]
     for name, fn in [("A", design_a), ("B", design_b), ("C", design_c),
-                     ("D", design_d), ("E", design_e), ("F", design_f)]:
+                     ("D", design_d), ("E", design_e), ("F", design_f)] + parts:
         path = f"{OUT}/DPad_{name}.png"
         png(path, fn())
         guid = hashlib.md5(f"MagicTower/dpad/{name}".encode()).hexdigest()
