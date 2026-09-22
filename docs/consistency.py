@@ -1281,6 +1281,12 @@ chk(sum(1 for n in _cs_steps if n.startswith("閉まる "))==3
     "（40階の開け直しと24階の時空の門）。10階の台本は別勘定")
 chk(sum(1 for n in _cs_steps if "=ID93" in n)==17,
     "魔導師が出るのは3階4体・42階5体・49階8体の計17体（原典の座標表どおり）")
+# 階段で着いたマスでも立ち入りのできごとを見る（原典 0x23ee の 0x29e9〜0x2a00）。
+# 31→32階（金騎士敗走）と 41→42階（金騎士処刑）は**着地マスが発動マス**なので、
+# ここが抜けると場面ごと飛ぶ。作者から「32階のイベントが起きずに戦闘になった」と報告あり。
+_tg_stairs=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk(_tg_stairs.count("CheckPositionEvent()")>=2,
+    "階段で着いたあとにも立ち入りのできごとを見る（原典 0x2a00 の call 0x1588）")
 # 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚ぶん書き出してある
 chk(all(os.path.exists(f"Assets/Sprites/Screens/Prologue_{_i}.png") for _i in range(4)),
     "序章の1枚絵が4枚ある（行が0〜3つ出た状態）")

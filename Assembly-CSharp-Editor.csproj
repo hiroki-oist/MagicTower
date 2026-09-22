@@ -124,6 +124,7 @@
     <Compile Include="Assets/Tests/Editor/PrisonBarsTests.cs" />
     <Compile Include="Assets/Tests/Editor/SoundCueTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerGameTests.cs" />
+    <Compile Include="Assets/Tests/Editor/ArriveSweepTests.cs" />
     <Compile Include="Assets/Editor/IosBuild.cs" />
     <Compile Include="Assets/Tests/Editor/EndingTowerTests.cs" />
     <Compile Include="Assets/Tests/Editor/ScreenFlowTests.cs" />

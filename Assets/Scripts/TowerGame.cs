@@ -1085,6 +1085,11 @@ public class TowerGame
                 {
                     EnterFloor(t.Floor, t.Arrive);
                     ApplyArrival(t.Floor, down);
+                    // **着いたマスでも立ち入りのできごとを見る**。原典 0x23ee は
+                    // 階段で X,Y を書き換えたあと、そのまま `call 0x1588` している
+                    // （0x29e9〜0x2a00）。ここが抜けていたので、31階から上がると
+                    // ちょうど発動マス (0,-4) に着地する32階の金騎士が飛ばされていた。
+                    CheckPositionEvent();
                 }
                 return r.Outcome;
             }
