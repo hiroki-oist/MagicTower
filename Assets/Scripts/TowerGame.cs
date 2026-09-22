@@ -726,7 +726,8 @@ public class TowerGame
     /// </summary>
     public bool DoorPendingAt(Vector2Int at)
     {
-        foreach (var d in doorOpens) if (d.At == at) return true;
+        // 待たせるのは**間をおいて開くもの**（解錠の門）だけ。
+        foreach (var d in doorOpens) if (d.Delayed && d.At == at) return true;
         return false;
     }
 
@@ -1152,8 +1153,8 @@ public class TowerGame
         {
             case TowerPlayer.Outcome.OpenedDoor:
                 // 原典 0x023ee は地図を床にしてから 0x7be6（扉が開く9コマ）を呼ぶ。
-                // 音もその中で鳴るので、ここでは**場所と色を積むだけ**にする。
-                PlaySound(SoundCues.OpenDoor);
+                // **音はその9コマの頭で鳴る**ので、ここでは場所と色を積むだけにする
+                // （ここでも鳴らしていて二重に聞こえていた）。
                 doorOpens.Add(new DoorOpen { At = r.Target, Cell = r.What });
                 break;
 

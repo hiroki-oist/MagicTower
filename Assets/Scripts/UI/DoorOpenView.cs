@@ -60,7 +60,10 @@ public class DoorOpenView : MonoBehaviour
         for (int i = 0; i < list.Count; i++)
         {
             queue.Enqueue(list[i]);
-            held.Add(list[i].At);          // 動きが終わるまで盤面を描き直させない
+            // 描き直しを待たせるのは**間をおいて開くもの**（解錠の門）だけ。
+            // 鍵の扉は積んだ次のコマで動き出すので待たせる必要がなく、
+            // 待たせると別の不具合の元になる（作者から「通常の扉が変」と報告）。
+            if (list[i].Delayed) held.Add(list[i].At);
         }
         if (!draining && queue.Count > 0 && isActiveAndEnabled) StartCoroutine(Drain());
     }
@@ -96,7 +99,7 @@ public class DoorOpenView : MonoBehaviour
     IEnumerator Play(TowerGame.DoorOpen door)
     {
         int at = IndexOf(DoorAnimation.ColorOf(door.Cell));
-        if (at < 0 || cel == null) yield break;
+        if (at < 0 || cel == null) { held.Remove(door.At); yield break; }
         running++;
         var sr = cel.GetComponent<SpriteRenderer>();
         cel.transform.position = new Vector3(door.At.x, door.At.y, -1f);
