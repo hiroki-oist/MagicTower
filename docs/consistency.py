@@ -1907,8 +1907,10 @@ chk("kind == SpecialItems.Kind.HeroOrb) return ShowHeroOrb()" in _tgi,
 _dpv=open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read()
 _phs=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
 chk("DPad_B.png" in _phs,"十字キーは作者が選んだ B の絵")
-chk("controller.TouchDir = Pressed()" in _dpv and "TouchDir" in _tc,
+chk("controller.TouchDir = dir;" in _dpv and "TouchDir" in _tc,
     "十字キーの向きが鍵と同じ道で本線へ入る")
+chk("controller.TouchConfirm = true;" in _dpv and "TakeConfirm()" in _tc,
+    "盤面を触ると会話を送れる／選んだものを決められる")
 chk("if (dir == Vector2Int.zero) dir = TouchDir;" in _tc,
     "鍵が押されていないときだけ十字キーの向きを使う")
 chk("MonsterHpBox" in _sl and "KeyIconOrigin" in _sl,
@@ -2223,7 +2225,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=744
+MIN_CHECKS=745
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

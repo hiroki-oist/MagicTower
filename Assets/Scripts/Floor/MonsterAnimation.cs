@@ -70,7 +70,8 @@ public class MonsterAnimation
     /// ⚠ 原典は歩いたときと待ちの間しか回さないが、
     /// 「自分が動かないと敵が動かない」と報告されたので**常に回す**。
     /// </summary>
-    public const float IdleTickSeconds = 1f / 24f;
+    /// ⚠ 作者の指定で**倍速**（1回のなめが約0.5秒）にしてある。
+    public const float IdleTickSeconds = 1f / 48f;
 
     /// <summary>その回数ぶんの長さ（秒）。</summary>
     public static float StepSeconds(bool fast)

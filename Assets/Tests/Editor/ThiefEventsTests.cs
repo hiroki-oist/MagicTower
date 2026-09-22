@@ -58,6 +58,8 @@ public class ThiefEventsTests
         var text = g.TalkToThief();
         StringAssert.Contains("ドジッて", text, "セリフ141");
         Assert.IsTrue(g.Player.EventFlags.Contains(88));
+        // 地図の書き換えは**セリフを読み終えてから**（原典 0x003e0 も同じ順）
+        while (g.IsShowingPage) g.NextPage();
         Assert.IsTrue(g.FloorAt(35).IsCleared(new Vector2Int(-2, -3)),
                       "35階(-2,-3)＝動画で通路になっていた唯一のマス");
 
@@ -80,6 +82,7 @@ public class ThiefEventsTests
     {
         var g = Game(15, new Vector2Int(3, 5));
         StringAssert.Contains("大\nダコ", g.TalkToThief(), "セリフ120（原文の改行位置のまま）");
+        while (g.IsShowingPage) g.NextPage();            // 書き換えはセリフのあと
         Assert.IsTrue(g.FloorAt(15).IsCleared(new Vector2Int(2, 5)));
         Assert.IsTrue(g.FloorAt(15).IsCleared(new Vector2Int(3, 5)), "盗賊自身も消える");
     }

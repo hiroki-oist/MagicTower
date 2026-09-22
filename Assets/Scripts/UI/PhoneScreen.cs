@@ -126,6 +126,12 @@ public static class PhoneScreen
     /// <summary>その文字の大きさと、下に敷く帯の高さ（画布の単位）。</summary>
     public const float ToastFontSize = 46f, ToastHeight = 120f;
 
+    /// <summary>押している間の色（少し濃くする。どこを押しているか分かるように）。</summary>
+    public static Color Pressed(Color c)
+    {
+        return new Color(c.r * 0.55f, c.g * 0.55f, c.b * 0.55f, c.a);
+    }
+
     /// <summary>盤面の枠の、画布の中での大きさ（正方形）。高さが足りなければ縮める。</summary>
     public static float MapSide(float canvasWidth, float canvasHeight)
     {

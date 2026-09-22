@@ -26,10 +26,11 @@ public class DialogueFlowTests
     {
         var g = Game(2, new Vector2Int(-3, -1));
         g.TalkToThief();
-        Assert.AreEqual(1, g.PendingPages, "セリフ116は10行以内なので1ページ");
+        // セリフ116（1ページ）＋ そのあとの「盗賊が去る」（できごとの頁）
+        Assert.AreEqual(2, g.PendingPages, "セリフ1ページと、去っていく動き");
         StringAssert.Contains("先に行かせてもらう", g.CurrentPage);
 
-        Assert.IsFalse(g.NextPage(), "読み終えたら空になる");
+        Assert.IsFalse(g.NextPage(), "読み終えたら空になる（去る動きはその場で起きる）");
         Assert.IsNull(g.CurrentPage);
     }
 

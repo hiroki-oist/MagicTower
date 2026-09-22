@@ -373,6 +373,8 @@ public static class TowerPlaythrough
                     done.Add(target);
                     // **話すと居なくなる人**（2階の盗賊は (-5,-2) が床になる）は
                     // そのまま道になるので、避ける所には入れない。
+                    // 居なくなるのは**セリフを読み終えてから**なので、先に送り切る。
+                    Drain(game);
                     if (game.Floor.At(target) == what) giveUp.Add(target);
                 }
             }

@@ -23,8 +23,14 @@ public class ItemBarView : MonoBehaviour
     /// <summary>いま何マスぶん送っているか（テストから見る）。</summary>
     public float Offset { get; private set; }
 
+    /// <summary>押している間だけ色を変える枠（左右の矢印と、下のボタン）。</summary>
+    [SerializeField] UnityEngine.UI.Image[] buttons = new UnityEngine.UI.Image[0];
+    Color[] colors;
+    int held = -1;
+
     void Update()
     {
+        Feedback();
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
 
@@ -51,6 +57,32 @@ public class ItemBarView : MonoBehaviour
         float max = Mathf.Max(0f, content.rect.width - viewport.rect.width);
         Offset = Mathf.Clamp(Offset + dir * viewport.rect.width, 0f, max);
         content.anchoredPosition = new Vector2(-Offset, content.anchoredPosition.y);
+    }
+
+    /// <summary>押している枠を濃くする。</summary>
+    void Feedback()
+    {
+        if (buttons == null || buttons.Length == 0) return;
+        if (colors == null)
+        {
+            colors = new Color[buttons.Length];
+            for (int i = 0; i < buttons.Length; i++)
+                if (buttons[i] != null) colors[i] = buttons[i].color;
+        }
+        int now = -1;
+        if (Input.GetMouseButton(0))
+        {
+            var at = (Vector2)Input.mousePosition;
+            for (int i = 0; i < buttons.Length; i++)
+                if (buttons[i] != null
+                    && Inside(buttons[i].rectTransform, at)) { now = i; break; }
+        }
+        if (now == held) return;
+        if (held >= 0 && held < buttons.Length && buttons[held] != null)
+            buttons[held].color = colors[held];
+        held = now;
+        if (held >= 0 && buttons[held] != null)
+            buttons[held].color = PhoneScreen.Pressed(colors[held]);
     }
 
     static bool Inside(RectTransform rt, Vector2 screenPoint)

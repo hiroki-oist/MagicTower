@@ -42,6 +42,12 @@ public class Cutscenes
     /// <summary>ゼノに全てを奪われる処理を表す行（原典 0x06f1b）。</summary>
     public const string ZenoTakesStep = "奪われる";
 
+    /// <summary>
+    /// 話しかけたあと盗賊が歩いて去る処理（原典 0x003e0 の 0x4c9〜0x520）。
+    /// セリフを**読み終えてから**動くので、会話の頁のあとに積む。
+    /// </summary>
+    public const string ThiefLeavesStep = "盗賊が去る";
+
     /// <summary>盗賊が脱け出して牢が開く処理を表す行（原典 0x070c8）。</summary>
     public const string PrisonOpensStep = "牢が開く";
 

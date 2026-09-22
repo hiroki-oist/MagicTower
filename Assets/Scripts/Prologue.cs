@@ -73,6 +73,16 @@ public static class Prologue
     /// </summary>
     public static Vector2Int ThiefGoal { get { return ThiefWalk[ThiefWalk.Length - 1]; } }
 
+    /// <summary>
+    /// 話しかけたあと、盗賊が去っていく道順（原典 0x003e0 の向きの表 `{3,3,5}`）。
+    /// 立っている (-5,-2) から**下へ2歩**（上り階段の方向）で、そこで消える。
+    /// 原典はセリフ116 を出して**キーを待ってから**歩かせる（0x47e のあと 0x4c9）。
+    /// </summary>
+    public static readonly Vector2Int[] ThiefLeave =
+    {
+        new Vector2Int(-5, -3), new Vector2Int(-5, -4),
+    };
+
     /// <summary>ゼノに会うまでに出るセリフ（Dialogue.txt のレコード番号）。</summary>
     public static readonly int[] BeforeFall = { 110, 111 };
 

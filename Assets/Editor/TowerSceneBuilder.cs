@@ -365,13 +365,20 @@ public static class TowerSceneBuilder
         float stack = bh * nb + bgap * (nb - 1);
         float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
         RectTransform damageButton = null;
+        var pressable = new List<Object>
+        {
+            leftArrow.GetComponent<UnityEngine.UI.Image>(),
+            rightArrow.GetComponent<UnityEngine.UI.Image>(),
+        };
         for (int i = 0; i < nb; i++)
         {
             float by = btop + (bh + bgap) * i;
-            Placeholder(bottom, font, "Left" + i, pad, by, bw, bh,
-                        PhoneScreen.LeftButtons[i], PhoneScreen.LeftButton);
+            var left = Placeholder(bottom, font, "Left" + i, pad, by, bw, bh,
+                                   PhoneScreen.LeftButtons[i], PhoneScreen.LeftButton);
             var right = Placeholder(bottom, font, "Right" + i, w - pad - bw, by, bw, bh,
                                     PhoneScreen.RightButtons[i], PhoneScreen.RightButton);
+            pressable.Add(left.GetComponent<UnityEngine.UI.Image>());
+            pressable.Add(right.GetComponent<UnityEngine.UI.Image>());
             if (i == PhoneScreen.DamageButtonIndex) damageButton = right;
         }
         // 中央の十字。**押すと歩く**（作者が選んだ絵。DPadView が触りを受ける）
@@ -568,6 +575,9 @@ public static class TowerSceneBuilder
         var padso = new SerializedObject(padView);
         padso.FindProperty("controller").objectReferenceValue = controller;
         padso.FindProperty("pad").objectReferenceValue = padRt;
+        padso.FindProperty("padImage").objectReferenceValue = padImg;
+        padso.FindProperty("topBand").objectReferenceValue = top;
+        padso.FindProperty("bottomBand").objectReferenceValue = bottom;
         padso.ApplyModifiedPropertiesWithoutUndo();
 
         // 持ち物の帯と「ダメージ表示」の触りを受ける役（作者の指定）
@@ -580,6 +590,7 @@ public static class TowerSceneBuilder
         barso.FindProperty("rightArrow").objectReferenceValue = rightArrow;
         barso.FindProperty("damageButton").objectReferenceValue = damageButton;
         FillObjects(barso.FindProperty("slots"), slotRects);
+        FillObjects(barso.FindProperty("buttons"), pressable);
         barso.ApplyModifiedPropertiesWithoutUndo();
 
         // 盤面の枠へカメラを合わせ、窓の入れ物も盤面の大きさに合わせる役（縦画面）

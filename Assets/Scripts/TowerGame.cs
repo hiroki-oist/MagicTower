@@ -191,6 +191,23 @@ public class TowerGame
                 Player.HighestFloor = Mathf.Max(Player.HighestFloor, Ending.LastFloor);
                 EnterFloor(Ending.LastFloor, Ending.LastPosition);
             }
+            else if (e.Effect == Cutscenes.ThiefLeavesStep)
+            {
+                foreach (var c in leaving.Changes)
+                {
+                    var st = FloorAt(c.Floor);
+                    if (st != null) st.Clear(c.Pos);
+                }
+                // 2階で最初に別れるときだけ、下へ2歩あるいて消える（原典の表 {3,3}）
+                if (leaving.Floor == Prologue.PrisonFloor
+                    && Player.Position == Prologue.ThiefGoal + Vector2Int.up)
+                    walks.Add(new NpcWalk
+                    {
+                        Prefab = Prologue.ThiefPrefab,
+                        From = Prologue.ThiefGoal,
+                        Path = new List<Vector2Int>(Prologue.ThiefLeave)
+                    });
+            }
             else if (e.Effect == Cutscenes.PrisonOpensStep)
             {
                 // 原典 0x070c8〜0x07153。盗賊が去って牢の壁が開き、
@@ -859,7 +876,10 @@ public class TowerGame
                 if (got.Taken)
                 {
                     PlaySound(SoundCues.TakeItem);
+                    // **消す → そのマスへ進む → 手に入れる** の順（作者の指定）。
+                    // 拾ったあとその場に立つので、押しっぱなしで歩き続けられる。
                     Floor.Clear(r.Target);
+                    if (AuthorStyle.StepOntoItem) Player.Position = r.Target;
                     // 原典（0x23ee → 0x9d80）は**窓を開かず右下の欄に書くだけ**。
                     // こちらは画面の中央に出して薄くなって消える（MessageToastView）。
                     Note(GameText.Instance.Message(got.MessageKey, got.Value));
@@ -1105,6 +1125,9 @@ public class TowerGame
     /// <summary>人形のセリフ（MT.GTX のレコード番号）。原典 0x2a61 の即値 0xa0。</summary>
     public const int DollRecord = 160;
 
+    /// <summary>いま去ろうとしている盗賊のできごと（セリフのあとに効かせる）。</summary>
+    ThiefEvents.Event leaving;
+
     /// <summary>直前に発火した場面の名前。演出はこれを見て流す。</summary>
     public string PendingScene { get; private set; }
 
@@ -1296,15 +1319,18 @@ public class TowerGame
         var e = hit.Value;
 
         if (e.SetsFlag >= 0) Player.EventFlags.Add(e.SetsFlag);
-        foreach (var c in e.Changes)
-        {
-            var st = FloorAt(c.Floor);
-            if (st != null) st.Clear(c.Pos);
-        }
 
         var line = GameText.Instance.Dialogue(e.Record);
         var text = line.HasValue ? line.Value.Body : "";
         Say(text);
+        // 地図の書き換え（＝盗賊が居なくなる）と歩き去りは**セリフを読み終えてから**。
+        // 原典 0x003e0 も、セリフ → キー待ち → マスを床にして歩かせる、の順。
+        leaving = e;
+        pages.Enqueue(new Page
+        {
+            Kind = PageKind.Effect, Text = null, Record = -1,
+            Effect = Cutscenes.ThiefLeavesStep
+        });
         return text;
     }
 

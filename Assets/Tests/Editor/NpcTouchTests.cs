@@ -85,7 +85,7 @@ public class NpcTouchTests
     }
 
     [Test]
-    public void アイテムは拾えるがその手では進まない()
+    public void アイテムを拾うとそのマスへ進む()
     {
         var g = Game(1, new Vector2Int(0, -5));
         bool found = false;
@@ -101,7 +101,9 @@ public class NpcTouchTests
                 g.Player.Position = from;
                 var r = g.Step(Vector2Int.up);
                 Assert.AreEqual(TowerPlayer.Outcome.TookItem, r);
-                Assert.AreEqual(from, g.Player.Position, "拾った手では進まない（原典 0x00a6fb）");
+                // 作者の指定で**拾ったらそのマスへ進む**（原典 0x00a6fb は進まない）
+                Assert.AreEqual(AuthorStyle.StepOntoItem ? c : from, g.Player.Position,
+                                "消す→進む→手に入れる");
                 Assert.IsTrue(g.Floor.IsCleared(c), "マスは床になる");
             }
         Assert.IsTrue(found, "1階に薬か宝石がある");

@@ -90,14 +90,17 @@ public class TowerController : MonoBehaviour
             {
                 // 「◎はい／◎いいえ」や祭壇の望み。原典 0x9e78 は
                 // 上下で印を動かし、リターンかスペースで決める。
+                // 触りでも動かせるようにしてある（十字キーと、盤面を触ったら決定）。
                 var move = ReadInputOnce();
+                if (move.y == 0) move = TakeStep();
                 if (move.y != 0) { Game.MoveChoice(move.y > 0 ? -1 : 1); acted = true; }
-                else if (MenuKeyDown()) { Game.ConfirmChoice(); Game.NextPage(); acted = true; }
+                else if (MenuKeyDown() || TakeConfirm())
+                { Game.ConfirmChoice(); Game.NextPage(); acted = true; }
                 else acted = false;
             }
             else
             {
-                acted = Input.anyKeyDown;
+                acted = Input.anyKeyDown || TakeConfirm();
                 if (acted)
                 {
                     // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
@@ -134,12 +137,13 @@ public class TowerController : MonoBehaviour
             acted = dir != Vector2Int.zero && dir != blockedDir;
             if (acted)
             {
-                var before = Game.Player.Position;
-                Game.TryStep(dir);
-                if (Game.Player.Position == before && !Game.IsShowingPage && !Game.IsMenuOpen)
-                    blockedDir = dir;      // 動けなかった
-                else
-                    blockedDir = Vector2Int.zero;
+                // **何も起きなかったとき（壁）だけ**同じ向きを止める。
+                // 扉を開けた・物を拾った・戦ったときは、押しっぱなしで進み続ける
+                // （「一度離さないと動かない」と報告されたのがここ）。
+                var outcome = Game.TryStep(dir);
+                blockedDir = outcome == TowerPlayer.Outcome.Blocked
+                             && !Game.IsShowingPage && !Game.IsMenuOpen
+                           ? dir : Vector2Int.zero;
             }
         }
 
@@ -153,6 +157,21 @@ public class TowerController : MonoBehaviour
     /// 押しっぱなしにすれば歩き続ける。
     /// </summary>
     public Vector2Int TouchDir { get; set; }
+
+    /// <summary>
+    /// 十字キーを**押した瞬間**の向き（1回ぶん）。選ばせている窓やメニューで、
+    /// 押しっぱなしで飛ばないように1回だけ使う。取り出すと空になる。
+    /// </summary>
+    public Vector2Int TouchStep { get; set; }
+
+    /// <summary>
+    /// 盤面のあたりを触った（＝決定・送り）。会話を送る／選んだものを決める。
+    /// 取り出すと空になる。
+    /// </summary>
+    public bool TouchConfirm { get; set; }
+
+    Vector2Int TakeStep() { var d = TouchStep; TouchStep = Vector2Int.zero; return d; }
+    bool TakeConfirm() { bool c = TouchConfirm; TouchConfirm = false; return c; }
 
     /// <summary>
     /// 持ち物の帯を触ったとき（作者の指定。並びは <see cref="PhoneScreen"/>）。
@@ -179,6 +198,7 @@ public class TowerController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.Escape)) { Game.MenuBack(); return true; }
 
         var move = ReadInputOnce();
+        if (move.y == 0) move = TakeStep();
         if (move.y != 0)
         {
             // 段によって上下の意味が変わる。
@@ -192,7 +212,7 @@ public class TowerController : MonoBehaviour
             }
             return true;
         }
-        if (MenuKeyDown())
+        if (MenuKeyDown() || TakeConfirm())
         {
             Game.MenuConfirm();
             // 「ゲーム終了」。原典は DOS へ戻るので、こちらは遊びを閉じる
@@ -315,7 +335,10 @@ public class TowerController : MonoBehaviour
         var a = new Vector3(from.x, from.y, -1f);
         var b = new Vector3(to.x, to.y, -1f);
         // 左右に動くときは途中で2コマ目に入れ替える（原典 0xa276 の 0x100 → 0x120）。
-        bool sideways = from.y == to.y && from.x != to.x;
+        // 縦のときも入れ替えるのは**作者の指定**（原典は入れ替えない。
+        // そもそも主人公の絵は2枚しか無く、後ろ姿や横向きは存在しない）。
+        bool sideways = AuthorStyle.WalkAnimationBothWays
+                      || (from.y == to.y && from.x != to.x);
         var sr = playerView != null ? playerView.GetComponent<SpriteRenderer>() : null;
         // **経過時間で進める**。コマ送りで待つと、画面が60コマ/秒のときに
         // 1コマが1/60秒になってしまい、指定の何倍も遅くなる（作者から
