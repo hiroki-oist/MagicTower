@@ -1312,6 +1312,10 @@ chk("TitleScreen.Title" in _tcw,
 _bv2=open("Assets/Scripts/UI/BattleView.cs",encoding="utf-8").read()
 chk("PlacePlayerViewAt" in _bv2 and "ShowActor" in _bv2,
     "戦いは相手のマスに重ねてから、主人公→閃光→相手→閃光…と見せる（作者の指定）")
+_tcb=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
+chk("!(battle != null && battle.IsPlaying)\n            && Game.Player.Position != shownPos" in _tcb
+    or "battle.IsPlaying)\n            && Game.Player.Position" in _tcb,
+    "斬り合いの最中は主人公の絵を元のマスへ戻さない（2人に見えていた）")
 chk("Dying" in _bv2 and "FadeSeconds" in _bv2,
     "倒れたら相手を残して主人公が点滅して消え、少しずつ暗くなる")
 _tg8=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()

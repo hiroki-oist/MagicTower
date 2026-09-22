@@ -195,8 +195,12 @@ public class TowerController : MonoBehaviour
         // （11→12階・31→32階で商店が浮かんで見えた報告がこれ）。
         if (!drawing) SyncChangedCells();
         // 場面や戦闘の後始末で主人公の立ち位置が変わったら、その場で合わせる
-        // （原典も戦いのあとは滑らせずに相手のマスへ置く）
-        if (!sliding && Game.Player.Position != shownPos)
+        // （原典も戦いのあとは滑らせずに相手のマスへ置く）。
+        // **斬り合いの最中は動かさない** — 本線の立ち位置はまだ元のマスなので、
+        // ここで合わせ直すと相手のマスに重ねた絵が毎コマ元へ戻ってしまう
+        // （戦闘中に主人公が元の場所に残って見える、という作者の報告）。
+        if (!sliding && !(battle != null && battle.IsPlaying)
+            && Game.Player.Position != shownPos)
         {
             shownPos = Game.Player.Position;
             PlacePlayerView();
