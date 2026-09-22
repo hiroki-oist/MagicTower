@@ -34,9 +34,14 @@ public class FeedbackFixTests
         g.Floor.Clear(new Vector2Int(0, 0));
         g.Floor.Put(new Vector2Int(0, 1), "Enemy_SlimeR");
         g.Step(Vector2Int.up);
-        Assert.IsTrue(g.IsGameOver, "生命力が尽きたらゲームオーバー");
+        // **すぐには画面を出さない**（作者の指定）。まず倒れる様子を見せる。
+        Assert.IsFalse(g.IsGameOver, "斬り合いの最中はまだ画面を出さない");
+        Assert.AreEqual(TowerGame.PageKind.Effect, g.CurrentKind);
+        Assert.IsTrue(g.ConsumeDeath(), "倒れる様子を見せる番が来ている");
         Assert.AreEqual("Enemy_SlimeR", g.Floor.At(new Vector2Int(0, 1)),
                         "倒す前に死ぬので相手は残る（原典 0x64cd）");
+        g.Pump(false);                              // 倒れる様子が終わった
+        Assert.IsTrue(g.IsGameOver, "そのあとで ＧＡＭＥ　ＯＶＥＲ");
     }
 
     [Test]

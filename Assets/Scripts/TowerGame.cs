@@ -173,7 +173,8 @@ public class TowerGame
         get
         {
             return blinks.Count > 0 || walks.Count > 0 || doorOpens.Count > 0
-                   || bossAppears.Count > 0 || vanishes.Count > 0 || PlayerSlide != null;
+                   || bossAppears.Count > 0 || vanishes.Count > 0 || deathQueued
+                   || PlayerSlide != null;
         }
     }
 
@@ -221,6 +222,12 @@ public class TowerGame
                 // 原典 0x7038。奪われて本編が始まるところで本編の曲に戻す。
                 // これが無いと、題名の曲のまま塔を登り続けることになる。
                 PlaySound(SoundCues.FieldMusic);
+            }
+            else if (e.Effect == DyingStep)
+            {
+                // 見せるのは見た目の層（BattleView）。ここは**間を作る**のが仕事なので、
+                // 渡した印を立てて、動き終わるまで次（ＧＡＭＥ　ＯＶＥＲ）へ進ませない。
+                viewTicket++;
             }
             else if (e.Effect != null && e.Effect.StartsWith(ClearCellStep))
             {
@@ -392,6 +399,19 @@ public class TowerGame
     /// <summary>そのマスを空ける段（妖精は読み終えてから消える）。</summary>
     public const string ClearCellStep = "マスを空ける";
 
+    /// <summary>倒れる様子を見せる段（主人公が点滅して消え、暗くなる）。</summary>
+    public const string DyingStep = "倒れる";
+
+    bool deathQueued;
+
+    /// <summary>倒れる様子を見せる番が来たか。取り出すと下ろす。</summary>
+    public bool ConsumeDeath()
+    {
+        bool v = deathQueued;
+        deathQueued = false;
+        return v;
+    }
+
     /// <summary>まだ知らせていない、倒した相手からの金。</summary>
     int pendingGoldNote;
 
@@ -414,6 +434,7 @@ public class TowerGame
         {
             return walks.Count + doorOpens.Count + blinks.Count
                    + bossAppears.Count + vanishes.Count + viewTicket
+                   + (deathQueued ? 1 : 0)
                    + (PlayerSlide != null ? 1 : 0);
         }
     }
@@ -1211,19 +1232,30 @@ public class TowerGame
     /// </summary>
     public void GameOver()
     {
-        if (IsGameOver) return;
+        if (gameOverStarted) return;
+        gameOverStarted = true;
+        Player.Hp = 0;
         // 残っている場面の続き（突撃の残りなど）は捨てる。
         // 倒れたのに次の相手が歩いてきては困る。
         pages.Clear();
         walks.Clear(); doorOpens.Clear(); blinks.Clear(); vanishes.Clear();
-        Player.Hp = 0;
-        pages.Clear();
         frontMapDone = true;
+        // **倒れる様子を見せてから**画面を出す（作者の指定）。
+        // 相手はそのまま、主人公だけが点滅して消え、少しずつ暗くなってから
+        // ＧＡＭＥ　ＯＶＥＲ。見せるのは見た目の層（BattleView）。
+        deathQueued = true;
+        pages.Enqueue(new Page
+        {
+            Kind = PageKind.Effect, Text = null, Record = -1, Effect = DyingStep
+        });
         pages.Enqueue(new Page
         {
             Kind = PageKind.GameOver, Text = GameOverScreen.Line, Record = -1
         });
     }
+
+    /// <summary>もう倒れる流れに入っているか（二重に入らないようにする印）。</summary>
+    bool gameOverStarted;
 
     // ---------------------------------------------------------------- 選ばせる
     //
@@ -1521,7 +1553,7 @@ public class TowerGame
         var from = Player.Position;
         int hpBefore = Player.Hp;
         var b = TowerBattle.Resolve(Player, what);
-        LastBattle = BattlePresentation.Steps(from, target, b.Hits);
+        LastBattle = BattlePresentation.Steps(from, target, b.Hits, b.Died);
         viewTicket++;
         LastBattleEnemy = what;
         // 作者の旧版の帯（BattleBand）に出す数字。戦う前の値を残しておく。

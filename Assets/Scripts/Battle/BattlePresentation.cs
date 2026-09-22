@@ -67,6 +67,17 @@ public static class BattlePresentation
     public static System.Collections.Generic.List<Step> Steps(
         Vector2Int from, Vector2Int to, int playerHits)
     {
+        return Steps(from, to, playerHits, false);
+    }
+
+    /// <summary>
+    /// <paramref name="died"/> が真なら**倒れた側**の並び。最後の一撃で相手は死なず、
+    /// 相手の反撃で終わる（原典 0x64cd は一撃ごとに生命力を見る）。
+    /// 相手はそのまま残るので「相手が消える」も付けない。
+    /// </summary>
+    public static System.Collections.Generic.List<Step> Steps(
+        Vector2Int from, Vector2Int to, int playerHits, bool died)
+    {
         var list = new System.Collections.Generic.List<Step>();
         if (playerHits <= 0) return list;
         list.Add(new Step { Kind = "踏み込む", At = to });
@@ -75,12 +86,12 @@ public static class BattlePresentation
             list.Add(new Step { Kind = "待つ", Value = StepWait, At = to });
             list.Add(new Step { Kind = "音",   Value = SlashSound, At = to });
             list.Add(new Step { Kind = "斬る", Value = HitWait, At = to });
-            if (i == playerHits - 1) break;              // 最後の一撃で倒すので反撃は無い
+            if (!died && i == playerHits - 1) break;     // 最後の一撃で倒すので反撃は無い
             list.Add(new Step { Kind = "待つ", Value = HitEffectWait, At = to });
             list.Add(new Step { Kind = "音",   Value = CounterSound, At = to });
             list.Add(new Step { Kind = "反撃", Value = HitWait, At = to });
         }
-        list.Add(new Step { Kind = "相手が消える", At = to });
+        if (!died) list.Add(new Step { Kind = "相手が消える", At = to });
         return list;
     }
 

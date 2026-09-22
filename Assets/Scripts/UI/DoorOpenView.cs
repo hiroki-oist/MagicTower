@@ -32,6 +32,19 @@ public class DoorOpenView : MonoBehaviour
 
     bool draining;
 
+    /// <summary>
+    /// 今この役が絵を持っているマス。**盤面の描き直しを止めておく**ための印。
+    ///
+    /// 原典は地図を書き換えても**その場では描き直さず**、9コマの動きの中で
+    /// そのマスを塗っていく。こちらは書き換えるとすぐ盤面に映るので、
+    /// 「扉が一瞬消えてから動きが始まる」「閉まる前に門が現れる」ように見えていた。
+    /// </summary>
+    readonly System.Collections.Generic.HashSet<Vector2Int> held =
+        new System.Collections.Generic.HashSet<Vector2Int>();
+
+    /// <summary>そのマスの描き直しを止めているか（本線の見た目合わせが見る）。</summary>
+    public bool Holds(Vector2Int at) { return held.Contains(at); }
+
     void Awake()
     {
         cel = new GameObject("DoorFrame", typeof(SpriteRenderer));
@@ -44,7 +57,11 @@ public class DoorOpenView : MonoBehaviour
     {
         if (controller == null || controller.Game == null) return;
         var list = controller.Game.ConsumeDoorOpens();
-        for (int i = 0; i < list.Count; i++) queue.Enqueue(list[i]);
+        for (int i = 0; i < list.Count; i++)
+        {
+            queue.Enqueue(list[i]);
+            held.Add(list[i].At);          // 動きが終わるまで盤面を描き直させない
+        }
         if (!draining && queue.Count > 0 && isActiveAndEnabled) StartCoroutine(Drain());
     }
 
@@ -52,11 +69,28 @@ public class DoorOpenView : MonoBehaviour
     IEnumerator Drain()
     {
         draining = true;
-        // 戦いのあとに開く扉は、戦闘の箱が消えてからひと呼吸おいてから開く（作者の指定）
+        // 戦いのあとに開く扉は、戦闘の箱が消えてからひと呼吸おいてから開く（作者の指定）。
+        // その間もマスは**扉のまま**に見せる（下の Play が最初のコマを出す）。
         if (queue.Count > 0 && queue.Peek().Delayed)
+        {
+            var first = queue.Peek();
+            ShowFirstFrame(first);
             yield return new WaitForSeconds(AuthorStyle.SettleSeconds);
+        }
         while (queue.Count > 0) yield return Play(queue.Dequeue());
         draining = false;
+    }
+
+    /// <summary>待ちの間、そのマスに最初のコマを出しておく。</summary>
+    void ShowFirstFrame(TowerGame.DoorOpen door)
+    {
+        int at = IndexOf(DoorAnimation.ColorOf(door.Cell));
+        if (at < 0 || cel == null) return;
+        var sr = cel.GetComponent<SpriteRenderer>();
+        cel.transform.position = new Vector3(door.At.x, door.At.y, -1f);
+        int f = at * DoorAnimation.Frames + (door.Closing ? DoorAnimation.Frames - 1 : 0);
+        if (f < frames.Length) sr.sprite = frames[f];
+        cel.SetActive(true);
     }
 
     IEnumerator Play(TowerGame.DoorOpen door)
@@ -66,6 +100,11 @@ public class DoorOpenView : MonoBehaviour
         running++;
         var sr = cel.GetComponent<SpriteRenderer>();
         cel.transform.position = new Vector3(door.At.x, door.At.y, -1f);
+        // 最初のコマ（開くなら閉じた扉、閉まるなら開いた扉）をまず出しておく。
+        // 待ちの間このマスが空に見えてしまうのを防ぐ。
+        int firstFrame = at * DoorAnimation.Frames
+                       + (door.Closing ? DoorAnimation.Frames - 1 : 0);
+        if (firstFrame < frames.Length) sr.sprite = frames[firstFrame];
         cel.SetActive(true);
         for (int f = 0; f < DoorAnimation.Frames; f++)
         {
@@ -76,6 +115,7 @@ public class DoorOpenView : MonoBehaviour
             yield return new WaitForSeconds(DoorAnimation.FrameSeconds);
         }
         cel.SetActive(false);
+        held.Remove(door.At);           // ここで初めて盤面の絵に任せる
         // 原典は9コマのあと盤面の動きだけを回す（鍵の扉は 0x9288(8)、門は 0x9288(0x14)）
         yield return new WaitForSeconds(
             DoorAnimation.TailOf(door.Cell) * DoorAnimation.FrameSeconds);

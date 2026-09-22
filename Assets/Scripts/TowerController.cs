@@ -636,11 +636,30 @@ public class TowerController : MonoBehaviour
     }
 
     /// <summary>変わったマスだけ作り直す。</summary>
+    /// <summary>扉の動きが終わるまで描き直しを待つマス。</summary>
+    readonly System.Collections.Generic.List<Vector2Int> heldCells =
+        new System.Collections.Generic.List<Vector2Int>();
+
     void SyncChangedCells()
     {
         if (loader == null || Game == null) return;
+        // 扉の動きが終わって手が離れたマスから先に片付ける
+        for (int i = heldCells.Count - 1; i >= 0; i--)
+        {
+            if (doorView != null && doorView.Holds(heldCells[i])) continue;
+            loader.Refresh(heldCells[i], FloorState.ViewKeyOf(Game.Floor.At(heldCells[i])));
+            heldCells.RemoveAt(i);
+        }
         foreach (var p in Game.Floor.ConsumeDirty())
         {
+            // **扉の動きが出ている間は描き直さない**。原典は地図を書き換えても
+            // その場では描き直さず、9コマの動きの中で塗っていく。すぐ映すと
+            // 「扉が一瞬消えてから動きが始まる」ように見える（作者の報告）。
+            if (doorView != null && doorView.Holds(p))
+            {
+                if (!heldCells.Contains(p)) heldCells.Add(p);
+                continue;
+            }
             // 盤面の記号（"#" や ">"）のままではプレハブを引けないので、見た目の鍵に直す。
             loader.Refresh(p, FloorState.ViewKeyOf(Game.Floor.At(p)));
         }
@@ -651,6 +670,25 @@ public class TowerController : MonoBehaviour
 
     /// <summary>盤面を渦巻きに描き出している最中か。</summary>
     public bool IsDrawing { get { return drawing; } }
+
+    /// <summary>
+    /// 主人公の絵だけを動かす（本線の立ち位置は変えない）。
+    /// 戦いのとき、相手のマスに**重ねてから**斬り合いを見せるのに使う
+    /// （終わったあと瞬間移動して見える、という作者の指摘）。
+    /// </summary>
+    public void PlacePlayerViewAt(Vector2Int at)
+    {
+        if (playerView == null) return;
+        playerView.position = new Vector3(at.x, at.y + HeroOffsetY, -1f);
+        shownPos = at;
+    }
+
+    /// <summary>主人公の絵を出す・消す（倒れるときの点滅に使う）。</summary>
+    public void SetPlayerViewVisible(bool on)
+    {
+        if (playerView != null && playerView.gameObject.activeSelf != on)
+            playerView.gameObject.SetActive(on);
+    }
 
     /// <summary>場面の中で人が歩いている最中か。</summary>
     public bool IsWalking { get { return walkView != null && walkView.IsPlaying; } }

@@ -1308,6 +1308,18 @@ chk("battle_gold" in _tg5,"倒した相手からの金も知らせに出す（�
 _tcw=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("TitleScreen.Title" in _tcw,
     "1枚絵の上の字も起動時に作っておく（3階だけ一瞬止まると報告された）")
+# 作者の報告（その8）
+_bv2=open("Assets/Scripts/UI/BattleView.cs",encoding="utf-8").read()
+chk("PlacePlayerViewAt" in _bv2 and "ShowActor" in _bv2,
+    "戦いは相手のマスに重ねてから、主人公→閃光→相手→閃光…と見せる（作者の指定）")
+chk("Dying" in _bv2 and "FadeSeconds" in _bv2,
+    "倒れたら相手を残して主人公が点滅して消え、少しずつ暗くなる")
+_tg8=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("DyingStep" in _tg8 and "gameOverStarted" in _tg8,
+    "ＧＡＭＥ　ＯＶＥＲ の画面は倒れる様子のあとに出す")
+_dov2=open("Assets/Scripts/UI/DoorOpenView.cs",encoding="utf-8").read()
+chk("Holds" in _dov2 and "ShowFirstFrame" in _dov2,
+    "扉の動きの間はそのマスを描き直さない（一瞬消えてから開いて見えた）")
 # 作者の報告（その7）
 _tg7=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("Cue = SoundCues.TitleMusic" in _tg7,

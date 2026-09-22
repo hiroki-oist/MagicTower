@@ -18,6 +18,10 @@ using UnityEngine;
 public class BattleView : MonoBehaviour
 {
     [SerializeField] TowerController controller;
+    /// <summary>相手の絵を出し入れするため（盤面に置かれているもの）。</summary>
+    [SerializeField] FloorLoader loader;
+    /// <summary>倒れたときに少しずつ暗くする黒い板（画面いっぱい）。</summary>
+    [SerializeField] UnityEngine.UI.Image fade;
     [SerializeField] Sprite hitSprite;
     // 金騎士の絵は使わなくなった。40階は**部下が1体ずつ歩いてくる**作りで、
     // 歩かせるのは NpcWalkView（盤面のプレハブをそのまま動かす）。
@@ -77,15 +81,29 @@ public class BattleView : MonoBehaviour
         effect.SetActive(false);
     }
 
+    /// <summary>
+    /// 斬り合いの見せ方（作者の指定）。
+    ///
+    /// **相手のマスに主人公を重ねてから**、
+    /// 主人公 → 閃光 → 相手 → 閃光 → 主人公 … と入れ替えて見せる。
+    /// 勝ったら主人公はそのマスに立ったまま（あとで本線も同じ場所へ動く）なので、
+    /// 戦いのあとに瞬間移動して見えることがない。
+    /// </summary>
     IEnumerator Play(List<BattlePresentation.Step> steps)
     {
         IsPlaying = true;
         HitsDone = 0;
         CountersDone = 0;
+        var at = Vector2Int.zero;
         foreach (var s in steps)
         {
+            at = s.At;
             switch (s.Kind)
             {
+                case "踏み込む":
+                    if (controller != null) controller.PlacePlayerViewAt(s.At);
+                    ShowActor(s.At, true);            // まず主人公
+                    break;
                 case "待つ":
                     yield return new WaitForSeconds(BattlePresentation.WaitSeconds(s.Value));
                     break;
@@ -95,13 +113,63 @@ public class BattleView : MonoBehaviour
                     ShowEffect(s.At);
                     yield return new WaitForSeconds(BattlePresentation.WaitSeconds(s.Value));
                     effect.SetActive(false);
+                    // 斬ったら相手、反撃されたら主人公を出す
+                    ShowActor(s.At, s.Kind != "斬る");
                     break;
                 case "相手が消える":
                     effect.SetActive(false);
+                    ShowActor(s.At, true);
                     break;
             }
         }
+        // 倒れるときは**相手を残して**主人公が点滅して消える
+        if (controller != null && controller.Game != null && controller.Game.ConsumeDeath())
+            yield return Dying(at);
         IsPlaying = false;
+    }
+
+    /// <summary>そのマスに出すのが主人公か相手か。</summary>
+    void ShowActor(Vector2Int at, bool player)
+    {
+        if (controller != null) controller.SetPlayerViewVisible(player);
+        var enemy = loader != null ? loader.ObjectAt(at) : null;
+        if (enemy != null) enemy.SetActive(!player);
+    }
+
+    /// <summary>点滅する回数（倒れるとき）。</summary>
+    public const int DeathBlinks = 6;
+    /// <summary>暗くなるまでの長さ（秒）。</summary>
+    public const float FadeSeconds = 1.2f;
+
+    /// <summary>
+    /// 倒れる様子。相手はそのまま、主人公だけが点滅して消え、少しずつ暗くなる。
+    /// 暗くなり切ってから ＧＡＭＥ　ＯＶＥＲ の画面が出る（本線がそう並べている）。
+    /// </summary>
+    IEnumerator Dying(Vector2Int at)
+    {
+        var enemy = loader != null ? loader.ObjectAt(at) : null;
+        if (enemy != null) enemy.SetActive(true);         // 相手は残る
+        for (int i = 0; i < DeathBlinks; i++)
+        {
+            if (controller != null) controller.SetPlayerViewVisible(false);
+            yield return new WaitForSeconds(0.12f);
+            if (controller != null) controller.SetPlayerViewVisible(true);
+            yield return new WaitForSeconds(0.12f);
+        }
+        if (controller != null) controller.SetPlayerViewVisible(false);
+
+        if (fade != null)
+        {
+            fade.gameObject.SetActive(true);
+            float t = 0f;
+            while (t < FadeSeconds)
+            {
+                t += Time.deltaTime;
+                var c = fade.color;
+                fade.color = new Color(c.r, c.g, c.b, Mathf.Clamp01(t / FadeSeconds));
+                yield return null;
+            }
+        }
     }
 
     /// <summary>

@@ -613,6 +613,23 @@ public static class TowerSceneBuilder
         backImg.raycastTarget = false;
         backGo.SetActive(false);
 
+        // 倒れたときに少しずつ暗くする黒い板（1枚絵より後ろ、盤面より前）
+        var fadeGo = new GameObject("FadeOverlay", typeof(RectTransform),
+                                    typeof(UnityEngine.UI.Image));
+        fadeGo.transform.SetParent(full, false);
+        var fadeRt = fadeGo.GetComponent<RectTransform>();
+        fadeRt.anchorMin = Vector2.zero; fadeRt.anchorMax = Vector2.one;
+        fadeRt.offsetMin = Vector2.zero; fadeRt.offsetMax = Vector2.zero;
+        var fadeImg = fadeGo.GetComponent<UnityEngine.UI.Image>();
+        fadeImg.color = new Color(0f, 0f, 0f, 0f);
+        fadeImg.raycastTarget = false;
+        fadeGo.SetActive(false);
+        var bvso = new SerializedObject(battleView);
+        bvso.FindProperty("fade").objectReferenceValue = fadeImg;
+        bvso.FindProperty("loader").objectReferenceValue =
+            controller.GetComponent<FloorLoader>();
+        bvso.ApplyModifiedPropertiesWithoutUndo();
+
         BuildFullScreen(full, font, controller, TowerGame.PageKind.Title,
                         // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
                         // 真っ黒な画面に

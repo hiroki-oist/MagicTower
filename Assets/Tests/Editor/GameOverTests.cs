@@ -49,7 +49,10 @@ public class GameOverTests
         g.Player.Position = new Vector2Int(0, -1);
 
         g.Step(Vector2Int.up);
-        Assert.IsTrue(g.IsGameOver, "ゲームオーバーの画面が出る");
+        // **まず倒れる様子**（主人公が点滅して消え、暗くなる）を見せてから画面を出す
+        Assert.IsTrue(g.ConsumeDeath(), "倒れる様子を見せる番が来る");
+        g.Pump(false);
+        Assert.IsTrue(g.IsGameOver, "そのあとにゲームオーバーの画面が出る");
         Assert.AreEqual(0, g.Player.Hp);
         Assert.AreEqual("Enemy_SlimeG", g.Floor.At(at), "倒せていないので相手は残る");
         Assert.AreEqual(new Vector2Int(0, -1), g.Player.Position, "踏み込んでいない");
@@ -69,6 +72,8 @@ public class GameOverTests
 
         g.Step(Vector2Int.up);
         Assert.AreEqual(0, g.Player.Hp);
+        g.ConsumeDeath();
+        g.Pump(false);
         Assert.IsTrue(g.IsGameOver);
     }
 
