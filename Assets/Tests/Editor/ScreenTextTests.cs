@@ -80,8 +80,12 @@ public class ScreenTextTests
 
             Assert.IsNotNull(title, "題名の画面が無い");
             Assert.IsNotNull(ending, "終幕の画面が無い");
-            Assert.IsFalse(title.gameObject.activeSelf, "ふだんは隠れている");
-            Assert.IsFalse(ending.gameObject.activeSelf, "ふだんは隠れている");
+            // 入れ物は**生かしたまま**（役がそこに付いているので、消すと動かなくなる）。
+            // ふだん見えないのは絵と文字を消してあるから。
+            Assert.IsTrue(title.gameObject.activeSelf, "入れ物は生きている");
+            Assert.IsTrue(ending.gameObject.activeSelf, "入れ物は生きている");
+            foreach (var g in title.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+                Assert.IsFalse(g.enabled, "ふだんは隠れている " + g.name);
 
             Assert.IsNotNull(titleLine);
             Assert.AreEqual(ScreenLayout.ToCanvas(

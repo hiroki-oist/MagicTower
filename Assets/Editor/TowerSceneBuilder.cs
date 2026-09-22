@@ -649,6 +649,7 @@ public static class TowerSceneBuilder
             var veil = veilGo.GetComponent<UnityEngine.UI.Image>();
             veil.color = new Color(1f, 1f, 1f, 0f);
             veil.raycastTarget = false;
+            veil.enabled = false;              // ふだんは消しておく（出すのは役の仕事）
 
             var tso = new SerializedObject(towerScreen);
             tso.FindProperty("scrollTower").boolValue = true;
@@ -1029,7 +1030,15 @@ public static class TowerSceneBuilder
         }
         so.ApplyModifiedPropertiesWithoutUndo();
 
-        panelGo.SetActive(false);
+        // **入れ物は生かしておく**。この役は入れ物そのものに付いているので、
+        // 消すと自分の LateUpdate が動かず、出番が来ても出られない
+        // （題名・序章の絵・ゲームオーバーが出なかった原因）。
+        // 見えないようにするのは絵と文字の側。
+        art.enabled = false;
+        t1.enabled = false;
+        t2.enabled = false;
+        foreach (var g in panelGo.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+            g.enabled = false;
         return view;
     }
 

@@ -78,6 +78,8 @@ public class FullScreenView : MonoBehaviour
 
     Coroutine towerRun;
 
+    void Awake() { SetVisible(false); }
+
     void LateUpdate()
     {
         if (controller == null || controller.Game == null) return;

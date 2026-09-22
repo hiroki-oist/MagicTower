@@ -213,4 +213,36 @@ public class SceneWiringTests
             UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
         }
     }
+
+    /// <summary>
+    /// 1枚絵の入れ物は**生かしたまま**置く。この役は入れ物そのものに付いているので、
+    /// 消すと自分の LateUpdate が動かず、出番が来ても出られない
+    /// （題名・序章の絵・ゲームオーバーが出なかった原因）。
+    /// </summary>
+    [Test]
+    public void 一枚絵の入れ物は生きていて絵だけ消してある()
+    {
+        var path = "Assets/Scenes/Tower.unity";
+        if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            int seen = 0;
+            foreach (var go in scene.GetRootGameObjects())
+                foreach (var v in go.GetComponentsInChildren<FullScreenView>(true))
+                {
+                    seen++;
+                    Assert.IsTrue(v.gameObject.activeSelf,
+                                  v.name + " の入れ物が消えている（出番が来ても出られない）");
+                    foreach (var g in v.GetComponentsInChildren<UnityEngine.UI.Graphic>(true))
+                        Assert.IsFalse(g.enabled, v.name + " の " + g.name + " が出たままになっている");
+                }
+            Assert.AreEqual(6, seen, "題名・序章・終幕の塔・終わりの言葉・ゲームオーバー・最後の画面");
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
 }
