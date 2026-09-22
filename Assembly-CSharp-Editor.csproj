@@ -113,6 +113,7 @@
     <Compile Include="Assets/Tests/Editor/SoundSynthTests.cs" />
     <Compile Include="Assets/Tests/Editor/ScreenTextTests.cs" />
     <Compile Include="Assets/Tests/Editor/KeyIconTests.cs" />
+    <Compile Include="Assets/Editor/TowerScreenshot.cs" />
     <Compile Include="Assets/Tests/Editor/TowerPlayerTests.cs" />
     <Compile Include="Assets/Tests/Editor/AssetLinkTests.cs" />
     <Compile Include="Assets/Tests/Editor/PrisonBarsTests.cs" />

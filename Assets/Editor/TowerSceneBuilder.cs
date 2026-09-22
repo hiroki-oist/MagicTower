@@ -323,7 +323,7 @@ public static class TowerSceneBuilder
         }
 
         // ボタンはどれも**まだ繋がっていない**（作者の指定。移動もキーボードの矢印のまま）
-        float bw = 280f, bh = 88f, bgap = 12f;
+        float bw = 280f, bh = 84f, bgap = 12f;
         int nb = PhoneScreen.LeftButtons.Length;
         float stack = bh * nb + bgap * (nb - 1);
         float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
@@ -342,6 +342,19 @@ public static class TowerSceneBuilder
                     dpad, dpad, "↑\n←　→\n↓", PhoneScreen.BoxFill);
 
         // 知らせの欄は盤面の下の端に薄く重ねる（原典の右下の欄にあたるもの）
+        var msgBack = new GameObject("MessageBack", typeof(RectTransform),
+                                     typeof(UnityEngine.UI.Image));
+        msgBack.transform.SetParent(mapArea, false);
+        var mbRt = msgBack.GetComponent<RectTransform>();
+        mbRt.anchorMin = new Vector2(0f, 0f);
+        mbRt.anchorMax = new Vector2(1f, 0f);
+        mbRt.pivot = new Vector2(0.5f, 0f);
+        mbRt.sizeDelta = new Vector2(0f, 64f);
+        mbRt.anchoredPosition = Vector2.zero;
+        var mbImg = msgBack.GetComponent<UnityEngine.UI.Image>();
+        mbImg.color = new Color(0f, 0f, 0f, 0.55f);
+        mbImg.raycastTarget = false;
+
         var msgGo = new GameObject("Message", typeof(RectTransform));
         msgGo.transform.SetParent(mapArea, false);
         var msgRt = msgGo.GetComponent<RectTransform>();
@@ -358,6 +371,8 @@ public static class TowerSceneBuilder
         msg.enableWordWrapping = false;
         msg.raycastTarget = false;
         vso.FindProperty("messageBox").objectReferenceValue = msg;
+        // 縦画面の欄は横に長いので、原典の6桁折り返しは使わない
+        vso.FindProperty("oneLineMessage").boolValue = true;
 
         // 戦闘中は同じ枠に相手の絵と能力値を出す（原典 0x9626）。
         var battleView = BuildBattleView(controller);
@@ -1113,7 +1128,8 @@ public static class TowerSceneBuilder
     static void Placeholder(Transform parent, TMP_FontAsset font, string name,
                             float x, float y, float w, float h, string label, Color fill)
     {
-        var rt = Cell(parent, name, x, y, w, h + PhoneScreen.Pad * 2f, fill);
+        // Cell は上下に Pad を取るので、その分を戻して**指定した位置・大きさそのもの**にする
+        var rt = Cell(parent, name, x, y - PhoneScreen.Pad, w, h + PhoneScreen.Pad * 2f, fill);
         var t = CellText(rt, font, 0f, TextAlignmentOptions.Center);
         t.text = label;
         t.fontSizeMax = 34f;

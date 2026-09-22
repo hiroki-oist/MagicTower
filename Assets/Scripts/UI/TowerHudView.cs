@@ -25,6 +25,12 @@ public class TowerHudView : MonoBehaviour
     [SerializeField] TextMeshProUGUI messageBox;
 
     /// <summary>
+    /// 知らせを**1行で**出すか。原典の欄は6桁×8行で折り返す（<see cref="TowerHud.InfoBox"/>）が、
+    /// 縦画面の並べ方（作者の指定）では横に長い1行の帯なので折り返さない。
+    /// </summary>
+    [SerializeField] bool oneLineMessage;
+
+    /// <summary>
     /// 戦闘中に出す相手の欄（原典 0x9626）。メッセージと同じ枠を使う。
     /// </summary>
     [SerializeField] BattleView battleView;
@@ -92,8 +98,11 @@ public class TowerHudView : MonoBehaviour
         var fighting = ShowMonster(p);
         if (messageBox != null) messageBox.enabled = !fighting;
         if (!fighting)
+        {
             // 原典は欄を塗り直して**その時のメッセージ1つだけ**を6桁で折り返して書く。
-            Set(messageBox, TowerHud.InfoBox(Last(controller.Game.Log)));
+            var last = Last(controller.Game.Log);
+            Set(messageBox, oneLineMessage ? (last ?? "") : TowerHud.InfoBox(last));
+        }
         ShowIcon(weaponIcon, swordIcons,  p.SwordRank);
         ShowIcon(shieldIcon, shieldIcons, p.ShieldRank);
         ShowKeys(p);
