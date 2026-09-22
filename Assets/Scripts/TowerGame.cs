@@ -82,6 +82,12 @@ public class TowerGame
         /// 場面を積むときにまとめて書いてしまうと**順番が崩れる**。
         /// </summary>
         public List<Cutscenes.MapStep> MapBefore;
+        /// <summary>
+        /// そのページを**出すときに**鳴らす合図（曲の切り替え）。
+        /// 場面を積む時点で鳴らすと、まだ何も出ていないうちに曲が変わってしまう
+        /// （3階で踏み込んだ瞬間に曲が変わって一瞬止まる、という報告）。
+        /// </summary>
+        public string Cue;
     }
 
     readonly Queue<Page> pages = new Queue<Page>();
@@ -122,7 +128,11 @@ public class TowerGame
         }
         // 送る前に、そのページの地図の書き換えを必ず当てておく。
         // 演出を1手ずつ待つようになって「当てないまま送ってしまう」道ができた。
-        if (pages.Count > 0 && !frontMapDone) { ApplyMap(pages.Peek().MapBefore); }
+        if (pages.Count > 0 && !frontMapDone)
+        {
+            ApplyMap(pages.Peek().MapBefore);
+            PlaySound(pages.Peek().Cue);
+        }
         if (pages.Count > 0) { pages.Dequeue(); frontMapDone = false; }
         ResolveEffects();
         // 選ばせている窓を**決めずに閉じた**ら「いいえ」と同じ扱いにする。
@@ -192,7 +202,12 @@ public class TowerGame
             if (afterBattle ? ViewMoving : ViewBusy) break;
             int before = ViewWork;
             // そのページを出す前に地図を書き換える（原典も場面の途中で書いている）
-            if (!frontMapDone) { ApplyMap(pages.Peek().MapBefore); frontMapDone = true; }
+            if (!frontMapDone)
+            {
+                ApplyMap(pages.Peek().MapBefore);
+                PlaySound(pages.Peek().Cue);     // 曲の切り替えは**出すとき**に
+                frontMapDone = true;
+            }
             // 見た目に何か渡したら、そこで止めて動き終わるのを待つ。
             // 10階の場面は骸骨を1体ずつ寄せてくるので、ここで止めないと重なってしまう。
             if (ViewWork != before) break;
@@ -203,6 +218,9 @@ public class TowerGame
             {
                 Player.ApplyZenoEvent();
                 EnterFloor(Player.Floor, Player.Position);
+                // 原典 0x7038。奪われて本編が始まるところで本編の曲に戻す。
+                // これが無いと、題名の曲のまま塔を登り続けることになる。
+                PlaySound(SoundCues.FieldMusic);
             }
             else if (e.Effect != null && e.Effect.StartsWith(ClearCellStep))
             {
@@ -450,11 +468,11 @@ public class TowerGame
             {
                 // 原典 0xcd20 は塔が流れ出す前に「遠ざかる」音を鳴らし、
                 // 0xbf5b で題名の曲へ切り替える（題名と終幕は同じ曲）。
-                PlaySound(SoundCues.TitleMusic);
                 PlaySound(SoundCues.Receding);
                 pages.Enqueue(withMap(new Page
                 {
-                    Kind = PageKind.EndingTower, Text = "", Record = 1
+                    Kind = PageKind.EndingTower, Text = "", Record = 1,
+                    Cue = SoundCues.TitleMusic
                 }));
                 continue;
             }
@@ -482,10 +500,12 @@ public class TowerGame
             }
             if (step == Cutscenes.TitleStep)
             {
-                // 原典 0xbf5b は題名（と終幕）でこの曲に切り替える
-                PlaySound(SoundCues.TitleMusic);
+                // 原典 0xbf5b は題名（と終幕）でこの曲に切り替える。
+                // **題名を出すときに**鳴らす（積んだ時点だと、まだ盤面に居るうちに
+                // 曲が変わり、その読み込みで一瞬止まる）。
                 pages.Enqueue(withMap(new Page
                 {
+                    Cue = SoundCues.TitleMusic,
                     Kind = PageKind.Title,
                     Text = TitleScreen.Title + "\n" + TitleScreen.Copyright,
                     Record = -1

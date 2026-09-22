@@ -1308,6 +1308,15 @@ chk("battle_gold" in _tg5,"倒した相手からの金も知らせに出す（�
 _tcw=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("TitleScreen.Title" in _tcw,
     "1枚絵の上の字も起動時に作っておく（3階だけ一瞬止まると報告された）")
+# 作者の報告（その7）
+_tg7=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("Cue = SoundCues.TitleMusic" in _tg7,
+    "題名の曲は**題名を出すとき**に切り替える（積んだ瞬間だと踏み込みで止まる）")
+chk("PlaySound(SoundCues.FieldMusic)" in _tg7,
+    "奪われて本編が始まるところで本編の曲に戻す（原典 0x7038）")
+_plv=open("Assets/Scripts/UI/PhoneLayoutView.cs",encoding="utf-8").read()
+chk("IsFullScreen" in _plv and "cullingMask" in _plv,
+    "1枚絵の間は盤面も帯も窓も消す（触りの読み取りは生かす）")
 # 作者の報告（その6）
 _tg6=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("pendingEvaluate && pages.Count == 0 && !ViewMoving" in _tg6,

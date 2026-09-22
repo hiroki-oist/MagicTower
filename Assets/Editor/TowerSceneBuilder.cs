@@ -705,6 +705,7 @@ public static class TowerSceneBuilder
         lso.FindProperty("topBand").objectReferenceValue = top;
         lso.FindProperty("bottomBand").objectReferenceValue = bottom;
         lso.FindProperty("screen").objectReferenceValue = screen;
+        lso.FindProperty("controller").objectReferenceValue = controller;
         lso.ApplyModifiedPropertiesWithoutUndo();
     }
 

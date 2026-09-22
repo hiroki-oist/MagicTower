@@ -74,7 +74,13 @@ public class FullScreenView : MonoBehaviour
             var n = Mathf.Clamp(controller.Game.CurrentRecord, 0, steps.Length - 1);
             if (steps[n] != null) art.sprite = steps[n];
         }
-        if (panel != null && panel.activeSelf != mine) panel.SetActive(mine);
+        if (panel != null && panel.activeSelf != mine)
+        {
+            panel.SetActive(mine);
+            // 後ろの黒地も一緒に。ここを Show/Hide に任せていなかったので、
+            // 黒地が出ないまま1枚絵だけが盤面の上に乗っていた。
+            if (backdrop != null) backdrop.SetActive(mine);
+        }
 
         if (!scrollTower) return;
         if (mine && towerRun == null && isActiveAndEnabled) towerRun = StartCoroutine(ScrollTower());

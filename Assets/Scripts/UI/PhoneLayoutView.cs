@@ -20,6 +20,45 @@ public class PhoneLayoutView : MonoBehaviour
     [SerializeField] RectTransform mapArea;
     [SerializeField] RectTransform screen;     // 原典の座標で置く入れ物（会話の窓など）
     [SerializeField] RectTransform topBand, bottomBand;
+    /// <summary>1枚絵（題名・序章の絵・終幕）を出している間は、ほかを全部消す。</summary>
+    [SerializeField] TowerController controller;
+
+    /// <summary>画面いっぱいの1枚絵を出す種類か。</summary>
+    public static bool IsFullScreen(TowerGame.PageKind k)
+    {
+        return k == TowerGame.PageKind.Title
+            || k == TowerGame.PageKind.Prologue
+            || k == TowerGame.PageKind.EndingTower
+            || k == TowerGame.PageKind.EndingText
+            || k == TowerGame.PageKind.GameOver
+            || k == TowerGame.PageKind.FinalScreen;
+    }
+
+    int boardMask = -1;
+
+    /// <summary>
+    /// 1枚絵の間は**盤面も帯も窓も消す**（作者の指定）。
+    /// 消すのは見た目だけで、入れ物は生かしておく（触りの読み取りが止まると
+    /// ページを送れなくなるため）。盤面はカメラの写す層を空にして消す。
+    /// </summary>
+    void ShowOnlyFullScreen(bool full)
+    {
+        Fade(topBand, full); Fade(bottomBand, full); Fade(screen, full);
+        if (boardCamera != null)
+        {
+            if (boardMask == -1) boardMask = boardCamera.cullingMask;
+            boardCamera.cullingMask = full ? 0 : boardMask;
+        }
+    }
+
+    static void Fade(RectTransform rt, bool hide)
+    {
+        if (rt == null) return;
+        var g = rt.GetComponent<CanvasGroup>();
+        if (g == null) g = rt.gameObject.AddComponent<CanvasGroup>();
+        float a = hide ? 0f : 1f;
+        if (!Mathf.Approximately(g.alpha, a)) g.alpha = a;
+    }
 
     void LateUpdate() { Apply(); }
     void OnEnable() { Apply(); }
@@ -66,5 +105,10 @@ public class PhoneLayoutView : MonoBehaviour
             screen.localScale = new Vector3(k, k, 1f);
             screen.anchoredPosition = mapArea.anchoredPosition;
         }
+
+        // 1枚絵を出している間は、盤面も帯も窓も消す
+        var kind = controller != null && controller.Game != null
+                 ? controller.Game.CurrentKind : null;
+        ShowOnlyFullScreen(kind.HasValue && IsFullScreen(kind.Value));
     }
 }

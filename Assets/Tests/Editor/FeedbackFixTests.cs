@@ -144,4 +144,54 @@ public class FeedbackFixTests
         Assert.AreEqual("Matock", g.Floor.At(new Vector2Int(0, 1)),
                         "真ん中はつるはしになっている（もう一度戦わされない）");
     }
+
+    [Test]
+    public void 題名の曲は題名を出すときに切り替える()
+    {
+        // 場面を積んだ時点で鳴らしていたため、3階で踏み込んだ瞬間に曲が変わり、
+        // その読み込みで一瞬止まっていた（作者の報告）。
+        var p3 = PlayerState.NewGame();
+        p3.Floor = 3; p3.Position = new Vector2Int(-1, -2);
+        var g = new TowerGame(p3);
+        int music = SoundCues.Instance.Number(SoundCues.TitleMusic);
+        g.Step(Vector2Int.down);                       // ゼノとの初対面が始まる
+        CollectionAssert.DoesNotContain(g.Sounds, music, "積んだ時点では鳴らさない");
+
+        for (int i = 0; i < 200 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Title) break;
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+        }
+        Assert.AreEqual(TowerGame.PageKind.Title, g.CurrentKind, "題名まで来る");
+        CollectionAssert.Contains(g.Sounds, music, "題名を出すときに鳴らす");
+    }
+
+    [Test]
+    public void 奪われたら本編の曲に戻る()
+    {
+        var p3 = PlayerState.NewGame();
+        p3.Floor = 3; p3.Position = new Vector2Int(-1, -2);
+        var g = new TowerGame(p3);
+        g.Step(Vector2Int.down);
+        for (int i = 0; i < 300 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+        }
+        Assert.AreEqual(2, g.Player.Floor, "2階の牢まで進む");
+        CollectionAssert.Contains(g.Sounds, SoundCues.Instance.Number(SoundCues.FieldMusic),
+                                  "本編の曲に戻る（原典 0x7038）");
+    }
+
+    [Test]
+    public void 一枚絵の間はほかを全部消す()
+    {
+        foreach (var k in new[] { TowerGame.PageKind.Title, TowerGame.PageKind.Prologue,
+                                  TowerGame.PageKind.GameOver, TowerGame.PageKind.FinalScreen,
+                                  TowerGame.PageKind.EndingTower, TowerGame.PageKind.EndingText })
+            Assert.IsTrue(PhoneLayoutView.IsFullScreen(k), k.ToString());
+        Assert.IsFalse(PhoneLayoutView.IsFullScreen(TowerGame.PageKind.Dialogue));
+        Assert.IsFalse(PhoneLayoutView.IsFullScreen(TowerGame.PageKind.Effect));
+    }
 }
