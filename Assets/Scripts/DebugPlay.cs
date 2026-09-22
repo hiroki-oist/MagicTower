@@ -19,11 +19,13 @@ public static class DebugPlay
     public static readonly bool StrongAfterZeno = true;
 
     /// <summary>
-    /// そのときの攻撃力・防御力。頼まれたのは 1000 だが、**原典の上限が 990**
-    /// （<see cref="PlayerState.MaxAttack"/> / <see cref="PlayerState.MaxDefense"/>、
-    /// 原典は描き直すたびに頭を押さえる）なので、そこで止まる 990 にしてある。
+    /// そのときの攻撃力・防御力。
+    ///
+    /// ⚠ 以前は**上限いっぱいの 990**（<see cref="PlayerState.MaxAttack"/>）にしていたが、
+    /// それだと祭壇で攻撃力を買っても宝石を拾っても **ClampStats で即座に戻される**ので
+    /// 「上がらない」と報告された。上限に当たらない 300 にしてある。
     /// </summary>
-    public const int StrongStat = PlayerState.MaxAttack;
+    public const int StrongStat = 300;
 
     /// <summary>
     /// 生命力は原典のまま 400 にしてある。**魔法攻撃は防御力を素通りする**

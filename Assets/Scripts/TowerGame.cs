@@ -140,6 +140,9 @@ public class TowerGame
     /// </summary>
     readonly List<Cutscenes.MapStep> blinks = new List<Cutscenes.MapStep>();
 
+    /// <summary>これから点滅させるものが残っているか（窓はこれが片付くまで待つ）。</summary>
+    public bool HasBlinks { get { return blinks.Count > 0; } }
+
     /// <summary>積んだ点滅を取り出して空にする。</summary>
     public List<Cutscenes.MapStep> ConsumeBlinks()
     {

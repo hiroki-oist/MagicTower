@@ -219,6 +219,11 @@ public class DialogueWindowView : MonoBehaviour
     /// </summary>
     bool Waiting()
     {
+        // **これから点滅させるもの**も待つ。積んだ直後はまだ動き出していないので、
+        // これを見ないと「ゼノが出るより先にセリフが出る」ことになる。
+        if (controller != null && controller.Game != null && controller.Game.HasBlinks)
+            return true;
+        if (controller != null && controller.IsSliding) return true;   // 歩き終わるまで
         return (blink != null && blink.IsPlaying) || (boss != null && boss.IsPlaying);
     }
 

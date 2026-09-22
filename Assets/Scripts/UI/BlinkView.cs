@@ -59,6 +59,8 @@ public class BlinkView : MonoBehaviour
     IEnumerator Drain()
     {
         draining = true;
+        // **歩き終わってから**出す（歩いている途中に現れると、着く前に始まって見える）
+        while (controller != null && controller.IsSliding) yield return null;
         while (queue.Count > 0) yield return Play(queue.Dequeue());
         draining = false;
     }

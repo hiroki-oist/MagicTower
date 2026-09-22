@@ -35,6 +35,46 @@ public static class AuthorStyle
     // ------------------------------------------------------------------ 会話
 
     /// <summary>
+    /// 主人公の絵を **Java版（2001年の公式移植）の4方向×2コマ**にするか。
+    ///
+    /// ⚠ **原典（PC98版）の主人公は PLAYER1/PLAYER2 の2枚だけ**で、後ろ姿も横向きも無い。
+    /// Java版のアトラス `Assets/Images/MagicTower/MTower.gif`（40x40で切ってある）には
+    /// 上・下・左・右 × 2コマ の8枚があり、作者の旧版はこちらを使っていた。
+    /// 「縦に歩くときも歩いて見えるように」という作者の指定でこちらへ差し替える。
+    ///
+    /// 並びは上段の x=80 から順に:
+    ///   MTower_1/2 … 上（後ろ姿） MTower_3/4 … 下（正面）
+    ///   MTower_5/6 … 左           MTower_7/8 … 右
+    /// </summary>
+    public static readonly bool JavaHeroSprites = true;
+
+    public const string HeroAtlasPath = "Assets/Images/MagicTower/MTower.gif";
+
+    /// <summary>上・下・左・右 × 2コマ の順。</summary>
+    public static readonly string[] HeroSpriteNames =
+    {
+        "MTower_1", "MTower_2",   // 上（後ろ姿）
+        "MTower_3", "MTower_4",   // 下（正面）
+        "MTower_5", "MTower_6",   // 左
+        "MTower_7", "MTower_8",   // 右
+    };
+
+    /// <summary>
+    /// Java版の絵は40ドット（原典のタイルは32ドット）。出し方を2通り用意して、
+    /// **奇数階と偶数階で出し分けて**作者に選んでもらう:
+    ///   奇数階 … 原寸のまま（1.25マス）。足元をマスに合わせて上にはみ出す
+    ///   偶数階 … 1マスに収める（32ドットに縮める）
+    /// 取り込みは 100ドット=1単位なので、40ドットの絵は 0.4単位。
+    /// 1マス（=1単位）にするには 2.5倍、1.25マスなら 3.125倍。
+    /// </summary>
+    public const float HeroScaleFit = 2.5f;          // 1マスに収める
+    public const float HeroScaleFull = 3.125f;       // 原寸（1.25マス）
+    public const float HeroFullOffsetY = 0.125f;     // 足元を合わせるぶん上げる
+
+    /// <summary>その階での出し方（奇数階は原寸、偶数階は1マス）。</summary>
+    public static bool FullSizeHeroOn(int floor) { return (floor & 1) == 1; }
+
+    /// <summary>
     /// 物を拾ったとき、**そのマスへ進む**か。
     /// ⚠ **原典は進まない**（0x00a6fb は座標を変えない＝その場で拾うだけ）。
     /// 「消す→進む→手に入れる の流れにしたい」という作者の指定で入れている。

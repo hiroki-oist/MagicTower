@@ -437,6 +437,22 @@ public static class TowerSceneBuilder
         // 戦闘の演出が終わるまで入力を止めるので、入力の側からも見えるようにする
         var bso = new SerializedObject(controller);
         bso.FindProperty("battle").objectReferenceValue = battleView;
+        // 主人公の絵（Java版の 上/下/左/右 × 2コマ）。無ければ原典の2枚のまま。
+        var heroProp = bso.FindProperty("heroSprites");
+        heroProp.arraySize = AuthorStyle.HeroSpriteNames.Length;
+        var atlas = AssetDatabase.LoadAllAssetsAtPath(AuthorStyle.HeroAtlasPath);
+        for (int i = 0; i < AuthorStyle.HeroSpriteNames.Length; i++)
+        {
+            Sprite found = null;
+            foreach (var a in atlas)
+            {
+                var sp = a as Sprite;
+                if (sp != null && sp.name == AuthorStyle.HeroSpriteNames[i]) { found = sp; break; }
+            }
+            if (found == null)
+                Debug.LogWarning($"主人公の絵が見つからない: {AuthorStyle.HeroSpriteNames[i]}");
+            heroProp.GetArrayElementAtIndex(i).objectReferenceValue = found;
+        }
         bso.ApplyModifiedPropertiesWithoutUndo();
         vso.FindProperty("registry").objectReferenceValue =
             Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");

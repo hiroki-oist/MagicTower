@@ -17,6 +17,11 @@ public class TowerController : MonoBehaviour
     /// 上下の向き3/4 は 0x140 のまま）。
     /// </summary>
     [SerializeField] Sprite playerSprite2;
+    /// <summary>
+    /// Java版の主人公（上・下・左・右 × 2コマ。<see cref="AuthorStyle.HeroSpriteNames"/>）。
+    /// 空なら原典の2枚（<see cref="playerSprite"/> / <see cref="playerSprite2"/>）を使う。
+    /// </summary>
+    [SerializeField] Sprite[] heroSprites = new Sprite[8];
     [SerializeField] MonsterAnimator monsters;
     [SerializeField] SoundPlayer sound;
     [SerializeField] BattleView battle;
@@ -341,14 +346,14 @@ public class TowerController : MonoBehaviour
         sliding = true;
         bool fast = Game.Player.FastMode;
         int n = fast ? MonsterAnimation.FastTicksPerStep : MonsterAnimation.TicksPerStep;
-        var a = new Vector3(from.x, from.y, -1f);
-        var b = new Vector3(to.x, to.y, -1f);
+        var a = new Vector3(from.x, from.y + HeroOffsetY, -1f);
+        var b = new Vector3(to.x, to.y + HeroOffsetY, -1f);
         // 左右に動くときは途中で2コマ目に入れ替える（原典 0xa276 の 0x100 → 0x120）。
-        // 縦のときも入れ替えるのは**作者の指定**（原典は入れ替えない。
-        // そもそも主人公の絵は2枚しか無く、後ろ姿や横向きは存在しない）。
+        // 縦のときも入れ替えるのは**作者の指定**（原典の2枚の絵には後ろ姿が無いため。
+        // Java版の絵を使うときは4方向とも2コマある）。
         bool sideways = AuthorStyle.WalkAnimationBothWays
                       || (from.y == to.y && from.x != to.x);
-        var sr = playerView != null ? playerView.GetComponent<SpriteRenderer>() : null;
+        facing = FacingOf(to - from);
         // **経過時間で進める**。コマ送りで待つと、画面が60コマ/秒のときに
         // 1コマが1/60秒になってしまい、指定の何倍も遅くなる（作者から
         // 「遅すぎる」と報告されたのがこれ）。
@@ -360,12 +365,11 @@ public class TowerController : MonoBehaviour
             t += Time.deltaTime;
             float k = Mathf.Clamp01(t / dur);
             playerView.position = Vector3.Lerp(a, b, k);
-            if (sr != null && sideways && playerSprite2 != null)
-                sr.sprite = k <= 0.5f ? playerSprite : playerSprite2;
+            if (sideways) ShowHero(k <= 0.5f ? 0 : 1);
             // 敵と人の絵は原典どおり**コマ数ぶん**動かす（0x92a4）
             yield return null;
         }
-        if (sr != null && playerSprite != null) sr.sprite = playerSprite;   // 立ち姿へ戻す
+        ShowHero(0);                                   // 立ち姿へ戻す
         PlacePlayerView();
         sliding = false;
         slidingRoutine = null;
@@ -454,6 +458,60 @@ public class TowerController : MonoBehaviour
         }
     }
 
+    /// <summary>いま1マス滑っている最中か（窓や点滅はこれが終わってから）。</summary>
+    public bool IsSliding { get { return sliding; } }
+
+    /// <summary>原寸で出すときに、足元をマスに合わせるぶん上げる量。</summary>
+    float HeroOffsetY
+    {
+        get
+        {
+            return HasHeroSprites
+                && AuthorStyle.FullSizeHeroOn(Game != null ? Game.Player.Floor : 1)
+                 ? AuthorStyle.HeroFullOffsetY : 0f;
+        }
+    }
+
+    /// <summary>いま向いている方角（0=上 1=下 2=左 3=右）。</summary>
+    int facing = 1;
+
+    /// <summary>Java版の絵が揃っているか。</summary>
+    bool HasHeroSprites
+    {
+        get
+        {
+            if (!AuthorStyle.JavaHeroSprites || heroSprites == null
+                || heroSprites.Length < 8) return false;
+            for (int i = 0; i < 8; i++) if (heroSprites[i] == null) return false;
+            return true;
+        }
+    }
+
+    static int FacingOf(Vector2Int d)
+    {
+        if (d.y > 0) return 0;
+        if (d.y < 0) return 1;
+        return d.x < 0 ? 2 : 3;
+    }
+
+    /// <summary>主人公の絵を、向きとコマに合わせて貼る。</summary>
+    void ShowHero(int frame)
+    {
+        var sr = playerView != null ? playerView.GetComponent<SpriteRenderer>() : null;
+        if (sr == null) return;
+        if (HasHeroSprites)
+        {
+            sr.sprite = heroSprites[facing * 2 + (frame & 1)];
+            // 40ドットの絵の出し方は階で変える（作者に選んでもらうため）
+            bool full = AuthorStyle.FullSizeHeroOn(Game != null ? Game.Player.Floor : 1);
+            float k = full ? AuthorStyle.HeroScaleFull : AuthorStyle.HeroScaleFit;
+            playerView.localScale = new Vector3(k, k, 1f);
+            return;
+        }
+        playerView.localScale = Vector3.one;
+        sr.sprite = (frame & 1) == 1 && playerSprite2 != null ? playerSprite2 : playerSprite;
+    }
+
     void PlacePlayerView()
     {
         if (playerView == null)
@@ -464,8 +522,10 @@ public class TowerController : MonoBehaviour
             sr.sortingOrder = 100;
             playerView = go.transform;
             playerView.SetParent(transform, false);
+            ShowHero(0);
         }
         var at = Game.Player.Position;
-        playerView.position = new Vector3(at.x, at.y, -1f);
+        playerView.position = new Vector3(at.x, at.y + HeroOffsetY, -1f);
+        if (!sliding) ShowHero(0);        // 立ち姿。階で大きさが変わるので毎回貼り直す
     }
 }

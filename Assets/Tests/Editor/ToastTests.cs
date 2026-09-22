@@ -88,3 +88,75 @@ public class MoveSpeedTests
         StringAssert.DoesNotContain("WaitForSeconds(MonsterAnimation.SlideFrameSeconds)", src);
     }
 }
+
+/// <summary>
+/// 主人公の絵（作者の指定で Java版の4方向×2コマに差し替え）。
+/// 原典（PC98版）は PLAYER1/PLAYER2 の2枚だけで、後ろ姿も横向きも無い。
+/// </summary>
+public class HeroSpriteTests
+{
+    [Test]
+    public void 四方向かける二コマの名前が並んでいる()
+    {
+        Assert.AreEqual(8, AuthorStyle.HeroSpriteNames.Length);
+        CollectionAssert.AreEqual(
+            new[] { "MTower_1", "MTower_2", "MTower_3", "MTower_4",
+                    "MTower_5", "MTower_6", "MTower_7", "MTower_8" },
+            AuthorStyle.HeroSpriteNames);
+    }
+
+    [Test]
+    public void アトラスからその八枚が引ける()
+    {
+        var all = UnityEditor.AssetDatabase.LoadAllAssetsAtPath(AuthorStyle.HeroAtlasPath);
+        foreach (var name in AuthorStyle.HeroSpriteNames)
+        {
+            bool found = false;
+            foreach (var a in all)
+            {
+                var sp = a as Sprite;
+                if (sp != null && sp.name == name) { found = true; break; }
+            }
+            Assert.IsTrue(found, name + " がアトラスに無い");
+        }
+    }
+
+    [Test]
+    public void 奇数階は原寸で偶数階は一マスに収める()
+    {
+        Assert.IsTrue(AuthorStyle.FullSizeHeroOn(3), "奇数階は原寸（1.25マス）");
+        Assert.IsFalse(AuthorStyle.FullSizeHeroOn(2), "偶数階は1マス");
+        // 40ドットの絵を 100ドット=1単位 で取り込んでいるので 0.4単位
+        Assert.AreEqual(1f, 0.4f * AuthorStyle.HeroScaleFit, 1e-4f, "1マスちょうど");
+        Assert.AreEqual(1.25f, 0.4f * AuthorStyle.HeroScaleFull, 1e-4f, "1.25マス");
+    }
+
+    [Test]
+    public void シーンに八枚とも繋がっている()
+    {
+        var path = "Assets/Scenes/Tower.unity";
+        if (!System.IO.File.Exists(path)) Assert.Ignore("シーン未生成");
+        var scene = UnityEditor.SceneManagement.EditorSceneManager.OpenScene(
+            path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
+        try
+        {
+            TowerController c = null;
+            foreach (var go in scene.GetRootGameObjects())
+            {
+                var found = go.GetComponentInChildren<TowerController>(true);
+                if (found != null) c = found;
+            }
+            Assert.IsNotNull(c);
+            var so = new UnityEditor.SerializedObject(c);
+            var arr = so.FindProperty("heroSprites");
+            Assert.AreEqual(8, arr.arraySize);
+            for (int i = 0; i < 8; i++)
+                Assert.IsNotNull(arr.GetArrayElementAtIndex(i).objectReferenceValue,
+                                 AuthorStyle.HeroSpriteNames[i]);
+        }
+        finally
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.CloseScene(scene, true);
+        }
+    }
+}

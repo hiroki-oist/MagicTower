@@ -76,6 +76,23 @@ public static class TowerScreenshot
         hsr.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Effects/Player_0.png");
         hsr.sortingOrder = 100;
         hero.transform.position = new Vector3(0f, -3f, -1f);
+        // Java版の絵を使うときは、正面の1コマ目を見本の階（3階＝奇数＝原寸）で出す
+        if (AuthorStyle.JavaHeroSprites)
+        {
+            foreach (var a in AssetDatabase.LoadAllAssetsAtPath(AuthorStyle.HeroAtlasPath))
+            {
+                var sp = a as Sprite;
+                if (sp == null || sp.name != AuthorStyle.HeroSpriteNames[2]) continue;
+                hsr.sprite = sp;
+                float k = AuthorStyle.FullSizeHeroOn(3)
+                        ? AuthorStyle.HeroScaleFull : AuthorStyle.HeroScaleFit;
+                hero.transform.localScale = new Vector3(k, k, 1f);
+                hero.transform.position = new Vector3(
+                    0f, -3f + (AuthorStyle.FullSizeHeroOn(3)
+                               ? AuthorStyle.HeroFullOffsetY : 0f), -1f);
+                break;
+            }
+        }
 
         FillSample();
         ShowDpad();
