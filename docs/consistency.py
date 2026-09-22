@@ -1315,8 +1315,10 @@ chk("Cue = SoundCues.TitleMusic" in _tg7,
 chk("PlaySound(SoundCues.FieldMusic)" in _tg7,
     "奪われて本編が始まるところで本編の曲に戻す（原典 0x7038）")
 _plv=open("Assets/Scripts/UI/PhoneLayoutView.cs",encoding="utf-8").read()
-chk("IsFullScreen" in _plv and "cullingMask" in _plv,
-    "1枚絵の間は盤面も帯も窓も消す（触りの読み取りは生かす）")
+_fsv=open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read()
+chk("panel.SetActive" not in _fsv and "gameObject.SetActive" not in _fsv,
+    "1枚絵の役は**自分の入れ物を消さない**（消すと自分の LateUpdate も止まる）")
+chk("SetVisible" in _fsv,"出し入れは絵と文字の側で行う")
 # 作者の報告（その6）
 _tg6=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("pendingEvaluate && pages.Count == 0 && !ViewMoving" in _tg6,

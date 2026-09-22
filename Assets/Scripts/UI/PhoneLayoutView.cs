@@ -34,31 +34,9 @@ public class PhoneLayoutView : MonoBehaviour
             || k == TowerGame.PageKind.FinalScreen;
     }
 
-    int boardMask = -1;
-
-    /// <summary>
-    /// 1枚絵の間は**盤面も帯も窓も消す**（作者の指定）。
-    /// 消すのは見た目だけで、入れ物は生かしておく（触りの読み取りが止まると
-    /// ページを送れなくなるため）。盤面はカメラの写す層を空にして消す。
-    /// </summary>
-    void ShowOnlyFullScreen(bool full)
-    {
-        Fade(topBand, full); Fade(bottomBand, full); Fade(screen, full);
-        if (boardCamera != null)
-        {
-            if (boardMask == -1) boardMask = boardCamera.cullingMask;
-            boardCamera.cullingMask = full ? 0 : boardMask;
-        }
-    }
-
-    static void Fade(RectTransform rt, bool hide)
-    {
-        if (rt == null) return;
-        var g = rt.GetComponent<CanvasGroup>();
-        if (g == null) g = rt.gameObject.AddComponent<CanvasGroup>();
-        float a = hide ? 0f : 1f;
-        if (!Mathf.Approximately(g.alpha, a)) g.alpha = a;
-    }
+    // 1枚絵の間にほかを全部消す仕掛けは**取りやめた**（作者の指示）。
+    // 出なかった原因は層ではなく、1枚絵の役が自分の入れ物を消して
+    // 二度と動かなくなっていたことだった（FullScreenView）。
 
     void LateUpdate() { Apply(); }
     void OnEnable() { Apply(); }
@@ -106,9 +84,5 @@ public class PhoneLayoutView : MonoBehaviour
             screen.anchoredPosition = mapArea.anchoredPosition;
         }
 
-        // 1枚絵を出している間は、盤面も帯も窓も消す
-        var kind = controller != null && controller.Game != null
-                 ? controller.Game.CurrentKind : null;
-        ShowOnlyFullScreen(kind.HasValue && IsFullScreen(kind.Value));
     }
 }

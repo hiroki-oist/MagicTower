@@ -194,4 +194,23 @@ public class FeedbackFixTests
         Assert.IsFalse(PhoneLayoutView.IsFullScreen(TowerGame.PageKind.Dialogue));
         Assert.IsFalse(PhoneLayoutView.IsFullScreen(TowerGame.PageKind.Effect));
     }
+
+    [Test]
+    public void 一枚絵の役は消えても動き続ける()
+    {
+        // ⚠ この役は1枚絵の入れ物そのものに付いている。入れ物を SetActive(false)
+        // していたため、起動して最初の1コマで自分を消し、**二度と出せなくなって**いた。
+        // 題名も序章の絵もゲームオーバーの画面も出なかったのはこれが原因。
+        var go = new GameObject("FullScreenTest", typeof(RectTransform));
+        try
+        {
+            var view = go.AddComponent<FullScreenView>();
+            view.Hide();
+            Assert.IsTrue(go.activeSelf, "入れ物は消さない（消すと自分も止まる）");
+            Assert.IsFalse(view.IsShowing);
+            view.Show(null, "あ", "い");
+            Assert.IsTrue(view.IsShowing, "出し直せる");
+        }
+        finally { Object.DestroyImmediate(go); }
+    }
 }

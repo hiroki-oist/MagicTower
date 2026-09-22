@@ -1017,7 +1017,6 @@ public static class TowerSceneBuilder
             so.FindProperty("backdrop").objectReferenceValue = screen.GetChild(0).gameObject;
         so.FindProperty("controller").objectReferenceValue = controller;
         so.FindProperty("showOn").enumValueIndex = (int)showOn;
-        so.FindProperty("panel").objectReferenceValue = panelGo;
         so.FindProperty("art").objectReferenceValue = art;
         so.FindProperty("line1").objectReferenceValue = t1;
         so.FindProperty("line2").objectReferenceValue = t2;

@@ -12,30 +12,44 @@ public class FullScreenView : MonoBehaviour
     [SerializeField] TowerController controller;
     /// <summary>この種類のページが出ているときに自分を出す。</summary>
     [SerializeField] TowerGame.PageKind showOn = TowerGame.PageKind.Title;
-    [SerializeField] GameObject panel;
+    // 入れ物（panel）は**消さない**。この役がその入れ物に付いているので、
+    // 消すと自分の LateUpdate ごと止まってしまう。出し入れは絵と文字の側で行う。
     /// <summary>1枚絵の後ろに敷く黒地（画面いっぱい）。出している間だけ出す。</summary>
     [SerializeField] GameObject backdrop;
     [SerializeField] UnityEngine.UI.Image art;
     [SerializeField] TMPro.TextMeshProUGUI line1;
     [SerializeField] TMPro.TextMeshProUGUI line2;
 
-    public bool IsShowing { get { return panel != null && panel.activeSelf; } }
+    public bool IsShowing { get { return shown; } }
+
+    bool shown;
 
     /// <summary>絵と2行の文字を出す。文字は null なら消す。</summary>
     public void Show(Sprite image, string first, string second)
     {
-        if (panel == null) return;
         if (art != null && image != null) art.sprite = image;
         if (line1 != null) line1.text = first ?? "";
         if (line2 != null) line2.text = second ?? "";
-        panel.SetActive(true);
-        if (backdrop != null) backdrop.SetActive(true);
+        SetVisible(true);
     }
 
-    public void Hide()
+    public void Hide() { SetVisible(false); }
+
+    /// <summary>
+    /// 出す・消すは**絵と文字の側**で行う。
+    ///
+    /// ⚠ この役は1枚絵の入れ物そのものに付いているので、
+    /// **入れ物を SetActive(false) にすると自分の LateUpdate も止まり、
+    /// 二度と出せなくなる**。題名も序章の絵もゲームオーバーの画面も
+    /// 出なかったのはこれが原因だった（起動して最初の1コマで自分を消していた）。
+    /// </summary>
+    void SetVisible(bool on)
     {
-        if (panel != null) panel.SetActive(false);
-        if (backdrop != null) backdrop.SetActive(false);
+        shown = on;
+        if (art != null) art.enabled = on;
+        if (line1 != null) line1.enabled = on;
+        if (line2 != null) line2.enabled = on;
+        if (whiteVeil != null) whiteVeil.enabled = on && scrollTower;
     }
 
     /// <summary>
@@ -74,12 +88,14 @@ public class FullScreenView : MonoBehaviour
             var n = Mathf.Clamp(controller.Game.CurrentRecord, 0, steps.Length - 1);
             if (steps[n] != null) art.sprite = steps[n];
         }
-        if (panel != null && panel.activeSelf != mine)
+        if (shown != mine) SetVisible(mine);
+        // 後ろの黒地は6つの役で1枚を分け合っているので、
+        // **今どれかが出ているか**で決める（自分の出番だけで消すと取り合いになる）。
+        if (backdrop != null)
         {
-            panel.SetActive(mine);
-            // 後ろの黒地も一緒に。ここを Show/Hide に任せていなかったので、
-            // 黒地が出ないまま1枚絵だけが盤面の上に乗っていた。
-            if (backdrop != null) backdrop.SetActive(mine);
+            var k = controller.Game.CurrentKind;
+            bool anyFull = k.HasValue && PhoneLayoutView.IsFullScreen(k.Value);
+            if (backdrop.activeSelf != anyFull) backdrop.SetActive(anyFull);
         }
 
         if (!scrollTower) return;

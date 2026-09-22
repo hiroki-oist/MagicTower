@@ -89,12 +89,11 @@ public class RuntimeSmokeTests
         try
         {
             var view = go.AddComponent<FullScreenView>();
-            var so = new UnityEditor.SerializedObject(view);
-            so.FindProperty("panel").objectReferenceValue = go;
-            so.ApplyModifiedPropertiesWithoutUndo();
 
-            Assert.IsTrue(view.IsShowing, "作った直後は出ている");
+            // ⚠ 入れ物（自分が付いている GameObject）は消さない。
+            // 消すと自分の LateUpdate も止まり、二度と出せなくなる。
             view.Hide();
+            Assert.IsTrue(go.activeSelf, "入れ物は消さない");
             Assert.IsFalse(view.IsShowing);
             view.Show(null, TitleScreen.Title, TitleScreen.Copyright);
             Assert.IsTrue(view.IsShowing);
