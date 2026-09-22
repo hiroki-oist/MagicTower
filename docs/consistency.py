@@ -1310,8 +1310,8 @@ chk("TitleScreen.Title" in _tcw,
     "1枚絵の上の字も起動時に作っておく（3階だけ一瞬止まると報告された）")
 # 作者の報告（その8）
 _bv2=open("Assets/Scripts/UI/BattleView.cs",encoding="utf-8").read()
-chk("PlacePlayerViewAt" in _bv2 and "ShowActor" in _bv2,
-    "戦いは相手のマスに重ねてから、主人公→閃光→相手→閃光…と見せる（作者の指定）")
+chk("SlidePlayerViewTo" in _bv2 and "ShowActor" in _bv2,
+    "戦いは相手のマスへ**歩いて**入ってから、主人公→閃光→相手→閃光…と見せる（作者の指定）")
 _tcb=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("!(battle != null && battle.IsPlaying)\n            && Game.Player.Position != shownPos" in _tcb
     or "battle.IsPlaying)\n            && Game.Player.Position" in _tcb,
@@ -1388,9 +1388,9 @@ chk("結果が出ていない" in open("docs/run_tests.sh",encoding="utf-8").rea
     "結果が出ていなければ落ちたと分かるようにする")
 # 場面の中の地図の書き換え（原典 0x3044 の三つ組の表から取った）
 _cs_map=[n for n in _cs_steps if n.startswith("地図 ")]
-chk(len(_cs_map)==41,
-    "場面の表の地図の書き換えは41件（3階のゼノ5＋片付け5・20階のボス登場10・"
-    "32階の金騎士1・42階の処刑10・49階の口上10）。10階と40階は別の台本",
+chk(len(_cs_map)==42,
+    "場面の表の地図の書き換えは42件（3階のゼノ5＋片付け5・20階のボス登場10・"
+    "32階の金騎士1・42階の処刑11・49階の口上10）。10階と40階は別の台本",
     len(_cs_map))
 chk(all(re.match(r"^地図 \([-+]?\d+,[-+]?\d+\)=.+$",n) for n in _cs_map),
     "場面の地図の段は「地図 (x,y)=種別」の形")
@@ -2307,7 +2307,8 @@ chk("game.IsChoosing" in open("Assets/Editor/TowerPlaythrough.cs",encoding="utf-
 _sccs=open("Assets/Scripts/Items/SoundCues.cs",encoding="utf-8").read()
 _players="".join(open(q,encoding="utf-8").read() for q in
                  ("Assets/Scripts/TowerGame.cs","Assets/Scripts/TowerController.cs",
-                  "Assets/Scripts/UI/FullScreenView.cs","Assets/Scripts/UI/BattleView.cs"))
+                  "Assets/Scripts/UI/FullScreenView.cs","Assets/Scripts/UI/BattleView.cs",
+                  "Assets/Scripts/UI/DoorOpenView.cs"))
 _silent=[]
 for _l in open("Assets/Resources/SoundCues.txt",encoding="utf-8"):
     if _l.startswith("#") or not _l.strip(): continue

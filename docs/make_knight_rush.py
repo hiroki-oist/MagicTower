@@ -78,6 +78,9 @@ def objects():
 
 STEP = {1: (1, 0), 2: (-1, 0), 3: (0, -1), 4: (0, 1)}
 
+# 主人公が立つマス（位置イベントの発動マス）。相手はここまで歩いてきて戦う。
+PLAYER = (0, -1)
+
 def walk(start, dirs):
     x, y = start
     for d in dirs: dx, dy = STEP[d]; x, y = x + dx, y + dy
@@ -118,15 +121,20 @@ def main():
         if who is None: raise SystemExit("%s に居るものが Floor_40.txt に無い" % (s,))
         goal = walk(s, ps[i])
         if goal != (0, 0): raise SystemExit("%d本目の行き先が (0,0) でない: %s" % (i, goal))
+        # ★作者の指定: 相手から歩いてくる戦いは**主人公のマス**で行う。
+        #   原典の道順は (0,0) まで（主人公は (0,-1)）なので、もう1歩ぶん下ろす。
+        dirs = list(ps[i]) + [3]
         print("地図 %s=床" % pos(s))
-        print("歩き %s %s %s" % (who, pos(s), ",".join(str(d) for d in ps[i])))
-        print("戦闘 %s (+0,+0)" % who)
-        print("消す (+0,+0)")          # 原典 0x45be(5,5)（倒した相手の絵を消す）
+        print("歩き %s %s %s" % (who, pos(s), ",".join(str(d) for d in dirs)))
+        print("戦闘 %s %s" % (who, pos(PLAYER)))
+        print("消す %s" % pos(PLAYER))   # 原典 0x45be(5,5)（倒した相手の絵を消す）
     print()
     print("# 引き上げる（0x3cb1。最後の1本だけ戦闘が無い）")
     print(says[13])
-    print("歩き %s (+0,+0) %s" % (obj[(0, 4)], ",".join(str(d) for d in ps[13])))
-    print("消す %s" % pos(walk((0, 0), ps[13])))
+    # 引き上げも主人公のマスから（1歩ぶん余計に上がる）
+    back = [4] + list(ps[13])
+    print("歩き %s %s %s" % (obj[(0, 4)], pos(PLAYER), ",".join(str(d) for d in back)))
+    print("消す %s" % pos(walk(PLAYER, back)))
     print()
     print("# 門を開けて中央を空ける（0x3da3〜0x3dd1）。三つ組を当てるたびに音6（0x3d18）")
     print("音 場面のできごと")

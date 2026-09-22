@@ -101,7 +101,9 @@ public class BattleView : MonoBehaviour
             switch (s.Kind)
             {
                 case "踏み込む":
-                    if (controller != null) controller.PlacePlayerViewAt(s.At);
+                    // **普通の移動と同じように歩いて**相手のマスへ入る（作者の指定）。
+                    // 瞬間移動して見えるのが不自然、という報告への手当て。
+                    if (controller != null) yield return controller.SlidePlayerViewTo(s.At);
                     ShowActor(s.At, true);            // まず主人公
                     break;
                 case "待つ":
@@ -132,9 +134,14 @@ public class BattleView : MonoBehaviour
     void ShowActor(Vector2Int at, bool player)
     {
         if (controller != null) controller.SetPlayerViewVisible(player);
+        // 盤面に居る相手か、場面で歩いてきて立っている相手（32階・40階）
         var enemy = loader != null ? loader.ObjectAt(at) : null;
+        if (enemy == null && walkView != null) enemy = walkView.StandingAt(at);
         if (enemy != null) enemy.SetActive(!player);
     }
+
+    /// <summary>場面で歩いてきた相手（盤面には載っていない立ち絵）を探すため。</summary>
+    [SerializeField] NpcWalkView walkView;
 
     /// <summary>点滅する回数（倒れるとき）。</summary>
     public const int DeathBlinks = 6;
@@ -148,6 +155,7 @@ public class BattleView : MonoBehaviour
     IEnumerator Dying(Vector2Int at)
     {
         var enemy = loader != null ? loader.ObjectAt(at) : null;
+        if (enemy == null && walkView != null) enemy = walkView.StandingAt(at);
         if (enemy != null) enemy.SetActive(true);         // 相手は残る
         for (int i = 0; i < DeathBlinks; i++)
         {

@@ -273,8 +273,9 @@ public class DialogueWindowView : MonoBehaviour
     {
         // **これから点滅させるもの**も待つ。積んだ直後はまだ動き出していないので、
         // これを見ないと「ゼノが出るより先にセリフが出る」ことになる。
-        if (controller != null && controller.Game != null && controller.Game.HasBlinks)
-            return true;
+        if (controller != null && controller.Game != null
+            && (controller.Game.HasBlinks || controller.Game.HasPendingView))
+            return true;      // 渡したばかりで、まだ動き出していないものも待つ
         if (controller != null && controller.IsSliding) return true;   // 歩き終わるまで
         // **人が歩いている間も待つ**。10階の盗賊は9階から歩いてきて
         // 主人公の目の前で止まってから話し出す（作者の指摘）。

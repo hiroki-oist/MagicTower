@@ -333,21 +333,13 @@ public class TowerGame
             {
                 Vector2Int at;
                 if (Cutscenes.TryParseCell(e.Effect, Cutscenes.DoorOpenPrefix, out at))
-                {
-                    // 音は9コマの動き（原典 0x7a68）の中で鳴る
-                    PlaySound(SoundCues.OpenDoor);
-                    doorOpens.Add(new DoorOpen { At = at, Cell = "s" });
-                }
+                    doorOpens.Add(new DoorOpen { At = at, Cell = "s" });   // 音は動きの頭で
             }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.DoorClosePrefix))
             {
                 Vector2Int at;
                 if (Cutscenes.TryParseCell(e.Effect, Cutscenes.DoorClosePrefix, out at))
-                {
-                    // 閉まる方（原典 0x7b26）も同じ音11
-                    PlaySound(SoundCues.OpenDoor);
                     doorOpens.Add(new DoorOpen { At = at, Cell = "s", Closing = true });
-                }
             }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.SoundPrefix))
             {
@@ -726,6 +718,16 @@ public class TowerGame
         var copy = new List<NpcWalk>(walks);
         walks.Clear();
         return copy;
+    }
+
+    /// <summary>
+    /// そのマスに**これから出す扉の動き**が積んであるか。
+    /// 見た目の側は、これを見て地図の描き直しを待つ（描き直すと扉が一瞬消える）。
+    /// </summary>
+    public bool DoorPendingAt(Vector2Int at)
+    {
+        foreach (var d in doorOpens) if (d.At == at) return true;
+        return false;
     }
 
     /// <summary>積んだ扉を取り出して空にする。</summary>
@@ -1380,9 +1382,11 @@ public class TowerGame
             foreach (var at in gates)
                 if (Floor.At(at) != "s")
                 {
-                    // 原典 0x7a68 は門1マスごとに9コマの動きを出し、その頭で音11を鳴らす。
+                    // 原典 0x7a68 は門1マスごとに9コマの動きを出し、**その頭で**音11を鳴らす。
+                    // 鳴らすのは見た目の側（動きが始まるとき）。ここで鳴らすと
+                    // 「音が鳴り終わってから扉が開く」「何枚ぶんも重なって聞こえる」
+                    // ことになる（作者の報告）。
                     // 戦いのあとに開くものなので、**ひと呼吸おいてから**出す（作者の指定）。
-                    PlaySound(SoundCues.OpenGate);
                     doorOpens.Add(new DoorOpen { At = at, Cell = "s", Delayed = true });
                 }
     }

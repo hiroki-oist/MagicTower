@@ -106,6 +106,11 @@ public class DoorOpenView : MonoBehaviour
                        + (door.Closing ? DoorAnimation.Frames - 1 : 0);
         if (firstFrame < frames.Length) sr.sprite = frames[firstFrame];
         cel.SetActive(true);
+        // 原典 0x7be6 / 0x7a68 / 0x7b26 はどれも**9コマの頭で**音11を鳴らす。
+        if (controller != null && controller.Sound != null)
+            // 門（封印扉）は 0x7a68、鍵の扉は 0x7be6。どちらも音11だが名前を分けてある。
+            controller.Sound.PlayCue(door.Cell == "s" ? SoundCues.OpenGate
+                                                      : SoundCues.OpenDoor);
         for (int f = 0; f < DoorAnimation.Frames; f++)
         {
             // 閉まるときは同じ9コマを逆から貼る（原典 0x07b26 は 0xa00 ずつ引く）

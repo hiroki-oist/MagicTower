@@ -628,6 +628,7 @@ public static class TowerSceneBuilder
         bvso.FindProperty("fade").objectReferenceValue = fadeImg;
         bvso.FindProperty("loader").objectReferenceValue =
             controller.GetComponent<FloorLoader>();
+        bvso.FindProperty("walkView").objectReferenceValue = walkView;
         bvso.ApplyModifiedPropertiesWithoutUndo();
 
         BuildFullScreen(full, font, controller, TowerGame.PageKind.Title,

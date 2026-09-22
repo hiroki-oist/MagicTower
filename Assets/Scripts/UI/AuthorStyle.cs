@@ -114,6 +114,9 @@ public static class AuthorStyle
     /// <summary>盤面を描き出したあとの間（秒）。暗転が明けてすぐだと誰の声か分からない。</summary>
     public static readonly float SettleAfterDrawSeconds = 1f;
 
+    /// <summary>ボスが現れたあとの間（秒）。合体の直後にすぐ喋られると落ち着かない。</summary>
+    public static readonly float SettleAfterBossSeconds = 1f;
+
     /// <summary>
     /// 会話の窓の横幅（ドット）。**本文の一番長い行に合わせて決める**。
     ///

@@ -123,8 +123,9 @@ public class FeedbackFixTests
         foreach (var at in new[] { new Vector2Int(0, -1), new Vector2Int(0, -3),
                                    new Vector2Int(-1, -2), new Vector2Int(1, -2) })
             Assert.IsTrue(g.Floor.IsCleared(at), $"終わりに片付く {at}");
-        Assert.AreEqual("Boss_Zeno", g.Floor.At(new Vector2Int(0, 0)),
-                        "ゼノは残る（原典 0x7182 は消していない）");
+        // ★作者の指定: ゼノも最後に片付ける（原典 0x7182 は (0,0) を戻していないので、
+        //   そのままだと居座る）。
+        Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(0, 0)), "ゼノも片付く");
         Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(0, -2)), "金騎士は処刑されて消える");
     }
 

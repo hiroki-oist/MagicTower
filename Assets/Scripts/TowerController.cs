@@ -172,6 +172,8 @@ public class TowerController : MonoBehaviour
             if (busy)
             {
                 float wait = drawing ? AuthorStyle.SettleAfterDrawSeconds
+                           : (bossView != null && bossView.IsPlaying)
+                             ? AuthorStyle.SettleAfterBossSeconds
                            : (battle != null && battle.IsPlaying)
                              || (band != null && band.IsShowing)
                              || (blinkView != null && blinkView.IsPlaying)
@@ -650,7 +652,9 @@ public class TowerController : MonoBehaviour
         // 扉の動きが終わって手が離れたマスから先に片付ける
         for (int i = heldCells.Count - 1; i >= 0; i--)
         {
-            if (doorView != null && doorView.Holds(heldCells[i])) continue;
+            if (doorView != null
+                && (doorView.Holds(heldCells[i]) || Game.DoorPendingAt(heldCells[i])))
+                continue;
             loader.Refresh(heldCells[i], FloorState.ViewKeyOf(Game.Floor.At(heldCells[i])));
             heldCells.RemoveAt(i);
         }
@@ -659,7 +663,9 @@ public class TowerController : MonoBehaviour
             // **扉の動きが出ている間は描き直さない**。原典は地図を書き換えても
             // その場では描き直さず、9コマの動きの中で塗っていく。すぐ映すと
             // 「扉が一瞬消えてから動きが始まる」ように見える（作者の報告）。
-            if (doorView != null && doorView.Holds(p))
+            // **まだ見た目が拾っていない扉**も待つ。積んだコマと拾うコマの間に
+            // 描き直してしまうと、そこで扉が一瞬消える（作者の報告）。
+            if (doorView != null && (doorView.Holds(p) || Game.DoorPendingAt(p)))
             {
                 if (!heldCells.Contains(p)) heldCells.Add(p);
                 continue;
@@ -685,6 +691,33 @@ public class TowerController : MonoBehaviour
         if (playerView == null) return;
         playerView.position = new Vector3(at.x, at.y + HeroOffsetY, -1f);
         shownPos = at;
+    }
+
+    /// <summary>
+    /// 主人公の絵だけを1マス滑らせる（本線の立ち位置は変えない）。
+    /// 戦いに入るときは**普通の移動と同じように歩いて**相手のマスへ入る（作者の指定）。
+    /// </summary>
+    public System.Collections.IEnumerator SlidePlayerViewTo(Vector2Int to)
+    {
+        if (playerView == null) { PlacePlayerViewAt(to); yield break; }
+        var from = shownPos;
+        if (from == to) { PlacePlayerViewAt(to); yield break; }
+        var a = new Vector3(from.x, from.y + HeroOffsetY, -1f);
+        var b = new Vector3(to.x, to.y + HeroOffsetY, -1f);
+        facing = FacingOf(to - from);
+        bool fast = Game != null && Game.Player.FastMode;
+        float dur = MonsterAnimation.StepSeconds(fast);
+        float t = 0f;
+        while (t < dur)
+        {
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / dur);
+            playerView.position = Vector3.Lerp(a, b, k);
+            ShowHero(k <= 0.5f ? 0 : 1);
+            yield return null;
+        }
+        ShowHero(0);
+        PlacePlayerViewAt(to);
     }
 
     /// <summary>主人公の絵を出す・消す（倒れるときの点滅に使う）。</summary>

@@ -48,6 +48,13 @@ public class NpcWalkView : MonoBehaviour
             StartCoroutine(Walk(queue.Dequeue()));
     }
 
+    /// <summary>そのマスに立たせてある人（場面で歩いてきた相手）。無ければ null。</summary>
+    public GameObject StandingAt(Vector2Int at)
+    {
+        GameObject who;
+        return standing.TryGetValue(at, out who) ? who : null;
+    }
+
     /// <summary>立たせてある人を消す（原典 0x45be はそのマスを地図どおりに描き直す）。</summary>
     void Vanish(Vector2Int at)
     {

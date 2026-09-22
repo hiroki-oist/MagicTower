@@ -20,7 +20,9 @@ public class SoundCoverageTests
         var src = System.IO.File.ReadAllText("Assets/Scripts/TowerGame.cs")
                 + System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs")
                 + System.IO.File.ReadAllText("Assets/Scripts/UI/FullScreenView.cs")
-                + System.IO.File.ReadAllText("Assets/Scripts/UI/BattleView.cs");
+                + System.IO.File.ReadAllText("Assets/Scripts/UI/BattleView.cs")
+                // 扉の音は**動きの頭で**鳴らすので、見た目の側にある（原典 0x7a68/0x7be6）
+                + System.IO.File.ReadAllText("Assets/Scripts/UI/DoorOpenView.cs");
         var consts = System.IO.File.ReadAllText("Assets/Scripts/Items/SoundCues.cs");
         var fromTable = System.IO.File.ReadAllText("Assets/Resources/PositionEvents.txt")
                       + System.IO.File.ReadAllText("Assets/Resources/KnightRush.txt")

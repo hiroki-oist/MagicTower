@@ -12,73 +12,73 @@
 # セリフ135（数え上げ 0 の切れ目）
 135
 地図 (-1,+2)=床
-歩き Enemy_GreatZombie (-1,+2) 3,1,3
-戦闘 Enemy_GreatZombie (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatZombie (-1,+2) 3,1,3,3
+戦闘 Enemy_GreatZombie (+0,-1)
+消す (+0,-1)
 地図 (-2,+2)=床
-歩き Enemy_GreatZombie (-2,+2) 1,3,1,3
-戦闘 Enemy_GreatZombie (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatZombie (-2,+2) 1,3,1,3,3
+戦闘 Enemy_GreatZombie (+0,-1)
+消す (+0,-1)
 地図 (-3,+2)=床
-歩き Enemy_GreatZombie (-3,+2) 1,1,3,1,3
-戦闘 Enemy_GreatZombie (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatZombie (-3,+2) 1,1,3,1,3,3
+戦闘 Enemy_GreatZombie (+0,-1)
+消す (+0,-1)
 
 # セリフ136（数え上げ 3 の切れ目）
 136
 地図 (+1,+2)=床
-歩き Enemy_GreatZombieSoldier (+1,+2) 3,2,3
-戦闘 Enemy_GreatZombieSoldier (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatZombieSoldier (+1,+2) 3,2,3,3
+戦闘 Enemy_GreatZombieSoldier (+0,-1)
+消す (+0,-1)
 地図 (+2,+2)=床
-歩き Enemy_GreatZombieSoldier (+2,+2) 2,3,2,3
-戦闘 Enemy_GreatZombieSoldier (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatZombieSoldier (+2,+2) 2,3,2,3,3
+戦闘 Enemy_GreatZombieSoldier (+0,-1)
+消す (+0,-1)
 地図 (+3,+2)=床
-歩き Enemy_GreatZombieSoldier (+3,+2) 2,2,3,2,3
-戦闘 Enemy_GreatZombieSoldier (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatZombieSoldier (+3,+2) 2,2,3,2,3,3
+戦闘 Enemy_GreatZombieSoldier (+0,-1)
+消す (+0,-1)
 
 # セリフ137（数え上げ 6 の切れ目）
 137
 地図 (-2,+4)=床
-歩き Enemy_Samurai (-2,+4) 3,1,3,1,3,3
-戦闘 Enemy_Samurai (+0,+0)
-消す (+0,+0)
+歩き Enemy_Samurai (-2,+4) 3,1,3,1,3,3,3
+戦闘 Enemy_Samurai (+0,-1)
+消す (+0,-1)
 地図 (-3,+4)=床
-歩き Enemy_Samurai (-3,+4) 1,3,1,3,1,3,3
-戦闘 Enemy_Samurai (+0,+0)
-消す (+0,+0)
+歩き Enemy_Samurai (-3,+4) 1,3,1,3,1,3,3,3
+戦闘 Enemy_Samurai (+0,-1)
+消す (+0,-1)
 地図 (-4,+4)=床
-歩き Enemy_Samurai (-4,+4) 1,1,3,1,3,1,3,3
-戦闘 Enemy_Samurai (+0,+0)
-消す (+0,+0)
+歩き Enemy_Samurai (-4,+4) 1,1,3,1,3,1,3,3,3
+戦闘 Enemy_Samurai (+0,-1)
+消す (+0,-1)
 
 # セリフ138（数え上げ 9 の切れ目）
 138
 地図 (+2,+4)=床
-歩き Enemy_GreatWorrior (+2,+4) 3,2,3,2,3,3
-戦闘 Enemy_GreatWorrior (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatWorrior (+2,+4) 3,2,3,2,3,3,3
+戦闘 Enemy_GreatWorrior (+0,-1)
+消す (+0,-1)
 地図 (+3,+4)=床
-歩き Enemy_GreatWorrior (+3,+4) 2,3,2,3,2,3,3
-戦闘 Enemy_GreatWorrior (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatWorrior (+3,+4) 2,3,2,3,2,3,3,3
+戦闘 Enemy_GreatWorrior (+0,-1)
+消す (+0,-1)
 地図 (+4,+4)=床
-歩き Enemy_GreatWorrior (+4,+4) 2,2,3,2,3,2,3,3
-戦闘 Enemy_GreatWorrior (+0,+0)
-消す (+0,+0)
+歩き Enemy_GreatWorrior (+4,+4) 2,2,3,2,3,2,3,3,3
+戦闘 Enemy_GreatWorrior (+0,-1)
+消す (+0,-1)
 
 # セリフ139（数え上げ 12 の切れ目）
 139
 地図 (+0,+4)=床
-歩き Enemy_Worrior (+0,+4) 3,3,3,3
-戦闘 Enemy_Worrior (+0,+0)
-消す (+0,+0)
+歩き Enemy_Worrior (+0,+4) 3,3,3,3,3
+戦闘 Enemy_Worrior (+0,-1)
+消す (+0,-1)
 
 # 引き上げる（0x3cb1。最後の1本だけ戦闘が無い）
 140
-歩き Enemy_Worrior (+0,+0) 4,4,4,4,4
+歩き Enemy_Worrior (+0,-1) 4,4,4,4,4,4
 消す (+0,+5)
 
 # 門を開けて中央を空ける（0x3da3〜0x3dd1）。三つ組を当てるたびに音6（0x3d18）
