@@ -47,6 +47,10 @@ public static class IosBuild
         PlayerSettings.iOS.targetOSVersionString = "13.0";
         // 実機向けは Xcode に署名を任せる（Apple ID を入れて Team を選ぶだけで通る）。
         PlayerSettings.iOS.appleEnableAutomaticSigning = sdk == iOSSdkVersion.DeviceSDK;
+        // 署名する組。**この場で証明書から拾う**（誰の機械かを書き込まないため）。
+        // 環境変数 IOS_TEAM_ID があればそちらを優先する。
+        var team = System.Environment.GetEnvironmentVariable("IOS_TEAM_ID");
+        if (!string.IsNullOrEmpty(team)) PlayerSettings.iOS.appleDeveloperTeamID = team;
 
         // **縦画面だけ**。画面の並べ方（PhoneScreen）が縦を前提にしている。
         PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
