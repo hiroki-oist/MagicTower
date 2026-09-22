@@ -1308,6 +1308,18 @@ chk("battle_gold" in _tg5,"倒した相手からの金も知らせに出す（�
 _tcw=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("TitleScreen.Title" in _tcw,
     "1枚絵の上の字も起動時に作っておく（3階だけ一瞬止まると報告された）")
+# Java版の曲（作者の指定で足したもの。原典 PC98版には曲が2つしか無い）
+import glob as _g
+_mus=sorted(os.path.basename(x) for x in _g.glob("Assets/Resources/Music/*.wav"))
+chk(_mus==["Block1.wav","Block2.wav","Block3.wav","Block4.wav","Block5.wav","Boss.wav"],
+    "Java版の曲6本を書き出してある（かたまり5つ＋戦い）", str(_mus))
+chk(all(os.path.exists("Assets/Resources/Music/"+m+".meta") for m in _mus),
+    "曲の取り込み設定（.meta）も置いてある")
+chk(os.path.exists("docs/tools/MidiRender.swift"),
+    "MIDI を音にする道具がある（macOS 内蔵の音源を使う）")
+_jm=open("Assets/Scripts/Items/JavaMusic.cs",encoding="utf-8").read()
+chk("BossEnemies" in _jm and "Enemy_BossSkeleton" in _jm,
+    "ボスと戦うときだけ戦いの曲にする（Java版はどの戦いでも変える）")
 # 作者の報告（その9）
 _dwv2=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
 chk("waiting || Waiting()" in _dwv2,

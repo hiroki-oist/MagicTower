@@ -219,4 +219,35 @@ public class FeedbackFixTests
         }
         finally { Object.DestroyImmediate(go); }
     }
+
+    [Test]
+    public void ジャバ版の曲が階のかたまりで切り替わる()
+    {
+        Assert.AreEqual("Music/Block1", JavaMusic.ForFloor(1));
+        Assert.AreEqual("Music/Block1", JavaMusic.ForFloor(10));
+        Assert.AreEqual("Music/Block2", JavaMusic.ForFloor(11));
+        Assert.AreEqual("Music/Block3", JavaMusic.ForFloor(30));
+        Assert.AreEqual("Music/Block4", JavaMusic.ForFloor(40));
+        Assert.AreEqual("Music/Block5", JavaMusic.ForFloor(41));
+        Assert.AreEqual("Music/Block5", JavaMusic.ForFloor(50));
+    }
+
+    [Test]
+    public void ボスと戦うときだけ戦いの曲になる()
+    {
+        Assert.IsTrue(JavaMusic.IsBoss("Enemy_BossSkeleton"), "10階の金の骸骨騎士");
+        Assert.IsTrue(JavaMusic.IsBoss("Enemy_ID95"), "20階のヴァンパイア");
+        Assert.IsTrue(JavaMusic.IsBoss("Enemy_Worrior"), "32階・40階の金騎士");
+        Assert.IsTrue(JavaMusic.IsBoss("Boss_Zeno"), "49・50階のゼノ");
+        Assert.IsFalse(JavaMusic.IsBoss("Enemy_SlimeR"), "ふつうの敵は変えない");
+    }
+
+    [Test]
+    public void 曲の音が全部そろっている()
+    {
+        for (int i = 1; i <= 5; i++)
+            Assert.IsNotNull(Resources.Load<AudioClip>(JavaMusic.ForFloor((i - 1) * 10 + 1)),
+                             $"かたまり{i}の曲");
+        Assert.IsNotNull(Resources.Load<AudioClip>(JavaMusic.Boss), "戦いの曲");
+    }
 }

@@ -54,10 +54,41 @@ public class SoundPlayer : MonoBehaviour
         return c;
     }
 
+    /// <summary>今かけている Java版の曲（Resources の名前）。かけていなければ null。</summary>
+    public string PlayingTrack { get; private set; }
+
+    readonly Dictionary<string, AudioClip> tracks = new Dictionary<string, AudioClip>();
+
+    /// <summary>
+    /// Java版の曲をかける（<see cref="JavaMusic"/>）。同じ曲ならかけ直さない。
+    /// 原典の曲（番号で鳴らすもの）とは別の口で、こちらが優先。
+    /// </summary>
+    public void PlayTrack(string resource)
+    {
+        EnsureSources();
+        if (string.IsNullOrEmpty(resource)) return;
+        if (PlayingTrack == resource && musicSource.isPlaying) return;
+        AudioClip clip;
+        if (!tracks.TryGetValue(resource, out clip))
+        {
+            clip = Resources.Load<AudioClip>(resource);
+            tracks[resource] = clip;
+        }
+        if (clip == null) return;
+        PlayingTrack = resource;
+        PlayingMusic = -1;
+        musicSource.clip = clip;
+        musicSource.volume = volume;
+        musicSource.loop = true;
+        musicSource.Play();
+    }
+
     /// <summary>音番号で鳴らす。曲なら流しっぱなしにする。</summary>
     public void Play(int number)
     {
         EnsureSources();
+        // Java版の曲を使うときは、原典の曲（音1・音2）はかけない（作者の指定）。
+        if (JavaMusic.Enabled && SoundBank.Instance.IsMusic(number)) return;
         var clip = ClipOf(number);
         if (clip == null) return;
         if (SoundBank.Instance.IsMusic(number))
@@ -86,6 +117,7 @@ public class SoundPlayer : MonoBehaviour
     public void StopMusic()
     {
         PlayingMusic = -1;
+        PlayingTrack = null;
         if (musicSource != null) musicSource.Stop();
     }
 }

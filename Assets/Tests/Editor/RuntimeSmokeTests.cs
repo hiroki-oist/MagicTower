@@ -52,10 +52,15 @@ public class RuntimeSmokeTests
             p.PlayCue(SoundCues.TakeItem);          // 効果音。例外が出なければよい
             Assert.AreEqual(-1, p.PlayingMusic, "効果音では曲は変わらない");
 
+            // Java版の曲を使うときは原典の曲（音1・音2）はかけない（作者の指定）
             p.Play(SoundCues.Instance.Number(SoundCues.FieldMusic));
-            Assert.AreEqual(1, p.PlayingMusic, "曲は流しっぱなしになる");
+            Assert.AreEqual(JavaMusic.Enabled ? -1 : 1, p.PlayingMusic, "曲は流しっぱなしになる");
+
+            p.PlayTrack(JavaMusic.ForFloor(1));
+            Assert.AreEqual(JavaMusic.ForFloor(1), p.PlayingTrack, "Java版の曲がかかる");
             p.StopMusic();
             Assert.AreEqual(-1, p.PlayingMusic);
+            Assert.IsNull(p.PlayingTrack);
         }
         finally { Object.DestroyImmediate(go); }
     }

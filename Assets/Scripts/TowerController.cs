@@ -208,6 +208,7 @@ public class TowerController : MonoBehaviour
             PlacePlayerView();
         }
         if (sound != null) sound.Flush(Game);   // 場面の途中で積まれた音もその場で鳴らす
+        UpdateMusic();
         // 場面が主人公を動かす1歩（10階の押し上げ）
         var push = Game.ConsumePlayerSlide();
         if (push != null && isActiveAndEnabled)
@@ -645,6 +646,21 @@ public class TowerController : MonoBehaviour
     /// <summary>扉の動きが終わるまで描き直しを待つマス。</summary>
     readonly System.Collections.Generic.List<Vector2Int> heldCells =
         new System.Collections.Generic.List<Vector2Int>();
+
+    /// <summary>
+    /// 流す曲を決める（<see cref="JavaMusic"/>。作者の指定で Java版の曲を使う）。
+    /// ボスと戦っている間は戦いの曲、ふだんは階のかたまりの曲。
+    /// 題名や終幕の1枚絵の間は本線が積んだ曲（原典の音2）に任せる。
+    /// </summary>
+    void UpdateMusic()
+    {
+        if (!JavaMusic.Enabled || sound == null || Game == null) return;
+        var kind = Game.CurrentKind;
+        if (kind.HasValue && PhoneLayoutView.IsFullScreen(kind.Value)) return;
+        bool boss = battle != null && battle.IsPlaying
+                    && JavaMusic.IsBoss(Game.LastBattleEnemy);
+        sound.PlayTrack(boss ? JavaMusic.Boss : JavaMusic.ForFloor(Game.Player.Floor));
+    }
 
     /// <summary>そのマスを今の地図に合わせて描き直す（扉の動きが終わったときに使う）。</summary>
     public void RefreshCell(Vector2Int at)
