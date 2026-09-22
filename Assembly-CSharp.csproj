@@ -185,6 +185,7 @@
     <None Include="Assets/Resources/Floors/Floor_14.txt" />
     <None Include="Assets/Resources/Floors/Floor_1.txt" />
     <None Include="Assets/Resources/HiddenOccupants.txt" />
+    <None Include="Assets/Resources/BossSkeletons.txt" />
     <None Include="Assets/Resources/Floors/Floor_39.txt" />
     <None Include="Assets/Resources/ItemPower.txt" />
     <None Include="Assets/Resources/Floors/Floor_22.txt" />

@@ -113,6 +113,16 @@ public class TowerGame
     /// <summary>今のページを読み終えた。まだ続きがあれば true。</summary>
     public bool NextPage()
     {
+        // 出ているのが「できごと」なら、送るのではなく**その手を起こす**。
+        // 押しても飛ばせない（原典の場面もキーでは飛ばせない）。
+        if (pages.Count > 0 && pages.Peek().Kind == PageKind.Effect)
+        {
+            ResolveEffects();
+            return pages.Count > 0;
+        }
+        // 送る前に、そのページの地図の書き換えを必ず当てておく。
+        // 演出を1手ずつ待つようになって「当てないまま送ってしまう」道ができた。
+        if (pages.Count > 0 && !frontMapDone) { ApplyMap(pages.Peek().MapBefore); }
         if (pages.Count > 0) { pages.Dequeue(); frontMapDone = false; }
         ResolveEffects();
         // 選ばせている窓を**決めずに閉じた**ら「いいえ」と同じ扱いにする。
@@ -159,8 +169,15 @@ public class TowerGame
     {
         while (pages.Count > 0)
         {
+            // 原典の場面は1本道で、絵が動き終わるまで次の行に進まない。
+            // 見た目の層が動いている間は地図も書き換えない（出す順が崩れるため）。
+            if (ViewBusy) break;
+            int before = ViewWork;
             // そのページを出す前に地図を書き換える（原典も場面の途中で書いている）
             if (!frontMapDone) { ApplyMap(pages.Peek().MapBefore); frontMapDone = true; }
+            // 見た目に何か渡したら、そこで止めて動き終わるのを待つ。
+            // 10階の場面は骸骨を1体ずつ寄せてくるので、ここで止めないと重なってしまう。
+            if (ViewWork != before) break;
             if (pages.Peek().Kind != PageKind.Effect) break;
             var e = pages.Dequeue();
             frontMapDone = false;
@@ -211,6 +228,54 @@ public class TowerGame
                         Path = new List<Vector2Int>(Prologue.ThiefLeave)
                     });
             }
+            else if (e.Effect == Cutscenes.PushUpStep)
+            {
+                // 原典 0x3ebc。主人公を上へ1マス滑らせて Y を1つ減らす。
+                var to = Player.Position + Vector2Int.up;
+                PlayerSlide = new NpcWalk
+                {
+                    Prefab = null, From = Player.Position,
+                    Path = new List<Vector2Int> { to }
+                };
+                Player.Position = to;
+            }
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.WalkPrefix))
+            {
+                string prefab; Vector2Int from; List<Vector2Int> path;
+                if (Cutscenes.TryParseWalk(e.Effect, out prefab, out from, out path))
+                    walks.Add(new NpcWalk
+                    {
+                        Prefab = prefab, From = from, Path = path,
+                        // 盤面に載っていない人は、着いたあとも絵だけで立たせておく
+                        Stay = Floor == null || Floor.IsCleared(path[path.Count - 1])
+                    });
+            }
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.DoorOpenPrefix))
+            {
+                Vector2Int at;
+                if (Cutscenes.TryParseCell(e.Effect, Cutscenes.DoorOpenPrefix, out at))
+                {
+                    // 音は9コマの動き（原典 0x7a68）の中で鳴る
+                    PlaySound(SoundCues.OpenDoor);
+                    doorOpens.Add(new DoorOpen { At = at, Cell = "s" });
+                }
+            }
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.DoorClosePrefix))
+            {
+                Vector2Int at;
+                if (Cutscenes.TryParseCell(e.Effect, Cutscenes.DoorClosePrefix, out at))
+                {
+                    // 閉まる方（原典 0x7b26）も同じ音11
+                    PlaySound(SoundCues.OpenDoor);
+                    doorOpens.Add(new DoorOpen { At = at, Cell = "s", Closing = true });
+                }
+            }
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.VanishPrefix))
+            {
+                Vector2Int at;
+                if (Cutscenes.TryParseCell(e.Effect, Cutscenes.VanishPrefix, out at))
+                    vanishes.Add(at);
+            }
             else if (e.Effect == Cutscenes.PrisonOpensStep)
             {
                 // 原典 0x070c8〜0x07153。盗賊が去って牢の壁が開き、
@@ -228,6 +293,28 @@ public class TowerGame
                     });
                 }
             }
+            if (ViewWork != before) break;
+        }
+        // 場面が終わったところで、ためておいた解錠を見る
+        if (pendingEvaluate && pages.Count == 0 && !ViewBusy)
+        {
+            pendingEvaluate = false;
+            Evaluate();
+        }
+    }
+
+    /// <summary>場面が終わってから解錠を見直すか。</summary>
+    bool pendingEvaluate;
+
+    /// <summary>
+    /// 見た目の層に渡した仕事の数。増えていたら、その手は絵が動くまで続きがある。
+    /// </summary>
+    int ViewWork
+    {
+        get
+        {
+            return walks.Count + doorOpens.Count + blinks.Count
+                   + bossAppears.Count + vanishes.Count + (PlayerSlide != null ? 1 : 0);
         }
     }
 
@@ -252,7 +339,12 @@ public class TowerGame
         {
             if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
                 || step == Cutscenes.ClimbStep || step == Cutscenes.FlashStep
-                || step == Cutscenes.ChargeStep || step == Cutscenes.BossAppearStep)
+                || step == Cutscenes.ChargeStep || step == Cutscenes.BossAppearStep
+                || step == Cutscenes.PushUpStep
+                || step.StartsWith(Cutscenes.WalkPrefix)
+                || step.StartsWith(Cutscenes.DoorOpenPrefix)
+                || step.StartsWith(Cutscenes.DoorClosePrefix)
+                || step.StartsWith(Cutscenes.VanishPrefix))
             {
                 pages.Enqueue(withMap(new Page
                 {
@@ -393,6 +485,11 @@ public class TowerGame
         public Vector2Int At;
         /// <summary>扉の記号（"y" / "b" / "r"）。<see cref="DoorAnimation.ColorOf"/> で絵を選ぶ。</summary>
         public string Cell;
+        /// <summary>
+        /// 閉まる向きか。原典は開く 0x07a68 と閉まる 0x07b26 で**同じ9コマを逆から**貼る
+        /// （0x5048 から 0xa00 ずつ引いていく）。
+        /// </summary>
+        public bool Closing;
     }
 
     /// <summary>
@@ -424,6 +521,11 @@ public class TowerGame
         public Vector2Int From;
         /// <summary>通っていくマス（最後が立ち止まる所）。</summary>
         public List<Vector2Int> Path;
+        /// <summary>
+        /// 着いたあとも立たせたままにするか。盤面に載らない人（10階の盗賊）は
+        /// 原典も地図に書かずに絵だけ出しているので、"消す" が来るまで残す。
+        /// </summary>
+        public bool Stay;
     }
 
     /// <summary>
@@ -432,6 +534,45 @@ public class TowerGame
     /// 音や点滅と同じで、ここは積むだけにして動かすのは見た目の層に任せる。
     /// </summary>
     readonly List<NpcWalk> walks = new List<NpcWalk>();
+
+    /// <summary>
+    /// 見た目の層が何かを動かしている最中か。控えの層はこれが下りるまで
+    /// 次の手へ進まない（原典の場面は1本道で、絵が動き終わるまで止まっている）。
+    /// </summary>
+    public bool ViewBusy { get; set; }
+
+    /// <summary>
+    /// 見た目の層を毎コマ回す。動きが終わったら続きの手へ進む。
+    /// </summary>
+    public void Pump(bool viewBusy)
+    {
+        ViewBusy = viewBusy;
+        if (!viewBusy) ResolveEffects();
+    }
+
+    /// <summary>
+    /// 場面が主人公を動かす1歩（原典 0x3ebc の押し上げ）。無ければ null。
+    /// </summary>
+    public NpcWalk PlayerSlide { get; private set; }
+
+    /// <summary>積んだ主人公の1歩を取り出して空にする。</summary>
+    public NpcWalk ConsumePlayerSlide()
+    {
+        var copy = PlayerSlide;
+        PlayerSlide = null;
+        return copy;
+    }
+
+    /// <summary>これから消す立ち絵のマス。</summary>
+    readonly List<Vector2Int> vanishes = new List<Vector2Int>();
+
+    /// <summary>積んだ「消す」を取り出して空にする。</summary>
+    public List<Vector2Int> ConsumeVanishes()
+    {
+        var copy = new List<Vector2Int>(vanishes);
+        vanishes.Clear();
+        return copy;
+    }
 
     /// <summary>積んだ歩きを取り出して空にする。</summary>
     public List<NpcWalk> ConsumeWalks()
@@ -953,7 +1094,10 @@ public class TowerGame
         }
 
         if (Player.Position != before && !sceneStarted) ApplyMagicAttack();
-        Evaluate();
+        // 場面の途中では解錠を見ない。原典の場面は1本の関数で最後まで走り切るので、
+        // その間に解錠（0x4762）が回ることはない。ここで見てしまうと、
+        // 10階なら骸骨が来る前に、20階ならボスが出る前に、条件が満たされてしまう。
+        if (pages.Count > 0) pendingEvaluate = true; else Evaluate();
         return r.Outcome;
     }
 

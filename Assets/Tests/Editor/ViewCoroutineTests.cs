@@ -206,7 +206,7 @@ public class NewViewCoroutineTests
         {
             // **経過時間で進める**ようにしたので、止まる回数は画面の速さで決まる。
             // ここでは「最後まで流れて、行き先に着く」ことだけを見る。
-            int n = Drain(Call(c, "Slide", new Vector2Int(0, 0), new Vector2Int(0, 1)));
+            int n = Drain(Call(c, "Slide", new Vector2Int(0, 0), new Vector2Int(0, 1), true));
             // 止まる回数は 経過時間 ÷ 1コマ ぶん。60コマ/秒なら 0.067秒 ÷ 0.017 ≒ 4回。
             Assert.Greater(n, 0, "少なくとも1回は止まる");
             Assert.Less(n, MonsterAnimation.TicksPerStep,
@@ -225,7 +225,7 @@ public class NewViewCoroutineTests
             // 高速モードは**半分の長さ**で終わる（コマ数8＝原典どおり）
             Assert.AreEqual(MonsterAnimation.StepSeconds(false) / 2f,
                             MonsterAnimation.StepSeconds(true), 1e-5f);
-            int n = Drain(Call(c, "Slide", new Vector2Int(0, 0), new Vector2Int(1, 0)));
+            int n = Drain(Call(c, "Slide", new Vector2Int(0, 0), new Vector2Int(1, 0), true));
             Assert.Greater(n, 0, "最後まで流れる");
         }
         finally { Object.DestroyImmediate(go); }

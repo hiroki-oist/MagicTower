@@ -78,6 +78,102 @@ public class Cutscenes
     public const string FinalScreenStep = "最後の画面";
 
     /// <summary>
+    /// 10階で骸骨に囲まれる段（原典 0x03e0a）。台本は Resources/BossSkeletons.txt に
+    /// あって（書き出しは docs/make_boss_skeletons.py）、読むときにこの1行を
+    /// その並びへ広げる。原典が持っている8本の向きの表がそのまま入っている。
+    /// </summary>
+    public const string AmbushStep = "骸骨に囲まれる";
+
+    /// <summary>台本を置いてある名前。</summary>
+    public const string AmbushScript = "BossSkeletons";
+
+    /// <summary>
+    /// 主人公が1歩押し上げられる段（原典 0x3ebc〜0x3edd）。
+    /// 10階の場面は (0,0) で始まって、主人公を上へ1マス滑らせてから囲む。
+    /// </summary>
+    public const string PushUpStep = "押し上げられる";
+
+    /// <summary>
+    /// 人が歩いてくる行の頭。書き方は "歩き 名前 (x,y) 1,2,3"。
+    /// 数字は**原典の向きの表そのまま**（1=右 / 2=左 / 3=画面の下 / 4=上）。
+    /// </summary>
+    public const string WalkPrefix = "歩き ";
+
+    /// <summary>扉が開く行の頭。書き方は "開く (x,y)"（原典 0x11b8）。</summary>
+    public const string DoorOpenPrefix = "開く ";
+
+    /// <summary>扉が閉まる行の頭。書き方は "閉まる (x,y)"（原典 0x1276）。</summary>
+    public const string DoorClosePrefix = "閉まる ";
+
+    /// <summary>
+    /// 立っている人を消す行の頭。書き方は "消す (x,y)"。
+    /// 原典 0x45be はそのマスを地図のとおりに描き直す＝盤面に居ない人は消える。
+    /// </summary>
+    public const string VanishPrefix = "消す ";
+
+    /// <summary>向きの番号 → 盤面の1歩。原典の Y は下へ増えるので 3 が y-1。</summary>
+    public static Vector2Int StepOf(int dir)
+    {
+        switch (dir)
+        {
+            case 1: return new Vector2Int(1, 0);
+            case 2: return new Vector2Int(-1, 0);
+            case 3: return new Vector2Int(0, -1);
+            case 4: return new Vector2Int(0, 1);
+        }
+        return Vector2Int.zero;
+    }
+
+    /// <summary>"歩き 名前 (x,y) 1,2,3" を読む。違う形なら false。</summary>
+    public static bool TryParseWalk(string step, out string prefab,
+                                    out Vector2Int from, out List<Vector2Int> path)
+    {
+        prefab = null; from = Vector2Int.zero; path = null;
+        if (step == null || !step.StartsWith(WalkPrefix)) return false;
+        var t = step.Substring(WalkPrefix.Length).Trim();
+        int open = t.IndexOf('('), close = t.IndexOf(')');
+        if (open <= 0 || close < open) return false;
+        prefab = t.Substring(0, open).Trim();
+        if (!TryPos(t.Substring(open, close - open + 1), out from)) return false;
+        path = new List<Vector2Int>();
+        var at = from;
+        foreach (var s in t.Substring(close + 1).Split(','))
+        {
+            int d;
+            if (!int.TryParse(s.Trim(), out d)) continue;
+            var move = StepOf(d);
+            if (move == Vector2Int.zero) continue;
+            at += move;
+            path.Add(at);
+        }
+        return prefab.Length > 0 && path.Count > 0;
+    }
+
+    /// <summary>"開く (x,y)" のような行を読む。違う形なら false。</summary>
+    public static bool TryParseCell(string step, string prefix, out Vector2Int pos)
+    {
+        pos = Vector2Int.zero;
+        if (step == null || !step.StartsWith(prefix)) return false;
+        return TryPos(step.Substring(prefix.Length), out pos);
+    }
+
+    /// <summary>"(x,y)" を読む。</summary>
+    static bool TryPos(string text, out Vector2Int pos)
+    {
+        pos = Vector2Int.zero;
+        if (text == null) return false;
+        var t = text.Trim();
+        int close = t.IndexOf(')');
+        if (!t.StartsWith("(") || close < 0) return false;
+        var xy = t.Substring(1, close - 1).Split(',');
+        int x, y;
+        if (xy.Length != 2 || !int.TryParse(xy[0].Trim(), out x) || !int.TryParse(xy[1].Trim(), out y))
+            return false;
+        pos = new Vector2Int(x, y);
+        return true;
+    }
+
+    /// <summary>
     /// 地図の書き換えを表す行の頭。書き方は "地図 (x,y)=種別"。
     ///
     /// 原典の場面は、セリフを出すだけでなく**その場で地図を書き換える**ものが多い。
@@ -182,11 +278,36 @@ public class Cutscenes
             foreach (var s in p[2].Split(';'))
             {
                 var t = s.Trim();
-                if (t.Length > 0) steps.Add(t);
+                if (t.Length == 0) continue;
+                // 長い段は別の帳面に書いてある（原典から書き出したもの）
+                if (t == AmbushStep) steps.AddRange(Script(AmbushScript));
+                else steps.Add(t);
             }
             scenes[name] = steps;
             sources[name] = p[1].Trim();
         }
+    }
+
+    /// <summary>
+    /// 別の帳面に書いてある段の並び。1行が1手で、# から後ろは覚え書き。
+    /// </summary>
+    public static List<string> Script(string name)
+    {
+        var out_ = new List<string>();
+        var asset = Resources.Load<TextAsset>(name);
+        if (asset == null)
+        {
+            Debug.LogError("Cutscenes: Resources/" + name + ".txt が見つかりません");
+            return out_;
+        }
+        foreach (var raw in asset.text.Split('\n'))
+        {
+            var line = raw.TrimEnd('\r').Trim();
+            int sharp = line.IndexOf('#');
+            if (sharp >= 0) line = line.Substring(0, sharp).Trim();
+            if (line.Length > 0) out_.Add(line);
+        }
+        return out_;
     }
 
     /// <summary>その場面の並び。無ければ null。</summary>

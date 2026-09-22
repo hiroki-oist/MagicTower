@@ -7,6 +7,7 @@ using UnityEngine;
 ///
 /// 原典は地図を先に床へ書き換えてから、そのマスに9コマを1つずつ貼る。
 /// こちらも同じで、盤面の側はもう床になっているところへ**上から**9コマを重ねる。
+/// 閉まるとき（原典 0x07b26）は同じ絵を**逆から**貼る。地図を先に門へ書き換えるのも同じ。
 /// </summary>
 public class DoorOpenView : MonoBehaviour
 {
@@ -46,7 +47,9 @@ public class DoorOpenView : MonoBehaviour
         cel.SetActive(true);
         for (int f = 0; f < DoorAnimation.Frames; f++)
         {
-            int k = at * DoorAnimation.Frames + f;
+            // 閉まるときは同じ9コマを逆から貼る（原典 0x07b26 は 0xa00 ずつ引く）
+            int k = at * DoorAnimation.Frames
+                    + (door.Closing ? DoorAnimation.Frames - 1 - f : f);
             if (k < frames.Length) sr.sprite = frames[k];
             yield return new WaitForSeconds(DoorAnimation.FrameSeconds);
         }

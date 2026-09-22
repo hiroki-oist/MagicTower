@@ -1224,10 +1224,35 @@ _cs_steps=[n.strip() for r in _cs for n in r[2].split(";")]
 _cs_say=[n for n in _cs_steps
          if n not in ("題名","奪われる","牢が開く","最後の画面","駆け上がる","閃光",
                       "斬りかかる","序章の絵","塔の絵","終わりの言葉",
-                      "ボスが現れる")
-         and not n.startswith("地図 ")]
+                      "ボスが現れる","骸骨に囲まれる","押し上げられる")
+         and not n.startswith("地図 ") and not n.startswith("歩き ")
+         and not n.startswith("開く ") and not n.startswith("閉まる ")
+         and not n.startswith("消す ")]
 chk(all(int(n) in _dlg for n in _cs_say),
     "場面のセリフ番号が Dialogue.txt に実在する（「題名」「奪われる」は別仕立て）")
+# 10階「骸骨に囲まれる」の台本（原典 0x3e0a。書き出しは docs/make_boss_skeletons.py）
+_bs=[l.split("#")[0].strip() for l in
+     open("Assets/Resources/BossSkeletons.txt",encoding="utf-8").read().split("\n")]
+_bs=[l for l in _bs if l]
+_bs_walk=[l for l in _bs if l.startswith("歩き ")]
+chk(len(_bs_walk)==9,"10階の台本は金騎士1体＋骸骨8体が歩く",str(len(_bs_walk)))
+def _goal(line):
+    head,dirs=line.rsplit(" ",1)
+    x,y=[int(v) for v in head[head.index("(")+1:head.index(")")].split(",")]
+    for d in dirs.split(","):
+        d=int(d)
+        x+= 1 if d==1 else -1 if d==2 else 0
+        y+= -1 if d==3 else 1 if d==4 else 0
+    return (x,y)
+chk(sorted(_goal(l) for l in _bs_walk[1:])
+    ==sorted([(x,y) for y in (0,1,2) for x in (-1,0,1) if not (x==0 and y==1)]),
+    "骸骨8体の行き先は押し上げられた主人公(0,+1)の周り8マス")
+chk(_goal(_bs_walk[0])==(0,5),"金騎士は (0,+5) まで下がる")
+chk(sum(1 for l in _bs if l.startswith("閉まる "))==4
+    and sum(1 for l in _bs if l.startswith("開く "))==2,
+    "扉は2つ開いて4つ閉まる（奥・退路・左右）")
+chk("押し上げられる" in _cs_steps and "骸骨に囲まれる" in _cs_steps,
+    "10階の場面は押し上げ→セリフ100→囲まれるの順")
 # 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚ぶん書き出してある
 chk(all(os.path.exists(f"Assets/Sprites/Screens/Prologue_{_i}.png") for _i in range(4)),
     "序章の1枚絵が4枚ある（行が0〜3つ出た状態）")
@@ -1556,7 +1581,10 @@ chk("new Vector2Int(-5, -2)" in _pro,"歩き終えて立つのは (-5,-2)")
 chk("ConsumeWalks" in _tg3 and "walks.Add" in _tg3,
     "歩きは本線が積み、動かすのは見た目の層")
 _nw=open("Assets/Scripts/UI/NpcWalkView.cs",encoding="utf-8").read()
-chk("MonsterAnimation.TicksPerStep" in _nw,"歩く速さは主人公と同じ16コマ（原典 0xa276）")
+chk("MonsterAnimation.StepSeconds" in _nw,
+    "歩く速さは主人公と同じ（原典 0xa276 の16コマぶんの時間）")
+chk("standing" in _nw and "Stay" in _nw,
+    "盤面に載らない人（10階の盗賊）は着いたあとも立たせておく")
 _th=[l for l in open("Assets/Resources/ThiefEvents.txt",encoding="utf-8")
      if l.strip().startswith("2 |")]
 chk(any("116" in l and "(-5,-2)=床" in l for l in _th),

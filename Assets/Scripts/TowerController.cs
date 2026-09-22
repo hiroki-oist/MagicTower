@@ -29,6 +29,10 @@ public class TowerController : MonoBehaviour
     [SerializeField] DoorOpenView doorView;
     /// <summary>戦闘の黒い帯。**消えるまで次の一手を受けない**（作者の指定）。</summary>
     [SerializeField] BattleBandView band;
+    /// <summary>場面の中で人が歩く動き。**歩き終わるまで次の手へ進まない**。</summary>
+    [SerializeField] NpcWalkView walkView;
+    /// <summary>ものが点滅しながら現れる動き。**終わるまで次の手へ進まない**。</summary>
+    [SerializeField] BlinkView blinkView;
     /// <summary>日本語の字。**先に作っておく**（初出の字で固まるため）。</summary>
     [SerializeField] TMPro.TMP_FontAsset font;
 
@@ -120,10 +124,35 @@ public class TowerController : MonoBehaviour
     /// <summary>出したい1秒あたりのコマ数。演出の数え方（1/60秒）と合わせる。</summary>
     public const int TargetFrameRate = 60;
 
+    /// <summary>見た目の層が何かを動かしている最中か。</summary>
+    bool ViewBusy
+    {
+        get
+        {
+            return sliding
+                   || (doorView != null && doorView.IsPlaying)
+                   || (walkView != null && walkView.IsPlaying)
+                   || (battle != null && battle.IsPlaying)
+                   || (blinkView != null && blinkView.IsPlaying)
+                   || Game.HasBlinks;
+        }
+    }
+
     void Update()
     {
         if (Game == null) return;
+        // 場面の続きを進める。原典の場面は1本道で、絵が動き終わってから次の行に進む。
+        Game.Pump(ViewBusy);
+        // 場面の途中で書き換わった地図を、その場で見た目に映す
+        // （一手の後始末を待っていると、歩く先のマスがまだ空のままになる）
+        SyncChangedCells();
+        if (sound != null) sound.Flush(Game);   // 場面の途中で積まれた音もその場で鳴らす
+        // 場面が主人公を動かす1歩（10階の押し上げ）
+        var push = Game.ConsumePlayerSlide();
+        if (push != null && isActiveAndEnabled)
+            slidingRoutine = StartCoroutine(Slide(push.From, push.Path[push.Path.Count - 1]));
         if (sliding || drawing) return;   // 演出の最中は入力を受けない（原典も同じ）
+        if (walkView != null && walkView.IsPlaying) return;
         // 戦闘の演出が終わるまで次の一手を受けない。原典の戦闘処理（0x6082）は
         // 斬り合いが片付くまで**その場で回り続ける**ので、途中で動くことはできない。
         if (battle != null && battle.IsPlaying) return;
@@ -136,6 +165,11 @@ public class TowerController : MonoBehaviour
         int floorBefore = Game.Player.Floor;
         var posBefore = Game.Player.Position;
         bool acted;
+
+        // 出ているのが「できごと」の間は、押しても何も起きない。
+        // 原典の場面（0x3e0a など）は絵が動き終わるまでキーを見ないし、
+        // 押して飛ばせると骸骨が重なって寄ってきてしまう。
+        if (Game.CurrentKind == TowerGame.PageKind.Effect) { TakeStep(); TakeConfirm(); return; }
 
         if (Game.IsShowingPage)
         {
@@ -294,10 +328,23 @@ public class TowerController : MonoBehaviour
         // 隣のマスへ1歩動いたときだけ滑らせる（原典 0xa276。階が変わる・
         // 戦闘の踏み込み・階段や門で飛ぶときは、原典もこの演出を通らない）
         var now = Game.Player.Position;
-        var d = now - posBefore;
+        // 場面が主人公を押した1歩（10階の 0x3ebc）は、踏み込んだ1歩に**続けて**滑らせる。
+        // まとめて1回で動かすと2マス飛ぶし、先に置き直すと後戻りして見える。
+        var push = Game.ConsumePlayerSlide();
+        var cells = new System.Collections.Generic.List<Vector2Int>();
+        if (push != null)
+        {
+            cells.Add(push.From);
+            cells.Add(push.Path[push.Path.Count - 1]);
+        }
+        else cells.Add(now);
+
+        var d = cells[0] - posBefore;
         bool oneStep = Game.Player.Floor == floorBefore
                        && (Mathf.Abs(d.x) + Mathf.Abs(d.y)) == 1;
-        if (oneStep && isActiveAndEnabled) slidingRoutine = StartCoroutine(Slide(posBefore, now));
+        if (!oneStep) cells.RemoveAt(0);          // 階段や門で飛ぶときは滑らせない
+        if (cells.Count > 0 && (oneStep || push != null) && isActiveAndEnabled)
+            slidingRoutine = StartCoroutine(SlideAll(oneStep ? posBefore : cells[0], cells));
         else PlacePlayerView();
 
         if (sound != null) sound.Flush(Game);      // 本線が積んだ音を鳴らす
@@ -381,12 +428,28 @@ public class TowerController : MonoBehaviour
         drawingRoutine = null;
     }
 
+    /// <summary>続けて何マスか滑らせる。場面が押した1歩を踏み込みに繋げるのに使う。</summary>
+    System.Collections.IEnumerator SlideAll(Vector2Int from,
+                                            System.Collections.Generic.List<Vector2Int> cells)
+    {
+        var last = cells[cells.Count - 1];
+        foreach (var to in cells)
+        {
+            if (to == from) continue;
+            yield return Slide(from, to, to == last);   // 途中では「動いている」ままにする
+            from = to;
+        }
+        sliding = false;
+        slidingRoutine = null;
+        PlacePlayerView();
+    }
+
     /// <summary>
     /// 1マスぶん主人公を滑らせる。原典（0xa276）は**どの向きも16コマ**、
     /// 高速モード（旗31）なら8コマで、**1コマごとに敵と人の絵を1回動かす**（0x92a4）。
     /// 1コマの長さは原典からは出せないので <see cref="MonsterAnimation.FrameSeconds"/> に置く。
     /// </summary>
-    System.Collections.IEnumerator Slide(Vector2Int from, Vector2Int to)
+    System.Collections.IEnumerator Slide(Vector2Int from, Vector2Int to, bool last = true)
     {
         sliding = true;
         bool fast = Game.Player.FastMode;
@@ -416,6 +479,7 @@ public class TowerController : MonoBehaviour
         }
         ShowHero(0);                                   // 立ち姿へ戻す
         PlacePlayerView();
+        if (!last) yield break;                        // 続きがあるなら動いたままにしておく
         sliding = false;
         slidingRoutine = null;
     }

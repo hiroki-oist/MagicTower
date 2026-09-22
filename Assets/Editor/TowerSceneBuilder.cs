@@ -540,6 +540,12 @@ public static class TowerSceneBuilder
             Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
         wkso.ApplyModifiedPropertiesWithoutUndo();
 
+        // 場面は1本道。歩きと点滅が終わるまで次の手へ進まないようにする。
+        var wso3 = new SerializedObject(controller);
+        wso3.FindProperty("walkView").objectReferenceValue = walkView;
+        wso3.FindProperty("blinkView").objectReferenceValue = blinkView;
+        wso3.ApplyModifiedPropertiesWithoutUndo();
+
         // **メニューの窓を先に置く**。あとに置いたものが前に出るので、
         // メニューを開いたまま開く会話の窓（飛翔のオーブの断り）が隠れないようにする。
         BuildMenuWindow(screen, font, controller);

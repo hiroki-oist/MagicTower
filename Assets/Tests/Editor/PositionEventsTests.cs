@@ -157,7 +157,12 @@ public class PositionEventsTests
                  || t == "最後の画面" || t == "駆け上がる" || t == "閃光"
                  || t == "斬りかかる" || t == "序章の絵"
                  || t == "塔の絵" || t == "終わりの言葉"
-                 || t == "ボスが現れる") continue;                   // セリフ以外の段
+                 || t == "ボスが現れる"
+                 || t == Cutscenes.AmbushStep || t == Cutscenes.PushUpStep
+                 || t.StartsWith(Cutscenes.WalkPrefix)
+                 || t.StartsWith(Cutscenes.DoorOpenPrefix)
+                 || t.StartsWith(Cutscenes.DoorClosePrefix)
+                 || t.StartsWith(Cutscenes.VanishPrefix)) continue;  // セリフ以外の段
                 Vector2Int at; string kind;
                 if (Cutscenes.TryParseMap(t, out at, out kind))
                 {
