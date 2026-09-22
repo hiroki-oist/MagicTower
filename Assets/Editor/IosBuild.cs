@@ -17,7 +17,9 @@ using UnityEngine;
 /// </summary>
 public static class IosBuild
 {
+    /// <summary>書き出し先。シミュレータ向けと実機向けは別にする。</summary>
     public const string OutDir = "Build/iOS";
+    public const string DeviceOutDir = "Build/iOS-Device";
     public const string Scene = "Assets/Scenes/Tower.unity";
 
     /// <summary>アプリの名前と id（実機に入れるときは id を自分のものに変える）。</summary>
@@ -43,7 +45,8 @@ public static class IosBuild
         Debug.Log($"iOS の作り: SDK={sdk} / Architecture="
                 + PlayerSettings.GetArchitecture(BuildTargetGroup.iOS));
         PlayerSettings.iOS.targetOSVersionString = "13.0";
-        PlayerSettings.iOS.appleEnableAutomaticSigning = false;
+        // 実機向けは Xcode に署名を任せる（Apple ID を入れて Team を選ぶだけで通る）。
+        PlayerSettings.iOS.appleEnableAutomaticSigning = sdk == iOSSdkVersion.DeviceSDK;
 
         // **縦画面だけ**。画面の並べ方（PhoneScreen）が縦を前提にしている。
         PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
@@ -56,7 +59,7 @@ public static class IosBuild
         var opts = new BuildPlayerOptions
         {
             scenes = new[] { Scene },
-            locationPathName = OutDir,
+            locationPathName = sdk == iOSSdkVersion.SimulatorSDK ? OutDir : DeviceOutDir,
             target = BuildTarget.iOS,
             targetGroup = BuildTargetGroup.iOS,
             options = BuildOptions.None,
@@ -65,7 +68,7 @@ public static class IosBuild
         if (sdk == iOSSdkVersion.SimulatorSDK) MakeSimulatorArm64();
         var s = report.summary;
         Debug.Log($"iOS の書き出し: {s.result} / {s.totalSize} バイト / "
-                + $"{s.totalTime.TotalMinutes:0.0}分 → {OutDir}  (SDK={sdk})");
+                + $"{s.totalTime.TotalMinutes:0.0}分 → {opts.locationPathName}  (SDK={sdk})");
         if (s.result != BuildResult.Succeeded)
             Debug.LogError("iOS の書き出しに失敗した");
     }
