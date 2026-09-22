@@ -122,4 +122,26 @@ public class FeedbackFixTests
                         "ゼノは残る（原典 0x7182 は消していない）");
         Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(0, -2)), "金騎士は処刑されて消える");
     }
+
+    [Test]
+    public void 倒したあとの解錠はひと呼吸を待たずに効く()
+    {
+        // 15階のタコ（3x3）は (0,0) を倒すと残り8マスが床になり、真ん中に
+        // 仙人のつるはしが出る（解錠 0x60）。**解錠をひと呼吸あとにしていたため**、
+        // その間に一歩進めてしまい、まだ消えていないタコともう一度戦えてしまった。
+        var p = new PlayerState { Hp = 999990, Attack = 9990, Defense = 9990,
+                                  Floor = 15, Position = new Vector2Int(0, -1) };
+        var g = new TowerGame(p);
+        Assert.AreEqual("Boss_GiantOctopus", g.Floor.At(new Vector2Int(0, 0)));
+        g.Step(Vector2Int.up);                       // 踏み込んで戦う
+        g.Pump(true, true);                          // 斬り合いの絵が動いている
+        Assert.AreEqual("Boss_GiantOctopus", g.Floor.At(new Vector2Int(0, 1)),
+                        "動いている間はまだ変わらない");
+        // 絵は止まったが「ひと呼吸」の最中（ここで一歩動けてしまう）
+        g.Pump(true, false);
+        Assert.AreEqual(new Vector2Int(0, 0), g.Player.Position, "相手のマスへ進んでいる");
+        Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(0, 2)), "解錠はもう効いている");
+        Assert.AreEqual("Matock", g.Floor.At(new Vector2Int(0, 1)),
+                        "真ん中はつるはしになっている（もう一度戦わされない）");
+    }
 }

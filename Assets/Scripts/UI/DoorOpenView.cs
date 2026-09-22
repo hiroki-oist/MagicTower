@@ -52,6 +52,9 @@ public class DoorOpenView : MonoBehaviour
     IEnumerator Drain()
     {
         draining = true;
+        // 戦いのあとに開く扉は、戦闘の箱が消えてからひと呼吸おいてから開く（作者の指定）
+        if (queue.Count > 0 && queue.Peek().Delayed)
+            yield return new WaitForSeconds(AuthorStyle.SettleSeconds);
         while (queue.Count > 0) yield return Play(queue.Dequeue());
         draining = false;
     }

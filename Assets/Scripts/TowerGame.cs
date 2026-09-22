@@ -353,8 +353,12 @@ public class TowerGame
             }
             if (ViewWork != before) break;
         }
-        // 場面が終わったところで、ためておいた解錠を見る
-        if (pendingEvaluate && pages.Count == 0 && !ViewBusy)
+        // 場面や戦いが終わったところで、ためておいた解錠を見る。
+        // **ひと呼吸は待たない** — 待っている間に次の一歩が通ってしまい、
+        // まだ開いていない扉やまだ消えていない相手に突っ込めてしまう
+        // （15階のタコを2回倒さないと通れない、という報告がこれ）。
+        // 見た目をひと呼吸あとにするのは扉の動きの側で行う。
+        if (pendingEvaluate && pages.Count == 0 && !ViewMoving)
         {
             pendingEvaluate = false;
             Evaluate();
@@ -569,6 +573,11 @@ public class TowerGame
         /// （0x5048 から 0xa00 ずつ引いていく）。
         /// </summary>
         public bool Closing;
+        /// <summary>
+        /// 出す前にひと呼吸おくか（作者の指定）。戦いのあとに開く扉は、
+        /// 戦闘の箱が消えてから少し間をおいてから開く。
+        /// </summary>
+        public bool Delayed;
     }
 
     /// <summary>
@@ -1319,9 +1328,10 @@ public class TowerGame
             foreach (var at in gates)
                 if (Floor.At(at) != "s")
                 {
-                    // 原典 0x7a68 は門1マスごとに9コマの動きを出し、その頭で音11を鳴らす
+                    // 原典 0x7a68 は門1マスごとに9コマの動きを出し、その頭で音11を鳴らす。
+                    // 戦いのあとに開くものなので、**ひと呼吸おいてから**出す（作者の指定）。
                     PlaySound(SoundCues.OpenGate);
-                    doorOpens.Add(new DoorOpen { At = at, Cell = "s" });
+                    doorOpens.Add(new DoorOpen { At = at, Cell = "s", Delayed = true });
                 }
     }
 

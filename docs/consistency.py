@@ -1308,6 +1308,12 @@ chk("battle_gold" in _tg5,"倒した相手からの金も知らせに出す（�
 _tcw=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("TitleScreen.Title" in _tcw,
     "1枚絵の上の字も起動時に作っておく（3階だけ一瞬止まると報告された）")
+# 作者の報告（その6）
+_tg6=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("pendingEvaluate && pages.Count == 0 && !ViewMoving" in _tg6,
+    "解錠はひと呼吸を待たずに見る（待つ間に動けて二度戦えてしまう）")
+chk("Delayed = true" in _tg6,
+    "戦いのあとに開く扉だけ、ひと呼吸おいてから開く")
 # 作者の報告（その5）
 _bbv=open("Assets/Scripts/UI/BattleBandView.cs",encoding="utf-8").read()
 chk("GoldLine" not in _bbv,
