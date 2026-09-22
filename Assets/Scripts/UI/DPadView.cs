@@ -31,8 +31,10 @@ public class DPadView : MonoBehaviour
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
         if (dir != Vector2Int.zero) { controller.TouchStep = dir; return; }
+        // **十字の真ん中は「決定」**（会話を送る／選んだものを決める）。
+        if (Inside(pad, at)) { controller.TouchConfirm = true; return; }
         // 帯の上（ボタンや持ち物）は、それぞれの受け口に任せる。
-        // **盤面のあたりを触ったら「決定・送り」**（会話を送る／選んだものを決める）。
+        // 盤面のあたりを触ったときも「決定・送り」。
         if (Inside(topBand, at) || Inside(bottomBand, at)) return;
         controller.TouchConfirm = true;
     }

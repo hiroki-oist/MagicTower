@@ -133,3 +133,26 @@ public class DebugKeysTests
         Assert.AreEqual(0, GameStart.Prologue.YellowKeys, "序章は鍵を持たない");
     }
 }
+
+/// <summary>
+/// 触りで進めるところ（作者の指定。原典はキーボードしか無い）。
+/// </summary>
+public class TouchControlTests
+{
+    [Test]
+    public void 十字の真ん中は決定になる()
+    {
+        // 真ん中（遊びの範囲）は向きにならない ＝ そこを押したら「決定」に回す
+        Assert.AreEqual(Vector2Int.zero, PhoneScreen.DirFromTap(Vector2.zero, 100f));
+        var src = System.IO.File.ReadAllText("Assets/Scripts/UI/DPadView.cs");
+        StringAssert.Contains("if (Inside(pad, at)) { controller.TouchConfirm = true;", src);
+    }
+
+    [Test]
+    public void 扉が開き切るまでと戦闘の帯が出ている間は動かない()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
+        StringAssert.Contains("doorView != null && doorView.IsPlaying", src);
+        StringAssert.Contains("band != null && band.IsShowing", src);
+    }
+}

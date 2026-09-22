@@ -444,7 +444,7 @@ public static class TowerSceneBuilder
         vso.ApplyModifiedPropertiesWithoutUndo();
 
         // 作者の旧版の見せ方（黒い帯）。AuthorStyle.Enabled が false なら出ない。
-        BuildBattleBand(screen, font, controller, battleView);
+        var bandView = BuildBattleBand(screen, font, controller, battleView);
 
         // 鍵で扉を開けたときの9コマの動き（原典 0x7be6）。絵は LCG.P58 の #2〜#5。
         var doorGo = new GameObject("DoorOpenView");
@@ -464,6 +464,12 @@ public static class TowerSceneBuilder
         Fill(dso.FindProperty("colors"), doorColors);
         Fill(dso.FindProperty("frames"), doorFrames);
         dso.ApplyModifiedPropertiesWithoutUndo();
+
+        // 扉が開き切るまで／戦闘の帯が消えるまで、次の一手を受けないようにする
+        var wso2 = new SerializedObject(controller);
+        wso2.FindProperty("doorView").objectReferenceValue = doorView;
+        wso2.FindProperty("band").objectReferenceValue = bandView;
+        wso2.ApplyModifiedPropertiesWithoutUndo();
 
         // 20階のボスが現れる10コマ（原典 0x3044）。絵は LCG.P58 の #6。
         var bossGo = new GameObject("BossAppearView");
@@ -772,8 +778,8 @@ public static class TowerSceneBuilder
     /// 左が自分・右が相手、上に「第 N ターン」。原典どおりの見せ方に戻すなら
     /// <c>AuthorStyle.Enabled</c> を false にする（この入れ物は出なくなる）。
     /// </summary>
-    static void BuildBattleBand(RectTransform screen, TMP_FontAsset font,
-                                TowerController controller, BattleView battleView)
+    static BattleBandView BuildBattleBand(RectTransform screen, TMP_FontAsset font,
+                                          TowerController controller, BattleView battleView)
     {
         // 入れ物は画面の左上に合わせておく。中の欄は原典の画面座標をそのまま使える。
         var holderGo = new GameObject("BattleBand", typeof(RectTransform));
@@ -808,6 +814,7 @@ public static class TowerSceneBuilder
         so.ApplyModifiedPropertiesWithoutUndo();
 
         holderGo.SetActive(false);
+        return view;
     }
 
     /// <summary>旧版の枠の絵（9スライス・中身は黒）を1枚貼る。</summary>

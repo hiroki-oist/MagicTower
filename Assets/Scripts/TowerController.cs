@@ -20,6 +20,10 @@ public class TowerController : MonoBehaviour
     [SerializeField] MonsterAnimator monsters;
     [SerializeField] SoundPlayer sound;
     [SerializeField] BattleView battle;
+    /// <summary>扉が開く9コマの動き。**開き切るまで次の一手を受けない**。</summary>
+    [SerializeField] DoorOpenView doorView;
+    /// <summary>戦闘の黒い帯。**消えるまで次の一手を受けない**（作者の指定）。</summary>
+    [SerializeField] BattleBandView band;
 
     /// <summary>勇者の絵。戦闘の帯（<see cref="BattleBandView"/>）も同じ絵を使う。</summary>
     public Sprite PlayerSprite { get { return playerSprite; } }
@@ -76,6 +80,11 @@ public class TowerController : MonoBehaviour
         // 戦闘の演出が終わるまで次の一手を受けない。原典の戦闘処理（0x6082）は
         // 斬り合いが片付くまで**その場で回り続ける**ので、途中で動くことはできない。
         if (battle != null && battle.IsPlaying) return;
+        // 扉が開き切るまでと、戦闘の帯が消えるまでは動かさない（作者の指定）。
+        // 開いている途中に踏み込むと扉にめり込んで見えるし、
+        // 戦闘のあとも押しっぱなしだと次のマスまで進んでしまう。
+        if (doorView != null && doorView.IsPlaying) return;
+        if (band != null && band.IsShowing) return;
 
         int floorBefore = Game.Player.Floor;
         var posBefore = Game.Player.Position;
