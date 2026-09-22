@@ -122,6 +122,11 @@ public class TowerController : MonoBehaviour
                 if (ch != '\n' && ch != '\r' && used.Add(ch)) seen.Append(ch);
         };
         foreach (var t in GameText.Instance.AllText) add(t);
+        // 1枚絵の上の文字も先に作る（題名・終幕・ゲームオーバー）。
+        // 3階のイベントだけ一瞬止まると報告されたのがここ（題名が初出だった）。
+        add(TitleScreen.Title); add(TitleScreen.Copyright);
+        add(GameOverScreen.Line); add(GameOverScreen.Restart);
+        add(Ending.TitleLine); add(Ending.AnyKeyLine);
         if (seen.Length > 0) font.TryAddCharacters(seen.ToString());
     }
 
@@ -131,7 +136,24 @@ public class TowerController : MonoBehaviour
     /// <summary>この時までは「まだ落ち着いていない」ことにする。</summary>
     float settleUntil;
 
-    /// <summary>見た目の層が何かを動かしている最中か。</summary>
+    /// <summary>見た目の層が動いている最中か（ひと呼吸は含まない）。</summary>
+    bool ViewMoving
+    {
+        get
+        {
+            return sliding
+                   || drawing
+                   || Game.HasPendingView
+                   || (doorView != null && doorView.IsPlaying)
+                   || (walkView != null && walkView.IsPlaying)
+                   || (battle != null && battle.IsPlaying)
+                   || (band != null && band.IsShowing)
+                   || (blinkView != null && blinkView.IsPlaying)
+                   || Game.HasBlinks;
+        }
+    }
+
+    /// <summary>見た目の層が何かを動かしている最中か（ひと呼吸を含む）。</summary>
     bool ViewBusy
     {
         get
@@ -165,7 +187,7 @@ public class TowerController : MonoBehaviour
     {
         if (Game == null) return;
         // 場面の続きを進める。原典の場面は1本道で、絵が動き終わってから次の行に進む。
-        Game.Pump(ViewBusy);
+        Game.Pump(ViewBusy, ViewMoving);
         // 場面の途中で書き換わった地図を、その場で見た目に映す
         // （一手の後始末を待っていると、歩く先のマスがまだ空のままになる）。
         // **描き出しの最中は映さない** — 渦巻きに描いている途中で作り直すと、

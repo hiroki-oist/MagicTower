@@ -94,15 +94,17 @@ public class SceneWiringTests
             path, UnityEditor.SceneManagement.OpenSceneMode.Additive);
         try
         {
-            RectTransform screen = null;
+            RectTransform screen = null, title = null;
             var found = new Dictionary<string, RectTransform>();
             foreach (var go in scene.GetRootGameObjects())
                 foreach (var rt in go.GetComponentsInChildren<RectTransform>(true))
                 {
                     if (rt.name == "Screen") screen = rt;
-                    if (rt.name == "TitleScreen" || rt.name == "DialogueWindow"
-                        || rt.name == "MenuWindow")
+                    // 1枚絵（題名など）は**一番上の層**へ移した。上下の帯に隠れて
+                    // 見えないという報告があったため（FullScreenLayer）。
+                    if (rt.name == "DialogueWindow" || rt.name == "MenuWindow")
                         found[rt.name] = rt;
+                    if (rt.name == "TitleScreen") title = rt;
                 }
 
             Assert.IsNotNull(screen, "入れ物 Screen が無い");
@@ -113,6 +115,13 @@ public class SceneWiringTests
 
             foreach (var kv in found)
                 Assert.AreSame(screen, kv.Value.parent, kv.Key + " が入れ物の外にある");
+
+            Assert.IsNotNull(title, "題名の1枚絵が無い");
+            Assert.AreEqual("FullScreenLayer", title.parent.name,
+                            "1枚絵は一番上の層に置く（帯に隠れないように）");
+            Assert.AreSame(screen.parent, title.parent.parent, "層は同じ枠の中");
+            Assert.AreEqual(screen.parent.childCount - 1,
+                            title.parent.GetSiblingIndex(), "層は一番あと（＝一番上）");
 
             // 縦画面（作者の指定）。盤面が画面の幅いっぱいなので**幅で合わせる**。
             var scaler = screen.GetComponentInParent<UnityEngine.UI.CanvasScaler>();

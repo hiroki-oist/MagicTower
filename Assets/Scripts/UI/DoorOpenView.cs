@@ -16,10 +16,21 @@ public class DoorOpenView : MonoBehaviour
     [SerializeField] Sprite[] frames = new Sprite[0];     // colors.Length x DoorAnimation.Frames
 
     /// <summary>今出しているか。</summary>
-    public bool IsPlaying { get { return running > 0; } }
+    public bool IsPlaying { get { return running > 0 || queue.Count > 0; } }
 
     int running;
     GameObject cel;
+
+    /// <summary>
+    /// これから出す扉の待ち行列。**1枚ずつ順に**出す。
+    /// 原典の解錠（0x4762）は門1枚ごとに 0x7a68 を呼んで9コマを出し切るので、
+    /// 何枚も同時に開くことはない（10階で金の骸骨を倒したとき、まとめて消えて
+    /// 見えるという報告があった）。
+    /// </summary>
+    readonly System.Collections.Generic.Queue<TowerGame.DoorOpen> queue =
+        new System.Collections.Generic.Queue<TowerGame.DoorOpen>();
+
+    bool draining;
 
     void Awake()
     {
@@ -33,8 +44,16 @@ public class DoorOpenView : MonoBehaviour
     {
         if (controller == null || controller.Game == null) return;
         var list = controller.Game.ConsumeDoorOpens();
-        for (int i = 0; i < list.Count; i++)
-            if (isActiveAndEnabled) StartCoroutine(Play(list[i]));
+        for (int i = 0; i < list.Count; i++) queue.Enqueue(list[i]);
+        if (!draining && queue.Count > 0 && isActiveAndEnabled) StartCoroutine(Drain());
+    }
+
+    /// <summary>待ち行列を頭から1枚ずつ。</summary>
+    IEnumerator Drain()
+    {
+        draining = true;
+        while (queue.Count > 0) yield return Play(queue.Dequeue());
+        draining = false;
     }
 
     IEnumerator Play(TowerGame.DoorOpen door)

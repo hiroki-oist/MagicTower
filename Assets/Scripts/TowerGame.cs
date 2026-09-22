@@ -185,7 +185,11 @@ public class TowerGame
         {
             // 原典の場面は1本道で、絵が動き終わるまで次の行に進まない。
             // 見た目の層が動いている間は地図も書き換えない（出す順が崩れるため）。
-            if (ViewBusy) break;
+            // ただし**戦いの後始末だけ**は、ひと呼吸を待たずに当てる。
+            bool afterBattle = pages.Peek().Kind == PageKind.Effect
+                               && pages.Peek().Effect != null
+                               && pages.Peek().Effect.StartsWith(AfterBattleStep);
+            if (afterBattle ? ViewMoving : ViewBusy) break;
             int before = ViewWork;
             // そのページを出す前に地図を書き換える（原典も場面の途中で書いている）
             if (!frontMapDone) { ApplyMap(pages.Peek().MapBefore); frontMapDone = true; }
@@ -215,6 +219,11 @@ public class TowerGame
                 {
                     Floor.Clear(at);
                     Player.Position = at;
+                }
+                if (pendingGoldNote > 0)
+                {
+                    Note(GameText.Instance.Message("battle_gold", pendingGoldNote));
+                    pendingGoldNote = 0;
                 }
             }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.BattlePrefix))
@@ -360,6 +369,9 @@ public class TowerGame
 
     /// <summary>そのマスを空ける段（妖精は読み終えてから消える）。</summary>
     public const string ClearCellStep = "マスを空ける";
+
+    /// <summary>まだ知らせていない、倒した相手からの金。</summary>
+    int pendingGoldNote;
 
     /// <summary>場面が終わってから解錠を見直すか。</summary>
     bool pendingEvaluate;
@@ -613,11 +625,26 @@ public class TowerGame
     /// <summary>
     /// 見た目の層を毎コマ回す。動きが終わったら続きの手へ進む。
     /// </summary>
-    public void Pump(bool viewBusy)
+    public void Pump(bool viewBusy) { Pump(viewBusy, viewBusy); }
+
+    /// <summary>
+    /// 見た目の層を毎コマ回す。動きが終わったら続きの手へ進む。
+    ///
+    /// <paramref name="viewBusy"/> は「動き＋そのあとのひと呼吸」、
+    /// <paramref name="viewMoving"/> は「動いている最中」だけ。
+    /// **戦いの後始末だけは、ひと呼吸を待たずに当てる**（作者の指定。
+    /// 普通の戦闘のあとに動けるようになるまでが遅くなってしまうため）。
+    /// 倒した結果から起きること（扉が開く・褒美が出る）は、ひと呼吸のあと。
+    /// </summary>
+    public void Pump(bool viewBusy, bool viewMoving)
     {
         ViewBusy = viewBusy;
-        if (!viewBusy) ResolveEffects();
+        ViewMoving = viewMoving;
+        if (!viewBusy || !viewMoving) ResolveEffects();
     }
+
+    /// <summary>見た目が動いている最中か（ひと呼吸は含まない）。</summary>
+    public bool ViewMoving { get; set; }
 
     /// <summary>
     /// 場面が主人公を動かす1歩（原典 0x3ebc の押し上げ）。無ければ null。
@@ -1494,6 +1521,10 @@ public class TowerGame
             GameOver();
             return false;
         }
+        // 倒した相手からの金は、鍵や薬と同じやり方で知らせる（作者の指定）。
+        // 原典は右下の欄に数字が増えるだけで、文言は持っていない。
+        // 出すのは**斬り合いが終わってから**（帯が出ている間は知らせを出さない作り）。
+        pendingGoldNote = b.Won ? b.GoldGained : 0;
         if (!b.Won)
         {
             Say(GameText.Instance.Message(b.MessageKey));

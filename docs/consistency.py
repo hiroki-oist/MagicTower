@@ -1294,6 +1294,20 @@ chk(sum(1 for n in _cs_steps if "=ID93" in n)==16,
 _tg_stairs=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk(_tg_stairs.count("CheckPositionEvent()")>=2,
     "階段で着いたあとにも立ち入りのできごとを見る（原典 0x2a00 の call 0x1588）")
+# 作者の報告（その4）
+_dov=open("Assets/Scripts/UI/DoorOpenView.cs",encoding="utf-8").read()
+chk("queue" in _dov and "Drain" in _dov,
+    "扉は1枚ずつ順に開く（原典の解錠は門1枚ごとに9コマを出し切る）")
+_tsb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
+chk("FullScreenLayer" in _tsb,
+    "1枚絵（題名・序章の絵）は一番上の層に置く（上下の帯に隠れていた）")
+_tg5=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("ViewMoving" in _tg5 and "afterBattle ? ViewMoving : ViewBusy" in _tg5,
+    "普通の戦闘の後始末はひと呼吸を待たない（テンポが悪くなるため）")
+chk("battle_gold" in _tg5,"倒した相手からの金も知らせに出す（作者の指定）")
+_tcw=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
+chk("TitleScreen.Title" in _tcw,
+    "1枚絵の上の字も起動時に作っておく（3階だけ一瞬止まると報告された）")
 # 作者の報告（その3）で直した見た目の約束
 _dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
 chk("controller.IsWalking" in _dwv,
@@ -1315,7 +1329,7 @@ _tg4=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("AfterBattleStep" in _tg4,
     "倒した後始末は斬り合いの絵が終わってから当てる（褒美が戦闘開始と同時に出ていた）")
 chk("Player.Rank = r.Rank" in _tg4,
-    "妖精の称号を覚えて右上の実績に出す")
+    "妖精にもらった称号を覚えておく（出し方は作者と相談中）")
 # 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚ぶん書き出してある
 chk(all(os.path.exists(f"Assets/Sprites/Screens/Prologue_{_i}.png") for _i in range(4)),
     "序章の1枚絵が4枚ある（行が0〜3つ出た状態）")

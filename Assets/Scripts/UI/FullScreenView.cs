@@ -13,6 +13,8 @@ public class FullScreenView : MonoBehaviour
     /// <summary>この種類のページが出ているときに自分を出す。</summary>
     [SerializeField] TowerGame.PageKind showOn = TowerGame.PageKind.Title;
     [SerializeField] GameObject panel;
+    /// <summary>1枚絵の後ろに敷く黒地（画面いっぱい）。出している間だけ出す。</summary>
+    [SerializeField] GameObject backdrop;
     [SerializeField] UnityEngine.UI.Image art;
     [SerializeField] TMPro.TextMeshProUGUI line1;
     [SerializeField] TMPro.TextMeshProUGUI line2;
@@ -27,11 +29,13 @@ public class FullScreenView : MonoBehaviour
         if (line1 != null) line1.text = first ?? "";
         if (line2 != null) line2.text = second ?? "";
         panel.SetActive(true);
+        if (backdrop != null) backdrop.SetActive(true);
     }
 
     public void Hide()
     {
         if (panel != null) panel.SetActive(false);
+        if (backdrop != null) backdrop.SetActive(false);
     }
 
     /// <summary>

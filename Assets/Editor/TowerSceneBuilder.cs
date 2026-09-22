@@ -331,10 +331,8 @@ public static class TowerSceneBuilder
         vso.FindProperty("shield").objectReferenceValue = shieldBox;
         vso.FindProperty("weaponIcon").objectReferenceValue = wIcon;
         vso.FindProperty("shieldIcon").objectReferenceValue = sIcon;
-        var trophyBox = Placeholder(top, font, "Trophy", pad * 3 + eqW * 2, rh * 2, rh, rh,
-                                    PhoneScreen.TrophyLabel, PhoneScreen.RightButton);
-        vso.FindProperty("trophy").objectReferenceValue =
-            trophyBox.GetComponentInChildren<TextMeshProUGUI>();
+        Placeholder(top, font, "Trophy", pad * 3 + eqW * 2, rh * 2, rh, rh,
+                    PhoneScreen.TrophyLabel, PhoneScreen.RightButton);
         Placeholder(top, font, "Help", pad * 3 + eqW * 2 + rh, rh * 2, rh, rh, "？",
                     PhoneScreen.RightButton);
 
@@ -592,7 +590,26 @@ public static class TowerSceneBuilder
         // 一覧は画面いっぱいに出すので、原典の座標の入れ物ではなく画布に直に置く
         BuildHeroOrbPanel(frame, font, controller,
                           Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry"));
-        BuildFullScreen(screen, font, controller, TowerGame.PageKind.Title,
+        // **1枚絵は一番上の層に置く**。以前は原典の画面（Screen）の子にしていたので、
+        // 上下の帯（あとから作った兄弟）に隠れて題名も序章の絵も見えなかった
+        // （作者から「9と10が見えない」と報告あり）。
+        var fullGo = new GameObject("FullScreenLayer", typeof(RectTransform));
+        fullGo.transform.SetParent(frame, false);
+        var full = fullGo.GetComponent<RectTransform>();
+        full.anchorMin = Vector2.zero; full.anchorMax = Vector2.one;
+        full.offsetMin = Vector2.zero; full.offsetMax = Vector2.zero;
+        var backGo = new GameObject("Backdrop", typeof(RectTransform),
+                                    typeof(UnityEngine.UI.Image));
+        backGo.transform.SetParent(full, false);
+        var backRt = backGo.GetComponent<RectTransform>();
+        backRt.anchorMin = Vector2.zero; backRt.anchorMax = Vector2.one;
+        backRt.offsetMin = Vector2.zero; backRt.offsetMax = Vector2.zero;
+        var backImg = backGo.GetComponent<UnityEngine.UI.Image>();
+        backImg.color = Color.black;
+        backImg.raycastTarget = false;
+        backGo.SetActive(false);
+
+        BuildFullScreen(full, font, controller, TowerGame.PageKind.Title,
                         // 題名は**絵を貼らない**。動画の序章（Part1 t≈31）では
                         // 真っ黒な画面に
                         //   「Ｔｏｗｅｒ　ｏｆ　ｔｈｅ　Ｓｏｒｃｅｒｅｒ」(144,160)
@@ -604,7 +621,7 @@ public static class TowerSceneBuilder
                         TitleScreen.Title,   TitleScreen.TitleDot,
                         TitleScreen.Copyright, TitleScreen.CopyrightDot);
         // 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚を差し替える。
-        BuildFullScreen(screen, font, controller, TowerGame.PageKind.Prologue,
+        BuildFullScreen(full, font, controller, TowerGame.PageKind.Prologue,
                         "PrologueScreen", "Assets/Sprites/Screens/Prologue_0.png",
                         "", TitleScreen.TitleDot, "", TitleScreen.CopyrightDot,
                         new[] { "Assets/Sprites/Screens/Prologue_0.png",
@@ -613,7 +630,7 @@ public static class TowerSceneBuilder
                                 "Assets/Sprites/Screens/Prologue_3.png" });
         // 終幕の塔の絵（MTOWER2）と、終わりの言葉（MTENDMJ、段落が1つずつ）
         // 終幕の塔の絵は上へ流れていく（原典 0x0ce83 の26回の輪）
-        var towerScreen = BuildFullScreen(screen, font, controller, TowerGame.PageKind.EndingTower,
+        var towerScreen = BuildFullScreen(full, font, controller, TowerGame.PageKind.EndingTower,
                         "EndingTowerScreen", "Assets/Sprites/Screens/Ending_Tower2.png",
                         "", Ending.TitleDot, "", Ending.AnyKeyDot);
         if (towerScreen != null)
@@ -634,7 +651,7 @@ public static class TowerSceneBuilder
             tso.FindProperty("whiteVeil").objectReferenceValue = veil;
             tso.ApplyModifiedPropertiesWithoutUndo();
         }
-        BuildFullScreen(screen, font, controller, TowerGame.PageKind.EndingText,
+        BuildFullScreen(full, font, controller, TowerGame.PageKind.EndingText,
                         "EndingTextScreen", "Assets/Sprites/Screens/Ending_Text_0.png",
                         "", Ending.TitleDot, "", Ending.AnyKeyDot,
                         new[] { "Assets/Sprites/Screens/Ending_Text_0.png",
@@ -643,11 +660,11 @@ public static class TowerSceneBuilder
                                 "Assets/Sprites/Screens/Ending_Text_3.png",
                                 "Assets/Sprites/Screens/Ending_Text_4.png" });
         // ゲームオーバー（原典 0x097ac）。真っ黒に1行だけ。
-        BuildFullScreen(screen, font, controller, TowerGame.PageKind.GameOver,
+        BuildFullScreen(full, font, controller, TowerGame.PageKind.GameOver,
                         "GameOverScreen", "",
                         GameOverScreen.Line, GameOverScreen.Dot,
                         "", GameOverScreen.Dot);
-        BuildFullScreen(screen, font, controller, TowerGame.PageKind.FinalScreen,
+        BuildFullScreen(full, font, controller, TowerGame.PageKind.FinalScreen,
                         "EndingScreen", "Assets/Sprites/Screens/Ending_Art.png",
                         Ending.TitleLine,  Ending.TitleDot,
                         Ending.AnyKeyLine, Ending.AnyKeyDot);
@@ -954,9 +971,14 @@ public static class TowerSceneBuilder
         var panelGo = new GameObject(name, typeof(RectTransform));
         panelGo.transform.SetParent(screen, false);
         var prt = panelGo.GetComponent<RectTransform>();
-        prt.anchorMin = prt.anchorMax = prt.pivot = new Vector2(0f, 1f);
-        prt.anchoredPosition = Vector2.zero;
+        // 原典の 640x400 の中身はそのままに、枠の幅いっぱいへ真ん中に置く
+        prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0.5f);
+        prt.pivot = new Vector2(0f, 1f);
         prt.sizeDelta = new Vector2(DialogueWindow.CanvasWidth, DialogueWindow.CanvasHeight);
+        float fit = PhoneScreen.ReferenceWidth / DialogueWindow.CanvasWidth;
+        prt.localScale = new Vector3(fit, fit, 1f);
+        prt.anchoredPosition = new Vector2(-DialogueWindow.CanvasWidth * fit / 2f,
+                                           DialogueWindow.CanvasHeight * fit / 2f);
 
         var artGo = new GameObject("Art", typeof(RectTransform), typeof(UnityEngine.UI.Image));
         artGo.transform.SetParent(panelGo.transform, false);
@@ -985,6 +1007,9 @@ public static class TowerSceneBuilder
 
         var view = panelGo.AddComponent<FullScreenView>();
         var so = new SerializedObject(view);
+        // 一番上の層の1枚目が黒地（BuildTower が作る）
+        if (screen.childCount > 0 && screen.GetChild(0).name == "Backdrop")
+            so.FindProperty("backdrop").objectReferenceValue = screen.GetChild(0).gameObject;
         so.FindProperty("controller").objectReferenceValue = controller;
         so.FindProperty("showOn").enumValueIndex = (int)showOn;
         so.FindProperty("panel").objectReferenceValue = panelGo;
