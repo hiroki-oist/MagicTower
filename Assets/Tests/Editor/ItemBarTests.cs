@@ -99,7 +99,7 @@ public class ItemBarTests
         Assert.AreEqual(8, PhoneScreen.ItemsPerPage);
         Assert.AreEqual(15, ScreenLayout.ItemPanelSlots, "並ぶのは原典と同じ15");
         Assert.AreEqual(2, PhoneScreen.DamageButtonIndex, "右の3つ目がダメージ表示");
-        Assert.AreEqual("ダメージ表示", PhoneScreen.RightButtons[PhoneScreen.DamageButtonIndex]);
+        Assert.AreEqual("ダメージ", PhoneScreen.RightButtons[PhoneScreen.DamageButtonIndex]);
     }
 
     [Test]

@@ -44,7 +44,7 @@ public class TowerSceneTests
         // 本数ぶん絵を並べる側（keyIcons / keyRed / keyPurple / keyYellow）は使わない。
         foreach (var name in new[] { "controller", "floorLabel", "hp", "attack",
                                      "defense", "gold", "weapon", "shield",
-                                     "messageBox", "weaponIcon", "shieldIcon",
+                                     "weaponIcon", "shieldIcon",
                                      "battleView", "registry", "monsterPanel", "monsterIcon",
                                      "monsterName", "monsterHp", "monsterAttack",
                                      "monsterDefense",

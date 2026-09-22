@@ -66,10 +66,14 @@ public static class PhoneScreen
     /// 下のボタンの文字。**まだどれも繋がっていない**（押しても何も起きない）。
     /// 作者の指定で、右の4つは課金ものの見た目だけ。移動は当面キーボードの矢印のまま。
     /// </summary>
+    /// 文字は**短く**してある（作者の指定。左右を細くして真ん中の十字を大きくするため）。
     public static readonly string[] LeftButtons =
-        { "クイックセーブ", "クイックロード", "ショップ", "メニュー" };
+        { "セーブ", "ロード", "ショップ", "メニュー" };
     public static readonly string[] RightButtons =
-        { "かんたん商店", "飛行器", "ダメージ表示", "妖精の加護" };
+        { "商店", "飛行器", "ダメージ", "妖精" };
+
+    /// <summary>左右のボタンの幅と、真ん中の十字の大きさ（作者の指定で十字を大きく）。</summary>
+    public const float SideButtonWidth = 190f, DPadSize = 380f;
 
     /// <summary>右のボタンのうち、**繋がっている**のはこれ（勇者のオーブの一覧を出す）。</summary>
     public const int DamageButtonIndex = 2;
@@ -112,6 +116,15 @@ public static class PhoneScreen
              ? new Vector2Int(delta.x > 0f ? 1 : -1, 0)
              : new Vector2Int(0, delta.y > 0f ? 1 : -1);
     }
+
+    /// <summary>
+    /// 知らせ（「鍵を手に入れた！」など）を**画面の中央に出して、少し置いてから
+    /// 薄くして消す**ときの時間（秒）。作者の指定（旧版がこの見せ方だった）。
+    /// </summary>
+    public const float ToastHold = 0.5f, ToastFade = 0.5f;
+
+    /// <summary>その文字の大きさと、下に敷く帯の高さ（画布の単位）。</summary>
+    public const float ToastFontSize = 46f, ToastHeight = 120f;
 
     /// <summary>盤面の枠の、画布の中での大きさ（正方形）。高さが足りなければ縮める。</summary>
     public static float MapSide(float canvasWidth, float canvasHeight)

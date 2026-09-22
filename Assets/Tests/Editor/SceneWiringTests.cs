@@ -26,6 +26,9 @@ public class SceneWiringTests
         // 鍵を**本数ぶん絵で並べる**のは原典（横長）の見せ方。縦画面の並べ方
         // （作者の指定）では鍵の絵ひとつに数字を添えるので、こちらは使わない。
         "TowerHudView.keyIcons",
+        // 知らせは画面の中央に出して消える（MessageToastView）ので、
+        // 原典の右下の欄は使わない。
+        "TowerHudView.messageBox",
         "TowerHudView.keyRed", "TowerHudView.keyPurple", "TowerHudView.keyYellow",
     };
 

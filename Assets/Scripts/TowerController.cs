@@ -305,14 +305,25 @@ public class TowerController : MonoBehaviour
         // 左右に動くときは途中で2コマ目に入れ替える（原典 0xa276 の 0x100 → 0x120）。
         bool sideways = from.y == to.y && from.x != to.x;
         var sr = playerView != null ? playerView.GetComponent<SpriteRenderer>() : null;
+        // **経過時間で進める**。コマ送りで待つと、画面が60コマ/秒のときに
+        // 1コマが1/60秒になってしまい、指定の何倍も遅くなる（作者から
+        // 「遅すぎる」と報告されたのがこれ）。
+        float dur = MonsterAnimation.StepSeconds(fast);
+        float t = 0f;
+        int painted = 0;
         PlacePlayerView();
-        for (int i = 1; i <= n; i++)
+        while (t < dur)
         {
-            playerView.position = Vector3.Lerp(a, b, i / (float)n);
+            t += Time.deltaTime;
+            float k = Mathf.Clamp01(t / dur);
+            playerView.position = Vector3.Lerp(a, b, k);
             if (sr != null && sideways && playerSprite2 != null)
-                sr.sprite = i * 2 <= n ? playerSprite : playerSprite2;
-            if (monsters != null) monsters.TickOnce();
-            yield return new WaitForSeconds(MonsterAnimation.SlideFrameSeconds);
+                sr.sprite = k <= 0.5f ? playerSprite : playerSprite2;
+            // 敵と人の絵は原典どおり**コマ数ぶん**動かす（0x92a4）
+            int want = Mathf.RoundToInt(k * n);
+            for (; painted < want; painted++)
+                if (monsters != null) monsters.TickOnce();
+            yield return null;
         }
         if (sr != null && playerSprite != null) sr.sprite = playerSprite;   // 立ち姿へ戻す
         PlacePlayerView();

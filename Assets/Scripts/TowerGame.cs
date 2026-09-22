@@ -860,7 +860,9 @@ public class TowerGame
                 {
                     PlaySound(SoundCues.TakeItem);
                     Floor.Clear(r.Target);
-                    Say(GameText.Instance.Message(got.MessageKey, got.Value));
+                    // 原典（0x23ee → 0x9d80）は**窓を開かず右下の欄に書くだけ**。
+                    // こちらは画面の中央に出して薄くなって消える（MessageToastView）。
+                    Note(GameText.Instance.Message(got.MessageKey, got.Value));
                 }
                 break;
             }

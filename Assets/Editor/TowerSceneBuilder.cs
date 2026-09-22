@@ -360,7 +360,7 @@ public static class TowerSceneBuilder
         }
 
         // ボタンはどれも**まだ繋がっていない**（作者の指定。移動もキーボードの矢印のまま）
-        float bw = 280f, bh = 84f, bgap = 12f;
+        float bw = PhoneScreen.SideButtonWidth, bh = 84f, bgap = 12f;
         int nb = PhoneScreen.LeftButtons.Length;
         float stack = bh * nb + bgap * (nb - 1);
         float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
@@ -375,7 +375,7 @@ public static class TowerSceneBuilder
             if (i == PhoneScreen.DamageButtonIndex) damageButton = right;
         }
         // 中央の十字。**押すと歩く**（作者が選んだ絵。DPadView が触りを受ける）
-        float dpad = 260f;
+        float dpad = PhoneScreen.DPadSize;
         var padRt = Placeholder(bottom, font, "DPad", (w - dpad) / 2f,
                                 PhoneScreen.ItemBarHeight
                                 + (PhoneScreen.ButtonsHeight - dpad) / 2f,
@@ -384,38 +384,45 @@ public static class TowerSceneBuilder
         padImg.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(PhoneScreen.DPadSpritePath);
         padImg.preserveAspect = true;
 
-        // 知らせの欄は盤面の下の端に薄く重ねる（原典の右下の欄にあたるもの）
-        var msgBack = new GameObject("MessageBack", typeof(RectTransform),
+        // 知らせは**画面の中央に出して薄くなって消える**（作者の指定。MessageToastView）。
+        // 原典の右下の欄（TowerHudView.messageBox）は使わない。
+        var toastGo = new GameObject("Toast", typeof(RectTransform),
                                      typeof(UnityEngine.UI.Image));
-        msgBack.transform.SetParent(mapArea, false);
-        var mbRt = msgBack.GetComponent<RectTransform>();
-        mbRt.anchorMin = new Vector2(0f, 0f);
-        mbRt.anchorMax = new Vector2(1f, 0f);
-        mbRt.pivot = new Vector2(0.5f, 0f);
-        mbRt.sizeDelta = new Vector2(0f, 64f);
-        mbRt.anchoredPosition = Vector2.zero;
-        var mbImg = msgBack.GetComponent<UnityEngine.UI.Image>();
-        mbImg.color = new Color(0f, 0f, 0f, 0.55f);
-        mbImg.raycastTarget = false;
+        toastGo.transform.SetParent(frame, false);
+        var toastRt = toastGo.GetComponent<RectTransform>();
+        toastRt.anchorMin = new Vector2(0f, 0.5f);
+        toastRt.anchorMax = new Vector2(1f, 0.5f);
+        toastRt.pivot = new Vector2(0.5f, 0.5f);
+        toastRt.sizeDelta = new Vector2(0f, PhoneScreen.ToastHeight);
+        toastRt.anchoredPosition = new Vector2(0f, mapArea.anchoredPosition.y);
+        var toastImg = toastGo.GetComponent<UnityEngine.UI.Image>();
+        toastImg.color = new Color(0f, 0f, 0f, 0.72f);
+        toastImg.raycastTarget = false;
 
-        var msgGo = new GameObject("Message", typeof(RectTransform));
-        msgGo.transform.SetParent(mapArea, false);
-        var msgRt = msgGo.GetComponent<RectTransform>();
-        msgRt.anchorMin = new Vector2(0f, 0f);
-        msgRt.anchorMax = new Vector2(1f, 0f);
-        msgRt.pivot = new Vector2(0.5f, 0f);
-        msgRt.sizeDelta = new Vector2(0f, 64f);
-        msgRt.anchoredPosition = Vector2.zero;
-        var msg = msgGo.AddComponent<TextMeshProUGUI>();
-        if (font != null) msg.font = font;
-        msg.fontSize = 30f;
-        msg.color = Color.white;
-        msg.alignment = TextAlignmentOptions.Center;
-        msg.enableWordWrapping = false;
-        msg.raycastTarget = false;
-        vso.FindProperty("messageBox").objectReferenceValue = msg;
-        // 縦画面の欄は横に長いので、原典の6桁折り返しは使わない
-        vso.FindProperty("oneLineMessage").boolValue = true;
+        var toastTextGo = new GameObject("Text", typeof(RectTransform));
+        toastTextGo.transform.SetParent(toastRt, false);
+        var ttRt = toastTextGo.GetComponent<RectTransform>();
+        ttRt.anchorMin = Vector2.zero; ttRt.anchorMax = Vector2.one;
+        ttRt.offsetMin = new Vector2(24f, 0f); ttRt.offsetMax = new Vector2(-24f, 0f);
+        var toastText = toastTextGo.AddComponent<TextMeshProUGUI>();
+        if (font != null) toastText.font = font;
+        toastText.fontSize = PhoneScreen.ToastFontSize;
+        toastText.enableAutoSizing = true;
+        toastText.fontSizeMin = 20f;
+        toastText.fontSizeMax = PhoneScreen.ToastFontSize;
+        toastText.color = Color.white;
+        toastText.alignment = TextAlignmentOptions.Center;
+        toastText.enableWordWrapping = false;
+        toastText.raycastTarget = false;
+
+        var toastView = canvasGo.AddComponent<MessageToastView>();
+        var toso = new SerializedObject(toastView);
+        toso.FindProperty("controller").objectReferenceValue = controller;
+        toso.FindProperty("panel").objectReferenceValue = toastRt;
+        toso.FindProperty("background").objectReferenceValue = toastImg;
+        toso.FindProperty("text").objectReferenceValue = toastText;
+        toso.ApplyModifiedPropertiesWithoutUndo();
+        toastGo.SetActive(false);
 
         // 戦闘中は同じ枠に相手の絵と能力値を出す（原典 0x9626）。
         var battleView = BuildBattleView(controller);

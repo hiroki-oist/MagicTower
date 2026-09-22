@@ -190,10 +190,20 @@ public static class TowerScreenshot
         Set(so, "yellowKeys", GameText.Num(p.YellowKeys));
         Set(so, "purpleKeys", GameText.Num(p.PurpleKeys));
         Set(so, "redKeys", GameText.Num(p.RedKeys));
-        Set(so, "messageBox", "黄色の扉が開いた");
+
 
         Icon(so, "weaponIcon", "swordIcons", p.SwordRank);
         Icon(so, "shieldIcon", "shieldIcons", p.ShieldRank);
+
+        // 知らせ（画面の中央に出て薄くなって消えるもの）も見本を出しておく
+        var toast = GameObject.Find("HUD/PhoneFrame/Toast");
+        if (toast != null)
+        {
+            toast.SetActive(true);
+            var t = toast.transform.Find("Text");
+            var tmp = t != null ? t.GetComponent<TextMeshProUGUI>() : null;
+            if (tmp != null) tmp.text = "黄色の鍵を手に入れた！";
+        }
 
         // 持ち物はいくつか持っている形にしておく
         var slots = so.FindProperty("itemSlots");

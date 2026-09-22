@@ -95,6 +95,7 @@
     <Compile Include="Assets/Tests/Editor/SaveMapTests.cs" />
     <Compile Include="Assets/Tests/Editor/ThiefEventsTests.cs" />
     <Compile Include="Assets/Tests/Editor/HeroOrbTests.cs" />
+    <Compile Include="Assets/Tests/Editor/ToastTests.cs" />
     <Compile Include="Assets/Tests/Editor/BattlePresentationTests.cs" />
     <Compile Include="Assets/Tests/Editor/FloorLoaderTests.cs" />
     <Compile Include="Assets/Tests/Editor/MagicSealTests.cs" />

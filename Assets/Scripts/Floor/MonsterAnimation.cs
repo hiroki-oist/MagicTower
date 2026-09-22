@@ -47,11 +47,17 @@ public class MonsterAnimation
     public const float FrameSeconds = 1f / 60f;
 
     /// <summary>
-    /// 1マス動くときの1コマの長さ。**原典からは出せない**ので、作者の「倍速くらいでいい」
-    /// という指定に合わせて 1/120秒 にしてある（16コマで約0.13秒）。
+    /// 1マス動くときの1コマの長さ。**原典からは出せない**ので作者の指定で決めている。
     /// コマ数（16／高速8）は原典どおりで、変えているのは1コマの長さだけ。
+    ///
+    /// ⚠ 以前は 1/120秒 だったが、待ちをコマ送り（`WaitForSeconds`）で入れていたため
+    /// **60コマ/秒の画面では1コマが1/60秒になり、実際には1マス 0.27秒**かかっていた。
+    /// 「遅すぎる。4倍くらい速く」と言われて、
+    ///   ・待ちを**経過時間**で見るようにして画面の速さに左右されないようにし、
+    ///   ・1コマを 1/240秒（1マス 0.067秒）に
+    /// した。0.27 → 0.067 でちょうど4倍。
     /// </summary>
-    public const float SlideFrameSeconds = 1f / 120f;
+    public const float SlideFrameSeconds = 1f / 240f;
 
     /// <summary>その回数ぶんの長さ（秒）。</summary>
     public static float StepSeconds(bool fast)
