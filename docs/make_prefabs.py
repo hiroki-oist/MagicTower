@@ -82,6 +82,10 @@ SPEC=[
  ("Enemy","Boss_GiantOctopus","Enemy_GiantOctopus","Enemy","901_Boss_GiantOctopus",3,3,True),
  # 祭壇は3マスで1つの絵だが、**マスごとに絵が違う**ので1マスずつ置く。
  # （3マス幅の 902_Shop_Altar を2マスに置いて重なっていた）
+ # 商店の左の1マス。**以前は3マスぶんの子を持つ手作りのプレハブ**で、
+ # 真ん中と右のマスにも絵を描いていたため、隣の2マスの絵と二重になっていた
+ # （暗転中に商店だけ横一列に見えるという報告）。1マスに作り直す。
+ ("People","Vendor","Shop_Altar","People",15,1,1,False),
  ("FieldObstacle","Shop_Altar","Shop_Altar","People",16,1,1,False),
  ("FieldObstacle","Shop_Altar_R","Shop_Altar","People",17,1,1,False),
 ]

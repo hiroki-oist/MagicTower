@@ -88,21 +88,6 @@ public class ViewCoroutineTests
 
     /// <summary>金騎士の突撃。75歩ぶん動かして最後に消える。</summary>
     [Test]
-    public void 金騎士の突撃を最後まで流せる()
-    {
-        BattleView view;
-        var go = MakeBattleView(out view);
-        try
-        {
-            var path = KnightCharge.Instance.Trace();
-            int n = Drain(Call(view, "Charge", path));
-            Assert.AreEqual(path.Count, n, "1歩ごとに待つ");
-        }
-        finally { Object.DestroyImmediate(go); }
-    }
-
-    /// <summary>塔の駆け上がり。階の数字だけが 25→50 と動く。</summary>
-    [Test]
     public void 駆け上がりを最後まで流せる()
     {
         var go = new GameObject("HudViewTest");

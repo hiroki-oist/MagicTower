@@ -51,32 +51,10 @@ public class Cutscenes
     /// <summary>盗賊が脱け出して牢が開く処理を表す行（原典 0x070c8）。</summary>
     public const string PrisonOpensStep = "牢が開く";
 
-    /// <summary>
-    /// 金騎士が斬りかかる段（原典 0x325e の向きの表）。道順は <see cref="KnightCharge"/>。
-    ///
-    /// 原典は**6回に分けて**斬りかかり、その合間にセリフを挟む。
-    /// 道順の表は14まとまりで、1回目が1〜3、2回目が4〜6、3回目が7〜9、
-    /// 4回目が10〜12、5回目が13、6回目が14（0x325e の外側の輪が
-    /// `cmp [bp-0xfe], 3/6/9/0xc` と数えている）。
-    /// "斬りかかる 1-3" のように何番目から何番目までかを書く。
-    /// </summary>
-    public const string ChargeStep = "斬りかかる";
-
-    /// <summary>"斬りかかる 1-3" の範囲を読む。番号は1から。無ければ全部。</summary>
-    public static void ParseChargeRange(string step, int runCount, out int from, out int to)
-    {
-        from = 0; to = runCount - 1;
-        if (step == null || !step.StartsWith(ChargeStep)) return;
-        var t = step.Substring(ChargeStep.Length).Trim();
-        if (t.Length == 0) return;
-        var p = t.Split('-');
-        int a, b;
-        if (!int.TryParse(p[0].Trim(), out a)) return;
-        b = a;
-        if (p.Length > 1 && !int.TryParse(p[1].Trim(), out b)) b = a;
-        from = Mathf.Clamp(a - 1, 0, runCount - 1);
-        to = Mathf.Clamp(b - 1, from, runCount - 1);
-    }
+    // 「斬りかかる」の段は取りやめた。原典 0x325e をよく読むと、**絵が斬って回る
+    // のではなく、部下が1体ずつ突撃してきて、そのたびに戦闘（0x6082）が入る**
+    // 作りだった（作者から「キャラの移動がありません」と報告あり）。
+    // 道順の表そのものは <see cref="KnightCharge"/> に残してある。
 
     /// <summary>
     /// 場面の中で戦う段の頭。書き方は "戦闘 プレハブ名"。
@@ -90,6 +68,20 @@ public class Cutscenes
     /// （0x6d09〜0x6d42 と 0x73b1〜0x73c6）。戦闘や魔法攻撃と同じ絵。
     /// </summary>
     public const string FlashStep = "閃光";
+
+    /// <summary>
+    /// 音を鳴らす段の頭。書き方は "音 合図の名前"（Resources/SoundCues.txt の名前）。
+    /// 40階の突撃の終わりに、褒美を並べながら鳴る音6（原典 0x3d18）に使う。
+    /// </summary>
+    public const string SoundPrefix = "音 ";
+
+    /// <summary>"閃光 (x,y)" のマスを読む。書いていなければ false（主人公のマス）。</summary>
+    public static bool TryParseFlash(string step, out Vector2Int at)
+    {
+        at = Vector2Int.zero;
+        if (step == null || !step.StartsWith(FlashStep)) return false;
+        return TryPos(step.Substring(FlashStep.Length), out at);
+    }
 
     /// <summary>
     /// 塔を駆け上がる段（原典 0x2386〜0x23cd）。現在階を1つずつ50まで上げる演出のあと、
@@ -115,6 +107,16 @@ public class Cutscenes
 
     /// <summary>台本を置いてある名前。</summary>
     public const string AmbushScript = "BossSkeletons";
+
+    /// <summary>
+    /// 40階「金騎士の突撃」の段（原典 0x0325e）。台本は Resources/KnightRush.txt
+    /// （書き出しは docs/make_knight_rush.py）。**部下が1体ずつ突撃してきて、
+    /// そのたびに戦う**場面で、道順・出発のマス・相手のIDを原典から取り出してある。
+    /// </summary>
+    public const string RushStep = "突撃";
+
+    /// <summary>その台本を置いてある名前。</summary>
+    public const string RushScript = "KnightRush";
 
     /// <summary>
     /// 主人公が1歩押し上げられる段（原典 0x3ebc〜0x3edd）。
@@ -157,7 +159,18 @@ public class Cutscenes
     public static bool TryParseWalk(string step, out string prefab,
                                     out Vector2Int from, out List<Vector2Int> path)
     {
-        prefab = null; from = Vector2Int.zero; path = null;
+        bool slow;
+        return TryParseWalk(step, out prefab, out from, out path, out slow);
+    }
+
+    /// <summary>道順の後ろに "遅い" と書くと、半分の速さで歩く（作者の指定）。</summary>
+    public const string SlowWalkMark = "遅い";
+
+    public static bool TryParseWalk(string step, out string prefab,
+                                    out Vector2Int from, out List<Vector2Int> path,
+                                    out bool slow)
+    {
+        prefab = null; from = Vector2Int.zero; path = null; slow = false;
         if (step == null || !step.StartsWith(WalkPrefix)) return false;
         var t = step.Substring(WalkPrefix.Length).Trim();
         int open = t.IndexOf('('), close = t.IndexOf(')');
@@ -166,7 +179,13 @@ public class Cutscenes
         if (!TryPos(t.Substring(open, close - open + 1), out from)) return false;
         path = new List<Vector2Int>();
         var at = from;
-        foreach (var s in t.Substring(close + 1).Split(','))
+        var tail = t.Substring(close + 1).Trim();
+        if (tail.EndsWith(SlowWalkMark))
+        {
+            slow = true;
+            tail = tail.Substring(0, tail.Length - SlowWalkMark.Length).Trim();
+        }
+        foreach (var s in tail.Split(','))
         {
             int d;
             if (!int.TryParse(s.Trim(), out d)) continue;
@@ -310,6 +329,7 @@ public class Cutscenes
                 if (t.Length == 0) continue;
                 // 長い段は別の帳面に書いてある（原典から書き出したもの）
                 if (t == AmbushStep) steps.AddRange(Script(AmbushScript));
+                else if (t == RushStep) steps.AddRange(Script(RushScript));
                 else steps.Add(t);
             }
             scenes[name] = steps;

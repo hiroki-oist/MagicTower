@@ -581,6 +581,7 @@ public static class TowerSceneBuilder
         var wso3 = new SerializedObject(controller);
         wso3.FindProperty("walkView").objectReferenceValue = walkView;
         wso3.FindProperty("blinkView").objectReferenceValue = blinkView;
+        wso3.FindProperty("bossView").objectReferenceValue = bossView;
         wso3.ApplyModifiedPropertiesWithoutUndo();
         // 会話の窓は本線シーンの後ろの方で作るので、作ったところで繋ぐ（下の BuildDialogue 内）
 
@@ -935,9 +936,6 @@ public static class TowerSceneBuilder
         // 戦闘でも魔法攻撃でも場面の節目でも、原典は同じこの絵を貼る。
         so.FindProperty("hitSprite").objectReferenceValue =
             AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Effects/Hit.png");
-        // 金騎士の絵。盤面に出る金騎士（ID133）と同じものを使う。
-        so.FindProperty("knightSprite").objectReferenceValue =
-            AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Tiles/133_Enemy_Worrior.png");
         so.ApplyModifiedPropertiesWithoutUndo();
         return view;
     }

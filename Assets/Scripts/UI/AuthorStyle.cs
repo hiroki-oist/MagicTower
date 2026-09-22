@@ -106,6 +106,15 @@ public static class AuthorStyle
     public static readonly float TypeCharsPerSecond = 10f;
 
     /// <summary>
+    /// 戦いや登場の動きが終わってから、次の手に移るまでの間（秒。作者の指定）。
+    /// 合体の途中でセリフが出たり、戦闘の帯と重なって扉が開いたりするのを防ぐ。
+    /// </summary>
+    public static readonly float SettleSeconds = 0.5f;
+
+    /// <summary>盤面を描き出したあとの間（秒）。暗転が明けてすぐだと誰の声か分からない。</summary>
+    public static readonly float SettleAfterDrawSeconds = 1f;
+
+    /// <summary>
     /// 会話の窓の横幅（ドット）。**本文の一番長い行に合わせて決める**。
     ///
     /// 以前はここを 608（画面いっぱい近く）で固定していたが、折り返しは

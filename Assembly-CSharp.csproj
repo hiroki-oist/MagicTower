@@ -266,6 +266,7 @@
     <None Include="Assets/TextMesh Pro/Shaders/TMP_Bitmap-Mobile.shader" />
     <None Include="Assets/Resources/Floors/Floor_24.txt" />
     <None Include="Assets/TextMesh Pro/Fonts/LiberationSans - OFL.txt" />
+    <None Include="Assets/Resources/KnightRush.txt" />
     <None Include="Assets/Resources/SoundVoices.txt" />
     <None Include="Assets/Resources/Floors/Floor_48.txt" />
     <None Include="Assets/TextMesh Pro/Shaders/TMP_SDF-Mobile.shader" />

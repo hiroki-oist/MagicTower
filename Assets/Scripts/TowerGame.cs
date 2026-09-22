@@ -200,17 +200,12 @@ public class TowerGame
                 Player.ApplyZenoEvent();
                 EnterFloor(Player.Floor, Player.Position);
             }
-            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.ChargeStep))
+            else if (e.Effect != null && e.Effect.StartsWith(ClearCellStep))
             {
-                // 原典 0x3d1c は突撃の中で地図を書き換えるたびに音6を鳴らす
-                PlaySound(SoundCues.SceneBeat2);
-                var kc = KnightCharge.Instance;
-                int from, to;
-                Cutscenes.ParseChargeRange(e.Effect, kc.RunCount, out from, out to);
-                var path = new List<Vector2Int>();
-                for (int i = from; i <= to; i++) path.AddRange(kc.TraceRun(i));
-                LastKnightCharge = path;
-                viewTicket++;
+                Vector2Int gone;
+                if (Cutscenes.TryParseCell(e.Effect.Substring(ClearCellStep.Length).Trim(),
+                                           "", out gone))
+                    Floor.Clear(gone);
             }
             else if (e.Effect != null && e.Effect.StartsWith(AfterBattleStep))
             {
@@ -241,11 +236,14 @@ public class TowerGame
                 // 原典 0x3119〜0x3194。3x3の中心に10コマを貼る。描くのは見た目の層。
                 bossAppears.Add(BossAppear.Center);
             }
-            else if (e.Effect == Cutscenes.FlashStep)
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.FlashStep))
             {
-                // 原典は音7のあと、自分のマスに当たりの絵を貼る。
+                // 原典は音7のあと当たりの絵を貼る。貼る先は場面によって違う
+                // （3階は自分のマス、42階は金騎士のマス＝0x73e6 の貼り先 0x4da6）。
                 PlaySound(SoundCues.SceneBeat);
-                PlayEffect(Player.Position);
+                Vector2Int flashAt;
+                PlayEffect(Cutscenes.TryParseFlash(e.Effect, out flashAt)
+                           ? flashAt : Player.Position);
             }
             else if (e.Effect == Cutscenes.ClimbStep)
             {
@@ -288,11 +286,11 @@ public class TowerGame
             }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.WalkPrefix))
             {
-                string prefab; Vector2Int from; List<Vector2Int> path;
-                if (Cutscenes.TryParseWalk(e.Effect, out prefab, out from, out path))
+                string prefab; Vector2Int from; List<Vector2Int> path; bool slow;
+                if (Cutscenes.TryParseWalk(e.Effect, out prefab, out from, out path, out slow))
                     walks.Add(new NpcWalk
                     {
-                        Prefab = prefab, From = from, Path = path,
+                        Prefab = prefab, From = from, Path = path, Slow = slow,
                         // 盤面に載っていない人は、着いたあとも絵だけで立たせておく
                         Stay = Floor == null || Floor.IsCleared(path[path.Count - 1])
                     });
@@ -316,6 +314,10 @@ public class TowerGame
                     PlaySound(SoundCues.OpenDoor);
                     doorOpens.Add(new DoorOpen { At = at, Cell = "s", Closing = true });
                 }
+            }
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.SoundPrefix))
+            {
+                PlaySound(e.Effect.Substring(Cutscenes.SoundPrefix.Length).Trim());
             }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.VanishPrefix))
             {
@@ -355,6 +357,9 @@ public class TowerGame
     /// 「勝ったら相手のマスへ進んでそこを床にする」を、絵が終わるまで待たせる。
     /// </summary>
     public const string AfterBattleStep = "戦闘の後始末";
+
+    /// <summary>そのマスを空ける段（妖精は読み終えてから消える）。</summary>
+    public const string ClearCellStep = "マスを空ける";
 
     /// <summary>場面が終わってから解錠を見直すか。</summary>
     bool pendingEvaluate;
@@ -399,14 +404,15 @@ public class TowerGame
         foreach (var step in steps)
         {
             if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
-                || step == Cutscenes.ClimbStep || step == Cutscenes.FlashStep
-                || step.StartsWith(Cutscenes.ChargeStep) || step == Cutscenes.BossAppearStep
+                || step == Cutscenes.ClimbStep || step.StartsWith(Cutscenes.FlashStep)
+                || step == Cutscenes.BossAppearStep
                 || step.StartsWith(Cutscenes.BattlePrefix)
                 || step == Cutscenes.PushUpStep
                 || step.StartsWith(Cutscenes.WalkPrefix)
                 || step.StartsWith(Cutscenes.DoorOpenPrefix)
                 || step.StartsWith(Cutscenes.DoorClosePrefix)
-                || step.StartsWith(Cutscenes.VanishPrefix))
+                || step.StartsWith(Cutscenes.VanishPrefix)
+                || step.StartsWith(Cutscenes.SoundPrefix))
             {
                 pages.Enqueue(withMap(new Page
                 {
@@ -487,8 +493,13 @@ public class TowerGame
                 pages.Enqueue(withMap(new Page
                     { Kind = PageKind.Dialogue, Text = t, Record = id }));
         }
-        // 最後まで残った書き換え（ページが続かないもの）はその場で当てる
-        if (pendingMap != null) { ApplyMap(pendingMap); pendingMap = null; }
+        // 最後に残った書き換えは**終わりの1手**として積む。その場で当てると
+        // 場面が始まる前に効いてしまう（42階で魔導士が消えなかったのがこれ）。
+        if (pendingMap != null)
+            pages.Enqueue(withMap(new Page
+            {
+                Kind = PageKind.Effect, Text = null, Record = -1, Effect = ""
+            }));
         ResolveEffects();
         return true;
     }
@@ -533,12 +544,6 @@ public class TowerGame
     /// 原典は地図を変えず**階の数字だけ**を 24→50 と上げていく。
     /// </summary>
     public List<int> LastClimb { get; private set; }
-
-    /// <summary>
-    /// 金騎士の突撃の通り道。場面が流れたときに積む。見た目の層がこれを再生する。
-    /// 原典（0x325e）は向きの表を読みながら絵を動かし、振るたびに始まりへ戻す。
-    /// </summary>
-    public List<Vector2Int> LastKnightCharge { get; private set; }
 
     /// <summary>開いた扉ひとつぶん。</summary>
     public struct DoorOpen
@@ -588,6 +593,8 @@ public class TowerGame
         /// 原典も地図に書かずに絵だけ出しているので、"消す" が来るまで残す。
         /// </summary>
         public bool Stay;
+        /// <summary>半分の速さで歩くか（32階の金騎士。作者の指定）。</summary>
+        public bool Slow;
     }
 
     /// <summary>
@@ -1149,6 +1156,10 @@ public class TowerGame
     public void GameOver()
     {
         if (IsGameOver) return;
+        // 残っている場面の続き（突撃の残りなど）は捨てる。
+        // 倒れたのに次の相手が歩いてきては困る。
+        pages.Clear();
+        walks.Clear(); doorOpens.Clear(); blinks.Clear(); vanishes.Clear();
         Player.Hp = 0;
         pages.Clear();
         frontMapDone = true;
@@ -1529,7 +1540,12 @@ public class TowerGame
             // 採点したら**その場から消える**。20階・25階・49階では解錠の表の最後が
             // 妖精のマスを床に戻しており（出したその場で採点して消す）、
             // 10階でも話したあとは残らない。
-            Floor.Clear(at);
+            // **消えるのは読み終えてから**（話しかけた瞬間に消えると報告された）。
+            pages.Enqueue(new Page
+            {
+                Kind = PageKind.Effect, Text = null, Record = -1,
+                Effect = ClearCellStep + "(" + at.x + "," + at.y + ")"
+            });
             return;
         }
     }

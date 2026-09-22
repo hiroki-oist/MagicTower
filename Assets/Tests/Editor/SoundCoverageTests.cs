@@ -22,7 +22,9 @@ public class SoundCoverageTests
                 + System.IO.File.ReadAllText("Assets/Scripts/UI/FullScreenView.cs")
                 + System.IO.File.ReadAllText("Assets/Scripts/UI/BattleView.cs");
         var consts = System.IO.File.ReadAllText("Assets/Scripts/Items/SoundCues.cs");
-        var fromTable = System.IO.File.ReadAllText("Assets/Resources/PositionEvents.txt");
+        var fromTable = System.IO.File.ReadAllText("Assets/Resources/PositionEvents.txt")
+                      + System.IO.File.ReadAllText("Assets/Resources/KnightRush.txt")
+                      + System.IO.File.ReadAllText("Assets/Resources/Cutscenes.txt");
         var missing = new System.Collections.Generic.List<string>();
 
         foreach (var name in SoundCues.Instance.Names)

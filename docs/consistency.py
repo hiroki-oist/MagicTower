@@ -435,8 +435,18 @@ _kcs=open("Assets/Scripts/Items/KnightCharge.cs",encoding="utf-8").read()
 chk("FirstStart" in _kcs and "0, -2" in _kcs,"1振り目は門のマス (0,-2) から（原典 0x3547/0x354f）")
 chk("RunStart" in _kcs and "RunStart = new Vector2Int(0, 0)" in _kcs,
     "2振り目からは中央へ戻る（原典 0x35e0〜0x35e7）")
-_bvx=open("Assets/Scripts/UI/BattleView.cs",encoding="utf-8").read()
-chk("Charge(" in _bvx and "knightSprite" in _bvx,"金騎士が道順どおりに動く見た目がある")
+# 40階は**部下が1体ずつ歩いてきて、そのたびに戦う**（原典 0x325e を読み直した）。
+# 歩かせるのは盤面のプレハブ（NpcWalkView）なので、専用の絵はもう要らない。
+_kr=[l.split("#")[0].strip() for l in
+     open("Assets/Resources/KnightRush.txt",encoding="utf-8").read().split("\n")]
+_kr=[l for l in _kr if l]
+chk(sum(1 for l in _kr if l.startswith("歩き "))==14,
+    "40階の台本は14本の道順（12体＋金騎士＋引き上げ）",
+    str(sum(1 for l in _kr if l.startswith("歩き "))))
+chk(sum(1 for l in _kr if l.startswith("戦闘 "))==13,
+    "突撃のたびに戦う（引き上げの1本だけ戦闘が無い）")
+chk([l for l in _kr if l.isdigit()]==["135","136","137","138","139","140"],
+    "セリフは6つ、3体ごとの切れ目で出る（原典 0x363c/0x36f3/0x3964/0x39db）")
 chk("斬りかかる" in open("Assets/Resources/Cutscenes.txt",encoding="utf-8").read(),
     "場面の表に斬りかかる段がある")
 
@@ -813,7 +823,7 @@ chk("SerializedPropertyType.ObjectReference" in _swt,"シーンの配線の抜�
 _sceneT=open("Assets/Scenes/Tower.unity",encoding="utf-8",errors="ignore").read()
 chk("AudioSource" in _sceneT,"シーンに鳴らす口（AudioSource）が置いてある")
 _vct=open("Assets/Tests/Editor/ViewCoroutineTests.cs",encoding="utf-8").read()
-for _n in ("戦闘の演出を最後まで流せる","金騎士の突撃を最後まで流せる","駆け上がりを最後まで流せる"):
+for _n in ("戦闘の演出を最後まで流せる","駆け上がりを最後まで流せる"):
     chk(_n in _vct,f"コルーチンの検査「{_n}」がある")
 
 # 手で遊んで見つかった3件（配置のずれ・絵の大きさ・画面が付いてこない）
@@ -1224,11 +1234,11 @@ _cs_steps=[n.strip() for r in _cs for n in r[2].split(";")]
 _cs_say=[n for n in _cs_steps
          if n not in ("題名","奪われる","牢が開く","最後の画面","駆け上がる","閃光",
                       "斬りかかる","序章の絵","塔の絵","終わりの言葉",
-                      "ボスが現れる","骸骨に囲まれる","押し上げられる")
+                      "ボスが現れる","骸骨に囲まれる","押し上げられる","突撃")
          and not n.startswith("地図 ") and not n.startswith("歩き ")
          and not n.startswith("開く ") and not n.startswith("閉まる ")
          and not n.startswith("消す ") and not n.startswith("戦闘 ")
-         and not n.startswith("斬りかかる")]
+         and not n.startswith("音 ") and not n.startswith("閃光")]
 chk(all(int(n) in _dlg for n in _cs_say),
     "場面のセリフ番号が Dialogue.txt に実在する（「題名」「奪われる」は別仕立て）")
 # 10階「骸骨に囲まれる」の台本（原典 0x3e0a。書き出しは docs/make_boss_skeletons.py）
@@ -1267,20 +1277,17 @@ chk(any(r[0]=="15" and r[5].startswith("(+3,+5)") and r[5].endswith("2,2") for r
 chk(any(r[0]=="2" and r[5].startswith("(-5,-2)") and r[5].endswith("3,3") for r in _th),
     "2階の盗賊は (-5,-2) から下へ2歩（原典 0x4b2 の X=0,Y=7 と表 {3,3}）")
 _gk=[n for n in _cs_steps if n.startswith("歩き Enemy_Worrior")]
-chk(len(_gk)==2 and "3,3,3" in _gk[0] and _gk[1].endswith("4,4,4,4,4,4,4,4,1,1,1,1"),
+chk(len(_gk)==2 and "3,3,3" in _gk[0] and _gk[1].endswith("1,1,1,1 遅い"),
     "32階の金騎士は3歩降りてきて、上へ8歩・右へ4歩で逃げる（原典 0x68b0 の表2本）")
 chk(any(n.startswith("戦闘 Enemy_Worrior") for n in _cs_steps),
     "32階は歩かせたあと戦う（原典 0x69e2 の 0x6082 呼び出し）")
-_ch=[n for n in _cs_steps if n.startswith("斬りかかる")]
-chk(_ch==["斬りかかる 1-3","斬りかかる 4-6","斬りかかる 7-9",
-          "斬りかかる 10-12","斬りかかる 13","斬りかかる 14"],
-    "40階の突撃は6回に分かれる（原典 0x325e の外側の輪 cmp 3/6/9/0xc）")
-chk(sum(1 for n in _cs_steps if n.startswith("閉まる "))==3
-    and sum(1 for n in _cs_steps if n.startswith("開く "))==2,
-    "場面の中で門が閉まるのは3か所（20階・40階・49階）、開くのは2か所"
-    "（40階の開け直しと24階の時空の門）。10階の台本は別勘定")
-chk(sum(1 for n in _cs_steps if "=ID93" in n)==17,
-    "魔導師が出るのは3階4体・42階5体・49階8体の計17体（原典の座標表どおり）")
+
+chk(sum(1 for n in _cs_steps if n.startswith("閉まる "))==2
+    and sum(1 for n in _cs_steps if n.startswith("開く "))==1,
+    "場面の表で門が閉まるのは2か所（20階・49階）、開くのは1か所（24階の時空の門）。"
+    "10階と40階は別の台本に書いてある")
+chk(sum(1 for n in _cs_steps if "=ID93" in n)==16,
+    "魔導師が出るのは3階4体・42階4体・49階8体の計16体（原典の座標表どおり）")
 # 階段で着いたマスでも立ち入りのできごとを見る（原典 0x23ee の 0x29e9〜0x2a00）。
 # 31→32階（金騎士敗走）と 41→42階（金騎士処刑）は**着地マスが発動マス**なので、
 # ここが抜けると場面ごと飛ぶ。作者から「32階のイベントが起きずに戦闘になった」と報告あり。
@@ -1323,9 +1330,9 @@ chk("結果が出ていない" in open("docs/run_tests.sh",encoding="utf-8").rea
     "結果が出ていなければ落ちたと分かるようにする")
 # 場面の中の地図の書き換え（原典 0x3044 の三つ組の表から取った）
 _cs_map=[n for n in _cs_steps if n.startswith("地図 ")]
-chk(len(_cs_map)==46,
-    "場面の中の地図の書き換えは46件（3階のゼノ5＋片付け5・20階のボス登場10・"
-    "32階の金騎士1・40階の金騎士3・42階の処刑12・49階の口上10）",
+chk(len(_cs_map)==41,
+    "場面の表の地図の書き換えは41件（3階のゼノ5＋片付け5・20階のボス登場10・"
+    "32階の金騎士1・42階の処刑10・49階の口上10）。10階と40階は別の台本",
     len(_cs_map))
 chk(all(re.match(r"^地図 \([-+]?\d+,[-+]?\d+\)=.+$",n) for n in _cs_map),
     "場面の地図の段は「地図 (x,y)=種別」の形")
@@ -2249,7 +2256,8 @@ for _l in open("Assets/Resources/SoundCues.txt",encoding="utf-8"):
     _cue=_l.split("|")[0].strip()
     if _cue == "起動時のテンポ": continue            # 音は出ない（テンポを戻すだけ）
     # 表（PositionEvents.txt）から名前で鳴らすものもある（"音 合図名"）
-    if "音 "+_cue in open("Assets/Resources/PositionEvents.txt",encoding="utf-8").read():
+    if any("音 "+_cue in open(_f,encoding="utf-8").read() for _f in
+           ("Assets/Resources/PositionEvents.txt","Assets/Resources/KnightRush.txt")):
         continue
     _m=re.search(r'public const string (\w+)\s*=\s*"'+re.escape(_cue)+r'"',_sccs)
     if not _m or "SoundCues."+_m.group(1) not in _players: _silent.append(_cue)

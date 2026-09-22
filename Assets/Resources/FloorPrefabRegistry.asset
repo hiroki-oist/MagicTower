@@ -174,7 +174,7 @@ MonoBehaviour:
   - key: Sword_Dragon
     prefab: {fileID: 1007182839427644473, guid: be4a69b79869763b486e456f58997f45, type: 3}
   - key: Vendor
-    prefab: {fileID: 4773468787853144955, guid: 593e3bbb1ffc44bfaa9275482742d3a3, type: 3}
+    prefab: {fileID: 1102408421673989523, guid: 593e3bbb1ffc44bfaa9275482742d3a3, type: 3}
   - key: Wing_Down
     prefab: {fileID: 395894884577520964, guid: a1c129473f74331f162c980a027b7701, type: 3}
   - key: Wing_Up

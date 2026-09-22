@@ -75,7 +75,7 @@ public class NpcWalkView : MonoBehaviour
         var at = walk.From;
         foreach (var to in walk.Path)
         {
-            yield return Slide(mover, at, to);
+            yield return Slide(mover, at, to, walk.Slow);
             at = to;
         }
         if (walk.Stay)
@@ -91,12 +91,12 @@ public class NpcWalkView : MonoBehaviour
     }
 
     /// <summary>1マスぶん滑らせる。速さは主人公と同じ（原典 0xa276 の16コマ）。</summary>
-    IEnumerator Slide(GameObject who, Vector2Int from, Vector2Int to)
+    IEnumerator Slide(GameObject who, Vector2Int from, Vector2Int to, bool slow = false)
     {
         if (who == null) yield break;
         var a = new Vector3(from.x, from.y, -1f);
         var b = new Vector3(to.x, to.y, -1f);
-        float dur = MonsterAnimation.StepSeconds(false);
+        float dur = MonsterAnimation.StepSeconds(false) * (slow ? 2f : 1f);
         float t = 0f;
         while (t < dur)
         {

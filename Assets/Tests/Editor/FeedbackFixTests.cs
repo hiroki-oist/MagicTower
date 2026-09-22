@@ -81,4 +81,45 @@ public class FeedbackFixTests
         Assert.AreEqual(10f, AuthorStyle.TypeCharsPerSecond,
                         "作者の指定（出し終わる前に決定で全部出し、もう一度で送る）");
     }
+
+    [Test]
+    public void 妖精は読み終えてから消える()
+    {
+        var g = NewGameOn(10, new Vector2Int(0, 2));
+        g.Player.Hp = 99999; g.Player.Attack = 999; g.Player.Defense = 999;
+        g.Floor.Put(new Vector2Int(0, 3), "Fairy");
+        g.Step(Vector2Int.up);
+        Assert.AreEqual("Fairy", g.Floor.At(new Vector2Int(0, 3)), "話している間は居る");
+        while (g.PendingPages > 0)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+        }
+        Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(0, 3)), "送り終えたら消える");
+    }
+
+    [Test]
+    public void 場面の終わりの片付けは終わりに効く()
+    {
+        // 42階は魔導士4体を出して、最後にその4マスを片付ける。
+        // 片付けを「その場で当てる」と場面の頭で効いてしまい、魔導士が残っていた。
+        var g = NewGameOn(42, new Vector2Int(0, -4));
+        g.Player.Hp = 99999; g.Player.Attack = 999; g.Player.Defense = 999;
+        Assert.IsTrue(g.PlayScene("金騎士処刑とゼノ登場"));
+        bool sawMage = false;
+        for (int i = 0; i < 400 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+            g.ConsumeBlinks();
+            if (g.Floor.At(new Vector2Int(0, -1)) == "Enemy_ID93") sawMage = true;
+        }
+        Assert.IsTrue(sawMage, "途中で魔導士が出る");
+        foreach (var at in new[] { new Vector2Int(0, -1), new Vector2Int(0, -3),
+                                   new Vector2Int(-1, -2), new Vector2Int(1, -2) })
+            Assert.IsTrue(g.Floor.IsCleared(at), $"終わりに片付く {at}");
+        Assert.AreEqual("Boss_Zeno", g.Floor.At(new Vector2Int(0, 0)),
+                        "ゼノは残る（原典 0x7182 は消していない）");
+        Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(0, -2)), "金騎士は処刑されて消える");
+    }
 }

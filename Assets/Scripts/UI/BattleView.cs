@@ -19,7 +19,8 @@ public class BattleView : MonoBehaviour
 {
     [SerializeField] TowerController controller;
     [SerializeField] Sprite hitSprite;
-    [SerializeField] Sprite knightSprite;
+    // 金騎士の絵は使わなくなった。40階は**部下が1体ずつ歩いてくる**作りで、
+    // 歩かせるのは NpcWalkView（盤面のプレハブをそのまま動かす）。
     [SerializeField] Color flash = new Color(1f, 1f, 1f, 0.75f);
 
     /// <summary>今再生しているか。</summary>
@@ -38,9 +39,7 @@ public class BattleView : MonoBehaviour
     public int CountersDone { get; private set; }
 
     List<BattlePresentation.Step> playing;
-    List<Vector2Int> playingCharge;
     GameObject effect;
-    GameObject knight;
 
     void Awake()
     {
@@ -52,12 +51,6 @@ public class BattleView : MonoBehaviour
         sr.sortingOrder = 200;
         effect.SetActive(false);
 
-        knight = new GameObject("KnightCharge", typeof(SpriteRenderer));
-        knight.transform.SetParent(transform, false);
-        var ksr = knight.GetComponent<SpriteRenderer>();
-        ksr.sprite = knightSprite;
-        ksr.sortingOrder = 150;
-        knight.SetActive(false);
     }
 
     void LateUpdate()
@@ -67,14 +60,6 @@ public class BattleView : MonoBehaviour
         // 戦闘以外（魔法攻撃など）の閃光。原典は同じ絵を同じように1回出すだけ。
         foreach (var at in controller.Game.ConsumeEffects())
             StartCoroutine(Flash(at));
-
-        // 金騎士の突撃。原典の向きの表どおりに盤面を斬って回る。
-        var charge = controller.Game.LastKnightCharge;
-        if (charge != null && charge != playingCharge)
-        {
-            playingCharge = charge;
-            StartCoroutine(Charge(charge));
-        }
 
         if (IsPlaying) return;
         var steps = controller.Game.LastBattle;
@@ -123,21 +108,6 @@ public class BattleView : MonoBehaviour
     /// 金騎士が道順どおりに動く。1歩ごとの間合いは戦闘の踏み込みと同じ 10/60秒にしてある
     /// （原典は描画の中で待っていて、値は追えていない）。
     /// </summary>
-    IEnumerator Charge(List<Vector2Int> path)
-    {
-        if (knight == null) yield break;
-        IsPlaying = true;                 // 斬り終わるまで場面の次の行へ進ませない
-        knight.SetActive(true);
-        foreach (var at in path)
-        {
-            knight.transform.position = new Vector3(at.x, at.y, -2f);
-            yield return new WaitForSeconds(
-                BattlePresentation.WaitSeconds(BattlePresentation.StepWait));
-        }
-        knight.SetActive(false);
-        IsPlaying = false;
-    }
-
     void ShowEffect(Vector2Int at)
     {
         if (effect == null) return;

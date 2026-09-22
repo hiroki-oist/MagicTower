@@ -124,32 +124,36 @@ public class CutsceneTests
     }
 
     [Test]
-    public void 金騎士の突撃は六つのセリフが順に出る()
+    public void 金騎士の突撃は部下が一体ずつ突撃してくる()
     {
         var g = Game(40, new Vector2Int(0, -1));
         Assert.IsTrue(g.PlayScene("金騎士の突撃"));
 
-        // 原典 0x325e は**6回に分けて**斬りかかり、その合間にセリフを挟む
-        // （1回目→135のあと、2回目と3回目→136/137のあと、…）。
+        // 原典 0x325e は**部下が1体ずつ歩いてきて、そのたびに戦う**。
+        // 12体＋金騎士の13戦で、3体ごとにセリフが入る。
         var want = new[] { 135, 136, 137, 138, 139, 140 };
-        int seen = 0, charges = 0, steps = 0;
-        for (int i = 0; i < 200 && g.PendingPages > 0; i++)
+        int seen = 0, walks = 0, battles = 0;
+        int hpBefore = g.Player.Hp;
+        for (int i = 0; i < 400 && g.PendingPages > 0; i++)
         {
-            var before = g.LastKnightCharge;
-            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            if (g.CurrentKind == TowerGame.PageKind.Effect)
+            {
+                var before = g.LastBattle;
+                g.Pump(false);
+                walks += g.ConsumeWalks().Count;
+                if (g.LastBattle != null && g.LastBattle != before) battles++;
+            }
             else
             {
                 Assert.AreEqual(want[seen++], g.Current.Value.Record);
-                g.NextPage();          // 送ると続きの1手も起きる
+                g.NextPage();
             }
-            if (g.LastKnightCharge != null && g.LastKnightCharge != before)
-            { charges++; steps += g.LastKnightCharge.Count; }
         }
         Assert.AreEqual(6, seen, "セリフは6つ");
-        Assert.AreEqual(6, charges, "斬りかかりは6回");
-        Assert.IsNotNull(g.LastKnightCharge, "斬りかかる道順が積まれる");
-        Assert.AreEqual(KnightCharge.Instance.StepCount, steps,
-                        "6回ぶんを足すと表の全部の歩数になる");
+        Assert.AreEqual(14, walks, "12体＋金騎士の突撃13本＋引き上げ1本");
+        Assert.AreEqual(13, battles, "引き上げ以外は戦闘が入る");
+        Assert.AreEqual(FloorState.Floor, g.Floor.At(new Vector2Int(0, 0)), "中央は空く");
+        Assert.AreEqual(FloorState.Floor, g.Floor.At(new Vector2Int(0, -2)), "退路の門が開く");
     }
 
     [Test]

@@ -106,7 +106,9 @@ public class TowerHudView : MonoBehaviour
             Set(messageBox, oneLineMessage ? (last ?? "") : TowerHud.InfoBox(last));
         }
         if (trophy != null)
-            trophy.text = string.IsNullOrEmpty(p.Rank) ? PhoneScreen.TrophyLabel : p.Rank;
+            trophy.text = string.IsNullOrEmpty(p.Rank)
+                        ? PhoneScreen.TrophyLabel
+                        : PhoneScreen.TrophyLabel + "\n" + p.Rank;
         ShowIcon(weaponIcon, swordIcons,  p.SwordRank);
         ShowIcon(shieldIcon, shieldIcons, p.ShieldRank);
         ShowKeys(p);

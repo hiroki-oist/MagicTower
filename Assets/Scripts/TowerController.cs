@@ -35,6 +35,8 @@ public class TowerController : MonoBehaviour
     [SerializeField] BlinkView blinkView;
     /// <summary>会話の窓。出し終わる前の決定は「全部出す」に使う。</summary>
     [SerializeField] DialogueWindowView dialogue;
+    /// <summary>20階のボスが現れる10コマ。**出終わってひと呼吸おいてから**セリフ。</summary>
+    [SerializeField] BossAppearView bossView;
     /// <summary>日本語の字。**先に作っておく**（初出の字で固まるため）。</summary>
     [SerializeField] TMPro.TMP_FontAsset font;
 
@@ -126,19 +128,36 @@ public class TowerController : MonoBehaviour
     /// <summary>出したい1秒あたりのコマ数。演出の数え方（1/60秒）と合わせる。</summary>
     public const int TargetFrameRate = 60;
 
+    /// <summary>この時までは「まだ落ち着いていない」ことにする。</summary>
+    float settleUntil;
+
     /// <summary>見た目の層が何かを動かしている最中か。</summary>
     bool ViewBusy
     {
         get
         {
-            return sliding
+            bool busy = sliding
                    || drawing
                    || Game.HasPendingView          // 渡したばかりで、まだ動き出していない
                    || (doorView != null && doorView.IsPlaying)
                    || (walkView != null && walkView.IsPlaying)
                    || (battle != null && battle.IsPlaying)
+                   || (band != null && band.IsShowing)
                    || (blinkView != null && blinkView.IsPlaying)
                    || Game.HasBlinks;
+            // **ひと呼吸おく**（作者の指定）。合体や暗転の直後にセリフが出たり、
+            // 戦闘の帯と重なって次のできごとが起きたりするのが落ち着かないため。
+            if (busy)
+            {
+                float wait = drawing ? AuthorStyle.SettleAfterDrawSeconds
+                           : (battle != null && battle.IsPlaying)
+                             || (band != null && band.IsShowing)
+                             || (blinkView != null && blinkView.IsPlaying)
+                             || (bossView != null && bossView.IsPlaying)
+                             ? AuthorStyle.SettleSeconds : 0f;
+                if (wait > 0f) settleUntil = Time.time + wait;
+            }
+            return busy || Time.time < settleUntil;
         }
     }
 
@@ -257,6 +276,10 @@ public class TowerController : MonoBehaviour
             acted = dir != Vector2Int.zero && dir != blockedDir;
             if (acted)
             {
+                // **押した向きへ向き直る**。滑って動くときは Slide が向きを変えるが、
+                // 戦った・壁だった・扉を開けたときは動かないので、ここで向ける
+                // （上を向いたまま右の敵と戦っていた、という報告）。
+                facing = FacingOf(dir);
                 // **何も起きなかったとき（壁）だけ**同じ向きを止める。
                 // 扉を開けた・物を拾った・戦ったときは、押しっぱなしで進み続ける
                 // （「一度離さないと動かない」と報告されたのがここ）。
@@ -430,13 +453,16 @@ public class TowerController : MonoBehaviour
             int x, y;
             if (!int.TryParse(name.Substring(cut2 + 1, cut - cut2 - 1), out x)) continue;
             if (!int.TryParse(name.Substring(cut + 1), out y)) continue;
-            var sr = child.GetComponent<SpriteRenderer>();
-            if (sr == null) continue;
+            // **子に付いている絵も拾う**。根に絵が無いものを取りこぼすと、
+            // 暗転の最中もそれだけ描かれたままになる。
             var key = new Vector2Int(x, y);
-            if (!byCell.ContainsKey(key))
-                byCell[key] = new System.Collections.Generic.List<SpriteRenderer>();
-            byCell[key].Add(sr);
-            sr.enabled = false;
+            foreach (var sr in child.GetComponentsInChildren<SpriteRenderer>(true))
+            {
+                if (!byCell.ContainsKey(key))
+                    byCell[key] = new System.Collections.Generic.List<SpriteRenderer>();
+                byCell[key].Add(sr);
+                sr.enabled = false;
+            }
         }
         if (playerView != null) playerView.gameObject.SetActive(false);
 
