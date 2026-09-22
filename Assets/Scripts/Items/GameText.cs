@@ -76,6 +76,16 @@ public class GameText
         }
     }
 
+    /// <summary>字の下ごしらえ用に、持っている文言を全部返す。</summary>
+    public IEnumerable<string> AllText
+    {
+        get
+        {
+            foreach (var l in dialogue) yield return l.Body;
+            foreach (var m in messages.Values) yield return m;
+        }
+    }
+
     public Line? Dialogue(int id)
     {
         foreach (var l in dialogue) if (l.Id == id) return l;

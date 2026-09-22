@@ -29,6 +29,8 @@ public class TowerController : MonoBehaviour
     [SerializeField] DoorOpenView doorView;
     /// <summary>戦闘の黒い帯。**消えるまで次の一手を受けない**（作者の指定）。</summary>
     [SerializeField] BattleBandView band;
+    /// <summary>日本語の字。**先に作っておく**（初出の字で固まるため）。</summary>
+    [SerializeField] TMPro.TMP_FontAsset font;
 
     /// <summary>勇者の絵。戦闘の帯（<see cref="BattleBandView"/>）も同じ絵を使う。</summary>
     public Sprite PlayerSprite { get { return playerSprite; } }
@@ -81,7 +83,7 @@ public class TowerController : MonoBehaviour
     /// 組み立てるので、3階のゼノの場面に踏み込んだその一手だけ時間がかかり、
     /// **一歩手前で固まったように見えていた**（作者の報告）。
     /// </summary>
-    static void WarmUp()
+    void WarmUp()
     {
         var unused = GameText.Instance.Message("menu_title");
         if (Cutscenes.Instance == null || PositionEvents.Instance == null
@@ -92,6 +94,27 @@ public class TowerController : MonoBehaviour
             || string.IsNullOrEmpty(unused))
             Debug.LogWarning("表の読み込みに失敗した");
         GameText.Instance.Dialogue(110);        // セリフの表も引いておく
+        WarmUpFont();
+    }
+
+    /// <summary>
+    /// **セリフに出る字を先に作っておく**。TMP は初めて出す字をその場で作るので、
+    /// 長いセリフが初めて出る一手だけ固まる（3階のゼノで「一歩手前で固まる」と
+    /// 報告されたのがこれ）。起動時にまとめて作っておけば、以後は引っかからない。
+    /// </summary>
+    void WarmUpFont()
+    {
+        if (font == null) return;
+        var seen = new System.Text.StringBuilder();
+        var used = new System.Collections.Generic.HashSet<char>();
+        System.Action<string> add = t =>
+        {
+            if (string.IsNullOrEmpty(t)) return;
+            foreach (var ch in t)
+                if (ch != '\n' && ch != '\r' && used.Add(ch)) seen.Append(ch);
+        };
+        foreach (var t in GameText.Instance.AllText) add(t);
+        if (seen.Length > 0) font.TryAddCharacters(seen.ToString());
     }
 
     /// <summary>出したい1秒あたりのコマ数。演出の数え方（1/60秒）と合わせる。</summary>

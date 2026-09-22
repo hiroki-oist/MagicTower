@@ -499,6 +499,7 @@ public static class TowerSceneBuilder
         var wso2 = new SerializedObject(controller);
         wso2.FindProperty("doorView").objectReferenceValue = doorView;
         wso2.FindProperty("band").objectReferenceValue = bandView;
+        wso2.FindProperty("font").objectReferenceValue = font;   // 字の下ごしらえに使う
         wso2.ApplyModifiedPropertiesWithoutUndo();
 
         // 20階のボスが現れる10コマ（原典 0x3044）。絵は LCG.P58 の #6。

@@ -871,6 +871,11 @@ chk("AssertMatches" in _vmb and _vmb.count("AssertMatches(g,")>=4,
 for _m in ("Assets/Sprites/Effects/Player_0.png.meta","Assets/Sprites/Effects/Hit.png.meta"):
     chk("spritePixelsToUnits: 32" in open(_m,encoding="utf-8").read(),
         f"{_os.path.basename(_m)} は1マス32ドットで取り込む")
+# **全部の絵**が1マス32ドットで入っているか。3枚だけ 100 のままで、
+# 2コマ目に切り替わった瞬間に 1/3 の大きさになっていた（妖精・ゼノ・バンパイア）。
+_badppu=[_os.path.basename(_f) for _f in glob.glob("Assets/Sprites/Tiles/*.png.meta")
+         if "spritePixelsToUnits: 32" not in open(_f,encoding="utf-8").read()]
+chk(not _badppu,"盤面の絵はどれも1マス32ドットで取り込む",str(_badppu))
 
 print("\n【9w】できごとと音の結び付き（Resources/SoundCues.txt）")
 _cue={}
@@ -2225,7 +2230,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=745
+MIN_CHECKS=746
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

@@ -180,7 +180,11 @@ public class DialogueWindowView : MonoBehaviour
         // 原典どおり塗り広げたいときは false にする。
         if (AuthorStyle.InstantWindow)
         {
-            while (Waiting()) yield return null;      // 点滅や登場は待つ
+            // **待っている間は窓も文字も出さない**。ここで高さを0にしておかないと、
+            // 「ゼノが現れるのと同時にセリフが出る」ことになる（作者の報告）。
+            if (body != null) body.enabled = false;
+            panel.sizeDelta = new Vector2(r.width * DialogueWindow.CanvasScale, 0f);
+            while (Waiting()) yield return null;      // 歩き終わり・点滅・登場を待つ
             panel.sizeDelta = DialogueWindow.SizeOnCanvas(r);
             if (body != null) body.enabled = true;
             opening = null;
