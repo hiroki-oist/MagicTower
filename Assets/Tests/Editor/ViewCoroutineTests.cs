@@ -265,9 +265,14 @@ public class NewViewCoroutineTests
             so.ApplyModifiedPropertiesWithoutUndo();
 
             var page = "あいうえお";
-            int lines = DialogueBox.WindowLines(page);
             int n = Drain(Call(view, "Open", page));
-            Assert.AreEqual(0x14 * lines / DialogueWindow.RowStep + 1, n, "きざみの数だけ止まる");
+            // **一瞬で出す**（作者の指定 AuthorStyle.InstantWindow）ので止まらない。
+            // 原典どおり塗り広げるときは きざみの数だけ止まる。
+            if (AuthorStyle.InstantWindow)
+                Assert.AreEqual(0, n, "待たずに出る");
+            else
+                Assert.AreEqual(0x14 * DialogueBox.WindowLines(page)
+                                / DialogueWindow.RowStep + 1, n, "きざみの数だけ止まる");
         }
         finally { Object.DestroyImmediate(go); }
     }

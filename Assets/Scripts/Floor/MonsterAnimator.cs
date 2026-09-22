@@ -27,6 +27,7 @@ public class MonsterAnimator : MonoBehaviour
 
     int builtFloor = -1;
     Vector2Int lastPos;
+    float clock;
 
     /// <summary>今の仕掛けの中身（テストから見る）。</summary>
     public MonsterAnimation State { get { return anim; } }
@@ -52,13 +53,16 @@ public class MonsterAnimator : MonoBehaviour
             return;
         }
 
-        // ふだんは動きの主が1コマずつ <see cref="TickOnce"/> を呼ぶ（移動の演出と歩調を合わせる）。
-        // 滑らかな移動を通らずに座標が変わったとき（戦闘の踏み込み・階移動など）は
-        // ここで1歩ぶんまとめて進める。
-        if (p.Position == lastPos) return;
-        lastPos = p.Position;
-        anim.Step(p.FastMode);
-        Collect();
+        // **時間で回す**。原典は歩いたときと待ちの間だけ回すが、
+        // 「自分が動かないと敵が動かない」と報告されたので常に回す。
+        // 速さは <see cref="MonsterAnimation.IdleTickSeconds"/>（約1秒で盤面を一周）。
+        if (p.Position != lastPos) { lastPos = p.Position; Collect(); }
+        clock += Time.deltaTime;
+        while (clock >= MonsterAnimation.IdleTickSeconds)
+        {
+            clock -= MonsterAnimation.IdleTickSeconds;
+            anim.Tick();
+        }
         RepaintAll();
     }
 

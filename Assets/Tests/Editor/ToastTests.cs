@@ -64,11 +64,11 @@ public class ToastTests
 public class MoveSpeedTests
 {
     [Test]
-    public void 一マスは約十五分の一秒()
+    public void 一マスは十分の一秒()
     {
-        Assert.AreEqual(1f / 15f, MonsterAnimation.StepSeconds(false), 1e-4f,
-                        "16コマ x 1/240秒 = 0.067秒");
-        Assert.AreEqual(1f / 30f, MonsterAnimation.StepSeconds(true), 1e-4f,
+        Assert.AreEqual(0.1f, MonsterAnimation.StepSeconds(false), 1e-4f,
+                        "16コマ x 1/160秒 = 0.1秒");
+        Assert.AreEqual(0.05f, MonsterAnimation.StepSeconds(true), 1e-4f,
                         "高速モードはその半分（コマ数8）");
     }
 

@@ -101,7 +101,14 @@ public class ChoiceTests
             var g = Shopper(4, o.Pos + Vector2Int.down, 5000);
             g.Floor.Clear(o.Pos + Vector2Int.down);
             g.Step(Vector2Int.up);
-            Assert.IsTrue(g.IsChoosing, "選ばせている");
+            // 原典はまず寄進額を言って「寄進するか？」と聞く
+            Assert.AreEqual(TowerGame.ChoiceKind.AltarOffer, g.Choice);
+            Assert.AreEqual(2, g.ChoiceCount, "はい／いいえ");
+            StringAssert.Contains("ＧＯＬＤ", g.CurrentPage, "いくら要るか言う");
+            g.ConfirmChoice();                         // はい
+            g.NextPage();
+
+            Assert.IsTrue(g.IsChoosing, "望みを選ばせている");
             Assert.AreEqual(4, g.ChoiceCount, "生命力／攻撃力／防御力／やめる");
 
             int atk = g.Player.Attack, gold = g.Player.Gold;

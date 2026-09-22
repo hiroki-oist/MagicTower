@@ -172,10 +172,14 @@ public class DialogueCursorTests
     [Test]
     public void 選んでいる行を本文から数える()
     {
-        // 「◎」の付いた行だけを数えて、ChoiceIndex 番目に印を置く
+        // 選ばせている行（「◎」付き、または全角空白2つで字下げ）を数えて、
+        // ChoiceIndex 番目に印を置く
         var src = System.IO.File.ReadAllText("Assets/Scripts/UI/DialogueWindowView.cs");
         StringAssert.Contains("static int ChoiceLine(", src);
-        StringAssert.Contains("lines[i].IndexOf('◎')", src);
+        StringAssert.Contains("IsChoiceLine(", src);
+        Assert.IsTrue(DialogueWindowView.IsChoiceLine("　　◎はい"));
+        Assert.IsTrue(DialogueWindowView.IsChoiceLine("　　生命力を１００ポイント回復"));
+        Assert.IsFalse(DialogueWindowView.IsChoiceLine("「どの望みをかなえて欲しいのだ？」"));
         // 行送りは見せ方によって違う（作者の見せ方は26、原典は20）
         StringAssert.Contains("AuthorStyle.DialogueLineAdvance", src);
         StringAssert.Contains("ScreenLayout.LineAdvance", src);

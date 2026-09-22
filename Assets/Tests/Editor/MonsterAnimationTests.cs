@@ -207,12 +207,12 @@ public class SlideTests
     {
         Assert.AreEqual(16, MonsterAnimation.TicksPerStep);
         Assert.AreEqual(8, MonsterAnimation.FastTicksPerStep);
-        // 1コマの長さだけ作者の指定で 1/240秒（4倍速の指定）。コマ数は原典どおり
+        // 1コマの長さだけ作者の指定で 1/160秒（1マス0.1秒）。コマ数は原典どおり
         Assert.AreEqual(16 * MonsterAnimation.SlideFrameSeconds,
                         MonsterAnimation.StepSeconds(false), 1e-6f);
         Assert.AreEqual(8 * MonsterAnimation.SlideFrameSeconds,
                         MonsterAnimation.StepSeconds(true), 1e-6f);
-        Assert.AreEqual(1f / 240f, MonsterAnimation.SlideFrameSeconds, 1e-6f);
+        Assert.AreEqual(1f / 160f, MonsterAnimation.SlideFrameSeconds, 1e-6f);
         Assert.Less(MonsterAnimation.StepSeconds(true), MonsterAnimation.StepSeconds(false),
                     "高速モードのほうが短い");
     }

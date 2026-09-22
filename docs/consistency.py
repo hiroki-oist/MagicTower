@@ -851,9 +851,13 @@ _dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
 chk("IEnumerator Open(" in _dwv and "if (!fast) yield return" in _dwv,
     "窓は塗り広げながら開き、高速モードでは待たない")
 chk("body.enabled = false" in _dwv,"文字は塗り終わってから出す（原典も塗りのあと）")
-chk("TickOnce" in open("Assets/Scripts/Floor/MonsterAnimator.cs",encoding="utf-8").read()
-    and "monsters.TickOnce()" in _tc,
-    "コマごとに敵と人の絵も1回ずつ動かす（原典は移動の演出の中から 0x92a4 を呼ぶ）")
+# 敵と人の絵は**時間で**動かす。原典は移動の演出（0xa276）と待ちの中から 0x92a4 を
+# 呼ぶだけだが、「自分が動かないと敵が動かない」と報告されたので常に回している。
+_man=open("Assets/Scripts/Floor/MonsterAnimator.cs",encoding="utf-8").read()
+chk("MonsterAnimation.IdleTickSeconds" in _man and "clock += Time.deltaTime" in _man,
+    "敵と人の絵は立ち止まっていても動く（時間で回す）")
+chk("Application.targetFrameRate" in _tc,
+    "1秒あたりのコマ数を60に上げる（スマホの既定30だと演出が半分の速さになる）")
 chk("new FloorState(data)" in _tc,
     "階を作り直すとき、済んだこと（開けた扉・倒した敵）を盤面から反映する")
 _sb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
@@ -2219,7 +2223,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=743
+MIN_CHECKS=744
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

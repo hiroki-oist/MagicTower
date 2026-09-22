@@ -76,11 +76,23 @@ public class DialogueWindowView : MonoBehaviour
         int seen = 0;
         for (int i = 0; i < lines.Length; i++)
         {
-            if (lines[i].IndexOf('◎') < 0) continue;
+            if (!IsChoiceLine(lines[i])) continue;
             if (seen == game.ChoiceIndex) return i;
             seen++;
         }
         return -1;
+    }
+
+    /// <summary>
+    /// 選ばせている行か。原典の文面は2通りある:
+    ///   ・「◎はい／◎いいえ」のように印が文字として入っているもの
+    ///   ・祭壇の望みや持ち物のように、**全角の空白2つで字下げ**してあるだけのもの
+    /// 後者で印が出ないという報告があったので、字下げも見るようにした。
+    /// </summary>
+    public static bool IsChoiceLine(string line)
+    {
+        if (string.IsNullOrEmpty(line)) return false;
+        return line.IndexOf('◎') >= 0 || line.StartsWith("　　");
     }
 
     /// <summary>
@@ -129,7 +141,7 @@ public class DialogueWindowView : MonoBehaviour
         int seen = 0;
         for (int i = 0; i < lines.Length; i++)
         {
-            if (lines[i].IndexOf('◎') < 0) continue;
+            if (!IsChoiceLine(lines[i])) continue;
             if (seen == game.ChoiceIndex)
                 lines[i] = "→" + lines[i].TrimStart('　');
             seen++;
@@ -163,6 +175,17 @@ public class DialogueWindowView : MonoBehaviour
         int times = 0x14 * lines / DialogueWindow.RowStep + 1;
         bool fast = controller != null && controller.Game != null
                     && controller.Game.Player.FastMode;
+
+        // **一瞬で出す**（作者の指定。AuthorStyle.InstantWindow）。
+        // 原典どおり塗り広げたいときは false にする。
+        if (AuthorStyle.InstantWindow)
+        {
+            while (Waiting()) yield return null;      // 点滅や登場は待つ
+            panel.sizeDelta = DialogueWindow.SizeOnCanvas(r);
+            if (body != null) body.enabled = true;
+            opening = null;
+            yield break;
+        }
 
         if (body != null) body.enabled = false;
         // 原典は**点滅が終わってから**窓を出す（0x6ae0 は点滅→0x1e待ち→0x94ba）。

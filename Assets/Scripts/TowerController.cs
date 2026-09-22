@@ -57,6 +57,18 @@ public class TowerController : MonoBehaviour
         Game.ConsumeSounds();
     }
 
+    void Awake()
+    {
+        // **スマホは既定で30コマ/秒**（Unity の iOS/Android の既定）。
+        // 演出はどれも「1コマ＝1/60秒」で数えているので、そのままだと
+        // 扉が開く動き・ゼノの登場・人の歩きが**軒並み半分の速さ**になる
+        // （実機で遅くなったという報告がこれ）。60に上げてそろえる。
+        Application.targetFrameRate = TargetFrameRate;
+    }
+
+    /// <summary>出したい1秒あたりのコマ数。演出の数え方（1/60秒）と合わせる。</summary>
+    public const int TargetFrameRate = 60;
+
     void Update()
     {
         if (Game == null) return;
@@ -310,7 +322,6 @@ public class TowerController : MonoBehaviour
         // 「遅すぎる」と報告されたのがこれ）。
         float dur = MonsterAnimation.StepSeconds(fast);
         float t = 0f;
-        int painted = 0;
         PlacePlayerView();
         while (t < dur)
         {
@@ -320,9 +331,6 @@ public class TowerController : MonoBehaviour
             if (sr != null && sideways && playerSprite2 != null)
                 sr.sprite = k <= 0.5f ? playerSprite : playerSprite2;
             // 敵と人の絵は原典どおり**コマ数ぶん**動かす（0x92a4）
-            int want = Mathf.RoundToInt(k * n);
-            for (; painted < want; painted++)
-                if (monsters != null) monsters.TickOnce();
             yield return null;
         }
         if (sr != null && playerSprite != null) sr.sprite = playerSprite;   // 立ち姿へ戻す

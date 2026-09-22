@@ -961,7 +961,7 @@ public class TowerGame
     //   代用している（文言の「◎」は原典の文字列にもともと入っている）。
 
     /// <summary>何を選ばせているか。</summary>
-    public enum ChoiceKind { None, Merchant, Altar, UseItem }
+    public enum ChoiceKind { None, Merchant, Altar, AltarOffer, UseItem }
 
     public ChoiceKind Choice { get; private set; }
     public int ChoiceIndex { get; private set; }
@@ -1001,6 +1001,19 @@ public class TowerGame
         if (kind == ChoiceKind.UseItem)
         {
             if (at == 0) UseItem(choiceItem);          // 「はい」
+            return;
+        }
+        if (kind == ChoiceKind.AltarOffer)
+        {
+            if (at != 0) return;                       // 「いいえ」
+            // 金が足りないときは原典と同じ文言で断る
+            if (Player.Gold < TowerNpc.AltarCost(Player))
+            {
+                Say(GameText.Instance.Message("altar_poor"));
+                return;
+            }
+            Speak(TowerNpc.AltarMenu(Player));
+            BeginChoice(ChoiceKind.Altar, 4, default(Shop.Offer));
             return;
         }
         // 祭壇。並びは 生命力 / 攻撃力 / 防御力 / やめる
@@ -1234,9 +1247,11 @@ public class TowerGame
         }
         if (TowerNpc.IsAltar(what))
         {
-            Speak(TowerNpc.AltarMenu(Player));
-            // 祭壇も同じで、望みを選ばせないと寄進できない
-            BeginChoice(ChoiceKind.Altar, 4, default(Shop.Offer));
+            // 原典は**まず寄進額を言って「寄進するか？」と聞く**（altar_offer）。
+            // ここを飛ばして望みの一覧をいきなり出していたので、
+            // 「いくら払うのか出ない」と報告された。
+            Speak(GameText.Instance.Message("altar_offer", TowerNpc.AltarCost(Player)));
+            BeginChoice(ChoiceKind.AltarOffer, 2, default(Shop.Offer));
             return;
         }
         if (TowerNpc.IsFairy(what)) { Speak(FairyText()); return; }
