@@ -62,6 +62,23 @@ public static class TowerScreenshot
     [MenuItem("MagicTower/画面の写しを撮る")]
     public static void Capture() { Capture(false); }
 
+    /// <summary>1枚絵（題名・序章の絵）が帯に隠れていないかを見るための写し。</summary>
+    public static void CaptureTitle()    { fullScreen = "TitleScreen";    Capture(false); }
+    public static void CapturePrologue() { fullScreen = "PrologueScreen"; Capture(false); }
+
+    static string fullScreen;
+
+    /// <summary>名前の1枚絵と、その後ろの黒地を出す。</summary>
+    static void ShowFullScreen()
+    {
+        if (string.IsNullOrEmpty(fullScreen)) return;
+        foreach (var rt in Object.FindObjectsOfType<RectTransform>(true))
+        {
+            if (rt.name == "Backdrop") rt.gameObject.SetActive(true);
+            if (rt.name == fullScreen) rt.gameObject.SetActive(true);
+        }
+    }
+
     static void Capture(bool damagePanel)
     {
         var scene = EditorSceneManager.OpenScene("Assets/Scenes/Tower.unity");
@@ -96,6 +113,7 @@ public static class TowerScreenshot
 
         FillSample();
         ShowDpad();
+        ShowFullScreen();
         if (damagePanel) FillDamagePanel();
 
         var canvas = Object.FindObjectOfType<Canvas>();

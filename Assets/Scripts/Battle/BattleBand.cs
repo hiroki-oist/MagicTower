@@ -82,7 +82,11 @@ public static class BattleBand
         return list;
     }
 
-    /// <summary>勝ったあとに帯へ出す一言（旧版 EarnedCoinDialogue）。</summary>
+    /// <summary>
+    /// 勝ったあとの金の一言（旧版 EarnedCoinDialogue）。
+    /// **帯には出さない** — 中央の知らせ（`battle_gold`）と二重になるため（作者の指摘）。
+    /// 文面だけ残してある。
+    /// </summary>
     public static string GoldLine(int gold)
     {
         return GameText.Num(gold) + " ゴールド 手に入れた";

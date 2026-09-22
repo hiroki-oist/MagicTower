@@ -163,6 +163,9 @@ public static class PhoneScreen
         return Mathf.Max(0f, Mathf.Min(canvasWidth, free));
     }
 
-    /// <summary>右上の「実績」欄に、まだ称号が無いときに出す文字。</summary>
+    /// <summary>右上の「実績」の見出し。</summary>
     public const string TrophyLabel = "実績";
+
+    /// <summary>見出しの隣に出す称号。まだもらっていなければこれ（作者の指定）。</summary>
+    public const string NoRankLabel = "無";
 }

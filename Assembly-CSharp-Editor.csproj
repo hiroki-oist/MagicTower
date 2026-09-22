@@ -134,7 +134,6 @@
     <Compile Include="Assets/Tests/Editor/GameRulesTests.cs" />
     <Compile Include="Assets/Tests/Editor/WindowViewTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerBattleTests.cs" />
-    <Compile Include="Assets/Tests/Editor/Doors10Tests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerHudTests.cs" />
     <Compile Include="Assets/Tests/Editor/DialogueWindowTests.cs" />
   </ItemGroup>

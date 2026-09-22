@@ -331,10 +331,14 @@ public static class TowerSceneBuilder
         vso.FindProperty("shield").objectReferenceValue = shieldBox;
         vso.FindProperty("weaponIcon").objectReferenceValue = wIcon;
         vso.FindProperty("shieldIcon").objectReferenceValue = sIcon;
+        // 「実績」の見出しと、その隣に**妖精にもらった称号**（作者の指定）。
+        // まだもらっていなければ「無」。
         Placeholder(top, font, "Trophy", pad * 3 + eqW * 2, rh * 2, rh, rh,
                     PhoneScreen.TrophyLabel, PhoneScreen.RightButton);
-        Placeholder(top, font, "Help", pad * 3 + eqW * 2 + rh, rh * 2, rh, rh, "？",
-                    PhoneScreen.RightButton);
+        var rankBox = Placeholder(top, font, "Rank", pad * 3 + eqW * 2 + rh, rh * 2, rh, rh,
+                                  PhoneScreen.NoRankLabel, PhoneScreen.RightButton);
+        vso.FindProperty("rank").objectReferenceValue =
+            rankBox.GetComponentInChildren<TextMeshProUGUI>();
 
         for (int rank = 1; rank <= 5; rank++)
         {

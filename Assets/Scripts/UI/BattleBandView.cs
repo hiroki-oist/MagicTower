@@ -26,8 +26,6 @@ public class BattleBandView : MonoBehaviour
     [SerializeField] TextMeshProUGUI enemyName;
     [SerializeField] TextMeshProUGUI[] enemyStats = new TextMeshProUGUI[3];
 
-    /// <summary>勝ったあと「Ｎ ゴールド 手に入れた」を出しておく時間（秒）。</summary>
-    public const float GoldHold = 0.6f;
 
     float holdUntil;
     bool wasPlaying;
@@ -46,7 +44,7 @@ public class BattleBandView : MonoBehaviour
                        && !string.IsNullOrEmpty(n.Enemy) && n.Hits > 0;
 
         if (wasPlaying && !playing)
-            holdUntil = n.Gold > 0 ? Time.time + GoldHold : 0f;   // 金の一言を少し残す
+            holdUntil = 0f;   // 金の一言を出さないので、帯を残す理由も無い
         wasPlaying = playing;
 
         bool show = playing || Time.time < holdUntil;
@@ -61,10 +59,10 @@ public class BattleBandView : MonoBehaviour
         var tick = BattleBand.At(n.PlayerHp, n.EnemyHp, n.PlayerDamage, n.EnemyDamage,
                                  hits, counters);
 
+        // 金の一言はここには出さない（中央の知らせと二重になると報告された）。
+        // 帯は最後のターン数のまま消える。
         if (turnText != null)
-            turnText.text = playing
-                ? "第 " + GameText.Num(tick.Turn) + " ターン"
-                : BattleBand.GoldLine(n.Gold);
+            turnText.text = "第 " + GameText.Num(tick.Turn) + " ターン";
 
         Set(playerName, AuthorStyle.PlayerName);
         Set(playerStats, tick.PlayerHp, n.PlayerAttack, n.PlayerDefense);

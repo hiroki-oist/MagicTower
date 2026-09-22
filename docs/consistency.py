@@ -1308,6 +1308,13 @@ chk("battle_gold" in _tg5,"倒した相手からの金も知らせに出す（�
 _tcw=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("TitleScreen.Title" in _tcw,
     "1枚絵の上の字も起動時に作っておく（3階だけ一瞬止まると報告された）")
+# 作者の報告（その5）
+_bbv=open("Assets/Scripts/UI/BattleBandView.cs",encoding="utf-8").read()
+chk("GoldLine" not in _bbv,
+    "金の一言は帯に出さない（中央の知らせと二重になる）")
+_hv=open("Assets/Scripts/UI/TowerHudView.cs",encoding="utf-8").read()
+chk("PhoneScreen.NoRankLabel" in _hv,
+    "右上は「実績」の隣に称号（まだなら「無」）を出す")
 # 作者の報告（その3）で直した見た目の約束
 _dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
 chk("controller.IsWalking" in _dwv,
