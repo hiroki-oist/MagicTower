@@ -30,6 +30,7 @@ public static class GameStart
     public struct State
     {
         public int Hp, Attack, Defense, Gold, Floor, SwordRank, ShieldRank;
+        public int YellowKeys, PurpleKeys, RedKeys;
         public Vector2Int Position;
     }
 
@@ -46,6 +47,7 @@ public static class GameStart
     ///
     /// ⚠ 攻撃力・防御力は <see cref="DebugPlay.StrongAfterZeno"/> が立っている間だけ
     /// 1000 になる（イベントの通りを見て回るための細工）。**原典は 10 / 10**。
+    /// 鍵も <see cref="DebugPlay.KeysAfterZeno"/> の間だけ30本ずつ持つ。**原典は0本**。
     /// </summary>
     public static readonly State AfterZeno = new State
     {
@@ -53,6 +55,9 @@ public static class GameStart
         Attack = DebugPlay.StrongAfterZeno ? DebugPlay.StrongStat : 10,
         Defense = DebugPlay.StrongAfterZeno ? DebugPlay.StrongStat : 10,
         Gold = 0,
+        YellowKeys = DebugPlay.KeysAfterZeno ? DebugPlay.StartKeys : 0,
+        PurpleKeys = DebugPlay.KeysAfterZeno ? DebugPlay.StartKeys : 0,
+        RedKeys    = DebugPlay.KeysAfterZeno ? DebugPlay.StartKeys : 0,
         Floor = 2, SwordRank = 0, ShieldRank = 0,
         // 原典 0x0701e / 0x07029 が X=2, Y=7 を書く。盤面では x = 2-5 = -3、y = 5-7 = -2。
         // そこは 2階の牢の中で、**盗賊(-3,-1) の真下**にあたる（起こしてくれる相手の隣）。

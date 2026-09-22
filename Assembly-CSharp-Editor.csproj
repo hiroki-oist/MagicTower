@@ -84,6 +84,7 @@
     <Compile Include="Assets/Tests/Editor/ArrivalEventTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerMenuTests.cs" />
     <Compile Include="Assets/Tests/Editor/EndingTests.cs" />
+    <Compile Include="Assets/Tests/Editor/ItemBarTests.cs" />
     <Compile Include="Assets/Tests/Editor/HudLayoutTests.cs" />
     <Compile Include="Assets/Tests/Editor/SoundCoverageTests.cs" />
     <Compile Include="Assets/Tests/Editor/DoorAnimationTests.cs" />

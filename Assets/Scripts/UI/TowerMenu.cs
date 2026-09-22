@@ -60,6 +60,18 @@ public static class TowerMenu
         return sb.ToString();
     }
 
+    /// <summary>
+    /// 道具の名前（原典の一覧の文言 `special_1`〜`special_8` から、頭の空白を落としたもの）。
+    /// 持ち物の帯を触ったときの「〜を使いますか？」に使う。
+    /// </summary>
+    public static string ItemName(SpecialItems.Kind kind)
+    {
+        for (int i = 0; i < Usable.Length; i++)
+            if (Usable[i] == kind)
+                return GameText.Instance.Message("special_" + (i + 1)).Trim('　', ' ');
+        return "";
+    }
+
     /// <summary>並びの数（やめるを含む）。</summary>
     public static int ItemCount { get { return Usable.Length + 1; } }
 

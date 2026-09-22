@@ -35,4 +35,16 @@ public static class DebugPlay
 
     /// <summary>そのときの生命力。</summary>
     public const int StrongHp = 9990;
+
+    /// <summary>
+    /// ゼノに奪われたあとの鍵の本数を <see cref="StartKeys"/> 本ずつにする。
+    /// **false が原典どおり**（黄0/紫0/赤0。原典は鍵を持たずに牢から始まる）。
+    ///
+    /// 作者からの頼み（2026-09-22）:
+    /// 「デバッグ用として鍵の数は武器取り上げられた後の初期値を30ずつでお願い」
+    /// </summary>
+    public static readonly bool KeysAfterZeno = true;
+
+    /// <summary>そのときの鍵の本数（黄・紫・赤とも同じ）。</summary>
+    public const int StartKeys = 30;
 }

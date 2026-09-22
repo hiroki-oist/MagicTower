@@ -132,5 +132,7 @@ public class PlayerState
         Hp = s.Hp; Attack = s.Attack; Defense = s.Defense;
         SwordRank = s.SwordRank; ShieldRank = s.ShieldRank;
         Floor = s.Floor; Position = s.Position;
+        // 原典は0本。調べもの用に持たせているだけ（DebugPlay.KeysAfterZeno）。
+        YellowKeys = s.YellowKeys; PurpleKeys = s.PurpleKeys; RedKeys = s.RedKeys;
     }
 }

@@ -133,6 +133,25 @@ public class TowerController : MonoBehaviour
         AfterAction(floorBefore, posBefore);
     }
 
+    /// <summary>
+    /// 持ち物の帯を触ったとき（作者の指定。並びは <see cref="PhoneScreen"/>）。
+    /// 番号は持ち物の欄の並び（原典 0x2f8c の 物体ID 36〜50）。
+    /// </summary>
+    public void TapItem(int slot)
+    {
+        if (Game == null) return;
+        int floorBefore = Game.Player.Floor;
+        var posBefore = Game.Player.Position;
+        if (Game.TapItem(SpecialItems.PanelKind(slot))) AfterAction(floorBefore, posBefore);
+    }
+
+    /// <summary>下の「ダメージ表示」のボタン。勇者のオーブの一覧を出す。</summary>
+    public void ShowDamage()
+    {
+        if (Game == null || Game.IsShowingPage || Game.IsMenuOpen) return;
+        Game.ShowHeroOrb();
+    }
+
     /// <summary>メニューの中の一手。何かしたら true。</summary>
     bool StepMenu()
     {

@@ -71,6 +71,24 @@ public static class PhoneScreen
     public static readonly string[] RightButtons =
         { "かんたん商店", "飛行器", "ダメージ表示", "妖精の加護" };
 
+    /// <summary>右のボタンのうち、**繋がっている**のはこれ（勇者のオーブの一覧を出す）。</summary>
+    public const int DamageButtonIndex = 2;
+
+    /// <summary>
+    /// 持ち物の帯を触ったときに聞く言葉（作者の指定。原典にこの入口は無い）。
+    /// 「◎」は原典の選ばせる窓と同じ印で、見た目の層がこの行を数えて印を置く。
+    /// </summary>
+    public const string UseAsk = "{0}を使いますか？\n　　◎はい\n　　◎いいえ";
+
+    /// <summary>持ち物の帯に一度に見せる数（残りは左右の矢印で送る）。</summary>
+    public const int ItemsPerPage = 8;
+
+    /// <summary>帯の左右に置く矢印の幅。</summary>
+    public const float ArrowWidth = 64f;
+
+    /// <summary>帯の地の色（見せてもらった画面に合わせて黒）。</summary>
+    public static readonly Color ItemBarFill = new Color32(0x0c, 0x0c, 0x12, 0xff);
+
     /// <summary>盤面の枠の、画布の中での大きさ（正方形）。高さが足りなければ縮める。</summary>
     public static float MapSide(float canvasWidth, float canvasHeight)
     {

@@ -597,21 +597,8 @@ public class TowerGame
                 break;
             }
             case TowerMenu.Entry.HeroOrb:
-            {
-                // 原典（0x8c2a）はセーブと「その階の相手の能力＋予想ダメージ」の両方。
-                // 見せ方だけ作者の指定（<see cref="HeroOrbPanel"/>）で一覧にするので、
-                // 会話の窓ではなく専用の頁として積む。中身は原典のまま。
-                var text = HeroOrb.Text(Floor, Player);
-                if (!string.IsNullOrEmpty(text))
-                {
-                    log.Add(text);
-                    pages.Enqueue(new Page
-                    {
-                        Kind = PageKind.HeroOrb, Text = text, Record = -1
-                    });
-                }
+                ShowHeroOrb();
                 break;
-            }
             case TowerMenu.Entry.SpecialItems:
                 // ⚠ ここが繋がっていなくて、**スペシャル・アイテムが一度も使えなかった**。
                 Stage = MenuStage.Items; ItemIndex = 0;
@@ -627,6 +614,62 @@ public class TowerGame
                 break;
         }
         return e;
+    }
+
+    /// <summary>
+    /// その階の相手の能力と予想ダメージの一覧を出す（原典 0x8c2a の勇者のオーブ）。
+    /// メニューからと、下の「ダメージ表示」のボタンからの両方で呼ぶ（作者の指定）。
+    /// 見せ方だけ <see cref="HeroOrbPanel"/> で一覧にしてあり、中身は原典のまま。
+    /// </summary>
+    /// <returns>出したか。</returns>
+    public bool ShowHeroOrb()
+    {
+        var text = HeroOrb.Text(Floor, Player);
+        if (string.IsNullOrEmpty(text)) return false;
+        log.Add(text);
+        pages.Enqueue(new Page { Kind = PageKind.HeroOrb, Text = text, Record = -1 });
+        return true;
+    }
+
+    /// <summary>
+    /// 持ち物の帯のひとつを触ったとき（作者の指定。原典にはこの入口は無い）。
+    ///
+    ///   ・**勇者のオーブ**は触ると一覧を出す（「使う？」とは聞かない）
+    ///   ・知恵のオーブは持ち物と聞いた情報を出す
+    ///   ・飛翔のオーブはメニューと同じく階を選ばせる
+    ///   ・使い切りの道具は「使いますか？」と聞いてから使う
+    ///   ・十字架・ドラゴンスレイヤー・幸運の金貨は**持っているだけで効く**ので何もしない
+    /// </summary>
+    public bool TapItem(SpecialItems.Kind kind)
+    {
+        if (kind == SpecialItems.Kind.None || !Player.Has(kind)) return false;
+        if (pages.Count > 0 || IsMenuOpen) return false;
+
+        if (kind == SpecialItems.Kind.HeroOrb) return ShowHeroOrb();
+        if (kind == SpecialItems.Kind.WisdomOrb)
+        {
+            var text = WisdomOrb.Text(Player);
+            if (string.IsNullOrEmpty(text)) return false;
+            Say(text);
+            return true;
+        }
+        if (kind == SpecialItems.Kind.FlightOrb)
+        {
+            // メニューの「飛翔のオーブを使う」と同じ道を通す
+            if (!OpenMenu()) return false;
+            var entries = MenuEntries;
+            int at = entries.IndexOf(TowerMenu.Entry.FlightOrb);
+            if (at < 0) { CloseMenu(); return false; }
+            MenuMove(at - MenuIndex);
+            MenuConfirm();
+            return true;
+        }
+        if (!SpecialItemEffects.IsConsumedOnUse(kind)) return false;   // 持つだけで効くもの
+
+        Say(string.Format(PhoneScreen.UseAsk, TowerMenu.ItemName(kind)));
+        BeginChoice(ChoiceKind.UseItem, 2, default(Shop.Offer));
+        choiceItem = kind;
+        return true;
     }
 
     /// <summary>
@@ -916,12 +959,13 @@ public class TowerGame
     //   代用している（文言の「◎」は原典の文字列にもともと入っている）。
 
     /// <summary>何を選ばせているか。</summary>
-    public enum ChoiceKind { None, Merchant, Altar }
+    public enum ChoiceKind { None, Merchant, Altar, UseItem }
 
     public ChoiceKind Choice { get; private set; }
     public int ChoiceIndex { get; private set; }
     public int ChoiceCount { get; private set; }
     Shop.Offer choiceOffer;
+    SpecialItems.Kind choiceItem;
 
     /// <summary>選んでいる最中か。</summary>
     public bool IsChoosing { get { return Choice != ChoiceKind.None; } }
@@ -950,6 +994,11 @@ public class TowerGame
             if (at != 0) return;                       // 「いいえ」
             var said = TowerNpc.Buy(Player, choiceOffer);
             if (!string.IsNullOrEmpty(said)) Say(said);
+            return;
+        }
+        if (kind == ChoiceKind.UseItem)
+        {
+            if (at == 0) UseItem(choiceItem);          // 「はい」
             return;
         }
         // 祭壇。並びは 生命力 / 攻撃力 / 防御力 / やめる

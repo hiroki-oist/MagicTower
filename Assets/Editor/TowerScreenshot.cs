@@ -18,8 +18,13 @@ public static class TowerScreenshot
     public const string OutPath = "/tmp/mt_screen.png";
     const int Width = 1080, Height = 1920;
 
+    [MenuItem("MagicTower/画面の写しを撮る（ダメージ表示）")]
+    public static void CaptureDamage() { Capture(true); }
+
     [MenuItem("MagicTower/画面の写しを撮る")]
-    public static void Capture()
+    public static void Capture() { Capture(false); }
+
+    static void Capture(bool damagePanel)
     {
         var scene = EditorSceneManager.OpenScene("Assets/Scenes/Tower.unity");
 
@@ -35,6 +40,7 @@ public static class TowerScreenshot
         hero.transform.position = new Vector3(0f, -3f, -1f);
 
         FillSample();
+        if (damagePanel) FillDamagePanel();
 
         var canvas = Object.FindObjectOfType<Canvas>();
         var cam = Object.FindObjectOfType<Camera>();
@@ -43,9 +49,14 @@ public static class TowerScreenshot
         // 画布はふだん画面に直に描く（Overlay）ので、そのままでは写せない。
         // カメラ越しに描く形へ一時的に切り替える。
         var mode = canvas.renderMode;
+        var order = canvas.sortingOrder;
         canvas.renderMode = RenderMode.ScreenSpaceCamera;
         canvas.worldCamera = cam;
         canvas.planeDistance = 1f;
+        // カメラ越しに描くと、画布は**盤面の絵と同じ並び順**で混ざる（盤面の物は
+        // 描画順2〜3なので、そのままだと窓の上に出てしまう）。撮る間だけ前に出す。
+        // 遊んでいるときは画布は画面に直に描く（Overlay）ので、この心配は無い。
+        canvas.sortingOrder = 1000;
 
         var rt = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32);
         cam.targetTexture = rt;
@@ -64,9 +75,58 @@ public static class TowerScreenshot
 
         cam.targetTexture = null;
         canvas.renderMode = mode;
+        canvas.sortingOrder = order;
         Object.DestroyImmediate(hero);
         Debug.Log($"画面の写しを書き出した → {OutPath}  ({Width}x{Height})");
         EditorSceneManager.CloseScene(scene, false);
+    }
+
+    /// <summary>
+    /// 勇者のオーブの一覧（ダメージ表示）を出した形にする。
+    /// 遊んでいないと <see cref="HeroOrbView"/> が動かないので、中身は自分で入れる。
+    /// </summary>
+    static void FillDamagePanel()
+    {
+        var panel = GameObject.Find("HUD/PhoneFrame/HeroOrbPanel");
+        if (panel == null) { Debug.LogWarning("HeroOrbPanel が無い"); return; }
+        panel.SetActive(true);
+
+        var player = new PlayerState { Hp = 1000, Attack = 100, Defense = 100, Floor = 3 };
+        var floor = new FloorState(FloorData.Load(3));
+        var rows = HeroOrb.Rows(floor, player);
+        var registry = Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
+
+        for (int i = 0; i < HeroOrb.MaxRows; i++)
+        {
+            var row = panel.transform.Find($"Row{i}");
+            if (row == null) continue;
+            bool used = i < rows.Count;
+            var r = used ? rows[i] : default(HeroOrb.Row);
+            Text(row, "Name", used ? r.Name : "");
+            Text(row, "Gold", used ? HeroOrbPanel.GoldLine(r.Gold) : "");
+            Text(row, "Turns", used && r.CanAttack ? HeroOrbPanel.TurnLine(r.Turns) : "");
+            Text(row, "Stats", used ? HeroOrbPanel.StatLine(r.Hp, r.Attack, r.Defense) : "");
+            Text(row, "Damage", used ? HeroOrbPanel.DamageLine(r.CanAttack, r.Damage) : "");
+            var icon = row.Find("Icon");
+            var img = icon != null ? icon.GetComponent<UnityEngine.UI.Image>() : null;
+            if (img == null) continue;
+            Sprite sp = null;
+            if (used && registry != null)
+            {
+                var prefab = registry.Get(r.Prefab);
+                var sr = prefab != null ? prefab.GetComponent<SpriteRenderer>() : null;
+                sp = sr != null ? sr.sprite : null;
+            }
+            img.enabled = sp != null;
+            if (sp != null) img.sprite = sp;
+        }
+    }
+
+    static void Text(Transform row, string name, string s)
+    {
+        var t = row.Find(name);
+        var tmp = t != null ? t.GetComponent<TextMeshProUGUI>() : null;
+        if (tmp != null) tmp.text = s;
     }
 
     /// <summary>欄に見本の値を入れる（遊んでいないと空のままなので）。</summary>

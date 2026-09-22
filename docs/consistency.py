@@ -818,8 +818,10 @@ for _n in ("戦闘の演出を最後まで流せる","金騎士の突撃を最�
 
 # 手で遊んで見つかった3件（配置のずれ・絵の大きさ・画面が付いてこない）
 _tc=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
-chk("AfterAction" in _tc and _tc.count("AfterAction(floorBefore, posBefore)")==1,
-    "一手ぶんの後始末が1か所にまとまっている（会話やメニューでも階が変わる）")
+# 後始末を呼ぶのは「キーの一手」と「持ち物の帯を触ったとき」の2か所だけ
+chk("AfterAction" in _tc and _tc.count("AfterAction(floorBefore, posBefore)")==2,
+    "一手ぶんの後始末を通る入口は2つだけ（キーの一手と、持ち物を触ったとき）",
+    str(_tc.count("AfterAction(floorBefore, posBefore)")))
 # 1マスぶんの滑らかな移動（0xa276）。滑らせている間は入力を受けない
 chk("if (sliding || drawing) return;" in _tc and "IEnumerator Slide(" in _tc,
     "1マスの移動を滑らかに出し、その間は入力を止める")
@@ -1888,6 +1890,15 @@ chk("HpBox      = new RectInt(48, 80, 64, 16)" in _sl,"ScreenLayout に能力値
 # 原典の座標（横長の左右の帯）はもう使わない。縦画面の並べ方は PhoneScreen。
 chk("PhoneScreen.RowHeight" in _sb and "PhoneScreen.ItemBarHeight" in _sb,
     "シーンの HUD が縦画面の並べ方で置かれている")
+# 持ち物の帯（黒い地・左右に送る）と、触ったときの流れ（作者の指定）
+_ibv=open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read()
+chk("RectMask2D" in _sb,"帯からはみ出た絵は切り取る")
+chk("controller.TapItem" in _ibv and "controller.ShowDamage" in _ibv,
+    "帯の触りと「ダメージ表示」が本線に繋がっている")
+_tgi=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("ChoiceKind.UseItem" in _tgi,"使い切りの道具は「使いますか？」と聞いてから使う")
+chk("kind == SpecialItems.Kind.HeroOrb) return ShowHeroOrb()" in _tgi,
+    "勇者のオーブだけは聞かずに一覧を出す")
 chk("MonsterHpBox" in _sl and "KeyIconOrigin" in _sl,
     "戦闘中の相手の欄と鍵の絵の位置を区別してある")
 _bp=open("Assets/Scripts/Battle/BattlePresentation.cs",encoding="utf-8").read()
@@ -2200,7 +2211,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=736
+MIN_CHECKS=740
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

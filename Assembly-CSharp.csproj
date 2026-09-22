@@ -82,6 +82,7 @@
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/DropdownSample.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/VertexColorCycler.cs" />
     <Compile Include="Assets/Scripts/UI/MenuWindowView.cs" />
+    <Compile Include="Assets/Scripts/UI/ItemBarView.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/EnvMapAnimator.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorData.cs" />
     <Compile Include="Assets/Scripts/Items/Shop.cs" />

@@ -307,19 +307,54 @@ public static class TowerSceneBuilder
                .objectReferenceValue = TileById(55 + rank);
         }
 
-        // --- 下の帯: 持ち物の帯（15マス）とボタン ---
+        // --- 下の帯: 持ち物の帯（黒い地・左右に送れる）とボタン ---
+        // 地
+        var barGo = new GameObject("ItemBar", typeof(RectTransform),
+                                   typeof(UnityEngine.UI.Image));
+        barGo.transform.SetParent(bottom, false);
+        var barRt = barGo.GetComponent<RectTransform>();
+        barRt.anchorMin = barRt.anchorMax = barRt.pivot = new Vector2(0f, 1f);
+        barRt.anchoredPosition = Vector2.zero;
+        barRt.sizeDelta = new Vector2(w, PhoneScreen.ItemBarHeight);
+        barGo.GetComponent<UnityEngine.UI.Image>().color = PhoneScreen.ItemBarFill;
+
+        // 左右の矢印（押すと1画面ぶん送る）
+        var leftArrow = Arrow(barRt, font, "ArrowLeft", true);
+        var rightArrow = Arrow(barRt, font, "ArrowRight", false);
+
+        // 見える所（ここからはみ出た絵は切り取る）
+        var viewGo = new GameObject("ItemViewport", typeof(RectTransform),
+                                    typeof(UnityEngine.UI.RectMask2D));
+        viewGo.transform.SetParent(barRt, false);
+        var viewRt = viewGo.GetComponent<RectTransform>();
+        viewRt.anchorMin = new Vector2(0f, 0f);
+        viewRt.anchorMax = new Vector2(1f, 1f);
+        viewRt.offsetMin = new Vector2(PhoneScreen.ArrowWidth, 0f);
+        viewRt.offsetMax = new Vector2(-PhoneScreen.ArrowWidth, 0f);
+
+        float islot = (w - PhoneScreen.ArrowWidth * 2f) / PhoneScreen.ItemsPerPage;
+        var contentGo = new GameObject("ItemContent", typeof(RectTransform));
+        contentGo.transform.SetParent(viewRt, false);
+        var contentRt = contentGo.GetComponent<RectTransform>();
+        contentRt.anchorMin = new Vector2(0f, 0f);
+        contentRt.anchorMax = new Vector2(0f, 1f);
+        contentRt.pivot = new Vector2(0f, 0.5f);
+        contentRt.anchoredPosition = Vector2.zero;
+        contentRt.sizeDelta = new Vector2(islot * ScreenLayout.ItemPanelSlots, 0f);
+
         var slots = vso.FindProperty("itemSlots");
         slots.arraySize = ScreenLayout.ItemPanelSlots;
-        float islot = (w - pad * 2f) / ScreenLayout.ItemPanelSlots;
+        var slotRects = new List<Object>();
         for (int i = 0; i < ScreenLayout.ItemPanelSlots; i++)
         {
             var id = ScreenLayout.ItemPanelObjectId(i);
-            var img = Slot(bottom, $"Item{id}", pad + islot * i,
-                           0f, islot, PhoneScreen.ItemBarHeight);
+            var img = Slot(contentRt, $"Item{id}", islot * i, 0f,
+                           islot, PhoneScreen.ItemBarHeight);
             var sprite = TileById(id);
             if (sprite != null) img.sprite = sprite;
             img.enabled = false;                      // 持っていない間は出さない
             slots.GetArrayElementAtIndex(i).objectReferenceValue = img;
+            slotRects.Add(img.transform.parent);      // 触り判定は枠のほう
         }
 
         // ボタンはどれも**まだ繋がっていない**（作者の指定。移動もキーボードの矢印のまま）
@@ -327,13 +362,15 @@ public static class TowerSceneBuilder
         int nb = PhoneScreen.LeftButtons.Length;
         float stack = bh * nb + bgap * (nb - 1);
         float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
+        RectTransform damageButton = null;
         for (int i = 0; i < nb; i++)
         {
             float by = btop + (bh + bgap) * i;
             Placeholder(bottom, font, "Left" + i, pad, by, bw, bh,
                         PhoneScreen.LeftButtons[i], PhoneScreen.LeftButton);
-            Placeholder(bottom, font, "Right" + i, w - pad - bw, by, bw, bh,
-                        PhoneScreen.RightButtons[i], PhoneScreen.RightButton);
+            var right = Placeholder(bottom, font, "Right" + i, w - pad - bw, by, bw, bh,
+                                    PhoneScreen.RightButtons[i], PhoneScreen.RightButton);
+            if (i == PhoneScreen.DamageButtonIndex) damageButton = right;
         }
         // 中央の十字。**触っても動かない**（今のところ移動はキーボードの矢印）
         float dpad = 260f;
@@ -512,6 +549,18 @@ public static class TowerSceneBuilder
                         "EndingScreen", "Assets/Sprites/Screens/Ending_Art.png",
                         Ending.TitleLine,  Ending.TitleDot,
                         Ending.AnyKeyLine, Ending.AnyKeyDot);
+
+        // 持ち物の帯と「ダメージ表示」の触りを受ける役（作者の指定）
+        var barView = canvasGo.AddComponent<ItemBarView>();
+        var barso = new SerializedObject(barView);
+        barso.FindProperty("controller").objectReferenceValue = controller;
+        barso.FindProperty("viewport").objectReferenceValue = viewRt;
+        barso.FindProperty("content").objectReferenceValue = contentRt;
+        barso.FindProperty("leftArrow").objectReferenceValue = leftArrow;
+        barso.FindProperty("rightArrow").objectReferenceValue = rightArrow;
+        barso.FindProperty("damageButton").objectReferenceValue = damageButton;
+        FillObjects(barso.FindProperty("slots"), slotRects);
+        barso.ApplyModifiedPropertiesWithoutUndo();
 
         // 盤面の枠へカメラを合わせ、窓の入れ物も盤面の大きさに合わせる役（縦画面）
         var layout = canvasGo.AddComponent<PhoneLayoutView>();
@@ -962,7 +1011,7 @@ public static class TowerSceneBuilder
             irt.anchorMin = new Vector2(HeroOrbPanel.IconLeft, 0.05f);
             irt.anchorMax = new Vector2(HeroOrbPanel.IconLeft, 0.95f);
             irt.pivot = new Vector2(0f, 0.5f);
-            irt.sizeDelta = new Vector2(48f, 0f);
+            irt.sizeDelta = new Vector2(88f, 0f);
             irt.anchoredPosition = Vector2.zero;
             var iconImg = iconGo.GetComponent<UnityEngine.UI.Image>();
             iconImg.preserveAspect = true;
@@ -1039,6 +1088,24 @@ public static class TowerSceneBuilder
         img.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(PhoneScreen.BrickPath);
         img.type = UnityEngine.UI.Image.Type.Tiled;
         img.raycastTarget = false;
+        return rt;
+    }
+
+    /// <summary>持ち物の帯の左右の矢印。</summary>
+    static RectTransform Arrow(RectTransform bar, TMP_FontAsset font, string name, bool left)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(bar, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = new Vector2(left ? 0f : 1f, 0f);
+        rt.anchorMax = new Vector2(left ? 0f : 1f, 1f);
+        rt.pivot = new Vector2(left ? 0f : 1f, 0.5f);
+        rt.anchoredPosition = Vector2.zero;
+        rt.sizeDelta = new Vector2(PhoneScreen.ArrowWidth, 0f);
+        go.GetComponent<UnityEngine.UI.Image>().color = new Color(1f, 1f, 1f, 0.08f);
+        var t = CellText(rt, font, 0f, TextAlignmentOptions.Center);
+        t.text = left ? "←" : "→";   // PixelMplus に ◀▶ は無い
+        t.fontSizeMax = 40f;
         return rt;
     }
 
@@ -1125,14 +1192,16 @@ public static class TowerSceneBuilder
     /// **押しても何も起きない**飾りのボタン（作者の指定）。
     /// 下の4つ＋4つと十字、上の段の丸2つがこれ。移動は当面キーボードの矢印のまま。
     /// </summary>
-    static void Placeholder(Transform parent, TMP_FontAsset font, string name,
-                            float x, float y, float w, float h, string label, Color fill)
+    static RectTransform Placeholder(Transform parent, TMP_FontAsset font, string name,
+                                     float x, float y, float w, float h,
+                                     string label, Color fill)
     {
         // Cell は上下に Pad を取るので、その分を戻して**指定した位置・大きさそのもの**にする
         var rt = Cell(parent, name, x, y - PhoneScreen.Pad, w, h + PhoneScreen.Pad * 2f, fill);
         var t = CellText(rt, font, 0f, TextAlignmentOptions.Center);
         t.text = label;
         t.fontSizeMax = 34f;
+        return rt;
     }
 
     /// <summary>枠の中の文字。左のずれだけ指定する。</summary>
