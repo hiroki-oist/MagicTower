@@ -367,12 +367,6 @@ public class TowerGame
                 if (Cutscenes.TryParseCell(e.Effect, Cutscenes.VanishPrefix, out at))
                     vanishes.Add(at);
             }
-            else if (e.Effect == Cutscenes.EvaluateStep)
-            {
-                // 台本がここで解錠を見るように言っている（40階の褒美と上り階段）。
-                Evaluate();
-                pendingEvaluate = false;
-            }
             else if (e.Effect == Cutscenes.PrisonOpensStep)
             {
                 // 原典 0x070c8〜0x07153。盗賊が去って牢の壁が開き、
@@ -473,7 +467,6 @@ public class TowerGame
         foreach (var step in steps)
         {
             if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
-                || step == Cutscenes.EvaluateStep
                 || step == Cutscenes.ClimbStep || step.StartsWith(Cutscenes.FlashStep)
                 || step == Cutscenes.BossAppearStep
                 || step.StartsWith(Cutscenes.BattlePrefix)

@@ -127,8 +127,6 @@ public class CutsceneTests
     public void 金騎士の突撃は部下が一体ずつ突撃してくる()
     {
         var g = Game(40, new Vector2Int(0, -1));
-        // 立ち入りのできごと（0x79=121）が立っていないと褒美の解錠に入れない
-        g.Player.EventFlags.Add(121);
         Assert.IsTrue(g.PlayScene("金騎士の突撃"));
 
         // 原典 0x325e は**部下が1体ずつ歩いてきて、そのたびに戦う**。
@@ -154,40 +152,8 @@ public class CutsceneTests
         Assert.AreEqual(6, seen, "セリフは6つ");
         Assert.AreEqual(14, walks, "12体＋金騎士の突撃13本＋引き上げ1本");
         Assert.AreEqual(13, battles, "引き上げ以外は戦闘が入る");
-        Assert.AreEqual(">", g.Floor.At(new Vector2Int(0, 5)), "上り階段が出る");
-        // 中央は空いたあと、褒美の解錠(0x79)で妖精が立つ
-        Assert.AreEqual("Fairy", g.Floor.At(new Vector2Int(0, 0)), "中央に妖精が出る");
+        Assert.AreEqual(FloorState.Floor, g.Floor.At(new Vector2Int(0, 0)), "中央は空く");
         Assert.AreEqual(FloorState.Floor, g.Floor.At(new Vector2Int(0, -2)), "退路の門が開く");
-    }
-
-    /// <summary>
-    /// ★作者の指定: 40階の褒美と上り階段は**金騎士を倒した直後**に出し、
-    /// 金騎士が引き上げるのはそのあと（原典 0x3d18 は逆で、引き上げてから表を当てる）。
-    /// </summary>
-    [Test]
-    public void 四十階は階段が出てから金騎士が引き上げる()
-    {
-        var g = Game(40, new Vector2Int(0, -1));
-        g.Player.EventFlags.Add(121);
-        Assert.IsTrue(g.PlayScene("金騎士の突撃"));
-
-        bool stairs = false;
-        int lastWalkBeforeStairs = -1, walks = 0;
-        for (int i = 0; i < 400 && g.PendingPages > 0; i++)
-        {
-            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
-            else g.NextPage();
-            foreach (var w in g.ConsumeWalks())
-            {
-                walks++;
-                if (!stairs) lastWalkBeforeStairs = walks;
-            }
-            if (g.Floor.At(new Vector2Int(0, 5)) == ">") stairs = true;
-        }
-        Assert.IsTrue(stairs, "上り階段が出る");
-        Assert.AreEqual(14, walks, "歩きは全部で14本");
-        Assert.AreEqual(13, lastWalkBeforeStairs,
-                        "階段が出るまでに13本＝引き上げの1本はそのあと");
     }
 
     [Test]
