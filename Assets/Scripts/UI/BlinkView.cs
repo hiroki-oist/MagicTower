@@ -69,6 +69,13 @@ public class BlinkView : MonoBehaviour
     {
         running++;
         var target = loader.ObjectAt(step.Pos);
+        // 地図の書き換えが見た目に届くのが1コマ遅れることがある。
+        // そこで諦めると**点滅せずに出たまま**になり、セリフと同時に現れて見える。
+        for (int i = 0; i < 10 && target == null; i++)
+        {
+            yield return null;
+            target = loader.ObjectAt(step.Pos);
+        }
         if (target != null)
         {
             // 原典は「床を描く → ものを描く」の順。見えない状態から始まる。

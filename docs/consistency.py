@@ -1338,6 +1338,8 @@ chk("controller.IsWalking" in _dwv,
     "会話の窓は人が歩き終わってから出す（10階の盗賊は目の前に来てから話す）")
 chk("controller.IsDrawing" in _dwv,
     "会話の窓は盤面を描き出している間は出さない（暗転中にセリフが出ていた）")
+chk("&& !Waiting()" in _dwv,
+    "動きが終わるまで窓そのものを出さない（枠の絵は9分割なので高さ0でも縁が出る）")
 chk("controller.IsSettling" in _dwv,
     "会話の窓は動きが終わってからひと呼吸おいて出す（合体の直後・暗転明けの直後は待つ）")
 chk("maxVisibleCharacters" in _dwv and "TypeCharsPerSecond" in _dwv,

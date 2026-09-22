@@ -43,7 +43,10 @@ public class DialogueWindowView : MonoBehaviour
 
         // 題名と終幕の1枚絵は会話の窓ではなく FullScreenView が出す。
         bool dialogue = controller.Game.CurrentKind == TowerGame.PageKind.Dialogue;
-        bool show = dialogue && !string.IsNullOrEmpty(page);
+        // **動きが終わるまでは窓そのものを出さない**。以前は高さを0にして隠していたが、
+        // 作者の枠の絵は9分割（Sliced）なので、高さ0でも上下の縁が帯のように描かれ、
+        // 点滅しているゼノを覆ってしまっていた（「セリフが先に出る」という報告）。
+        bool show = dialogue && !string.IsNullOrEmpty(page) && !Waiting();
         if (panel != null && panel.gameObject.activeSelf != show)
         {
             panel.gameObject.SetActive(show);
