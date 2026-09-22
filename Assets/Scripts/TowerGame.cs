@@ -164,6 +164,17 @@ public class TowerGame
     public bool HasBlinks { get { return blinks.Count > 0; } }
 
     /// <summary>
+    /// そのマスに「消えるための点滅」を渡したばかりか。
+    /// 地図はもう床に書き換えてあるので、**見た目の層が点滅させ終わるまで**
+    /// 描き直しを待たせる（扉の <see cref="DoorPendingAt"/> と同じ仕組み）。
+    /// </summary>
+    public bool BlinkPendingAt(Vector2Int at)
+    {
+        foreach (var b in blinks) if (b.Kind == "床" && b.Pos == at) return true;
+        return false;
+    }
+
+    /// <summary>
     /// 見た目へ渡したまま、まだ動き出していない仕事があるか。
     /// 積んだコマと、見た目がそれを拾うコマの間に1コマの隙があるので、
     /// ここを見ないとその隙に入力が通ってしまう（扉が閉まる前に動けた報告）。
@@ -356,6 +367,12 @@ public class TowerGame
                 if (Cutscenes.TryParseCell(e.Effect, Cutscenes.VanishPrefix, out at))
                     vanishes.Add(at);
             }
+            else if (e.Effect == Cutscenes.EvaluateStep)
+            {
+                // 台本がここで解錠を見るように言っている（40階の褒美と上り階段）。
+                Evaluate();
+                pendingEvaluate = false;
+            }
             else if (e.Effect == Cutscenes.PrisonOpensStep)
             {
                 // 原典 0x070c8〜0x07153。盗賊が去って牢の壁が開き、
@@ -456,6 +473,7 @@ public class TowerGame
         foreach (var step in steps)
         {
             if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
+                || step == Cutscenes.EvaluateStep
                 || step == Cutscenes.ClimbStep || step.StartsWith(Cutscenes.FlashStep)
                 || step == Cutscenes.BossAppearStep
                 || step.StartsWith(Cutscenes.BattlePrefix)
@@ -1158,13 +1176,14 @@ public class TowerGame
 
         // 隠し壁と見た目が同じマスを壊すと、そこに隠れていた者が現れる（原典 0x02c6）。
         // プレーヤーは手前に立ったままなので、そこから話しかける形になる。
-        if (r.Outcome == TowerPlayer.Outcome.Blocked && r.What == "Marker_ID10")
+        // 48階の左上隅だけは**床と見た目が同じマス**（地形ID7）で、原典 0x02f3c が
+        // 同じように音6を鳴らして魔導師(ID93)を書き込む。この魔導師が門の番人で、
+        // 倒すと (-5,+5) が床になって解錠 0x7f が (+2,-2) の門を開ける
+        // （原典ヒント236「４８階の門を守っている敵は、とある場所に姿を隠している」）。
+        if (r.Outcome == TowerPlayer.Outcome.Blocked
+            && (r.What == "Marker_ID10" || r.What == "Marker_ID7"))
             Reveal(r.Target);
         CheckMagicSeal();
-        // 場面が流れ出したか。原典の場面（3階の 0x6ae0 など）は地図に敵を書き込んだあと
-        // **そのまま画面を乗っ取る**ので、書き込まれた魔導師から魔法攻撃を受けることはない。
-        // ここで覚えておいて、この手の魔法攻撃の判定は飛ばす。
-        bool sceneStarted = CheckPositionEvent() && !string.IsNullOrEmpty(PendingScene);
 
         switch (r.Outcome)
         {
@@ -1237,7 +1256,16 @@ public class TowerGame
             }
         }
 
-        if (Player.Position != before && !sceneStarted) ApplyMagicAttack();
+        // 原典は動いたあと 0x1588 を1本呼ぶだけで、その中が
+        //   魔法攻撃（0x1ab0〜0x1f80） → 立ち入りのできごと（0x209a 以降）
+        // の順に並んでいる。**この順でないと 47階が合わない**：
+        // 左の列を上がると上の魔術士Ａ(ID151)から 200 くらい、
+        // **そのあと**魔術士がもう1マス上へ下がる（0x2102〜0x2150）。
+        // 逆に読んでいたので、逃げたあとの離れた位置で判定していて無傷だった。
+        // 場面が地図に魔導師を書き込む（3階・42階・49階）のもこのあとなので、
+        // 「場面で出てきた魔導師から魔法攻撃を受ける」ことも起きない。
+        if (Player.Position != before) ApplyMagicAttack();
+        CheckPositionEvent();
         // 場面の途中では解錠を見ない。原典の場面は1本の関数で最後まで走り切るので、
         // その間に解錠（0x4762）が回ることはない。ここで見てしまうと、
         // 10階なら骸骨が来る前に、20階ならボスが出る前に、条件が満たされてしまう。

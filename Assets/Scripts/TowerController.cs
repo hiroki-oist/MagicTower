@@ -663,7 +663,9 @@ public class TowerController : MonoBehaviour
         bool boss = Game.BossMusic
                     || (battle != null && battle.IsPlaying
                         && JavaMusic.IsBoss(Game.LastBattleEnemy));
-        sound.PlayTrack(boss ? JavaMusic.Boss : JavaMusic.ForFloor(Game.Player.Floor));
+        int floor = Game.Player.Floor;
+        string track = boss ? JavaMusic.BossFor(floor) : null;
+        sound.PlayTrack(track ?? JavaMusic.ForFloor(floor));
     }
 
     /// <summary>そのマスを今の地図に合わせて描き直す（扉の動きが終わったときに使う）。</summary>
@@ -674,15 +676,24 @@ public class TowerController : MonoBehaviour
         loader.Refresh(at, FloorState.ViewKeyOf(Game.Floor.At(at)));
     }
 
+    /// <summary>
+    /// そのマスの描き直しを待たせるか。扉の9コマの動きと、
+    /// **点滅しながら消える**もの（42階のゼノと魔導師）が出ている間は待たせる。
+    /// </summary>
+    bool HoldsCell(Vector2Int at)
+    {
+        if (doorView != null && (doorView.Holds(at) || Game.DoorPendingAt(at))) return true;
+        if (blinkView != null && (blinkView.Holds(at) || Game.BlinkPendingAt(at))) return true;
+        return false;
+    }
+
     void SyncChangedCells()
     {
         if (loader == null || Game == null) return;
         // 扉の動きが終わって手が離れたマスから先に片付ける
         for (int i = heldCells.Count - 1; i >= 0; i--)
         {
-            if (doorView != null
-                && (doorView.Holds(heldCells[i]) || Game.DoorPendingAt(heldCells[i])))
-                continue;
+            if (HoldsCell(heldCells[i])) continue;
             loader.Refresh(heldCells[i], FloorState.ViewKeyOf(Game.Floor.At(heldCells[i])));
             heldCells.RemoveAt(i);
         }
@@ -693,7 +704,7 @@ public class TowerController : MonoBehaviour
             // 「扉が一瞬消えてから動きが始まる」ように見える（作者の報告）。
             // **まだ見た目が拾っていない扉**も待つ。積んだコマと拾うコマの間に
             // 描き直してしまうと、そこで扉が一瞬消える（作者の報告）。
-            if (doorView != null && (doorView.Holds(p) || Game.DoorPendingAt(p)))
+            if (HoldsCell(p))
             {
                 if (!heldCells.Contains(p)) heldCells.Add(p);
                 continue;

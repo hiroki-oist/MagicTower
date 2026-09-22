@@ -1155,13 +1155,18 @@ print("\n【9e】隠れている者と人形")
 _ho=[[c.strip() for c in l.split("|")] for l in
      open("Assets/Resources/HiddenOccupants.txt",encoding="utf-8").read().split("\n")
      if l.strip() and not l.strip().startswith("#")]
-chk(len(_ho)==4,"隠れている者は4人（地形ID10 の4マスと同数）")
+# 地形ID10 の4マス（0x02c6）＋48階の地形ID7 の1マス（0x02f3c、門の番人＝ヒント236）
+chk(len(_ho)==5,"隠れている者は5人（地形ID10 の4マス＋48階の地形ID7）")
 chk([(int(r[0]),r[1],int(r[3])) for r in _ho]==
-    [(12,"+5,+5",19),(16,"+5,-5",25),(19,"+0,+3",39),(41,"+4,+4",151)],
-    "階・マス・物体IDが原典 0x02c6 どおり")
+    [(12,"+5,+5",19),(16,"+5,-5",25),(19,"+0,+3",39),(41,"+4,+4",151),(48,"-5,+5",93)],
+    "階・マス・物体IDが原典 0x02c6 / 0x02f3c どおり")
 _m10=set((f,x,y) for f,x,y in _h10)
-chk(all((int(r[0]),int(r[1].split(",")[0]),int(r[1].split(",")[1])) in _m10 for r in _ho),
-    "4マスとも盤面の Marker_ID10 と一致する")
+chk(all((int(r[0]),int(r[1].split(",")[0]),int(r[1].split(",")[1])) in _m10
+        for r in _ho if int(r[0])!=48),
+    "48階以外の4マスは盤面の Marker_ID10 と一致する")
+chk("Marker_ID7" in open("Assets/Resources/Floors/Floor_48.txt",encoding="utf-8").read()
+    and '"Marker_ID7"' in open("Assets/Scripts/TowerPlayer.cs",encoding="utf-8").read(),
+    "48階の左上隅（地形ID7）は歩けないマスとして扱い、踏むと門番が現れる")
 chk(_ho[3][4]=="-4,+4","41階だけ条件つき＝左右対称の反対側を倒してから")
 chk(int(_ho[2][3])==39,"19階に現れるのは物体ID39（十字架）")
 chk(not any("Cross" in open(f"Assets/Resources/Floors/Floor_{_f}.txt",encoding="utf-8").read()
@@ -1311,8 +1316,10 @@ chk("TitleScreen.Title" in _tcw,
 # Java版の曲（作者の指定で足したもの。原典 PC98版には曲が2つしか無い）
 import glob as _g
 _mus=sorted(os.path.basename(x) for x in _g.glob("Assets/Resources/Music/*.wav"))
-chk(_mus==["Block1.wav","Block2.wav","Block3.wav","Block4.wav","Block5.wav","Boss.wav"],
-    "Java版の曲6本を書き出してある（かたまり5つ＋戦い）", str(_mus))
+chk(_mus==["Block1.wav","Block2.wav","Block3.wav","Block4.wav","Block5.wav",
+           "Boss10.wav","Boss20.wav","Boss40.wav","Boss49.wav","Boss50.wav"],
+    "Java版の曲10本を書き出してある（かたまり5つ＋ボス戦5つ）", str(_mus))
+chk(os.path.exists("docs/make_music.py"),"曲を作り直せる道具がある（docs/make_music.py）")
 chk(all(os.path.exists("Assets/Resources/Music/"+m+".meta") for m in _mus),
     "曲の取り込み設定（.meta）も置いてある")
 chk(os.path.exists("docs/tools/MidiRender.swift"),

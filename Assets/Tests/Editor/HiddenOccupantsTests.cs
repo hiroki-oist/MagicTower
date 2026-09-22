@@ -1,31 +1,64 @@
 using NUnit.Framework;
 using UnityEngine;
 
-/// <summary>隠れている者（原典 地形ID10・関数 0x02c6）が原典どおりかを確かめる。</summary>
+/// <summary>
+/// 隠れている者（原典 地形ID10・関数 0x02c6）が原典どおりかを確かめる。
+/// 48階だけは地形ID7（床と同じ見た目）で、原典 0x02f3c が同じことをする。
+/// </summary>
 public class HiddenOccupantsTests
 {
     [Test]
-    public void 隠れている者は四人で原典の階とマスどおり()
+    public void 隠れている者は五人で原典の階とマスどおり()
     {
         var h = HiddenOccupants.Instance;
-        Assert.AreEqual(4, h.Count);
+        Assert.AreEqual(5, h.Count);
 
         var seq = new System.Collections.Generic.List<string>();
         foreach (var e in h.All) seq.Add($"{e.Floor}:{e.Pos.x},{e.Pos.y}:{e.Id}");
         CollectionAssert.AreEqual(
-            new[] { "12:5,5:19", "16:5,-5:25", "19:0,3:39", "41:4,4:151" }, seq);
+            new[] { "12:5,5:19", "16:5,-5:25", "19:0,3:39", "41:4,4:151",
+                    "48:-5,5:93" }, seq);
     }
 
     [Test]
-    public void 表のマスは全部盤面のID10と一致する()
+    public void 表のマスは全部盤面の隠れマスと一致する()
     {
         foreach (var e in HiddenOccupants.Instance.All)
         {
             var a = Resources.Load<TextAsset>($"Floors/Floor_{e.Floor}");
             Assert.IsNotNull(a);
-            var want = $"{e.Pos.x:+#;-#;+0} {e.Pos.y:+#;-#;+0}  Marker_ID10";
+            // 48階だけ地形ID7（床と同じ見た目）、ほかは ID10（隠し壁と同じ見た目）
+            var marker = e.Floor == 48 ? "Marker_ID7" : "Marker_ID10";
+            var want = $"{e.Pos.x:+#;-#;+0} {e.Pos.y:+#;-#;+0}  {marker}";
             StringAssert.Contains(want, a.text, $"F{e.Floor} {e.Pos}");
         }
+    }
+
+    /// <summary>
+    /// 48階の門の番人。左上隅は床にしか見えないが、そこへ歩こうとすると
+    /// 魔導師が現れる（原典 0x02f3c、ヒント236）。倒すと (+2,-2) の門が開く。
+    /// </summary>
+    [Test]
+    public void 四十八階の左上隅に踏み込むと門番の魔導師が現れる()
+    {
+        var g = Game(48, new Vector2Int(-4, 5));
+        var r = g.Step(Vector2Int.left);
+        Assert.AreEqual(TowerPlayer.Outcome.Blocked, r, "そこへは進めない");
+        Assert.AreEqual(new Vector2Int(-4, 5), g.Player.Position, "手前に立ったまま");
+        Assert.AreEqual("Enemy_ID93", g.Floor.At(new Vector2Int(-5, 5)));
+        Assert.AreEqual("s", g.Floor.At(new Vector2Int(2, -2)), "門はまだ閉じている");
+
+        // 番人を倒すと門が開く（解錠 0x7f）
+        g.Player.Hp = 99999; g.Player.Attack = 999; g.Player.Defense = 999;
+        g.Step(Vector2Int.left);
+        for (int i = 0; i < 40 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+        }
+        g.Pump(false);
+        Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(-5, 5)), "倒した");
+        Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(2, -2)), "門が開く");
     }
 
     static TowerGame Game(int floor, Vector2Int at)

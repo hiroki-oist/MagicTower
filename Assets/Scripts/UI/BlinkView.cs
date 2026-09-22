@@ -39,16 +39,33 @@ public class BlinkView : MonoBehaviour
 
     bool draining;
 
+    /// <summary>
+    /// 点滅しながら**消える**もののマス。地図はもう床になっているので、
+    /// 点滅が終わるまで <see cref="TowerController"/> に描き直しを待たせる。
+    /// </summary>
+    readonly HashSet<Vector2Int> held = new HashSet<Vector2Int>();
+
+    /// <summary>そのマスをまだ手放していないか。</summary>
+    public bool Holds(Vector2Int at) { return held.Contains(at); }
+
     void LateUpdate()
     {
         if (controller == null || controller.Game == null || loader == null) return;
         var list = controller.Game.ConsumeBlinks();
         for (int i = 0; i < list.Count; i++)
         {
-            // 順番が来るまで**見せない**。原典は点滅を始めるときに初めて地図へ書くので、
-            // 待っている間は床のまま（先に4体とも見えてしまってはいけない）。
-            var waiting = loader.ObjectAt(list[i].Pos);
-            if (waiting != null) waiting.SetActive(false);
+            if (list[i].Kind == "床")
+            {
+                // 消える側。**出したまま**で順番を待つ（消してから点滅はできない）。
+                held.Add(list[i].Pos);
+            }
+            else
+            {
+                // 順番が来るまで**見せない**。原典は点滅を始めるときに初めて地図へ書くので、
+                // 待っている間は床のまま（先に4体とも見えてしまってはいけない）。
+                var waiting = loader.ObjectAt(list[i].Pos);
+                if (waiting != null) waiting.SetActive(false);
+            }
             queue.Enqueue(list[i]);
         }
         if (!draining && queue.Count > 0 && isActiveAndEnabled)
@@ -67,6 +84,7 @@ public class BlinkView : MonoBehaviour
 
     IEnumerator Play(Cutscenes.MapStep step)
     {
+        if (step.Kind == "床") { yield return Fade(step); yield break; }
         running++;
         var target = loader.ObjectAt(step.Pos);
         // 地図の書き換えが見た目に届くのが1コマ遅れることがある。
@@ -91,6 +109,35 @@ public class BlinkView : MonoBehaviour
         }
         if (step.Wait > 0)
             yield return new WaitForSeconds(step.Wait * MonsterAnimation.FrameSeconds);
+        running--;
+    }
+
+    /// <summary>
+    /// 点滅しながら消える（作者の指定）。出てきたときと同じ回数だけ入れ替えて、
+    /// 最後は床のまま終わる。42階の場面の終わりでゼノと魔導士を片付けるのに使う
+    /// （原典 0x7182 はただ地図を床に書き戻すだけで、消え方は決めていない）。
+    /// </summary>
+    IEnumerator Fade(Cutscenes.MapStep step)
+    {
+        running++;
+        var target = loader.ObjectAt(step.Pos);
+        if (target != null)
+        {
+            for (int i = 0; i < step.Blinks; i++)
+            {
+                target.SetActive(false);
+                yield return null;
+                if (target == null) break;
+                target.SetActive(true);
+                yield return null;
+            }
+            if (target != null) target.SetActive(false);
+        }
+        if (step.Wait > 0)
+            yield return new WaitForSeconds(step.Wait * MonsterAnimation.FrameSeconds);
+        // ここで手を離すと、本線のとおり床が描き直される
+        held.Remove(step.Pos);
+        if (controller != null) controller.RefreshCell(step.Pos);
         running--;
     }
 }

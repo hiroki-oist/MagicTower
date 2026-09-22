@@ -128,6 +128,28 @@ public class PositionEventsTests
         Assert.AreEqual("盗賊との再会", g.PendingScene);
     }
 
+    /// <summary>
+    /// 47階の左の列。**魔法を受けてから**魔術士Ａが1マス下がる。
+    /// 原典 0x1588 は 魔法攻撃(0x1ab0〜0x1f80) → 逃げる(0x2102〜0x2150) の順に走る。
+    /// </summary>
+    [Test]
+    public void 四十七階の魔術士は魔法を撃ってから下がる()
+    {
+        var g = Game(47, new Vector2Int(-5, -4));
+        g.Floor.Put(new Vector2Int(-5, -2), "Enemy_ID151");   // 1つ上に魔術士Ａ
+        g.Floor.Clear(new Vector2Int(-5, -3));
+        g.Player.Hp = 5000;
+        g.Player.ShieldRank = 4;                              // 神盾ではない
+        g.Step(Vector2Int.up);                                // (-5,-3) へ
+
+        Assert.AreEqual(new Vector2Int(-5, -3), g.Player.Position);
+        Assert.AreEqual(5000 - MagicAttack.WizardADamage, g.Player.Hp,
+                        "隣に来た魔術士Ａから200");
+        Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(-5, -2)), "居たマスは空く");
+        Assert.AreEqual("Enemy_ID151", g.Floor.At(new Vector2Int(-5, -1)),
+                        "もう1マス上へ下がる");
+    }
+
     [Test]
     public void 三階のゼノとの初対面は物語の始まり()
     {

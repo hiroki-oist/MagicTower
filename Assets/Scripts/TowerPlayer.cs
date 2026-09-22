@@ -64,6 +64,7 @@ public static class TowerPlayer
 
             case "#":                      // 壁
             case "Marker_ID10":            // 隠し壁と見た目が同じ「何かが隠れている」マス
+            case "Marker_ID7":             // 床と見た目が同じ「何かが隠れている」マス（48階）
             case "*":                      // 星空（F50 の周り）
             case "s":                      // 門。触れても開かない
             case "x":                      // 特殊扉。同じく開かない

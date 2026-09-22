@@ -278,6 +278,7 @@ public class FeedbackFixTests
         for (int i = 1; i <= 5; i++)
             Assert.IsNotNull(Resources.Load<AudioClip>(JavaMusic.ForFloor((i - 1) * 10 + 1)),
                              $"かたまり{i}の曲");
-        Assert.IsNotNull(Resources.Load<AudioClip>(JavaMusic.Boss), "戦いの曲");
+        foreach (int f in new[] { 10, 20, 32, 40, 49, 50 })
+            Assert.IsNotNull(Resources.Load<AudioClip>(JavaMusic.BossFor(f)), $"{f}階の戦いの曲");
     }
 }
