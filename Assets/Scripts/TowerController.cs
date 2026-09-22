@@ -33,6 +33,8 @@ public class TowerController : MonoBehaviour
     [SerializeField] NpcWalkView walkView;
     /// <summary>ものが点滅しながら現れる動き。**終わるまで次の手へ進まない**。</summary>
     [SerializeField] BlinkView blinkView;
+    /// <summary>会話の窓。出し終わる前の決定は「全部出す」に使う。</summary>
+    [SerializeField] DialogueWindowView dialogue;
     /// <summary>日本語の字。**先に作っておく**（初出の字で固まるため）。</summary>
     [SerializeField] TMPro.TMP_FontAsset font;
 
@@ -130,6 +132,8 @@ public class TowerController : MonoBehaviour
         get
         {
             return sliding
+                   || drawing
+                   || Game.HasPendingView          // 渡したばかりで、まだ動き出していない
                    || (doorView != null && doorView.IsPlaying)
                    || (walkView != null && walkView.IsPlaying)
                    || (battle != null && battle.IsPlaying)
@@ -144,14 +148,28 @@ public class TowerController : MonoBehaviour
         // 場面の続きを進める。原典の場面は1本道で、絵が動き終わってから次の行に進む。
         Game.Pump(ViewBusy);
         // 場面の途中で書き換わった地図を、その場で見た目に映す
-        // （一手の後始末を待っていると、歩く先のマスがまだ空のままになる）
-        SyncChangedCells();
+        // （一手の後始末を待っていると、歩く先のマスがまだ空のままになる）。
+        // **描き出しの最中は映さない** — 渦巻きに描いている途中で作り直すと、
+        // まだ描いていないはずのマスが暗い盤面にぽつんと現れる
+        // （11→12階・31→32階で商店が浮かんで見えた報告がこれ）。
+        if (!drawing) SyncChangedCells();
+        // 場面や戦闘の後始末で主人公の立ち位置が変わったら、その場で合わせる
+        // （原典も戦いのあとは滑らせずに相手のマスへ置く）
+        if (!sliding && Game.Player.Position != shownPos)
+        {
+            shownPos = Game.Player.Position;
+            PlacePlayerView();
+        }
         if (sound != null) sound.Flush(Game);   // 場面の途中で積まれた音もその場で鳴らす
         // 場面が主人公を動かす1歩（10階の押し上げ）
         var push = Game.ConsumePlayerSlide();
         if (push != null && isActiveAndEnabled)
             slidingRoutine = StartCoroutine(Slide(push.From, push.Path[push.Path.Count - 1]));
         if (sliding || drawing) return;   // 演出の最中は入力を受けない（原典も同じ）
+        // **渡したばかりの動き**も待つ。積んだ次のコマまでは
+        // どの見た目も「動いていない」ままなので、その隙に1歩動けてしまっていた
+        // （10階で扉が閉まりきる前に動けた報告）。
+        if (Game.HasPendingView) return;
         if (walkView != null && walkView.IsPlaying) return;
         // 戦闘の演出が終わるまで次の一手を受けない。原典の戦闘処理（0x6082）は
         // 斬り合いが片付くまで**その場で回り続ける**ので、途中で動くことはできない。
@@ -196,9 +214,18 @@ public class TowerController : MonoBehaviour
                 acted = MenuKeyDown() || TakeConfirm();
                 if (acted)
                 {
-                    // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
-                    if (Game.IsGameOver) { StartNewGame(); return; }
-                    Game.NextPage();
+                    // **まだ窓が出ていないなら何も起きない**。動きの最中に押した決定で
+                    // これから出るセリフが飛ばされていた（作者の指摘）。
+                    if (dialogue != null && dialogue.IsWaiting) acted = false;
+                    // **出している途中なら、まず全部出す**。もう一度押すと送る。
+                    else if (dialogue != null && dialogue.IsTyping)
+                    { dialogue.RevealAll(); acted = false; }
+                    else
+                    {
+                        // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
+                        if (Game.IsGameOver) { StartNewGame(); return; }
+                        Game.NextPage();
+                    }
                 }
             }
         }
@@ -345,7 +372,7 @@ public class TowerController : MonoBehaviour
         if (!oneStep) cells.RemoveAt(0);          // 階段や門で飛ぶときは滑らせない
         if (cells.Count > 0 && (oneStep || push != null) && isActiveAndEnabled)
             slidingRoutine = StartCoroutine(SlideAll(oneStep ? posBefore : cells[0], cells));
-        else PlacePlayerView();
+        else { PlacePlayerView(); shownPos = Game.Player.Position; }
 
         if (sound != null) sound.Flush(Game);      // 本線が積んだ音を鳴らす
     }
@@ -367,6 +394,9 @@ public class TowerController : MonoBehaviour
 
     /// <summary>進めなかった向き。キーを離すまで同じ向きは試さない。</summary>
     Vector2Int blockedDir;
+
+    /// <summary>いま絵を置いてある立ち位置。ここと食い違ったら置き直す。</summary>
+    Vector2Int shownPos;
 
     /// <summary>出している演出を止めて、見た目を整った形に戻す。</summary>
     void StopShows()
@@ -479,6 +509,7 @@ public class TowerController : MonoBehaviour
         }
         ShowHero(0);                                   // 立ち姿へ戻す
         PlacePlayerView();
+        shownPos = Game.Player.Position;
         if (!last) yield break;                        // 続きがあるなら動いたままにしておく
         sliding = false;
         slidingRoutine = null;
@@ -569,6 +600,12 @@ public class TowerController : MonoBehaviour
 
     /// <summary>いま1マス滑っている最中か（窓や点滅はこれが終わってから）。</summary>
     public bool IsSliding { get { return sliding; } }
+
+    /// <summary>盤面を渦巻きに描き出している最中か。</summary>
+    public bool IsDrawing { get { return drawing; } }
+
+    /// <summary>場面の中で人が歩いている最中か。</summary>
+    public bool IsWalking { get { return walkView != null && walkView.IsPlaying; } }
 
     /// <summary>原寸で出すときに、足元をマスに合わせるぶん上げる量。</summary>
     float HeroOffsetY

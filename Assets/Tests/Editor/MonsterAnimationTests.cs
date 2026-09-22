@@ -108,8 +108,14 @@ public class MonsterAnimatorTests
         var keys = so.FindProperty("keys");
         var first = so.FindProperty("firstFrames");
         var second = so.FindProperty("secondFrames");
-        // 36種 ＋ できごとで現れる 妖精(ID23)・ゼノ(ID91)・バンパイア(ID95)
-        Assert.AreEqual(39, keys.arraySize, "2コマで動くもの");
+        // 36種 ＋ できごとで現れる 妖精(ID23)・ゼノ(ID91)・バンパイア(ID95)。
+        // **祭壇は除く** — `902_Shop_Altar.png` は3マス幅の1枚絵で、名札が盤面の
+        // プレハブ `Shop_Altar`（真ん中の1マス）と同じだったために貼られて、
+        // 左右2マスまで覆っていた（暗転中に商店が横一列に見えた報告）。
+        Assert.AreEqual(38, keys.arraySize, "2コマで動くもの");
+        for (int i = 0; i < keys.arraySize; i++)
+            Assert.AreNotEqual("Shop_Altar", keys.GetArrayElementAtIndex(i).stringValue,
+                               "3マス幅の祭壇の絵は盤面に貼らない");
         Assert.AreEqual(keys.arraySize, first.arraySize);
         Assert.AreEqual(keys.arraySize, second.arraySize);
         for (int i = 0; i < keys.arraySize; i++)

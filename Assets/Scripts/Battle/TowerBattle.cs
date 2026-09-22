@@ -109,6 +109,14 @@ public static class TowerBattle
         if (p.DamageTaken >= player.Hp)
         {
             r.Died = true;
+            // **倒れるまでに入れた斬りの数**だけ見せる。原典 0x64cd は一撃ごとに
+            // 生命力を見ていて、尽きたらそこで終わり。最後まで斬り合ってから
+            // 死ぬように見えていた（作者の報告）。
+            r.Hits = r.EnemyDamage > 0
+                   ? Mathf.Min(p.PlayerHits,
+                               Mathf.CeilToInt(player.Hp / (float)r.EnemyDamage))
+                   : 1;
+            r.DamageTaken = player.Hp;
             player.Hp = 0;
             return r;
         }

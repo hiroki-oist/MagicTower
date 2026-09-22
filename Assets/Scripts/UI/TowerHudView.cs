@@ -23,6 +23,8 @@ public class TowerHudView : MonoBehaviour
     [SerializeField] TextMeshProUGUI weapon;
     [SerializeField] TextMeshProUGUI shield;
     [SerializeField] TextMeshProUGUI messageBox;
+    /// <summary>右上の「実績」欄。妖精からもらった称号を出す。</summary>
+    [SerializeField] TextMeshProUGUI trophy;
 
     /// <summary>
     /// 知らせを**1行で**出すか。原典の欄は6桁×8行で折り返す（<see cref="TowerHud.InfoBox"/>）が、
@@ -103,6 +105,8 @@ public class TowerHudView : MonoBehaviour
             var last = Last(controller.Game.Log);
             Set(messageBox, oneLineMessage ? (last ?? "") : TowerHud.InfoBox(last));
         }
+        if (trophy != null)
+            trophy.text = string.IsNullOrEmpty(p.Rank) ? PhoneScreen.TrophyLabel : p.Rank;
         ShowIcon(weaponIcon, swordIcons,  p.SwordRank);
         ShowIcon(shieldIcon, shieldIcons, p.ShieldRank);
         ShowKeys(p);

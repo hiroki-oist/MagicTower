@@ -97,7 +97,8 @@ public static class TowerSave
         File.WriteAllText(PathOf(slot),
             string.Join(",", fields) + "|" + string.Join(",", visited)
                                      + "|" + string.Join(",", flags)
-                                     + "|" + string.Join("/", maps));
+                                     + "|" + string.Join("/", maps)
+                                     + "|" + (p.Rank ?? ""));   // 妖精にもらった称号
     }
 
     /// <summary>読み込む。スロットが空なら null（地図の差は捨てる）。</summary>
@@ -142,6 +143,8 @@ public static class TowerSave
                 int f;
                 if (int.TryParse(v, out f)) state.EventFlags.Add(f);
             }
+
+        if (halves.Length > 4) state.Rank = halves[4].Trim();   // 妖精にもらった称号
 
         var snap = new Snapshot { Player = state };
         if (halves.Length > 3 && halves[3].Length > 0)

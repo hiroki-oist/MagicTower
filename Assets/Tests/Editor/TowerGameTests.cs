@@ -47,6 +47,11 @@ public class TowerGameTests
         g.Floor.Put(new Vector2Int(0, 1), "Enemy_SlimeR");
 
         Assert.AreEqual(TowerPlayer.Outcome.Encounter, g.Step(Up));
+        // **斬り合いの絵が終わってから**後始末が当たる（作者の指摘。
+        // 倒した結果が戦闘開始と同時に出ていた）。見た目が動いていない
+        // ことにして1手進める。
+        Assert.AreEqual("Enemy_SlimeR", g.Floor.At(new Vector2Int(0, 1)), "斬り合いの間はまだ居る");
+        g.Pump(false);
         Assert.AreEqual(FloorState.Floor, g.Floor.At(new Vector2Int(0, 1)));
         Assert.AreEqual(new Vector2Int(0, 1), g.Player.Position,
                         "戦闘処理の踏み込み（原典 0x61ef）で相手のマスに立つ");
@@ -64,10 +69,12 @@ public class TowerGameTests
 
         g.Player.Position = new Vector2Int(-4, 1);
         g.Step(new Vector2Int(-1, 0));           // (-5,+1) の守護者
+        g.Pump(false);                            // 斬り合いの絵のぶん1手
         Assert.AreEqual("s", g.Floor.At(gate), "片方だけでは開かない");
 
         g.Player.Position = new Vector2Int(-4, 1);
         g.Step(Right);                            // (-3,+1) の守護者
+        g.Pump(false);
         Assert.AreEqual(FloorState.Floor, g.Floor.At(gate), "両方倒すと門が消える");
     }
 

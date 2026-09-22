@@ -1287,6 +1287,26 @@ chk(sum(1 for n in _cs_steps if "=ID93" in n)==17,
 _tg_stairs=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk(_tg_stairs.count("CheckPositionEvent()")>=2,
     "階段で着いたあとにも立ち入りのできごとを見る（原典 0x2a00 の call 0x1588）")
+# 作者の報告（その3）で直した見た目の約束
+_dwv=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
+chk("controller.IsWalking" in _dwv,
+    "会話の窓は人が歩き終わってから出す（10階の盗賊は目の前に来てから話す）")
+chk("controller.IsDrawing" in _dwv,
+    "会話の窓は盤面を描き出している間は出さない（暗転中にセリフが出ていた）")
+chk("maxVisibleCharacters" in _dwv and "TypeCharsPerSecond" in _dwv,
+    "本文は1文字ずつ出す（出し終わる前の決定は全部出しに使う）")
+_tc=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
+chk("if (!drawing) SyncChangedCells();" in _tc,
+    "描き出しの最中は地図を映さない（暗転中に商店が浮かんで見えた）")
+chk("dialogue.IsWaiting" in _tc and "dialogue.RevealAll()" in _tc,
+    "まだ出ていないセリフは決定で飛ばせない／出している途中なら全部出す")
+chk("Game.HasPendingView" in _tc,
+    "渡したばかりの動きがある間は入力を受けない（扉が閉まる前に動けた）")
+_tg4=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("AfterBattleStep" in _tg4,
+    "倒した後始末は斬り合いの絵が終わってから当てる（褒美が戦闘開始と同時に出ていた）")
+chk("Player.Rank = r.Rank" in _tg4,
+    "妖精の称号を覚えて右上の実績に出す")
 # 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚ぶん書き出してある
 chk(all(os.path.exists(f"Assets/Sprites/Screens/Prologue_{_i}.png") for _i in range(4)),
     "序章の1枚絵が4枚ある（行が0〜3つ出た状態）")

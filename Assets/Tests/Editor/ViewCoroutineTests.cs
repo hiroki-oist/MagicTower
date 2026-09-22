@@ -269,7 +269,10 @@ public class NewViewCoroutineTests
             // **一瞬で出す**（作者の指定 AuthorStyle.InstantWindow）ので止まらない。
             // 原典どおり塗り広げるときは きざみの数だけ止まる。
             if (AuthorStyle.InstantWindow)
-                Assert.AreEqual(0, n, "待たずに出る");
+                // 窓は一瞬で出て、そのあと本文を1文字ずつ出す（作者の指定）ので、
+                // 止まるのは文字を出している間だけ。
+                Assert.AreEqual(AuthorStyle.TypeCharsPerSecond > 0f ? 1 : 0, n,
+                                "窓は待たずに出る");
             else
                 Assert.AreEqual(0x14 * DialogueBox.WindowLines(page)
                                 / DialogueWindow.RowStep + 1, n, "きざみの数だけ止まる");

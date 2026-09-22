@@ -51,7 +51,7 @@ public class DialogueWindowView : MonoBehaviour
             // メニューを開いたまま窓が開くことがあり、後ろに隠れると読めない。
             if (show) panel.SetAsLastSibling();
         }
-        if (!show) { Showing = null; return; }
+        if (!show) { Showing = null; waiting = typing = false; return; }
 
         PlaceCursor(page);
         // 印の絵が無いときだけ、選んでいる行に文字の印を付ける
@@ -155,7 +155,9 @@ public class DialogueWindowView : MonoBehaviour
     void StartOpening(string page)
     {
         if (panel == null) return;
+        // 途中で止めると印が立ったままになるので、ここで戻しておく
         if (opening != null) StopCoroutine(opening);
+        waiting = typing = revealAll = false;
         if (!isActiveAndEnabled) return;
         opening = StartCoroutine(Open(page));
     }
@@ -184,9 +186,12 @@ public class DialogueWindowView : MonoBehaviour
             // 「ゼノが現れるのと同時にセリフが出る」ことになる（作者の報告）。
             if (body != null) body.enabled = false;
             panel.sizeDelta = new Vector2(r.width * DialogueWindow.CanvasScale, 0f);
+            waiting = true;
             while (Waiting()) yield return null;      // 歩き終わり・点滅・登場を待つ
+            waiting = false;
             panel.sizeDelta = DialogueWindow.SizeOnCanvas(r);
             if (body != null) body.enabled = true;
+            yield return Type();
             opening = null;
             yield break;
         }
@@ -214,7 +219,47 @@ public class DialogueWindowView : MonoBehaviour
         }
         panel.sizeDelta = DialogueWindow.SizeOnCanvas(r);
         if (body != null) body.enabled = true;
+        yield return Type();
         opening = null;
+    }
+
+    /// <summary>まだ窓が出ていない（動きの終わりを待っている）か。</summary>
+    public bool IsWaiting { get { return waiting; } }
+    /// <summary>本文を出している途中か。</summary>
+    public bool IsTyping { get { return typing; } }
+
+    bool waiting, typing, revealAll;
+
+    /// <summary>残りを全部出す（出し終わる前に決定を押したとき）。</summary>
+    public void RevealAll() { revealAll = true; }
+
+    /// <summary>
+    /// 本文を1文字ずつ出す（作者の指定。<see cref="AuthorStyle.TypeCharsPerSecond"/>）。
+    /// 選ばせている窓は原典どおり一度に出す（印を動かして選ぶので途中では困る）。
+    /// </summary>
+    System.Collections.IEnumerator Type()
+    {
+        if (body == null) yield break;
+        bool choosing = controller != null && controller.Game != null
+                        && controller.Game.IsChoosing;
+        if (AuthorStyle.TypeCharsPerSecond <= 0f || choosing)
+        {
+            body.maxVisibleCharacters = int.MaxValue;
+            yield break;
+        }
+        body.ForceMeshUpdate();
+        int total = body.textInfo.characterCount;
+        typing = true; revealAll = false;
+        body.maxVisibleCharacters = 0;
+        float shown = 0f;
+        while (body.maxVisibleCharacters < total && !revealAll)
+        {
+            shown += Time.deltaTime * AuthorStyle.TypeCharsPerSecond;
+            body.maxVisibleCharacters = Mathf.Min(total, Mathf.FloorToInt(shown));
+            yield return null;
+        }
+        body.maxVisibleCharacters = int.MaxValue;
+        typing = false; revealAll = false;
     }
 
     /// <summary>
@@ -228,6 +273,11 @@ public class DialogueWindowView : MonoBehaviour
         if (controller != null && controller.Game != null && controller.Game.HasBlinks)
             return true;
         if (controller != null && controller.IsSliding) return true;   // 歩き終わるまで
+        // **人が歩いている間も待つ**。10階の盗賊は9階から歩いてきて
+        // 主人公の目の前で止まってから話し出す（作者の指摘）。
+        if (controller != null && controller.IsWalking) return true;
+        // **盤面を描き出している間も待つ**。暗転中にセリフだけ浮かんでいた（同）。
+        if (controller != null && controller.IsDrawing) return true;
         return (blink != null && blink.IsPlaying) || (boss != null && boss.IsPlaying);
     }
 

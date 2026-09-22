@@ -153,6 +153,20 @@ public class TowerGame
     /// <summary>これから点滅させるものが残っているか（窓はこれが片付くまで待つ）。</summary>
     public bool HasBlinks { get { return blinks.Count > 0; } }
 
+    /// <summary>
+    /// 見た目へ渡したまま、まだ動き出していない仕事があるか。
+    /// 積んだコマと、見た目がそれを拾うコマの間に1コマの隙があるので、
+    /// ここを見ないとその隙に入力が通ってしまう（扉が閉まる前に動けた報告）。
+    /// </summary>
+    public bool HasPendingView
+    {
+        get
+        {
+            return blinks.Count > 0 || walks.Count > 0 || doorOpens.Count > 0
+                   || bossAppears.Count > 0 || vanishes.Count > 0 || PlayerSlide != null;
+        }
+    }
+
     /// <summary>積んだ点滅を取り出して空にする。</summary>
     public List<Cutscenes.MapStep> ConsumeBlinks()
     {
@@ -197,6 +211,16 @@ public class TowerGame
                 for (int i = from; i <= to; i++) path.AddRange(kc.TraceRun(i));
                 LastKnightCharge = path;
                 viewTicket++;
+            }
+            else if (e.Effect != null && e.Effect.StartsWith(AfterBattleStep))
+            {
+                Vector2Int at;
+                if (Cutscenes.TryParseCell(e.Effect.Substring(AfterBattleStep.Length).Trim(),
+                                           "", out at))
+                {
+                    Floor.Clear(at);
+                    Player.Position = at;
+                }
             }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.BattlePrefix))
             {
@@ -325,6 +349,12 @@ public class TowerGame
             Evaluate();
         }
     }
+
+    /// <summary>
+    /// 斬り合いの絵が終わったあとに当てる後始末の印。
+    /// 「勝ったら相手のマスへ進んでそこを床にする」を、絵が終わるまで待たせる。
+    /// </summary>
+    public const string AfterBattleStep = "戦闘の後始末";
 
     /// <summary>場面が終わってから解錠を見直すか。</summary>
     bool pendingEvaluate;
@@ -1070,8 +1100,16 @@ public class TowerGame
                     // 戦闘処理そのもの（0x61ef〜0x6232）が踏み込みの一歩として
                     // プレーヤーの X か Y を敵の方へ1つ動かし、勝つと相手のマスを
                     // 床(6)にする（0x631f）ので、戦いが終わると相手のマスに立っている。
-                    Floor.Clear(r.Target);
-                    Player.Position = r.Target;
+                    //
+                    // **斬り合いの絵が終わってから**当てる。原典 0x6082 は斬り合いが
+                    // 片付くまでその場で回り続けるので、倒した結果（マスが床になる →
+                    // 解錠で扉が開く・妖精が出る）は戦いのあとに見える。
+                    // ここで即座に当てていたため「戦闘開始直後に褒美が出る」と報告された。
+                    pages.Enqueue(new Page
+                    {
+                        Kind = PageKind.Effect, Text = null, Record = -1,
+                        Effect = AfterBattleStep + "(" + r.Target.x + "," + r.Target.y + ")"
+                    });
                 }
                 break;
             }
@@ -1505,6 +1543,8 @@ public class TowerGame
         var t = GameText.Instance;
         var r = TowerNpc.AskFairy(Player);
         if (!r.Valid) return t.Message("fairy_here");
+        // もらった称号は右上の「実績」に出すので覚えておく（作者の指定）
+        if (r.Rank != null) Player.Rank = r.Rank;
         var body = t.Message("fairy_ask") + t.Message("fairy_score", r.Score)
                  + t.Message(r.EvaluationKey);
         if (r.Rank == null) return body;

@@ -156,6 +156,41 @@ public static class TowerSceneBuilder
             keys.Add(pair.Key); first.Add(a); second.Add(b);
         }
 
+        // **名札ではなくプレハブの名前で引けるようにする**。盤面のものは
+        // プレハブ名（`Enemy_Dragon` など）で置かれているので、絵の名札
+        // （`900_Boss_Dragon` → `Boss_Dragon`）のままだと対応が取れない。
+        // 逆に、**盤面のものと同じ名札の別の絵**を拾ってしまう事故もあった:
+        // `902_Shop_Altar.png` は3マス幅の祭壇1枚絵で、祭壇の真ん中のマス
+        // （プレハブ `Shop_Altar`）に貼られて**左右の2マスまで覆って**いた
+        // （暗転中に商店が横一列に見えるという報告）。
+        var reg = Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
+        if (reg != null)
+        {
+            var byPrefab = new Dictionary<string, int>();
+            foreach (var key in reg.Keys)
+            {
+                var prefab = reg.Get(key);
+                if (prefab == null) continue;
+                var sr = prefab.GetComponentInChildren<SpriteRenderer>();
+                if (sr == null || sr.sprite == null) continue;
+                // そのプレハブが使っている絵の名札
+                var label = sr.sprite.name;
+                int us = label.IndexOf('_');
+                if (us > 0 && us <= 4) label = label.Substring(us + 1);
+                int at = keys.IndexOf(label);
+                if (at >= 0) byPrefab[key] = at;
+            }
+            var k2 = new List<string>();
+            var f2 = new List<Sprite>();
+            var s2 = new List<Sprite>();
+            foreach (var pair in byPrefab)
+            {
+                k2.Add(pair.Key); f2.Add(first[pair.Value]); s2.Add(second[pair.Value]);
+            }
+            Debug.Log($"TowerSceneBuilder: 2コマの対応を名札{keys.Count}件 → プレハブ{k2.Count}件に読み替えた");
+            keys = k2; first = f2; second = s2;
+        }
+
         var anim = tower.AddComponent<MonsterAnimator>();
         var so = new SerializedObject(anim);
         so.FindProperty("controller").objectReferenceValue = controller;
@@ -296,8 +331,10 @@ public static class TowerSceneBuilder
         vso.FindProperty("shield").objectReferenceValue = shieldBox;
         vso.FindProperty("weaponIcon").objectReferenceValue = wIcon;
         vso.FindProperty("shieldIcon").objectReferenceValue = sIcon;
-        Placeholder(top, font, "Trophy", pad * 3 + eqW * 2, rh * 2, rh, rh, "実績",
-                    PhoneScreen.RightButton);
+        var trophyBox = Placeholder(top, font, "Trophy", pad * 3 + eqW * 2, rh * 2, rh, rh,
+                                    PhoneScreen.TrophyLabel, PhoneScreen.RightButton);
+        vso.FindProperty("trophy").objectReferenceValue =
+            trophyBox.GetComponentInChildren<TextMeshProUGUI>();
         Placeholder(top, font, "Help", pad * 3 + eqW * 2 + rh, rh * 2, rh, rh, "？",
                     PhoneScreen.RightButton);
 
@@ -545,6 +582,7 @@ public static class TowerSceneBuilder
         wso3.FindProperty("walkView").objectReferenceValue = walkView;
         wso3.FindProperty("blinkView").objectReferenceValue = blinkView;
         wso3.ApplyModifiedPropertiesWithoutUndo();
+        // 会話の窓は本線シーンの後ろの方で作るので、作ったところで繋ぐ（下の BuildDialogue 内）
 
         // **メニューの窓を先に置く**。あとに置いたものが前に出るので、
         // メニューを開いたまま開く会話の窓（飛翔のオーブの断り）が隠れないようにする。
@@ -757,6 +795,10 @@ public static class TowerSceneBuilder
         wso.FindProperty("cursorFrame2").objectReferenceValue =
             AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Sprites/Hud/Cursor_1.png");
         wso.ApplyModifiedPropertiesWithoutUndo();
+        // 決定の扱い（まだ出ていない／出し終わる前）を見るために本線へ繋ぐ
+        var cso = new SerializedObject(controller);
+        cso.FindProperty("dialogue").objectReferenceValue = win;
+        cso.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);
     }

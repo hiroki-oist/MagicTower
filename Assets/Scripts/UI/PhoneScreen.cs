@@ -162,4 +162,7 @@ public static class PhoneScreen
         float free = canvasHeight - TopHeight - BottomHeight;
         return Mathf.Max(0f, Mathf.Min(canvasWidth, free));
     }
+
+    /// <summary>右上の「実績」欄に、まだ称号が無いときに出す文字。</summary>
+    public const string TrophyLabel = "実績";
 }

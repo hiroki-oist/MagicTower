@@ -57,6 +57,13 @@ public class PlayerState
     public readonly HashSet<int> EventFlags = new HashSet<int>();
 
     /// <summary>
+    /// 妖精からもらった称号（「戦士」「勇者」…）。まだなら空。
+    /// 原典は話しかけるたびにその場で採点するだけで持ち歩かないが、
+    /// **右上の「実績」に出す**ため覚えておく（作者の指定）。
+    /// </summary>
+    public string Rank = "";
+
+    /// <summary>
     /// 高速モードの旗。原典もこれをフラグ置き場の **31番**（`es:[0x1f]`）に持っていて、
     /// セーブにもそのまま入る（0xa92d〜0xa956 が切り替える）。
     /// 立っているあいだ、原典は窓の開け閉めの待ち（0x9478 / 0x9546）と

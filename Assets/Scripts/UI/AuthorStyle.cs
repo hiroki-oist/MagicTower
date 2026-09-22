@@ -99,6 +99,13 @@ public static class AuthorStyle
     public static readonly bool InstantWindow = true;
 
     /// <summary>
+    /// 本文を1秒に何文字ずつ出すか（作者の指定）。0 なら一度に全部出す。
+    /// 出し終わる前に決定を押すと**まず全部出し**、もう一度押すと次へ送る。
+    /// 原典は一度に全部書くので、これは作者の見せ方。
+    /// </summary>
+    public static readonly float TypeCharsPerSecond = 10f;
+
+    /// <summary>
     /// 会話の窓の横幅（ドット）。**本文の一番長い行に合わせて決める**。
     ///
     /// 以前はここを 608（画面いっぱい近く）で固定していたが、折り返しは
