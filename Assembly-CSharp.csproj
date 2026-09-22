@@ -168,6 +168,7 @@
     <Compile Include="Assets/Scripts/Items/Altar.cs" />
     <Compile Include="Assets/Scripts/Items/Fairy.cs" />
     <Compile Include="Assets/Scripts/Battle/BattlePresentation.cs" />
+    <Compile Include="Assets/Scripts/UI/DPadView.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorDrawOrder.cs" />
     <Compile Include="Assets/Scripts/Battle/Battlers/BattlerBase.cs" />
     <Compile Include="Assets/Scripts/GameStart.cs" />

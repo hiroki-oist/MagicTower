@@ -70,6 +70,7 @@
     <Compile Include="Assets/Tests/Editor/ViewSyncTests.cs" />
     <Compile Include="Assets/Tests/Editor/StatCapTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerItemUseTests.cs" />
+    <Compile Include="Assets/Tests/Editor/DPadTests.cs" />
     <Compile Include="Assets/Tests/Editor/TextMetricsTests.cs" />
     <Compile Include="Assets/Tests/Editor/TitleScreenTests.cs" />
     <Compile Include="Assets/Tests/Editor/ChoiceTests.cs" />

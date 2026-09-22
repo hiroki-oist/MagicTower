@@ -113,6 +113,8 @@ public class TowerController : MonoBehaviour
         else
         {
             var dir = ReadInput();
+            // 鍵が押されていなければ、触っている十字キーの向きを使う
+            if (dir == Vector2Int.zero) dir = TouchDir;
             // 壁にぶつかったら、その向きは**キーを離すまで**もう試さない。
             // 押しっぱなしのまま毎コマ叩き続けると、判定が鳴りっぱなしになる。
             // ぶつかったときの音は**足さない**（原典に無く、作者もそれでよいとのこと）。
@@ -132,6 +134,13 @@ public class TowerController : MonoBehaviour
         if (!acted) return;
         AfterAction(floorBefore, posBefore);
     }
+
+    /// <summary>
+    /// 十字キーを触って押している向き（<see cref="DPadView"/> が毎コマ入れる）。
+    /// 押していなければ <see cref="Vector2Int.zero"/>。鍵と同じ扱いで、
+    /// 押しっぱなしにすれば歩き続ける。
+    /// </summary>
+    public Vector2Int TouchDir { get; set; }
 
     /// <summary>
     /// 持ち物の帯を触ったとき（作者の指定。並びは <see cref="PhoneScreen"/>）。

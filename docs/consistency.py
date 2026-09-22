@@ -1899,6 +1899,14 @@ _tgi=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("ChoiceKind.UseItem" in _tgi,"使い切りの道具は「使いますか？」と聞いてから使う")
 chk("kind == SpecialItems.Kind.HeroOrb) return ShowHeroOrb()" in _tgi,
     "勇者のオーブだけは聞かずに一覧を出す")
+# 移動の十字キー（作者が6案から選んだ B）。押しっぱなしで歩き続ける。
+_dpv=open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read()
+_phs=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+chk("DPad_B.png" in _phs,"十字キーは作者が選んだ B の絵")
+chk("controller.TouchDir = Pressed()" in _dpv and "TouchDir" in _tc,
+    "十字キーの向きが鍵と同じ道で本線へ入る")
+chk("if (dir == Vector2Int.zero) dir = TouchDir;" in _tc,
+    "鍵が押されていないときだけ十字キーの向きを使う")
 chk("MonsterHpBox" in _sl and "KeyIconOrigin" in _sl,
     "戦闘中の相手の欄と鍵の絵の位置を区別してある")
 _bp=open("Assets/Scripts/Battle/BattlePresentation.cs",encoding="utf-8").read()
@@ -2211,7 +2219,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=740
+MIN_CHECKS=743
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

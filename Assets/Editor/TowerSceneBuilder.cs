@@ -372,11 +372,15 @@ public static class TowerSceneBuilder
                                     PhoneScreen.RightButtons[i], PhoneScreen.RightButton);
             if (i == PhoneScreen.DamageButtonIndex) damageButton = right;
         }
-        // 中央の十字。**触っても動かない**（今のところ移動はキーボードの矢印）
+        // 中央の十字。**押すと歩く**（作者が選んだ絵。DPadView が触りを受ける）
         float dpad = 260f;
-        Placeholder(bottom, font, "DPad", (w - dpad) / 2f,
-                    PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - dpad) / 2f,
-                    dpad, dpad, "↑\n←　→\n↓", PhoneScreen.BoxFill);
+        var padRt = Placeholder(bottom, font, "DPad", (w - dpad) / 2f,
+                                PhoneScreen.ItemBarHeight
+                                + (PhoneScreen.ButtonsHeight - dpad) / 2f,
+                                dpad, dpad, "", Color.white);
+        var padImg = padRt.GetComponent<UnityEngine.UI.Image>();
+        padImg.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(PhoneScreen.DPadSpritePath);
+        padImg.preserveAspect = true;
 
         // 知らせの欄は盤面の下の端に薄く重ねる（原典の右下の欄にあたるもの）
         var msgBack = new GameObject("MessageBack", typeof(RectTransform),
@@ -549,6 +553,13 @@ public static class TowerSceneBuilder
                         "EndingScreen", "Assets/Sprites/Screens/Ending_Art.png",
                         Ending.TitleLine,  Ending.TitleDot,
                         Ending.AnyKeyLine, Ending.AnyKeyDot);
+
+        // 十字キーの触りを受ける役（押しっぱなしで歩き続ける）
+        var padView = canvasGo.AddComponent<DPadView>();
+        var padso = new SerializedObject(padView);
+        padso.FindProperty("controller").objectReferenceValue = controller;
+        padso.FindProperty("pad").objectReferenceValue = padRt;
+        padso.ApplyModifiedPropertiesWithoutUndo();
 
         // 持ち物の帯と「ダメージ表示」の触りを受ける役（作者の指定）
         var barView = canvasGo.AddComponent<ItemBarView>();

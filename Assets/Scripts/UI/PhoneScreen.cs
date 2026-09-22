@@ -89,6 +89,30 @@ public static class PhoneScreen
     /// <summary>帯の地の色（見せてもらった画面に合わせて黒）。</summary>
     public static readonly Color ItemBarFill = new Color32(0x0c, 0x0c, 0x12, 0xff);
 
+    /// <summary>
+    /// 移動の十字キーの絵。**作者が6案から選んだもの**（B＝黒い円盤に矢印と中央のつまみ）。
+    /// 絵は `docs/make_dpad.py` が作る。色は原典の枠（LCG.P58 #1）から取ってある。
+    /// </summary>
+    public const string DPadSpritePath = "Assets/Sprites/Hud/DPad_B.png";
+
+    /// <summary>十字キーの真ん中の「押しても動かない」部分（半径に対する割合）。</summary>
+    public const float DPadDeadZone = 0.28f;
+
+    /// <summary>
+    /// 十字キーのどこを押したかを向きに直す。
+    /// 円の外と、真ん中のつまみ（<see cref="DPadDeadZone"/>）は動かさない。
+    /// 斜めは、ずれの大きいほうの向きに倒す（原典も斜めには進めない）。
+    /// </summary>
+    public static Vector2Int DirFromTap(Vector2 delta, float radius)
+    {
+        if (radius <= 0f) return Vector2Int.zero;
+        float d = delta.magnitude;
+        if (d > radius || d < radius * DPadDeadZone) return Vector2Int.zero;
+        return Mathf.Abs(delta.x) >= Mathf.Abs(delta.y)
+             ? new Vector2Int(delta.x > 0f ? 1 : -1, 0)
+             : new Vector2Int(0, delta.y > 0f ? 1 : -1);
+    }
+
     /// <summary>盤面の枠の、画布の中での大きさ（正方形）。高さが足りなければ縮める。</summary>
     public static float MapSide(float canvasWidth, float canvasHeight)
     {
