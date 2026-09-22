@@ -83,6 +83,9 @@ public class ScreenFlowTests
         var g = Game(24, new Vector2Int(0, -1));
         Assert.AreEqual(24, g.Player.Floor);
         g.PlayScene("終幕");
+        // 原典 0x2312 は駆け上がる前に時空の門を開ける動きを出す。
+        // 演出は1手ずつ進むので、その動きが終わってから駆け上がりが起きる。
+        g.Pump(false);
         Assert.AreEqual(Ending.LastFloor, g.Player.Floor, "50階まで上がる");
         Assert.AreEqual(Ending.LastPosition, g.Player.Position, "立ち位置は (0,-1)");
         Assert.AreEqual(50, g.Player.HighestFloor);
@@ -105,6 +108,7 @@ public class ScreenFlowTests
         var g = Game(24, new Vector2Int(0, -1));
         Assert.IsNull(g.LastClimb);
         g.PlayScene("終幕");
+        g.Pump(false);                    // 門が開く動きのぶん1手進める
         CollectionAssert.AreEqual(floors, g.LastClimb, "本線が並びを残す");
     }
 

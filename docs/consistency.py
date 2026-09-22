@@ -1227,7 +1227,8 @@ _cs_say=[n for n in _cs_steps
                       "ボスが現れる","骸骨に囲まれる","押し上げられる")
          and not n.startswith("地図 ") and not n.startswith("歩き ")
          and not n.startswith("開く ") and not n.startswith("閉まる ")
-         and not n.startswith("消す ")]
+         and not n.startswith("消す ") and not n.startswith("戦闘 ")
+         and not n.startswith("斬りかかる")]
 chk(all(int(n) in _dlg for n in _cs_say),
     "場面のセリフ番号が Dialogue.txt に実在する（「題名」「奪われる」は別仕立て）")
 # 10階「骸骨に囲まれる」の台本（原典 0x3e0a。書き出しは docs/make_boss_skeletons.py）
@@ -1253,6 +1254,33 @@ chk(sum(1 for l in _bs if l.startswith("閉まる "))==4
     "扉は2つ開いて4つ閉まる（奥・退路・左右）")
 chk("押し上げられる" in _cs_steps and "骸骨に囲まれる" in _cs_steps,
     "10階の場面は押し上げ→セリフ100→囲まれるの順")
+# 原典で「1マス滑らせる（0xa276）」を呼ぶ場所は4つの関数だけ。全部が表に載っているか。
+#   0x003e0 = 2階の盗賊が去る / 0x00529 = 15階の盗賊・10階の盗賊が来る
+#   0x0325e = 40階の金騎士の突撃 / 0x03e0a = 10階の骸骨 / 0x068b0 = 32階の金騎士
+_th=[[c.strip() for c in l.split("|")] for l in
+     open("Assets/Resources/ThiefEvents.txt",encoding="utf-8").read().split("\n")
+     if l.strip() and not l.strip().startswith("#")]
+chk(sum(1 for r in _th if len(r)>5 and r[5]!="-")==2,
+    "盗賊が歩いて去るのは2階と15階の2件（原典 0x3e0/0x529 の 0x39c6 の呼び出しと同数）")
+chk(any(r[0]=="15" and r[5].startswith("(+3,+5)") and r[5].endswith("2,2") for r in _th),
+    "15階の盗賊は (+3,+5) から左へ2歩（原典 0x5b0 の X=8,Y=0 と表 {2,2}）")
+chk(any(r[0]=="2" and r[5].startswith("(-5,-2)") and r[5].endswith("3,3") for r in _th),
+    "2階の盗賊は (-5,-2) から下へ2歩（原典 0x4b2 の X=0,Y=7 と表 {3,3}）")
+_gk=[n for n in _cs_steps if n.startswith("歩き Enemy_Worrior")]
+chk(len(_gk)==2 and "3,3,3" in _gk[0] and _gk[1].endswith("4,4,4,4,4,4,4,4,1,1,1,1"),
+    "32階の金騎士は3歩降りてきて、上へ8歩・右へ4歩で逃げる（原典 0x68b0 の表2本）")
+chk(any(n.startswith("戦闘 Enemy_Worrior") for n in _cs_steps),
+    "32階は歩かせたあと戦う（原典 0x69e2 の 0x6082 呼び出し）")
+_ch=[n for n in _cs_steps if n.startswith("斬りかかる")]
+chk(_ch==["斬りかかる 1-3","斬りかかる 4-6","斬りかかる 7-9",
+          "斬りかかる 10-12","斬りかかる 13","斬りかかる 14"],
+    "40階の突撃は6回に分かれる（原典 0x325e の外側の輪 cmp 3/6/9/0xc）")
+chk(sum(1 for n in _cs_steps if n.startswith("閉まる "))==3
+    and sum(1 for n in _cs_steps if n.startswith("開く "))==2,
+    "場面の中で門が閉まるのは3か所（20階・40階・49階）、開くのは2か所"
+    "（40階の開け直しと24階の時空の門）。10階の台本は別勘定")
+chk(sum(1 for n in _cs_steps if "=ID93" in n)==17,
+    "魔導師が出るのは3階4体・42階5体・49階8体の計17体（原典の座標表どおり）")
 # 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚ぶん書き出してある
 chk(all(os.path.exists(f"Assets/Sprites/Screens/Prologue_{_i}.png") for _i in range(4)),
     "序章の1枚絵が4枚ある（行が0〜3つ出た状態）")
@@ -1269,9 +1297,9 @@ chk("結果が出ていない" in open("docs/run_tests.sh",encoding="utf-8").rea
     "結果が出ていなければ落ちたと分かるようにする")
 # 場面の中の地図の書き換え（原典 0x3044 の三つ組の表から取った）
 _cs_map=[n for n in _cs_steps if n.startswith("地図 ")]
-chk(len(_cs_map)==22,
-    "場面の中の地図の書き換えは22件"
-    "（3階のゼノ5＋片付け5・20階のボス登場10・40階の金騎士2）",
+chk(len(_cs_map)==46,
+    "場面の中の地図の書き換えは46件（3階のゼノ5＋片付け5・20階のボス登場10・"
+    "32階の金騎士1・40階の金騎士3・42階の処刑12・49階の口上10）",
     len(_cs_map))
 chk(all(re.match(r"^地図 \([-+]?\d+,[-+]?\d+\)=.+$",n) for n in _cs_map),
     "場面の地図の段は「地図 (x,y)=種別」の形")

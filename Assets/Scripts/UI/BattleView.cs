@@ -126,6 +126,7 @@ public class BattleView : MonoBehaviour
     IEnumerator Charge(List<Vector2Int> path)
     {
         if (knight == null) yield break;
+        IsPlaying = true;                 // 斬り終わるまで場面の次の行へ進ませない
         knight.SetActive(true);
         foreach (var at in path)
         {
@@ -134,6 +135,7 @@ public class BattleView : MonoBehaviour
                 BattlePresentation.WaitSeconds(BattlePresentation.StepWait));
         }
         knight.SetActive(false);
+        IsPlaying = false;
     }
 
     void ShowEffect(Vector2Int at)

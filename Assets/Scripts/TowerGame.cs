@@ -186,11 +186,31 @@ public class TowerGame
                 Player.ApplyZenoEvent();
                 EnterFloor(Player.Floor, Player.Position);
             }
-            else if (e.Effect == Cutscenes.ChargeStep)
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.ChargeStep))
             {
                 // 原典 0x3d1c は突撃の中で地図を書き換えるたびに音6を鳴らす
                 PlaySound(SoundCues.SceneBeat2);
-                LastKnightCharge = KnightCharge.Instance.Trace();
+                var kc = KnightCharge.Instance;
+                int from, to;
+                Cutscenes.ParseChargeRange(e.Effect, kc.RunCount, out from, out to);
+                var path = new List<Vector2Int>();
+                for (int i = from; i <= to; i++) path.AddRange(kc.TraceRun(i));
+                LastKnightCharge = path;
+                viewTicket++;
+            }
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.BattlePrefix))
+            {
+                // 原典 0x68b0 は歩かせたあと戦闘（0x6082）を直に呼ぶ。
+                // 踏み込みではないので主人公は動かず、相手のマスも空けない。
+                var arg = e.Effect.Substring(Cutscenes.BattlePrefix.Length).Trim();
+                int paren = arg.IndexOf('(');
+                Vector2Int spot = Player.Position;
+                if (paren > 0)
+                {
+                    Cutscenes.TryParseCell(arg.Substring(paren), "", out spot);
+                    arg = arg.Substring(0, paren).Trim();
+                }
+                RunBattle(arg, spot);
             }
             else if (e.Effect == Cutscenes.BossAppearStep)
             {
@@ -218,15 +238,18 @@ public class TowerGame
                     var st = FloorAt(c.Floor);
                     if (st != null) st.Clear(c.Pos);
                 }
-                // 2階で最初に別れるときだけ、下へ2歩あるいて消える（原典の表 {3,3}）
-                if (leaving.Floor == Prologue.PrisonFloor
-                    && Player.Position == Prologue.ThiefGoal + Vector2Int.up)
+                // 去り方は表のとおり（原典 0x3e0/0x529 で歩くのは
+                // 2階＝下へ2歩、15階＝抜け穴を開けて左へ2歩、の2件だけ）。
+                // 歩き終えたところで消える（原典 0x45be がマスを描き直す）。
+                if (leaving.Walk != null)
+                {
                     walks.Add(new NpcWalk
                     {
                         Prefab = Prologue.ThiefPrefab,
-                        From = Prologue.ThiefGoal,
-                        Path = new List<Vector2Int>(Prologue.ThiefLeave)
+                        From = leaving.WalkFrom,
+                        Path = new List<Vector2Int>(leaving.Walk)
                     });
+                }
             }
             else if (e.Effect == Cutscenes.PushUpStep)
             {
@@ -307,6 +330,13 @@ public class TowerGame
     bool pendingEvaluate;
 
     /// <summary>
+    /// 見た目へ渡した「数え上げられない仕事」の通し番号。
+    /// 斬りかかりや場面の中の戦いは並びに積むのではなく最新の1件を置くので、
+    /// これを増やして「渡した」ことを伝える。
+    /// </summary>
+    int viewTicket;
+
+    /// <summary>
     /// 見た目の層に渡した仕事の数。増えていたら、その手は絵が動くまで続きがある。
     /// </summary>
     int ViewWork
@@ -314,7 +344,8 @@ public class TowerGame
         get
         {
             return walks.Count + doorOpens.Count + blinks.Count
-                   + bossAppears.Count + vanishes.Count + (PlayerSlide != null ? 1 : 0);
+                   + bossAppears.Count + vanishes.Count + viewTicket
+                   + (PlayerSlide != null ? 1 : 0);
         }
     }
 
@@ -339,7 +370,8 @@ public class TowerGame
         {
             if (step == Cutscenes.ZenoTakesStep || step == Cutscenes.PrisonOpensStep
                 || step == Cutscenes.ClimbStep || step == Cutscenes.FlashStep
-                || step == Cutscenes.ChargeStep || step == Cutscenes.BossAppearStep
+                || step.StartsWith(Cutscenes.ChargeStep) || step == Cutscenes.BossAppearStep
+                || step.StartsWith(Cutscenes.BattlePrefix)
                 || step == Cutscenes.PushUpStep
                 || step.StartsWith(Cutscenes.WalkPrefix)
                 || step.StartsWith(Cutscenes.DoorOpenPrefix)
@@ -1032,50 +1064,15 @@ public class TowerGame
             }
             case TowerPlayer.Outcome.Encounter:
             {
-                var before2 = Player.Position;
-                int hpBefore = Player.Hp;
-                var b = TowerBattle.Resolve(Player, r.What);
-                LastBattle = BattlePresentation.Steps(before2, r.Target, b.Hits);
-                LastBattleEnemy = r.What;
-                // 作者の旧版の帯（BattleBand）に出す数字。戦う前の値を残しておく。
-                LastBattleNumbers = new BattleBand.Numbers
+                if (RunBattle(r.What, r.Target))
                 {
-                    Enemy = r.What,
-                    PlayerHp = hpBefore,
-                    PlayerAttack = Player.Attack,
-                    PlayerDefense = Player.Defense,
-                    EnemyHp = b.EnemyHp,
-                    EnemyAttack = b.EnemyAttack,
-                    EnemyDefense = b.EnemyDefense,
-                    PlayerDamage = b.PlayerDamage,
-                    EnemyDamage = b.EnemyDamage,
-                    Hits = b.Hits,
-                    Gold = b.GoldGained,
-                };
-                // 原典は一撃ごとに音9（自分の攻撃）、相手が生きていれば音10（反撃）。
-                // 回数は BattlePresentation.Steps の並びと同じ。
-                for (int i = 0; i < b.Hits; i++)
-                {
-                    PlaySound(SoundCues.Slash);
-                    if (i < b.Hits - 1) PlaySound(SoundCues.Hit);
+                    // 敵だけは**進む**。移動処理（0x00a6fb）は座標を変えないが、
+                    // 戦闘処理そのもの（0x61ef〜0x6232）が踏み込みの一歩として
+                    // プレーヤーの X か Y を敵の方へ1つ動かし、勝つと相手のマスを
+                    // 床(6)にする（0x631f）ので、戦いが終わると相手のマスに立っている。
+                    Floor.Clear(r.Target);
+                    Player.Position = r.Target;
                 }
-                if (b.Died)
-                {
-                    // 原典 0x64cd → 0x68b:0x2efc。生命力が尽きたらゲームオーバー。
-                    GameOver();
-                    break;
-                }
-                if (!b.Won)
-                {
-                    Say(GameText.Instance.Message(b.MessageKey));
-                    break;
-                }
-                // 敵だけは**進む**。移動処理（0x00a6fb）は座標を変えないが、
-                // 戦闘処理そのもの（0x61ef〜0x6232）が踏み込みの一歩として
-                // プレーヤーの X か Y を敵の方へ1つ動かし、勝つと相手のマスを
-                // 床(6)にする（0x631f）ので、戦いが終わると相手のマスに立っている。
-                Floor.Clear(r.Target);
-                Player.Position = r.Target;
                 break;
             }
             case TowerPlayer.Outcome.Stairs:
@@ -1308,8 +1305,18 @@ public class TowerGame
         {
             var st = FloorAt(c.Floor);
             if (st == null) continue;
+            bool wasGate = st.At(c.Pos) == "s";
             if (c.Kind == "床") st.Clear(c.Pos);
             else st.Put(c.Pos, FloorState.SymbolOfKind(c.Kind));
+            bool isGate = st.At(c.Pos) == "s";
+            // 原典 0x1588 は門を書いたすぐあとに 0x7b26（閉まる9コマ）を呼ぶ。
+            // 15階(0,-3) / 25階(0,-4) / 30階(0,+2)(0,-1) / 33階(+4,+2)(+4,-2) の6か所と、
+            // 24階(0,0) の 0x7a68（開く）で、**表の書き換えと1対1**になっている。
+            if (st == Floor && wasGate != isGate)
+            {
+                PlaySound(SoundCues.OpenDoor);
+                doorOpens.Add(new DoorOpen { At = c.Pos, Cell = "s", Closing = isGate });
+            }
             // 持ち物で溶かすものは**1マスずつ**音が鳴る（原典 0x2079 が1周ごとに音6）
             if (ev.NeedsItem != SpecialItems.Kind.None) PlaySound(SoundCues.SnowMelt);
         }
@@ -1392,6 +1399,55 @@ public class TowerGame
     /// 人や物に触れたときの振り分け。原典の物体ディスパッチャ（0x23ee）と同じ割り当て:
     /// ID25=仙人 / ID19=商人 / ID21=盗賊 / ID27=人形 / ID16,17=祭壇。
     /// </summary>
+    /// <summary>
+    /// 1回戦う。勝って生き残ったら true。
+    ///
+    /// 原典の戦闘（0x6082）は**踏み込みとは別の処理**で、場面の中から直に呼ばれることもある
+    /// （32階の金騎士 0x68b0）。だから「相手のマスへ進む」のは呼ぶ側の仕事にしてある。
+    /// </summary>
+    bool RunBattle(string what, Vector2Int target)
+    {
+        var from = Player.Position;
+        int hpBefore = Player.Hp;
+        var b = TowerBattle.Resolve(Player, what);
+        LastBattle = BattlePresentation.Steps(from, target, b.Hits);
+        viewTicket++;
+        LastBattleEnemy = what;
+        // 作者の旧版の帯（BattleBand）に出す数字。戦う前の値を残しておく。
+        LastBattleNumbers = new BattleBand.Numbers
+        {
+            Enemy = what,
+            PlayerHp = hpBefore,
+            PlayerAttack = Player.Attack,
+            PlayerDefense = Player.Defense,
+            EnemyHp = b.EnemyHp,
+            EnemyAttack = b.EnemyAttack,
+            EnemyDefense = b.EnemyDefense,
+            PlayerDamage = b.PlayerDamage,
+            EnemyDamage = b.EnemyDamage,
+            Hits = b.Hits,
+            Gold = b.GoldGained,
+        };
+        // 原典は一撃ごとに音9（自分の攻撃）、相手が生きていれば音10（反撃）。
+        for (int i = 0; i < b.Hits; i++)
+        {
+            PlaySound(SoundCues.Slash);
+            if (i < b.Hits - 1) PlaySound(SoundCues.Hit);
+        }
+        if (b.Died)
+        {
+            // 原典 0x64cd → 0x68b:0x2efc。生命力が尽きたらゲームオーバー。
+            GameOver();
+            return false;
+        }
+        if (!b.Won)
+        {
+            Say(GameText.Instance.Message(b.MessageKey));
+            return false;
+        }
+        return true;
+    }
+
     void Talk(string what, Vector2Int at)
     {
         if (TowerNpc.IsMaster(what))

@@ -128,17 +128,28 @@ public class CutsceneTests
     {
         var g = Game(40, new Vector2Int(0, -1));
         Assert.IsTrue(g.PlayScene("金騎士の突撃"));
-        Assert.AreEqual(7, g.PendingPages, "セリフ6つ＋斬りかかる動き");
 
+        // 原典 0x325e は**6回に分けて**斬りかかり、その合間にセリフを挟む
+        // （1回目→135のあと、2回目と3回目→136/137のあと、…）。
         var want = new[] { 135, 136, 137, 138, 139, 140 };
-        foreach (var id in want)
+        int seen = 0, charges = 0, steps = 0;
+        for (int i = 0; i < 200 && g.PendingPages > 0; i++)
         {
-            Assert.AreEqual(id, g.Current.Value.Record);
-            g.NextPage();
+            var before = g.LastKnightCharge;
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else
+            {
+                Assert.AreEqual(want[seen++], g.Current.Value.Record);
+                g.NextPage();          // 送ると続きの1手も起きる
+            }
+            if (g.LastKnightCharge != null && g.LastKnightCharge != before)
+            { charges++; steps += g.LastKnightCharge.Count; }
         }
-        Assert.IsNull(g.CurrentPage, "セリフのあとは動きが残るだけ");
+        Assert.AreEqual(6, seen, "セリフは6つ");
+        Assert.AreEqual(6, charges, "斬りかかりは6回");
         Assert.IsNotNull(g.LastKnightCharge, "斬りかかる道順が積まれる");
-        Assert.AreEqual(KnightCharge.Instance.StepCount, g.LastKnightCharge.Count);
+        Assert.AreEqual(KnightCharge.Instance.StepCount, steps,
+                        "6回ぶんを足すと表の全部の歩数になる");
     }
 
     [Test]

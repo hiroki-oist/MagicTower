@@ -162,7 +162,9 @@ public class PositionEventsTests
                  || t.StartsWith(Cutscenes.WalkPrefix)
                  || t.StartsWith(Cutscenes.DoorOpenPrefix)
                  || t.StartsWith(Cutscenes.DoorClosePrefix)
-                 || t.StartsWith(Cutscenes.VanishPrefix)) continue;  // セリフ以外の段
+                 || t.StartsWith(Cutscenes.VanishPrefix)
+                 || t.StartsWith(Cutscenes.BattlePrefix)
+                 || t.StartsWith(Cutscenes.ChargeStep)) continue;   // セリフ以外の段
                 Vector2Int at; string kind;
                 if (Cutscenes.TryParseMap(t, out at, out kind))
                 {

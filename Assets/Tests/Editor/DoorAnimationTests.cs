@@ -151,7 +151,9 @@ public class BossAppearTests
             Cutscenes.Instance.Steps("ボス登場"));
         int i = steps.IndexOf(Cutscenes.BossAppearStep);
         Assert.Greater(i, 0, "ボスが現れる段が無い");
-        StringAssert.Contains("=門", steps[i - 1], "退路の門を置いたあと");
+        // 原典 0x3044 は門を置いてすぐ 0x7b26（閉まる9コマ）を呼ぶ
+        StringAssert.StartsWith(Cutscenes.DoorClosePrefix, steps[i - 1], "門が閉まってから");
+        StringAssert.Contains("=門", steps[i - 2], "退路の門を置いたあと");
         StringAssert.StartsWith(Cutscenes.MapStepPrefix, steps[i + 1], "三つ組の前");
     }
 

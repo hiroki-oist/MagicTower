@@ -67,7 +67,11 @@ public class NpcWalkView : MonoBehaviour
         var real = walk.Stay ? null : loader.ObjectAt(goal);
         if (real != null) real.SetActive(false);
 
-        var mover = Spawn(walk.Prefab, walk.From);
+        // すでにそこに立たせてある人がいれば、その絵をそのまま動かす
+        // （32階の金騎士は「降りてくる → 戦う → 逃げる」と2回に分けて歩く）
+        GameObject mover;
+        if (standing.TryGetValue(walk.From, out mover)) standing.Remove(walk.From);
+        else mover = Spawn(walk.Prefab, walk.From);
         var at = walk.From;
         foreach (var to in walk.Path)
         {

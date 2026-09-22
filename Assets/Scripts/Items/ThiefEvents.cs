@@ -39,6 +39,14 @@ public class ThiefEvents
         /// <summary>実行時に立てるフラグ。無ければ -1。</summary>
         public int SetsFlag;
         public List<Change> Changes;
+        /// <summary>
+        /// 去っていく道順の出発マス。歩かないなら <see cref="Vector2Int.zero"/> で
+        /// <see cref="Walk"/> が null。原典 0x3e0/0x529 で `0x39c6` を呼ぶのは
+        /// 2階（下へ2歩）と15階（左へ2歩）の2件だけ。
+        /// </summary>
+        public Vector2Int WalkFrom;
+        /// <summary>通っていくマス。歩かないなら null。</summary>
+        public List<Vector2Int> Walk;
     }
 
     readonly List<Event> events = new List<Event>();
@@ -94,6 +102,7 @@ public class ThiefEvents
                 Requires = new List<KeyValuePair<int, bool>>(),
                 Changes = ParseChanges(p[4])
             };
+            if (p.Length > 5) ParseWalk(p[5].Trim(), ref e);
             ParseCondition(p[1].Trim(), ref e);
             events.Add(e);
         }
@@ -118,6 +127,31 @@ public class ThiefEvents
                 if (int.TryParse(t.Substring(3), out v)) e.MaxY = v;
             }
         }
+    }
+
+    /// <summary>"(x,y) 1,2,3" を読む。"-" なら歩かない。</summary>
+    static void ParseWalk(string s, ref Event e)
+    {
+        if (s == "-" || s.Length == 0) return;
+        int close = s.IndexOf(')');
+        if (!s.StartsWith("(") || close < 0) return;
+        var xy = s.Substring(1, close - 1).Split(',');
+        int x, y;
+        if (xy.Length != 2 || !int.TryParse(xy[0].Trim(), out x)
+                           || !int.TryParse(xy[1].Trim(), out y)) return;
+        var at = new Vector2Int(x, y);
+        e.WalkFrom = at;
+        e.Walk = new List<Vector2Int>();
+        foreach (var t in s.Substring(close + 1).Split(','))
+        {
+            int d;
+            if (!int.TryParse(t.Trim(), out d)) continue;
+            var move = Cutscenes.StepOf(d);
+            if (move == Vector2Int.zero) continue;
+            at += move;
+            e.Walk.Add(at);
+        }
+        if (e.Walk.Count == 0) e.Walk = null;
     }
 
     static List<Change> ParseChanges(string s)

@@ -53,8 +53,37 @@ public class Cutscenes
 
     /// <summary>
     /// 金騎士が斬りかかる段（原典 0x325e の向きの表）。道順は <see cref="KnightCharge"/>。
+    ///
+    /// 原典は**6回に分けて**斬りかかり、その合間にセリフを挟む。
+    /// 道順の表は14まとまりで、1回目が1〜3、2回目が4〜6、3回目が7〜9、
+    /// 4回目が10〜12、5回目が13、6回目が14（0x325e の外側の輪が
+    /// `cmp [bp-0xfe], 3/6/9/0xc` と数えている）。
+    /// "斬りかかる 1-3" のように何番目から何番目までかを書く。
     /// </summary>
     public const string ChargeStep = "斬りかかる";
+
+    /// <summary>"斬りかかる 1-3" の範囲を読む。番号は1から。無ければ全部。</summary>
+    public static void ParseChargeRange(string step, int runCount, out int from, out int to)
+    {
+        from = 0; to = runCount - 1;
+        if (step == null || !step.StartsWith(ChargeStep)) return;
+        var t = step.Substring(ChargeStep.Length).Trim();
+        if (t.Length == 0) return;
+        var p = t.Split('-');
+        int a, b;
+        if (!int.TryParse(p[0].Trim(), out a)) return;
+        b = a;
+        if (p.Length > 1 && !int.TryParse(p[1].Trim(), out b)) b = a;
+        from = Mathf.Clamp(a - 1, 0, runCount - 1);
+        to = Mathf.Clamp(b - 1, from, runCount - 1);
+    }
+
+    /// <summary>
+    /// 場面の中で戦う段の頭。書き方は "戦闘 プレハブ名"。
+    /// 原典 0x68b0（32階の金騎士）は歩かせたあと `0x6082` を直に呼ぶ。
+    /// 踏み込みではないので**主人公は動かないし、マスも空けない**。
+    /// </summary>
+    public const string BattlePrefix = "戦闘 ";
 
     /// <summary>
     /// 閃光の段。原典は音7を鳴らして**自分の立っているマス**に当たりの絵を貼る
