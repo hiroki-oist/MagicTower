@@ -40,13 +40,11 @@ public class HeroOrbPanelTests
     }
 
     [Test]
-    public void メニューから選ぶと専用の頁が出る()
+    public void 持ち物の帯から触ると専用の頁が出る()
     {
         var g = new TowerGame(Player(3, 100, 100));
         g.Player.Give(SpecialItems.Kind.HeroOrb);
-        g.OpenMenu();
-        while (g.MenuCurrent != TowerMenu.Entry.HeroOrb) g.MenuMove(1);
-        g.MenuConfirm();
+        Assert.IsTrue(g.TapItem(SpecialItems.Kind.HeroOrb));
         Assert.IsTrue(g.IsShowingPage, "中身が出る");
         Assert.AreEqual(TowerGame.PageKind.HeroOrb, g.CurrentKind, "会話の窓ではない");
         g.NextPage();

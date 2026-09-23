@@ -100,13 +100,11 @@ public class HeroOrbTests
     }
 
     [Test]
-    public void メニューから選ぶと窓に出る()
+    public void 持ち物の帯から触ると窓に出る()
     {
         var g = new TowerGame(Player(1, 100, 100));
         g.Player.Give(SpecialItems.Kind.HeroOrb);
-        g.OpenMenu();
-        while (g.MenuCurrent != TowerMenu.Entry.HeroOrb) g.MenuMove(1);
-        g.MenuConfirm();
+        Assert.IsTrue(g.TapItem(SpecialItems.Kind.HeroOrb));
         Assert.IsTrue(g.IsShowingPage, "中身が窓に出る");
     }
 }

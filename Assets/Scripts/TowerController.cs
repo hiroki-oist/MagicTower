@@ -292,6 +292,10 @@ public class TowerController : MonoBehaviour
                 }
             }
         }
+        else if (Game.IsChoosingFloor)
+        {
+            acted = StepFloorPicker();
+        }
         else if (Game.IsMenuOpen)
         {
             acted = StepMenu();
@@ -304,9 +308,11 @@ public class TowerController : MonoBehaviour
         }
         else if (MenuKeyDown())
         {
-            // 原典は鍵 0x1c(リターン) と 0x34(スペース) のどちらでもメニューに入る
-            Game.OpenMenu();
-            acted = true;
+            // ★作者の指定でメニューは**下の「メニュー」のボタンからだけ**開く。
+            // 原典は鍵 0x1c(リターン) と 0x34(スペース) のどちらでもメニューに入るが、
+            // スマホでは真ん中の決定ボタンがそれに当たってしまい、
+            // 歩こうとしただけでメニューが出てしまう。鍵は捨てるだけにする。
+            acted = false;
         }
         else
         {
@@ -385,6 +391,17 @@ public class TowerController : MonoBehaviour
     /// <summary>下の「ロード」のボタン。「ロードしますか？」と聞く。</summary>
     public void AskLoad() { if (Game != null && !AtTitle) Game.AskLoad(); }
 
+    /// <summary>
+    /// 下の「メニュー」のボタン（作者の指定）。**メニューはここからだけ開く**。
+    /// 開いていれば閉じる。
+    /// </summary>
+    public void ToggleMenu()
+    {
+        if (Game == null || AtTitle) return;
+        if (Game.IsMenuOpen) Game.CloseMenu();
+        else Game.OpenMenu();
+    }
+
     /// <summary>メニューの中の一手。何かしたら true。</summary>
     bool StepMenu()
     {
@@ -392,19 +409,7 @@ public class TowerController : MonoBehaviour
 
         var move = ReadInputOnce();
         if (move.y == 0) move = TakeStep();
-        if (move.y != 0)
-        {
-            // 段によって上下の意味が変わる。
-            //   本体 … 項目を選ぶ／スロット … 保存先を選ぶ／飛翔 … 階を選ぶ
-            switch (Game.Stage)
-            {
-                case TowerGame.MenuStage.Root:         Game.MenuMove(-move.y); break;
-                case TowerGame.MenuStage.FlightFloors: Game.FlightMove(move.y); break;
-                case TowerGame.MenuStage.Items:        Game.ItemMove(-move.y); break;
-                default:                               Game.SlotMove(-move.y); break;
-            }
-            return true;
-        }
+        if (move.y != 0) { Game.MenuMove(-move.y); return true; }
         if (MenuKeyDown() || TakeConfirm())
         {
             Game.MenuConfirm();
@@ -413,6 +418,23 @@ public class TowerController : MonoBehaviour
             if (Game.Quitting) QuitGame();
             return true;
         }
+        return false;
+    }
+
+    /// <summary>
+    /// 飛翔のオーブの階選びの一手（作者の指定でメニューとは別の画面）。
+    /// 上下で1階ずつ、左右で10階ずつ動かして、決定で飛ぶ。
+    /// **今いる階を選べば取りやめ**（原典も同じ階なら何も起きない）。
+    /// </summary>
+    bool StepFloorPicker()
+    {
+        if (Input.GetKeyDown(KeyCode.Escape)) { Game.CancelFlight(); return true; }
+
+        var move = ReadInputOnce();
+        if (move == Vector2Int.zero) move = TakeStep();
+        if (move.y != 0) { Game.FlightMove(move.y); return true; }
+        if (move.x != 0) { Game.FlightMove(move.x > 0 ? 10 : -10); return true; }
+        if (MenuKeyDown() || TakeConfirm()) { Game.ConfirmFlight(); return true; }
         return false;
     }
 

@@ -31,29 +31,14 @@ public class MenuWindowView : MonoBehaviour
     /// <summary>印の絵を2枚で切り替える（原典 0x9e78 の数え。規則は <see cref="ChoiceCursor"/>）。</summary>
     [SerializeField] Sprite cursorFrame2;
 
-    void Blink()
-    {
-        if (cursor == null || cursorFrame2 == null) return;
-        if (cursorFirst == null) cursorFirst = cursor.sprite;      // 組み立て器が入れた1枚目
-        cursor.sprite = ChoiceCursor.FrameAt(Time.time) == 0 ? cursorFirst : cursorFrame2;
-    }
-
-    Sprite cursorFirst;
+    /// <summary>
+    /// ★作者の指定で項目の文字を大きくしたので、**絵の印は使わない**。
+    /// 行ごとに高さが変わるため、原典と同じ「行の高さ×行数」では位置が合わない。
+    /// 印は <see cref="Compose"/> が置く文字の「▶」。
+    /// </summary>
     void PlaceCursor(TowerGame g)
     {
-        if (cursor == null) return;
-        bool show = g.IsMenuOpen;
-        if (cursor.enabled != show) cursor.enabled = show;
-        if (!show) return;
-        Blink();
-        int line = g.MenuStageIndex + 1;                 // 1行目は見出し
-        var rt = cursor.rectTransform;
-        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
-        rt.sizeDelta = new Vector2(16f * DialogueWindow.CanvasScale,
-                                   16f * DialogueWindow.CanvasScale);
-        rt.anchoredPosition = new Vector2(
-            DialogueWindow.TextLeft * DialogueWindow.CanvasScale,
-            -(DialogueWindow.TextTop + ScreenLayout.LineAdvance * line) * DialogueWindow.CanvasScale);
+        if (cursor != null && cursor.enabled) cursor.enabled = false;
     }
 
     string shown;
@@ -74,7 +59,7 @@ public class MenuWindowView : MonoBehaviour
         Layout();
         PlaceCursor(g);
 
-        var text = cursor != null ? g.MenuStageText : Compose(g);
+        var text = Display(g);
         if (text == shown) return;
         shown = text;
         if (body != null)
@@ -83,6 +68,18 @@ public class MenuWindowView : MonoBehaviour
             body.color = DialogueWindowView.Text;
         }
         if (background != null) background.color = DialogueWindowView.Fill;
+    }
+
+    /// <summary>
+    /// 窓に出す文字。見出しはそのまま、**項目だけ大きく**する（作者の指定）。
+    /// 印は文字の「▶」を使う。行ごとに大きさが違うので、
+    /// 絵の印（原典の小さな剣）では位置が合わせられない。
+    /// </summary>
+    public static string Display(TowerGame g)
+    {
+        var lines = Compose(g).Split('\n');
+        for (int i = 1; i < lines.Length; i++) lines[i] = TowerMenu.Big(lines[i]);
+        return string.Join("\n", lines);
     }
 
     /// <summary>選んでいる行の先頭2文字を印に置き換える。</summary>

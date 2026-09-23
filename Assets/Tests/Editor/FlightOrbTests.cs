@@ -20,12 +20,11 @@ public class FlightOrbTests
         return new TowerGame(p);
     }
 
-    static void OpenFlight(TowerGame g)
-    {
-        g.OpenMenu();
-        while (g.MenuCurrent != TowerMenu.Entry.FlightOrb) g.MenuMove(1);
-        g.MenuConfirm();
-    }
+    /// <summary>
+    /// ★作者の指定でメニューからは外し、持ち物の帯を触ると直に開く。
+    /// **階段の隣でなければ断るだけで、階選びの画面は開かない。**
+    /// </summary>
+    static bool OpenFlight(TowerGame g) { return g.TapItem(SpecialItems.Kind.FlightOrb); }
 
     /// <summary>階段の隣に立たせる。</summary>
     static void StandByStairs(TowerGame g)
@@ -40,8 +39,9 @@ public class FlightOrbTests
         for (int y = FloorData.MinY; y <= FloorData.MaxY; y++)
             for (int x = FloorData.MinX; x <= FloorData.MaxX; x++)
                 g.Floor.Clear(new Vector2Int(x, y));
-        OpenFlight(g);
+        Assert.IsFalse(OpenFlight(g), "何も開かない");
         Assert.AreEqual(TowerGame.MenuStage.Root, g.Stage, "階選びに入らない");
+        Assert.IsFalse(g.IsMenuOpen, "メニューも出さない");
         StringAssert.Contains("階段の隣", g.Log[g.Log.Count - 1]);
     }
 
@@ -91,7 +91,7 @@ public class FlightOrbTests
         Assert.AreEqual(8, g.Player.Floor);
         var want = FloorConnections.Instance.Get(8).ArriveFromBelow;
         Assert.AreEqual(want.Value, g.Player.Position, "下から上がってきたときの位置");
-        Assert.IsFalse(g.IsMenuOpen, "メニューは閉じる");
+        Assert.IsFalse(g.IsChoosingFloor, "階選びは閉じる");
     }
 
     [Test]

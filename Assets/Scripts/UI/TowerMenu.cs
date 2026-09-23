@@ -75,19 +75,18 @@ public static class TowerMenu
     /// <summary>並びの数（やめるを含む）。</summary>
     public static int ItemCount { get { return Usable.Length + 1; } }
 
-    /// <summary>今出すべき項目。持っていないオーブは並ばない。</summary>
+    /// <summary>
+    /// 今出すべき項目。
+    ///
+    /// ★**作者の指定で「ゲームに戻る」「ゲーム終了」の2つだけ**にしてある。
+    /// 原典は上の一覧のとおり8項目だが、スマホ版では
+    ///   オーブ3種と道具 … 持ち物の帯を触る
+    ///   セーブ・ロード   … 下のボタン
+    /// で足りるので、メニューに二重に置かない。
+    /// </summary>
     public static List<Entry> Entries(PlayerState p)
     {
-        var list = new List<Entry>();
-        if (p != null && p.Has(SpecialItems.Kind.HeroOrb))   list.Add(Entry.HeroOrb);
-        if (p != null && p.Has(SpecialItems.Kind.FlightOrb)) list.Add(Entry.FlightOrb);
-        if (p != null && p.Has(SpecialItems.Kind.WisdomOrb)) list.Add(Entry.WisdomOrb);
-        list.Add(Entry.SpecialItems);
-        list.Add(Entry.Load);
-        list.Add(Entry.Save);
-        list.Add(Entry.Resume);
-        list.Add(Entry.Quit);
-        return list;
+        return new List<Entry> { Entry.Resume, Entry.Quit };
     }
 
     /// <summary>項目に出す文字。原典の文言そのまま。</summary>
@@ -117,6 +116,24 @@ public static class TowerMenu
     /// </summary>
     public const int WindowLines = 11, TopEdge = 50;
 
+    /// <summary>
+    /// ★作者の指定。項目が2つになったので窓は**5行**に詰め、代わりに項目の
+    /// **文字を大きく**する（小さすぎる、という報告）。
+    ///
+    /// 大きくするのは項目だけで、見出しは原典のまま。見出しは15文字あり、
+    /// 窓の幅（320ドット、文字の入る幅は約296ドット）に 16ドット角で
+    /// ちょうど収まる大きさなので、これ以上大きくすると溢れる。
+    /// 項目は「　　ゲームに戻る」の8文字なので 1.9 倍でも収まる。
+    /// </summary>
+    public const int PhoneWindowLines = 5;
+    public const float TextScale = 1.9f;
+
+    /// <summary>項目1行を大きく出すための書き方（TMP の大きさ指定）。</summary>
+    public static string Big(string line)
+    {
+        return $"<size={Mathf.RoundToInt(TextScale * 100f)}%>{line}</size>";
+    }
+
     /// <summary>選ぶ印の位置（0x68b:0x35c8 に渡す 0x52 と 0x17）。</summary>
     public const int CursorX = 82, CursorY = 23;
 
@@ -144,11 +161,12 @@ public static class TowerMenu
         return sb.ToString();
     }
 
-    /// <summary>メニューの窓の位置と大きさ。</summary>
+    /// <summary>メニューの窓の位置と大きさ（作者の指定で4行ぶん）。</summary>
     public static RectInt Window
     {
         get { return new RectInt(DialogueWindow.Left, TopEdge,
-                                 DialogueWindow.Width, DialogueWindow.Height(WindowLines)); }
+                                 DialogueWindow.Width,
+                                 DialogueWindow.Height(PhoneWindowLines)); }
     }
 
     // ---- 飛翔のオーブ ------------------------------------------------
@@ -192,11 +210,11 @@ public static class TowerMenu
         return GameText.Instance.Message("fly_need_stair");   // 「階段の隣でなければ使えません。」
     }
 
-    /// <summary>階を選ぶときの案内。</summary>
-    public static string FlightPrompt()
-    {
-        return GameText.Instance.Message("teleport_menu");
-    }
+    /// <summary>
+    /// 階を選ぶときの案内。原典の文言（`teleport_menu`）から
+    /// スマホに無い「リターンで」だけ落としてある（作者の指定）。
+    /// </summary>
+    public static string FlightPrompt() { return PhoneScreen.FlightPrompt; }
 
     // ---- 知恵のオーブ ------------------------------------------------
     //

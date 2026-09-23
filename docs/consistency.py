@@ -5,6 +5,12 @@ from collections import Counter
 os.chdir(os.path.expanduser("~/Code/MagicTower"))
 issues=[]
 checks = 0
+def PhoneScreen_flight():
+    import re as _re
+    src=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+    m=_re.search(r'FlightPrompt\s*=\s*"([^"]*)"', src)
+    return m.group(1) if m else ""
+
 def PhoneScreen_left(src):
     import re as _re
     m=_re.search(r"LeftButtons\s*=\s*\{([^}]*)\}", src, _re.S)
@@ -1832,7 +1838,8 @@ chk("0x9b4e" in _sv,"原典のセーブ処理の出どころを書いてある")
 _fst=open("Assets/Scripts/Floor/FloorState.cs",encoding="utf-8").read()
 chk("public List<KeyValuePair<Vector2Int, string>> Diff(" in _fst
     and "public void Apply(" in _fst,"盤面が差の出し入れを持つ")
-chk("TowerSave.Save(slot, Player, floors)" in _tg3,"セーブに地図を渡している")
+chk("TowerSave.Save(PhoneScreen.QuickSlot, Player, floors)" in _tg3,
+    "セーブに地図を渡している")
 chk("var snap = TowerSave.Read(slot)" in _tg3 and "floors.Clear()" in _tg3,
     "ロードは階を組み直してから差を当てる")
 
@@ -2186,13 +2193,19 @@ chk("OpenKeyCodes = { 0x1c, 0x34 }" in _tm,"メニューを開く鍵は 0x1c と
 _tg3=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("IsMenuOpen" in _tg3 and "OpenMenu" in _tg3,"本線にメニューの開閉がある")
 _tc2=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
-chk("MenuKeyDown" in _tc2,"入力からメニューを開ける")
+# ★作者の指定でメニューは下の「メニュー」のボタンからだけ開く（鍵では開かない）
+chk("public void ToggleMenu()" in _tc2,"「メニュー」のボタンから開け閉めする")
+chk("menuButton" in open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read(),
+    "下の「メニュー」のボタンが繋がっている")
 chk("MenuMove" in _tg3 and "MenuConfirm" in _tg3,"選ぶ場所を動かして決められる")
 chk(os.path.exists("Assets/Scripts/UI/MenuWindowView.cs"),"メニューを描く役がある")
 chk("BuildMenuWindow" in _sb,"シーンにメニューの窓を組み込んでいる")
 chk("LoadRecord = 50, SaveRecord = 51" in _tg3,"スロット選択はセリフ50/51")
-chk("SlotWindowLines = 10, SlotWindowTop = 50" in _tg3,"スロットの窓は10行・上端50")
-chk("SlotCancelIndex" in _tg3,"「やっぱりやめる」がある")
+chk("Entry.Resume, Entry.Quit" in open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read(),
+    "メニューの項目は「ゲームに戻る」「ゲーム終了」の2つだけ（作者の指定）")
+chk("PhoneWindowLines" in open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
+    and "TowerMenu.Big" in open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read(),
+    "項目の文字を大きくしてある（小さすぎる、という報告）")
 for _r in (50,51):
     _b=[l.split(" | ",1)[1] for l in open("Assets/Resources/Dialogue.txt",encoding="utf-8")
         if l.startswith(f"{_r} | ")][0].rstrip("\n")
@@ -2353,18 +2366,25 @@ chk("TowerNpc.Buy(Player, choiceOffer)" in _tg4 and "TowerNpc.Donate(Player, wis
 _ctrl=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("Game.IsChoosing" in _ctrl and "Game.MoveChoice" in _ctrl and "Game.ConfirmChoice" in _ctrl,
     "入力の側が選ばせに繋がっている（原典 0x9e78 は上下とリターン／スペース）")
-# 「スペシャル・アイテムを使う」も繋がっていなかった（選んでも何も起きない）。
-chk("case TowerMenu.Entry.SpecialItems:" in _tg4 and "MenuStage.Items" in _tg4,
-    "メニューのアイテムの段がある")
-chk("public bool ConfirmItem()" in _tg4 and "UseItem(TowerMenu.Usable[ItemIndex])" in _tg4,
-    "選んだアイテムが UseItem に繋がっている")
-chk("Game.ItemMove" in _ctrl,"入力の側がアイテムの選び直しに繋がっている")
-# メニューの項目に「出しているのに何も起きない」枝を作らない（3つ見落とした形）
-_entries=re.search(r"public enum Entry\s*\{([^}]*)\}",
-                   open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read(),re.S)
-_names=[v.strip() for v in _entries.group(1).replace("\n"," ").split(",") if v.strip()]
-_noarm=[v for v in _names if f"TowerMenu.Entry.{v}" not in _tg4]
-chk(not _noarm,"メニューの項目はどれも本線に枝がある",str(_noarm))
+# 道具はメニューではなく**持ち物の帯**から使う（作者の指定）
+chk("ChoiceKind.UseItem" in _tg4 and "UseItem(choiceItem)" in _tg4,
+    "触った道具が「使いますか？」を経て UseItem に繋がっている")
+chk("controller.TapItem(i)" in open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read(),
+    "持ち物の帯の触りが本線に繋がっている")
+# 飛翔のオーブの階選び（作者の指定でメニューから切り離した）
+chk("public bool BeginFlight()" in _tg4 and "IsChoosingFloor" in _tg4,
+    "飛翔のオーブはメニューを通さずに階選びを開く")
+chk("StepFloorPicker" in _ctrl,"入力の側が階選びに繋がっている")
+chk(os.path.exists("Assets/Scripts/UI/FloorPickerView.cs")
+    and "BuildFloorPicker" in _sb,"階選びを描く役がシーンに入っている")
+_fp=open("Assets/Scripts/UI/FloorPicker.cs",encoding="utf-8").read()
+chk("Floors = 50" in _fp and "Columns = 10" in _fp,"1階〜50階を10列で並べる")
+chk("リターン" not in PhoneScreen_flight(),"案内から「リターンで」を落としてある")
+# メニューに**出している**項目に「選んでも何も起きない」枝を作らない
+# （以前は8項目のうち3つが繋がっていなかった）。今出しているのは2つだけで、
+# 残りの Entry は原典の文言を残すためだけに持っている。
+_noarm=[v for v in ("Resume","Quit") if f"TowerMenu.Entry.{v}" not in _tg4]
+chk(not _noarm,"メニューに出している項目はどれも本線に枝がある",str(_noarm))
 chk("public bool Quitting" in _tg4 and "if (Game.Quitting) QuitGame();" in _ctrl,
     "「ゲーム終了」が遊びを閉じるところまで繋がっている")
 chk("if (pages.Count == 0 && IsChoosing) Choice = ChoiceKind.None;" in _tg4,

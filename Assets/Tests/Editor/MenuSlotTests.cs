@@ -1,29 +1,24 @@
 using NUnit.Framework;
 using UnityEngine;
 
-/// <summary>セーブ／ロードのスロット選択が原典（MTE.EXE 0x0d60〜0x0e19）どおりかを確かめる。</summary>
+/// <summary>
+/// セーブ／ロードの**原典の姿**（MTE.EXE 0x0d60〜0x0e19）を控えておく検査。
+///
+/// 原典はメニューから8つのスロットを選ばせる（セリフ50＝ロード / 51＝セーブ、
+/// どちらも10行の窓・上端50）。★作者の指定でスマホ版はこの選び方をやめ、
+/// 下の「セーブ」「ロード」のボタンで**スロット1つ**を「はい／いいえ」で読み書きする
+/// （動きは <see cref="QuickSaveTests"/>）。原典のデータ自体は残してあるので、
+/// ここでそれが崩れていないかだけ見る。
+/// </summary>
 public class MenuSlotTests
 {
-    static TowerGame Open()
-    {
-        var p = new PlayerState
-        {
-            Hp = 1234, Attack = 56, Defense = 78, Gold = 90,
-            Floor = 1, Position = new Vector2Int(0, -5)
-        };
-        var g = new TowerGame(p);
-        g.OpenMenu();
-        return g;
-    }
-
     [Test]
     public void スロットは八つでセリフは五十と五十一()
     {
         Assert.AreEqual(8, TowerGame.SlotCount, "原典も選ぶ処理に 8 を渡す");
+        Assert.AreEqual(8, TowerSave.SlotCount, "書き出せる数も8つのまま");
         Assert.AreEqual(50, TowerGame.LoadRecord);
         Assert.AreEqual(51, TowerGame.SaveRecord);
-        Assert.AreEqual(10, TowerGame.SlotWindowLines, "原典 0xa");
-        Assert.AreEqual(50, TowerGame.SlotWindowTop, "原典 0x32");
     }
 
     [Test]
@@ -34,109 +29,39 @@ public class MenuSlotTests
         StringAssert.Contains("どのデータをロードしますか？", lines[0]);
         Assert.AreEqual(10, lines.Length, "問いかけ1行＋データ1〜8＋やっぱりやめる");
         Assert.AreEqual("　　やっぱりやめる", lines[9]);
-        Assert.AreEqual(TowerGame.SlotWindowLines, lines.Length, "10行の窓にちょうど収まる");
     }
 
     [Test]
-    public void ロードを選ぶとスロットの段へ移る()
+    public void セリフ五十一はセーブの問いかけ()
     {
-        var g = Open();
-        int i = g.MenuEntries.IndexOf(TowerMenu.Entry.Load);
-        g.MenuMove(i);
-        g.MenuConfirm();
-        Assert.AreEqual(TowerGame.MenuStage.LoadSlots, g.Stage);
-        StringAssert.Contains("ロードしますか", g.MenuStageText);
+        var body = GameText.Instance.Dialogue(51).Value.Body;
+        StringAssert.Contains("セーブ", body.Split('\n')[0]);
     }
 
+    /// <summary>8つのスロットに別々に書けること自体は変えていない。</summary>
     [Test]
-    public void スロットは上下に動いて端で止まる()
+    public void 八つのスロットに別々に書ける()
     {
-        var g = Open();
-        g.MenuMove(g.MenuEntries.IndexOf(TowerMenu.Entry.Save));
-        g.MenuConfirm();
-        Assert.AreEqual(0, g.SlotIndex);
-        g.SlotMove(-1);
-        Assert.AreEqual(0, g.SlotIndex);
-        for (int i = 0; i < 20; i++) g.SlotMove(1);
-        Assert.AreEqual(TowerGame.SlotCancelIndex, g.SlotIndex, "一番下は「やっぱりやめる」");
-    }
-
-    [Test]
-    public void やめると一つ前の段に戻る()
-    {
-        var g = Open();
-        g.MenuMove(g.MenuEntries.IndexOf(TowerMenu.Entry.Load));
-        g.MenuConfirm();
-        Assert.AreEqual(TowerGame.MenuStage.LoadSlots, g.Stage);
-        g.MenuBack();
-        Assert.AreEqual(TowerGame.MenuStage.Root, g.Stage);
-        Assert.IsTrue(g.IsMenuOpen, "メニュー自体はまだ開いている");
-        g.MenuBack();
-        Assert.IsFalse(g.IsMenuOpen);
-    }
-
-    [Test]
-    public void 保存して読み直すと状態が戻る()
-    {
-        var dir = System.IO.Path.Combine(Application.temporaryCachePath, "slottest");
-        if (System.IO.Directory.Exists(dir)) System.IO.Directory.Delete(dir, true);
+        var dir = System.IO.Path.Combine(Application.temporaryCachePath,
+                                         "slots_" + System.Guid.NewGuid());
         TowerSave.Directory = dir;
         try
         {
-            var g = Open();
-            g.MenuMove(g.MenuEntries.IndexOf(TowerMenu.Entry.Save));
-            g.MenuConfirm();
-            g.SlotMove(2);                       // データ3
-            Assert.IsTrue(g.ConfirmSlot());
-            Assert.AreEqual(TowerGame.MenuStage.Root, g.Stage);
-
-            g.Player.Hp = 1;                     // わざと壊す
-
-            g.MenuMove(g.MenuEntries.IndexOf(TowerMenu.Entry.Load) - g.MenuIndex);
-            g.MenuConfirm();
-            g.SlotMove(2);
-            Assert.IsTrue(g.ConfirmSlot());
-            Assert.AreEqual(1234, g.Player.Hp, "保存した値に戻る");
-            Assert.IsFalse(g.IsMenuOpen, "読み込んだらメニューは閉じる");
+            for (int slot = 1; slot <= TowerSave.SlotCount; slot++)
+                TowerSave.Save(slot, new PlayerState { Hp = 100 * slot, Floor = slot });
+            for (int slot = 1; slot <= TowerSave.SlotCount; slot++)
+            {
+                var p = TowerSave.Load(slot);
+                Assert.IsNotNull(p, $"スロット{slot}");
+                Assert.AreEqual(100 * slot, p.Hp);
+                Assert.AreEqual(slot, p.Floor);
+            }
+            Assert.IsNull(TowerSave.Load(TowerSave.SlotCount + 1), "範囲の外は空");
         }
-        finally { TowerSave.Directory = null; }
-    }
-
-    [Test]
-    public void 空のスロットを読んでも壊れない()
-    {
-        var dir = System.IO.Path.Combine(Application.temporaryCachePath, "slotempty");
-        if (System.IO.Directory.Exists(dir)) System.IO.Directory.Delete(dir, true);
-        TowerSave.Directory = dir;
-        try
+        finally
         {
-            var g = Open();
-            g.MenuMove(g.MenuEntries.IndexOf(TowerMenu.Entry.Load));
-            g.MenuConfirm();
-            Assert.IsFalse(g.ConfirmSlot(), "空なので読めない");
-            Assert.AreEqual(TowerGame.MenuStage.Root, g.Stage);
-            Assert.AreEqual(1234, g.Player.Hp, "状態はそのまま");
+            TowerSave.Directory = null;
+            if (System.IO.Directory.Exists(dir)) System.IO.Directory.Delete(dir, true);
         }
-        finally { TowerSave.Directory = null; }
-    }
-
-    [Test]
-    public void やっぱりやめるを選ぶと何も起きない()
-    {
-        var dir = System.IO.Path.Combine(Application.temporaryCachePath, "slotcancel");
-        if (System.IO.Directory.Exists(dir)) System.IO.Directory.Delete(dir, true);
-        TowerSave.Directory = dir;
-        try
-        {
-            var g = Open();
-            g.MenuMove(g.MenuEntries.IndexOf(TowerMenu.Entry.Save));
-            g.MenuConfirm();
-            g.SlotMove(TowerGame.SlotCancelIndex);
-            Assert.AreEqual(8, g.SlotIndex);
-            Assert.IsFalse(g.ConfirmSlot());
-            Assert.AreEqual(TowerGame.MenuStage.Root, g.Stage);
-            Assert.IsFalse(TowerSave.Exists(1), "何も書かれない");
-        }
-        finally { TowerSave.Directory = null; }
     }
 }

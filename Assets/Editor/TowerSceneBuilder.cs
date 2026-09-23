@@ -403,7 +403,8 @@ public static class TowerSceneBuilder
         int nb = PhoneScreen.LeftButtons.Length;
         float stack = bh * nb + bgap * (nb - 1);
         float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
-        RectTransform damageButton = null, saveButton = null, loadButton = null;
+        RectTransform damageButton = null, saveButton = null, loadButton = null,
+                      menuButton = null;
         var pressable = new List<Object>
         {
             leftArrow.GetComponent<UnityEngine.UI.Image>(),
@@ -421,6 +422,7 @@ public static class TowerSceneBuilder
             if (i == PhoneScreen.DamageButtonIndex) damageButton = right;
             if (i == PhoneScreen.SaveButtonIndex) saveButton = left;
             if (i == PhoneScreen.LoadButtonIndex) loadButton = left;
+            if (i == PhoneScreen.MenuButtonIndex) menuButton = left;
         }
         // 中央の十字。**押すと歩く**（作者が選んだ絵。DPadView が触りを受ける）
         float dpad = PhoneScreen.DPadSize;
@@ -592,6 +594,7 @@ public static class TowerSceneBuilder
         // **メニューの窓を先に置く**。あとに置いたものが前に出るので、
         // メニューを開いたまま開く会話の窓（飛翔のオーブの断り）が隠れないようにする。
         BuildMenuWindow(screen, font, controller);
+        BuildFloorPicker(screen, font, controller);
         BuildDialogueWindow(screen, font, controller, blinkView, bossView);
         // 一覧は画面いっぱいに出すので、原典の座標の入れ物ではなく画布に直に置く
         BuildHeroOrbPanel(frame, font, controller,
@@ -715,6 +718,7 @@ public static class TowerSceneBuilder
         barso.FindProperty("damageButton").objectReferenceValue = damageButton;
         barso.FindProperty("saveButton").objectReferenceValue = saveButton;
         barso.FindProperty("loadButton").objectReferenceValue = loadButton;
+        barso.FindProperty("menuButton").objectReferenceValue = menuButton;
         FillObjects(barso.FindProperty("slots"), slotRects);
         FillObjects(barso.FindProperty("buttons"), pressable);
         barso.ApplyModifiedPropertiesWithoutUndo();
@@ -775,6 +779,7 @@ public static class TowerSceneBuilder
         img.color = DialogueWindowView.Fill;
 
         var tmp = WindowBody(panelGo, font);
+        tmp.richText = true;        // 項目だけ大きく出す（TowerMenu.Big）
 
         // 選んでいる行に置く印（原典 PICTURE.P58 の4枚目。0x9e78 が -0x337 から貼る）
         var curGo = new GameObject("Cursor", typeof(RectTransform), typeof(UnityEngine.UI.Image));
@@ -795,6 +800,75 @@ public static class TowerSceneBuilder
         wso.ApplyModifiedPropertiesWithoutUndo();
 
         panelGo.SetActive(false);
+    }
+
+    /// <summary>
+    /// 飛翔のオーブの階選び（作者の指定）。1階〜50階のますを並べておいて、
+    /// 出すときに色と印だけ入れ替える。
+    /// </summary>
+    static void BuildFloorPicker(RectTransform screen, TMP_FontAsset font,
+                                 TowerController controller)
+    {
+        var panelGo = new GameObject("FloorPicker", typeof(RectTransform),
+                                     typeof(UnityEngine.UI.Image));
+        panelGo.transform.SetParent(screen, false);
+        var rt = panelGo.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = DialogueWindow.ToCanvas(FloorPicker.Window);
+        rt.sizeDelta = DialogueWindow.SizeOnCanvas(FloorPicker.Window);
+        var img = panelGo.GetComponent<UnityEngine.UI.Image>();
+        img.color = DialogueWindowView.Fill;
+
+        // 案内（窓の中の位置なので、窓の左上からの差で置く）
+        var prompt = Box(rt, font, "FloorPrompt",
+                         Shift(FloorPicker.Prompt, FloorPicker.Window),
+                         ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.TopLeft);
+        prompt.enableWordWrapping = true;
+
+        var cells = new List<Object>();
+        var labels = new List<Object>();
+        for (int f = 1; f <= FloorPicker.Floors; f++)
+        {
+            var box = Shift(FloorPicker.CellOf(f), FloorPicker.Window);
+            var cellGo = new GameObject("Floor" + f, typeof(RectTransform),
+                                        typeof(UnityEngine.UI.Image));
+            cellGo.transform.SetParent(rt, false);
+            var crt = cellGo.GetComponent<RectTransform>();
+            crt.anchorMin = crt.anchorMax = crt.pivot = new Vector2(0f, 1f);
+            crt.anchoredPosition = DialogueWindow.ToCanvas(box);
+            crt.sizeDelta = DialogueWindow.SizeOnCanvas(box);
+            var cimg = cellGo.GetComponent<UnityEngine.UI.Image>();
+            cimg.color = FloorPicker.Highlight;
+            cimg.raycastTarget = false;
+            cimg.enabled = false;
+
+            var t = Box(crt, font, "Label", new RectInt(0, 0, box.width, box.height),
+                        ScreenLayout.TextSizeOnCanvas, TextAlignmentOptions.Center);
+            t.rectTransform.anchorMin = Vector2.zero;
+            t.rectTransform.anchorMax = Vector2.one;
+            t.rectTransform.offsetMin = t.rectTransform.offsetMax = Vector2.zero;
+            t.text = f.ToString();
+            cells.Add(cimg);
+            labels.Add(t);
+        }
+
+        var view = screen.gameObject.AddComponent<FloorPickerView>();
+        var so = new SerializedObject(view);
+        so.FindProperty("controller").objectReferenceValue = controller;
+        so.FindProperty("panel").objectReferenceValue = rt;
+        so.FindProperty("background").objectReferenceValue = img;
+        so.FindProperty("prompt").objectReferenceValue = prompt;
+        FillObjects(so.FindProperty("cells"), cells);
+        FillObjects(so.FindProperty("labels"), labels);
+        so.ApplyModifiedPropertiesWithoutUndo();
+
+        panelGo.SetActive(false);
+    }
+
+    /// <summary>画面の座標で書いた矩形を、窓の左上からの差に直す。</summary>
+    static RectInt Shift(RectInt r, RectInt window)
+    {
+        return new RectInt(r.x - window.x, r.y - window.y, r.width, r.height);
     }
 
     /// <summary>会話ウィンドウ。位置と大きさは原典（MTE.EXE 0x94ba）由来。</summary>

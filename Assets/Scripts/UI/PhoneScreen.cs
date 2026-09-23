@@ -94,11 +94,19 @@ public static class PhoneScreen
     public const string Saved   = "セーブしました。";
     public const string Loaded  = "ロードしました。";
 
+    /// <summary>
+    /// 飛翔のオーブの階選びの案内（作者の指定）。
+    /// 原典の文言（Messages.txt の `teleport_menu`）は
+    /// 「↑↓で移動する階を選択して、**リターンで**決定してください。」だが、
+    /// スマホに「リターン」は無いのでそこだけ落としてある。
+    /// </summary>
+    public const string FlightPrompt = "↑↓で移動する階を選択して、決定してください。";
+
     /// <summary>ボタンで使うスロット（原典のスロット1）。</summary>
     public const int QuickSlot = 1;
 
     /// <summary>下の左の並びの中の「セーブ」「ロード」の位置。</summary>
-    public const int SaveButtonIndex = 0, LoadButtonIndex = 1;
+    public const int SaveButtonIndex = 0, LoadButtonIndex = 1, MenuButtonIndex = 3;
 
     /// <summary>持ち物の帯に一度に見せる数（残りは左右の矢印で送る）。</summary>
     public const int ItemsPerPage = 8;

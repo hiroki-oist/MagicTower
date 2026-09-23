@@ -188,56 +188,39 @@ public class SpecialItemMenuTests
         StringAssert.Contains("やっぱりやめる", text[9]);
     }
 
+    /// <summary>
+    /// ★作者の指定でメニューからは道具の一覧を外した（持ち物の帯から直に使う）。
+    /// 一覧の文言そのもの（原典 0x7d50 の並び）は上の検査で見ている。
+    /// </summary>
     [Test]
-    public void エリクサーを選ぶと生命力が増える()
+    public void 持ち物の帯から使うと効く()
     {
         var g = WithItems(SpecialItems.Kind.Elixir);
         g.Player.Hp = 100;
-        g.OpenMenu();
-        while (g.MenuCurrent != TowerMenu.Entry.SpecialItems) g.MenuMove(1);
-        g.MenuConfirm();
-        Assert.AreEqual(TowerGame.MenuStage.Items, g.Stage, "一覧が出る");
-        g.MenuConfirm();                          // 1つ目＝エリクサー
+        Assert.IsTrue(g.TapItem(SpecialItems.Kind.Elixir), "「使いますか？」と聞く");
+        Assert.IsTrue(g.IsChoosing);
+        g.ConfirmChoice();                        // ◎はい
         Assert.Greater(g.Player.Hp, 100, "生命力が増える");
         Assert.IsFalse(g.Player.Has(SpecialItems.Kind.Elixir), "使い切り");
     }
 
     [Test]
-    public void やっぱりやめるは何も起きない()
+    public void いいえなら使わない()
     {
         var g = WithItems(SpecialItems.Kind.Elixir);
         g.Player.Hp = 100;
-        g.OpenMenu();
-        while (g.MenuCurrent != TowerMenu.Entry.SpecialItems) g.MenuMove(1);
-        g.MenuConfirm();
-        for (int i = 0; i < 20; i++) g.ItemMove(1);     // いちばん下＝やめる
-        g.MenuConfirm();
+        g.TapItem(SpecialItems.Kind.Elixir);
+        g.MoveChoice(1);                          // ◎いいえ
+        g.ConfirmChoice();
         Assert.AreEqual(100, g.Player.Hp);
         Assert.IsTrue(g.Player.Has(SpecialItems.Kind.Elixir), "持ったまま");
     }
 
     [Test]
-    public void 持っていないものを選んでも何も起きない()
+    public void 持っていないものは触れない()
     {
         var g = WithItems(SpecialItems.Kind.Elixir);
-        g.OpenMenu();
-        while (g.MenuCurrent != TowerMenu.Entry.SpecialItems) g.MenuMove(1);
-        g.MenuConfirm();
-        g.ItemMove(1);                                  // マトック（持っていない）
-        Assert.IsFalse(g.ConfirmItem());
-    }
-
-    [Test]
-    public void 段ごとに正しい行へ印が出る()
-    {
-        var g = WithItems(SpecialItems.Kind.Elixir);
-        g.OpenMenu();
-        Assert.AreEqual(g.MenuIndex, g.MenuStageIndex, "本体では項目の番号");
-        while (g.MenuCurrent != TowerMenu.Entry.SpecialItems) g.MenuMove(1);
-        g.MenuConfirm();
-        g.ItemMove(2);
-        Assert.AreEqual(g.ItemIndex, g.MenuStageIndex, "一覧ではアイテムの番号");
-        StringAssert.Contains("破壊の玉", g.MenuStageText.Split('\n')[3]);
+        Assert.IsFalse(g.TapItem(SpecialItems.Kind.Matock));
     }
 }
 
@@ -276,8 +259,10 @@ public class QuitMenuTests
     {
         // 「出しているのに何も起きない」項目を作らない。
         // 商人・祭壇・アイテム・終了は、この形で3つ見落としていた。
+        // ★今メニューに出しているのは「ゲームに戻る」「ゲーム終了」の2つだけなので、
+        //   見るのもその2つ（残りの項目は文言だけ原典から残してある）。
         var src = System.IO.File.ReadAllText("Assets/Scripts/TowerGame.cs");
-        foreach (TowerMenu.Entry e in System.Enum.GetValues(typeof(TowerMenu.Entry)))
+        foreach (var e in TowerMenu.Entries(new PlayerState()))
             StringAssert.Contains($"TowerMenu.Entry.{e}", src, $"{e} の枝が無い");
     }
 }

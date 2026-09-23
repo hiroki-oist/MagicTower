@@ -67,6 +67,7 @@
     <Compile Include="Assets/Tests/Editor/TitleViewTests.cs" />
     <Compile Include="Assets/Tests/Editor/ViewMatchesBoardTests.cs" />
     <Compile Include="Assets/Tests/Editor/CutsceneTests.cs" />
+    <Compile Include="Assets/Tests/Editor/FloorPickerTests.cs" />
     <Compile Include="Assets/Tests/Editor/DialogueFlowTests.cs" />
     <Compile Include="Assets/Tests/Editor/RuntimeSmokeTests.cs" />
     <Compile Include="Assets/Tests/Editor/ViewSyncTests.cs" />

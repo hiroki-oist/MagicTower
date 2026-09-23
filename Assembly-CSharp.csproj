@@ -103,6 +103,7 @@
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark04.cs" />
     <Compile Include="Assets/Scripts/Items/SoundVoices.cs" />
     <Compile Include="Assets/Scripts/Battle/BattleRules.cs" />
+    <Compile Include="Assets/Scripts/UI/FloorPickerView.cs" />
     <Compile Include="Assets/Scripts/Floor/SealedDoors.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/ChatController.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/ObjectSpin.cs" />
@@ -119,6 +120,7 @@
     <Compile Include="Assets/Scripts/UI/ChoiceCursor.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_DigitValidator.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TMP_FrameRateCounter.cs" />
+    <Compile Include="Assets/Scripts/UI/FloorPicker.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TextConsoleSimulator.cs" />
     <Compile Include="Assets/Scripts/Items/ItemPowerTable.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/TeleType.cs" />

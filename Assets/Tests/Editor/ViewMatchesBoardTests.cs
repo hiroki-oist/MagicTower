@@ -149,7 +149,7 @@ public class ViewMatchesBoardTests
         Assert.AreEqual(2, g.Player.Floor, "2階の牢に移っている");
     }
 
-    /// <summary>飛翔のオーブ。メニューから階が飛ぶところ。</summary>
+    /// <summary>飛翔のオーブ。持ち物の帯から階が飛ぶところ。</summary>
     [Test]
     public void 飛んでも画面と盤面が食い違わない()
     {
@@ -159,9 +159,7 @@ public class ViewMatchesBoardTests
         g.Floor.Put(g.Player.Position + Vector2Int.up, ">");
         controller.RebuildView();
 
-        g.OpenMenu();
-        while (g.MenuCurrent != TowerMenu.Entry.FlightOrb) g.MenuMove(1);
-        g.MenuConfirm();
+        Assert.IsTrue(g.TapItem(SpecialItems.Kind.FlightOrb));
         for (int i = 0; i < 3; i++) g.FlightMove(1);
 
         int before = g.Player.Floor;

@@ -86,15 +86,13 @@ public class WisdomOrbTests
     }
 
     [Test]
-    public void メニューから選ぶと窓に出る()
+    public void 持ち物の帯から触ると窓に出る()
     {
         var p = new PlayerState { Hp = 1000, Attack = 10, Defense = 10,
                                   Floor = 1, Position = new Vector2Int(0, 0) };
         p.Give(SpecialItems.Kind.WisdomOrb);
         var g = new TowerGame(p);
-        g.OpenMenu();
-        while (g.MenuCurrent != TowerMenu.Entry.WisdomOrb) g.MenuMove(1);
-        g.MenuConfirm();
+        Assert.IsTrue(g.TapItem(SpecialItems.Kind.WisdomOrb));
         Assert.IsTrue(g.IsShowingPage, "中身が窓に出る");
     }
 }

@@ -836,7 +836,6 @@ public class TowerGame
         IsMenuOpen = true;
         MenuIndex = 0;
         Stage = MenuStage.Root;
-        SlotIndex = 0;
         return true;
     }
 
@@ -862,83 +861,36 @@ public class TowerGame
         }
     }
 
-    /// <summary>メニューのどの段にいるか。</summary>
-    public enum MenuStage { Root, LoadSlots, SaveSlots, FlightFloors, Items }
+    /// <summary>
+    /// メニューのどの段にいるか。
+    /// **作者の指定でスマホ版のメニューは「ゲームに戻る／ゲーム終了」の2つだけ**になり、
+    /// 原典の8つのスロット選びと道具の一覧はメニューから外れた（セーブ・ロードは
+    /// 下のボタン、道具は持ち物の帯から使う）。階選びだけはメニューとは別に開く。
+    /// </summary>
+    public enum MenuStage { Root, FlightFloors }
 
     /// <summary>今の段。</summary>
     public MenuStage Stage { get; private set; }
 
-    /// <summary>スロットの数。原典も8つ（選ぶ処理に 8 を渡している）。</summary>
+    /// <summary>
+    /// 原典のスロットの数。原典は選ぶ処理に 8 を渡し、セリフ50（ロード）・
+    /// 51（セーブ）で8つ並べて選ばせる（MTE.EXE 0x0d64 / 0x0dcb、10行の窓・上端50）。
+    /// **こちらはメニューから外して下のボタンの「はい／いいえ」1つにした**ので
+    /// 選ぶ画面は無いが、原典の数はここに控えておく。
+    /// </summary>
     public const int SlotCount = TowerSave.SlotCount;
-
-    /// <summary>
-    /// 今選んでいるスロット（0〜7）。8 は「やっぱりやめる」。
-    /// 原典も選ぶ処理に 8 を渡し、返りが 8 なら取りやめとして扱う（0x0d99 / 0x0e03）。
-    /// </summary>
-    public int SlotIndex { get; private set; }
-
-    /// <summary>「やっぱりやめる」の位置。</summary>
-    public const int SlotCancelIndex = SlotCount;
-
-    /// <summary>
-    /// スロットを選ぶ画面に出すセリフ。原典はロードが50、セーブが51で、
-    /// どちらも10行の窓・上端50（MTE.EXE 0x0d64 / 0x0dcb）。
-    /// </summary>
     public const int LoadRecord = 50, SaveRecord = 51;
-    public const int SlotWindowLines = 10, SlotWindowTop = 50;
 
     /// <summary>今の段で出す文章。</summary>
-    public string MenuStageText
-    {
-        get
-        {
-            if (Stage == MenuStage.Items) return TowerMenu.ItemText();
-            if (Stage == MenuStage.LoadSlots || Stage == MenuStage.SaveSlots)
-            {
-                var rec = Stage == MenuStage.LoadSlots ? LoadRecord : SaveRecord;
-                var line = GameText.Instance.Dialogue(rec);
-                return line.HasValue ? line.Value.Body : "";
-            }
-            return MenuText;                      // 本体と、階選び（階の案内は別に出す）
-        }
-    }
+    public string MenuStageText { get { return MenuText; } }
 
-    /// <summary>選んだ項目を決める。まだ中身の無いものは何も起きない。</summary>
+    /// <summary>選んだ項目を決める。</summary>
     public TowerMenu.Entry MenuConfirm()
     {
-        if (Stage == MenuStage.FlightFloors) { ConfirmFlight(); return TowerMenu.Entry.FlightOrb; }
-        if (Stage == MenuStage.Items) { ConfirmItem(); return TowerMenu.Entry.SpecialItems; }
-        if (Stage != MenuStage.Root) { ConfirmSlot(); return TowerMenu.Entry.Resume; }
-
         var e = MenuCurrent;
         switch (e)
         {
             case TowerMenu.Entry.Resume: CloseMenu(); break;
-            case TowerMenu.Entry.FlightOrb:
-            {
-                // 原典（0x8fda）は上下左右のどれかが階段(11/12)でなければ断る。
-                if (!TowerMenu.NextToStairs(Floor, Player.Position))
-                {
-                    Say(TowerMenu.FlightBlockedMessage());
-                    break;
-                }
-                Stage = MenuStage.FlightFloors;
-                FlightFloor = Player.Floor;
-                Say(TowerMenu.FlightPrompt());
-                break;
-            }
-            case TowerMenu.Entry.WisdomOrb:
-                ShowWisdom();
-                break;
-            case TowerMenu.Entry.HeroOrb:
-                ShowHeroOrb();
-                break;
-            case TowerMenu.Entry.SpecialItems:
-                // ⚠ ここが繋がっていなくて、**スペシャル・アイテムが一度も使えなかった**。
-                Stage = MenuStage.Items; ItemIndex = 0;
-                break;
-            case TowerMenu.Entry.Load: Stage = MenuStage.LoadSlots; SlotIndex = 0; break;
-            case TowerMenu.Entry.Save: Stage = MenuStage.SaveSlots; SlotIndex = 0; break;
             case TowerMenu.Entry.Quit:
                 // 原典はここで DOS へ戻る。こちらは**入力の側**が受け取って
                 // 遊びを閉じる（本線は「終わりたい」と言うだけにして、
@@ -982,8 +934,8 @@ public class TowerGame
     /// 持ち物の帯のひとつを触ったとき（作者の指定。原典にはこの入口は無い）。
     ///
     ///   ・**勇者のオーブ**は触ると一覧を出す（「使う？」とは聞かない）
-    ///   ・知恵のオーブは持ち物と聞いた情報を出す
-    ///   ・飛翔のオーブはメニューと同じく階を選ばせる
+    ///   ・知恵のオーブは聞いた情報を1件ずつ読み返す
+    ///   ・飛翔のオーブは階を選ぶ画面を開く（階段の隣でなければ断るだけ）
     ///   ・使い切りの道具は「使いますか？」と聞いてから使う
     ///   ・十字架・ドラゴンスレイヤー・幸運の金貨は**持っているだけで効く**ので何もしない
     /// </summary>
@@ -994,17 +946,7 @@ public class TowerGame
 
         if (kind == SpecialItems.Kind.HeroOrb) return ShowHeroOrb();
         if (kind == SpecialItems.Kind.WisdomOrb) return ShowWisdom();
-        if (kind == SpecialItems.Kind.FlightOrb)
-        {
-            // メニューの「飛翔のオーブを使う」と同じ道を通す
-            if (!OpenMenu()) return false;
-            var entries = MenuEntries;
-            int at = entries.IndexOf(TowerMenu.Entry.FlightOrb);
-            if (at < 0) { CloseMenu(); return false; }
-            MenuMove(at - MenuIndex);
-            MenuConfirm();
-            return true;
-        }
+        if (kind == SpecialItems.Kind.FlightOrb) return BeginFlight();
         if (!SpecialItemEffects.IsConsumedOnUse(kind)) return false;   // 持つだけで効くもの
 
         Say(string.Format(PhoneScreen.UseAsk, TowerMenu.ItemName(kind)));
@@ -1019,40 +961,33 @@ public class TowerGame
     /// </summary>
     public bool Quitting { get; private set; }
 
-    /// <summary>アイテムの一覧で今選んでいるもの。</summary>
-    public int ItemIndex { get; private set; }
-
     /// <summary>今の段で印を置く行（0から）。見出しは数えない。</summary>
-    public int MenuStageIndex
-    {
-        get
-        {
-            if (Stage == MenuStage.Items) return ItemIndex;
-            if (Stage == MenuStage.LoadSlots || Stage == MenuStage.SaveSlots) return SlotIndex;
-            return MenuIndex;
-        }
-    }
-
-    /// <summary>一覧の中で選び直す。</summary>
-    public void ItemMove(int delta)
-    {
-        if (Stage != MenuStage.Items) return;
-        ItemIndex = Mathf.Clamp(ItemIndex + delta, 0, TowerMenu.ItemCount - 1);
-    }
+    public int MenuStageIndex { get { return MenuIndex; } }
 
     /// <summary>
-    /// 選んだものを使う。持っていないもの・その場では効かないものを選んでも何も起きない
-    /// （原典も一覧は持ち物に関わらず8つとも並べる）。
+    /// 飛翔のオーブを使う（作者の指定でメニューからは外し、持ち物の帯から直に開く）。
+    /// 原典（0x8fda）は上下左右のどれかが階段(11/12)でなければ断る。
+    /// **断るときは断りの言葉を出すだけ**で、階を選ぶ画面は開かない。
     /// </summary>
-    public bool ConfirmItem()
+    /// <returns>階を選ぶ画面を開いたか。</returns>
+    public bool BeginFlight()
     {
-        if (Stage != MenuStage.Items) return false;
-        Stage = MenuStage.Root;
-        if (ItemIndex < 0 || ItemIndex >= TowerMenu.Usable.Length) return false;  // やめる
-        bool ok = UseItem(TowerMenu.Usable[ItemIndex]);
-        if (ok) CloseMenu();
-        return ok;
+        if (pages.Count > 0 || IsMenuOpen || IsChoosing) return false;
+        if (!TowerMenu.NextToStairs(Floor, Player.Position))
+        {
+            Say(TowerMenu.FlightBlockedMessage());
+            return false;
+        }
+        Stage = MenuStage.FlightFloors;
+        FlightFloor = Player.Floor;
+        return true;
     }
+
+    /// <summary>階を選んでいる最中か。見た目の層と入力がこれを見る。</summary>
+    public bool IsChoosingFloor { get { return Stage == MenuStage.FlightFloors; } }
+
+    /// <summary>階選びをやめる。</summary>
+    public void CancelFlight() { if (IsChoosingFloor) Stage = MenuStage.Root; }
 
     /// <summary>飛翔のオーブで今選んでいる階。</summary>
     public int FlightFloor { get; private set; }
@@ -1064,11 +999,17 @@ public class TowerGame
     public void FlightMove(int delta)
     {
         if (Stage != MenuStage.FlightFloors || delta == 0) return;
+        // 1つずつ動かす。**まとめて動かすと44階を飛ばす判定が抜ける**。
+        // 上下は1階ずつ（原典どおり）、左右は10階ずつ（一覧が1段10階なので、
+        // 段ごと跳べるようにした作者の指定）。
         int step = delta > 0 ? 1 : -1;
-        int f = FlightFloor + step;
-        if (f == FloorTransition.PhantomFloor) f += step;     // 44階は飛ばす
-        if (f < 1 || f > Player.HighestFloor) return;         // 端では止まる
-        FlightFloor = f;
+        for (int i = 0; i < Mathf.Abs(delta); i++)
+        {
+            int f = FlightFloor + step;
+            if (f == FloorTransition.PhantomFloor) f += step;     // 44階は飛ばす
+            if (f < 1 || f > Player.HighestFloor) break;          // 端では止まる
+            FlightFloor = f;
+        }
     }
 
     /// <summary>
@@ -1080,6 +1021,7 @@ public class TowerGame
         if (Stage != MenuStage.FlightFloors) return false;
         int to = FlightFloor;
         Stage = MenuStage.Root;
+        // 今いる階を選んだら「やっぱりやめる」（原典も同じ階なら何も起きない）
         if (to == Player.Floor) { CloseMenu(); return false; }
 
         var info = FloorConnections.Instance.Get(to);
@@ -1092,38 +1034,10 @@ public class TowerGame
         return true;
     }
 
-    /// <summary>スロットを選ぶ段で上下に動かす。</summary>
-    public void SlotMove(int delta)
-    {
-        if (Stage == MenuStage.Root) return;
-        SlotIndex = Mathf.Clamp(SlotIndex + delta, 0, SlotCancelIndex);
-    }
-
-    /// <summary>スロットを決める。読み込めたら true。</summary>
-    public bool ConfirmSlot()
-    {
-        if (SlotIndex == SlotCancelIndex) { Stage = MenuStage.Root; return false; }
-        int slot = SlotIndex + 1;               // 原典もスロットは1から
-        if (Stage == MenuStage.SaveSlots)
-        {
-            // 原典（0x9b4e）は地図もまるごと書き出すので、こちらも組み立て済みの階を渡す。
-            TowerSave.Save(slot, Player, floors);
-            Stage = MenuStage.Root;
-            return true;
-        }
-        if (Stage == MenuStage.LoadSlots)
-        {
-            Stage = MenuStage.Root;
-            if (!LoadSlot(slot)) return false;
-            CloseMenu();
-            return true;
-        }
-        return false;
-    }
-
     /// <summary>
     /// そのスロットを読み込む。空なら false。
-    /// メニューの8つのスロットからも、下の「ロード」のボタンからも通る。
+    /// 原典はメニューから8つのスロットを選ばせるが、こちらは下の「ロード」の
+    /// ボタンからスロット1つだけを読む（作者の指定）。
     /// </summary>
     public bool LoadSlot(int slot)
     {

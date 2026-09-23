@@ -1,7 +1,12 @@
 using NUnit.Framework;
 using UnityEngine;
 
-/// <summary>メニューと3つのオーブの機能が原典どおりかを確かめる。</summary>
+/// <summary>
+/// メニューと3つのオーブの機能。
+/// ★作者の指定でスマホ版のメニューは**「ゲームに戻る」「ゲーム終了」の2つだけ**で、
+/// オーブと道具は持ち物の帯、セーブ・ロードは下のボタンから使う。
+/// 原典の8項目の文言そのもの（<see cref="TowerMenu.Label"/>）は残してある。
+/// </summary>
 public class TowerMenuTests
 {
     PlayerState player;
@@ -13,26 +18,21 @@ public class TowerMenuTests
     }
 
     [Test]
-    public void 持っていないオーブは並ばない()
+    public void 項目は戻ると終了の二つだけ()
     {
         var e = TowerMenu.Entries(player);
-        CollectionAssert.DoesNotContain(e, TowerMenu.Entry.HeroOrb);
-        CollectionAssert.Contains(e, TowerMenu.Entry.SpecialItems);
-        CollectionAssert.Contains(e, TowerMenu.Entry.Save);
-        Assert.AreEqual(5, e.Count, "オーブ無しなら5項目");
+        CollectionAssert.AreEqual(
+            new[] { TowerMenu.Entry.Resume, TowerMenu.Entry.Quit }, e);
     }
 
     [Test]
-    public void 三つ揃うと原典と同じ8項目になる()
+    public void オーブを持っていても項目は増えない()
     {
         player.Give(SpecialItems.Kind.HeroOrb);
         player.Give(SpecialItems.Kind.FlightOrb);
         player.Give(SpecialItems.Kind.WisdomOrb);
-        var e = TowerMenu.Entries(player);
-        Assert.AreEqual(8, e.Count);
-        Assert.AreEqual(TowerMenu.Entry.HeroOrb, e[0], "並びは 勇者→飛翔→知恵");
-        Assert.AreEqual(TowerMenu.Entry.FlightOrb, e[1]);
-        Assert.AreEqual(TowerMenu.Entry.WisdomOrb, e[2]);
+        Assert.AreEqual(2, TowerMenu.Entries(player).Count,
+                        "オーブは持ち物の帯から使う");
     }
 
     [Test]
@@ -117,53 +117,34 @@ public class TowerMenuTests
         Assert.AreEqual(160, w.xMin, "会話の窓と同じ左端");
         Assert.AreEqual(320, w.width);
         Assert.AreEqual(50, w.yMin);
-        Assert.AreEqual(DialogueWindow.Height(11), w.height);
+        // ★項目が2つになったので窓も4行ぶんに詰めた（原典は 0xb 固定）
+        Assert.AreEqual(DialogueWindow.Height(TowerMenu.PhoneWindowLines), w.height);
         Assert.IsTrue(DialogueWindow.Fits(w));
     }
 
     [Test]
-    public void 窓の大きさはオーブの有無で変わらない()
-    {
-        // 原典は行数を 0xb 固定で渡している
-        var none = new PlayerState();
-        var all = new PlayerState();
-        all.Give(SpecialItems.Kind.HeroOrb);
-        all.Give(SpecialItems.Kind.FlightOrb);
-        all.Give(SpecialItems.Kind.WisdomOrb);
-        Assert.AreEqual(5, TowerMenu.Entries(none).Count);
-        Assert.AreEqual(8, TowerMenu.Entries(all).Count);
-        Assert.AreEqual(TowerMenu.Window, TowerMenu.Window, "窓は同じ");
-    }
-
-    [Test]
-    public void 文字の組み立てが原典の連結と同じ()
+    public void 文字は原典と同じ連結の仕方で組む()
     {
         var p = new PlayerState();
         p.Give(SpecialItems.Kind.HeroOrb);
-        var text = TowerMenu.Text(p);
-        var lines = text.Split('\n');
+        var lines = TowerMenu.Text(p).Split('\n');
 
-        Assert.AreEqual("メニューの選択をしてください。", lines[0]);
-        Assert.AreEqual("　　勇者のオーブを使う", lines[1]);
-        Assert.AreEqual("　　スペシャル・アイテムを使う", lines[2], "持っていないオーブは飛ばす");
-        Assert.AreEqual("　　データ・ロード", lines[3]);
-        Assert.AreEqual("　　データ・セーブ", lines[4]);
-        Assert.AreEqual("　　ゲームに戻る", lines[5]);
-        Assert.AreEqual("　　ゲーム終了", lines[6]);
-        Assert.AreEqual(7, lines.Length);
+        Assert.AreEqual("メニューの選択をしてください。", lines[0], "見出しは原典のまま");
+        Assert.AreEqual("　　ゲームに戻る", lines[1]);
+        Assert.AreEqual("　　ゲーム終了", lines[2]);
+        Assert.AreEqual(3, lines.Length);
+        Assert.LessOrEqual(lines.Length, TowerMenu.PhoneWindowLines, "窓に収まる");
     }
 
+    /// <summary>原典の8項目の文言は（メニューには出さないが）そのまま持っている。</summary>
     [Test]
-    public void 並びは勇者飛翔知恵の順()
+    public void 原典の文言は全部そろっている()
     {
-        var p = new PlayerState();
-        p.Give(SpecialItems.Kind.WisdomOrb);
-        p.Give(SpecialItems.Kind.FlightOrb);
-        p.Give(SpecialItems.Kind.HeroOrb);
-        var e = TowerMenu.Entries(p);
-        Assert.AreEqual(TowerMenu.Entry.HeroOrb, e[0]);
-        Assert.AreEqual(TowerMenu.Entry.FlightOrb, e[1], "原典のフラグ順 0x23→0x25→0x24");
-        Assert.AreEqual(TowerMenu.Entry.WisdomOrb, e[2]);
+        Assert.AreEqual("　　勇者のオーブを使う", TowerMenu.Label(TowerMenu.Entry.HeroOrb));
+        Assert.AreEqual("　　飛翔のオーブを使う", TowerMenu.Label(TowerMenu.Entry.FlightOrb));
+        Assert.AreEqual("　　知恵のオーブを使う", TowerMenu.Label(TowerMenu.Entry.WisdomOrb));
+        Assert.AreEqual("　　データ・ロード", TowerMenu.Label(TowerMenu.Entry.Load));
+        Assert.AreEqual("　　データ・セーブ", TowerMenu.Label(TowerMenu.Entry.Save));
     }
 
     [Test]
@@ -218,10 +199,10 @@ public class TowerMenuTests
             Hp = 1000, Attack = 100, Defense = 100,
             Floor = 1, Position = new Vector2Int(0, -5)
         };
-        p.Give(SpecialItems.Kind.HeroOrb);
         var g = new TowerGame(p);
         StringAssert.StartsWith("メニューの選択をしてください。", g.MenuText);
-        StringAssert.Contains("　　勇者のオーブを使う", g.MenuText);
+        StringAssert.Contains("　　ゲームに戻る", g.MenuText);
+        StringAssert.Contains("　　ゲーム終了", g.MenuText);
     }
 
     static TowerGame Open(params SpecialItems.Kind[] orbs)
@@ -263,11 +244,11 @@ public class TowerMenuTests
     [Test]
     public void 印は選んでいる行に付く()
     {
-        var g = Open(SpecialItems.Kind.HeroOrb);
+        var g = Open();
         var lines = MenuWindowView.Compose(g).Split('\n');
         Assert.AreEqual("メニューの選択をしてください。", lines[0], "見出しには付かない");
         StringAssert.StartsWith(MenuWindowView.Cursor, lines[1]);
-        StringAssert.Contains("勇者のオーブを使う", lines[1]);
+        StringAssert.Contains("ゲームに戻る", lines[1]);
 
         g.MenuMove(1);
         lines = MenuWindowView.Compose(g).Split('\n');
@@ -278,10 +259,10 @@ public class TowerMenuTests
     [Test]
     public void 印を付けても行数は変わらない()
     {
-        var g = Open(SpecialItems.Kind.HeroOrb, SpecialItems.Kind.WisdomOrb);
+        var g = Open();
         var before = g.MenuText.Split('\n').Length;
         var after = MenuWindowView.Compose(g).Split('\n').Length;
         Assert.AreEqual(before, after);
-        Assert.LessOrEqual(after, TowerMenu.WindowLines, "窓の11行に収まる");
+        Assert.LessOrEqual(after, TowerMenu.PhoneWindowLines, "窓に収まる");
     }
 }
