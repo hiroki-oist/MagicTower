@@ -2181,7 +2181,17 @@ chk(os.path.exists("Assets/Scripts/Cutscenes.cs"),"場面の並びを読む Cuts
 _sc=[[c.strip() for c in l.split("|")] for l in
      open("Assets/Resources/Cutscenes.txt",encoding="utf-8") if l.strip() and not l.startswith("#")]
 _names={r[0] for r in _sc}
-_used={r[4].split("演出 ")[1].strip() for r in _pe if "演出 " in r[4]}
+_used={r[4].split("演出 ")[1].split(";")[0].strip() for r in _pe if "演出 " in r[4]}
+# 32階の場面は盗賊を2階の奥の牢へ移す（原典 0x1801）。これが抜けていて
+# 35階の抜け穴（ドラゴンの迂回路）が永久に開かなかった。
+_row32=[r for r in _pe if r[0].strip()=="32"]
+chk(_row32 and "地図 2:(+5,-5)=Mikata" in _row32[0][4]
+    and "地図 29:(+1,+4)=床" in _row32[0][4],
+    "32階の場面で盗賊が2階の奥の牢へ移る（原典 0x1801）")
+_th=[l for l in open("Assets/Resources/ThiefEvents.txt",encoding="utf-8")
+     if l.strip() and not l.strip().startswith("#")]
+chk(any("35:(-2,-3)=床" in l for l in _th),
+    "2階の奥の盗賊が35階の抜け穴を掘る（ドラゴンを避けて通れる）")
 chk(_names==_used,"場面の名前が位置イベントの呼び出しと過不足なく一致する",
     str(_names ^ _used))
 

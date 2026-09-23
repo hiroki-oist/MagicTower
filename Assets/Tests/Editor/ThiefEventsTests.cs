@@ -107,6 +107,89 @@ public class ThiefEventsTests
         StringAssert.Contains("ここのブロックのボスを倒すと", g.TalkToThief());
     }
 
+    /// <summary>
+    /// 32階で金騎士を追い払うと、盗賊が29階から**2階の奥の牢**へ移る（原典 0x1801）。
+    /// そこで話しかけると 35階(-2,-3) に抜け穴が空いて、**ドラゴンを避けて通れる**
+    /// （未使用レコード220「３５階のドラゴンの手前まで来たら、一度、２階まで戻って
+    /// みてくれ。俺が道をつくってあげよう。」）。
+    /// </summary>
+    [Test]
+    public void 三十二階の場面で盗賊が二階の奥の牢へ移る()
+    {
+        var g = Game(32, new Vector2Int(0, -5));
+        g.Player.Hp = 99999; g.Player.Attack = 999; g.Player.Defense = 999;
+        var back = new Vector2Int(5, -5);
+        Assert.IsTrue(g.FloorAt(2).IsCleared(back), "はじめは誰も居ない");
+
+        g.Player.Position = new Vector2Int(0, -5);   // 下り階段のマス
+        g.Step(Vector2Int.up);                       // (0,-4) へ踏み込んで場面が始まる
+        Assert.IsTrue(g.Player.EventFlags.Contains(111));
+        Assert.AreEqual("Mikata", g.FloorAt(2).At(back), "2階の奥の牢に移る");
+        Assert.IsTrue(g.FloorAt(29).IsCleared(new Vector2Int(1, 4)), "29階からは消える");
+    }
+
+    [Test]
+    public void 二階の奥の盗賊が三十五階の抜け穴を掘る()
+    {
+        var g = Game(2, new Vector2Int(5, -5));
+        g.Player.EventFlags.Add(94);                 // 10階で再会済み
+        g.FloorAt(2).Put(new Vector2Int(5, -5), "Mikata");
+
+        var hole = new Vector2Int(-2, -3);
+        Assert.AreEqual("#", g.FloorAt(35).At(hole), "掘る前は壁");
+        StringAssert.Contains("奥の牢に閉じ込められ", g.TalkToThief());
+        Assert.IsTrue(g.Player.EventFlags.Contains(88));
+        // 地図の書き換えは**セリフを読み終えてから**効く（原典 0x4c9〜0x520）
+        for (int i = 0; i < 20 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+        }
+        Assert.IsTrue(g.FloorAt(35).IsCleared(hole), "35階に抜け穴が空く");
+    }
+
+    /// <summary>
+    /// 抜け穴が空くと、ドラゴン(3x3)の部屋を通らずに上の階段まで行ける。
+    /// 左の隠し壁の縦穴2本（x=-3 と x=-5）が y=-5 と y=+4 で繋がっていて、
+    /// (-2,-3) の1マスだけが INITIAL.DAT では壁＝盗賊が掘るところ。
+    /// </summary>
+    [Test]
+    public void 抜け穴を掘るとドラゴンを通らずに登れる()
+    {
+        var data = FloorData.Load(35);
+        var st = new FloorState(data);
+        st.Clear(new Vector2Int(-2, -3));            // 盗賊が掘ったあと
+
+        // 幅優先で、ドラゴンのマスを**通らずに**下り階段から上り階段へ行けるか
+        var start = new Vector2Int(0, -5);
+        var goal = new Vector2Int(5, 5);
+        var seen = new System.Collections.Generic.HashSet<Vector2Int> { start };
+        var q = new System.Collections.Generic.Queue<Vector2Int>();
+        q.Enqueue(start);
+        var dirs = new[] { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        while (q.Count > 0)
+        {
+            var at = q.Dequeue();
+            foreach (var d in dirs)
+            {
+                var to = at + d;
+                if (to.x < FloorData.MinX || to.x > FloorData.MaxX
+                    || to.y < FloorData.MinY || to.y > FloorData.MaxY) continue;
+                if (!seen.Add(to)) continue;
+                var cell = st.At(to);
+                // 床・隠し壁（壊せる）・階段だけ通る。ドラゴンと本物の壁と封印扉は通らない
+                if (cell != FloorState.Floor && cell != "%" && cell != ">" && cell != "<")
+                    continue;
+                q.Enqueue(to);
+            }
+        }
+        Assert.IsTrue(seen.Contains(goal), "ドラゴンを避けて上り階段まで行ける");
+
+        // 掘る前は行けない
+        var before = new FloorState(FloorData.Load(35));
+        Assert.AreEqual("#", before.At(new Vector2Int(-2, -3)), "掘る前は壁");
+    }
+
     [Test]
     public void 階の盤面は入り直しても元に戻らない()
     {
