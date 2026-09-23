@@ -53,6 +53,12 @@ public class TowerController : MonoBehaviour
 
     Transform playerView;
 
+    /// <summary>起動したときに出る題名画面（作者の指定。原典にこの画面は無い）。</summary>
+    [SerializeField] TitleView title;
+
+    /// <summary>まだ題名を出しているか。出ている間は遊びの入力を受けない。</summary>
+    public bool AtTitle { get { return title != null && title.IsShowing; } }
+
     void Start()
     {
         if (loader == null) loader = GetComponent<FloorLoader>();
@@ -60,6 +66,12 @@ public class TowerController : MonoBehaviour
         if (sound == null) sound = gameObject.AddComponent<SoundPlayer>();
         StartNewGame();
     }
+
+    /// <summary>
+    /// 題名を触ったところから遊びを始める。**必ず最初から**（作者の指定）。
+    /// 続きは下の「ロード」のボタンから読む。
+    /// </summary>
+    public void BeginGame() { StartNewGame(); }
 
     /// <summary>
     /// 最初から始める。原典のゲームオーバー（0x097ac）は
@@ -188,6 +200,9 @@ public class TowerController : MonoBehaviour
     void Update()
     {
         if (Game == null) return;
+        // 題名を出している間は遊びを進めない（触ると最初から始まる）。
+        // 曲だけは題名から鳴らして、始めてもそのまま続くようにしてある。
+        if (AtTitle) { UpdateMusic(); return; }
         // 場面の続きを進める。原典の場面は1本道で、絵が動き終わってから次の行に進む。
         Game.Pump(ViewBusy, ViewMoving);
         // 場面の途中で書き換わった地図を、その場で見た目に映す
@@ -363,6 +378,12 @@ public class TowerController : MonoBehaviour
         if (Game == null || Game.IsShowingPage || Game.IsMenuOpen) return;
         Game.ShowHeroOrb();
     }
+
+    /// <summary>下の「セーブ」のボタン（作者の指定）。「セーブしますか？」と聞く。</summary>
+    public void AskSave() { if (Game != null && !AtTitle) Game.AskSave(); }
+
+    /// <summary>下の「ロード」のボタン。「ロードしますか？」と聞く。</summary>
+    public void AskLoad() { if (Game != null && !AtTitle) Game.AskLoad(); }
 
     /// <summary>メニューの中の一手。何かしたら true。</summary>
     bool StepMenu()

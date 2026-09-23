@@ -1110,23 +1110,54 @@ public class TowerGame
         }
         if (Stage == MenuStage.LoadSlots)
         {
-            var snap = TowerSave.Read(slot);
             Stage = MenuStage.Root;
-            if (snap == null || snap.Player == null) return false;
-            Player = snap.Player;
-            // 倒した敵・開けた扉・拾った物を戻す。**組み立て直してから**差を当てる
-            // （そうしないと今の盤面が残ってしまう）。
-            floors.Clear();
-            foreach (var kv in snap.Floors)
-            {
-                var st = FloorAt(kv.Key);
-                if (st != null) st.Apply(kv.Value);
-            }
-            EnterFloor(Player.Floor, Player.Position);
+            if (!LoadSlot(slot)) return false;
             CloseMenu();
             return true;
         }
         return false;
+    }
+
+    /// <summary>
+    /// そのスロットを読み込む。空なら false。
+    /// メニューの8つのスロットからも、下の「ロード」のボタンからも通る。
+    /// </summary>
+    public bool LoadSlot(int slot)
+    {
+        var snap = TowerSave.Read(slot);
+        if (snap == null || snap.Player == null) return false;
+        Player = snap.Player;
+        // 倒した敵・開けた扉・拾った物を戻す。**組み立て直してから**差を当てる
+        // （そうしないと今の盤面が残ってしまう）。
+        floors.Clear();
+        foreach (var kv in snap.Floors)
+        {
+            var st = FloorAt(kv.Key);
+            if (st != null) st.Apply(kv.Value);
+        }
+        EnterFloor(Player.Floor, Player.Position);
+        return true;
+    }
+
+    /// <summary>
+    /// 下の「セーブ」のボタン（作者の指定）。その場で「セーブしますか？」と聞く。
+    /// 原典のメニューは8つのスロットを選ばせるが、こちらは1つだけにしてある。
+    /// </summary>
+    public bool AskSave()
+    {
+        if (pages.Count > 0 || IsMenuOpen || IsChoosing) return false;
+        Say(PhoneScreen.SaveAsk);
+        BeginChoice(ChoiceKind.Save, 2, default(Shop.Offer));
+        return true;
+    }
+
+    /// <summary>下の「ロード」のボタン。同じく「ロードしますか？」と聞く。</summary>
+    public bool AskLoad()
+    {
+        if (pages.Count > 0 || IsMenuOpen || IsChoosing) return false;
+        Say(PhoneScreen.LoadAsk);
+        BeginChoice(ChoiceKind.Load, 2, default(Shop.Offer));
+        return true;
     }
 
     /// <summary>スロットを選ぶのをやめて1つ前の段へ戻る。</summary>
@@ -1309,7 +1340,7 @@ public class TowerGame
     //   代用している（文言の「◎」は原典の文字列にもともと入っている）。
 
     /// <summary>何を選ばせているか。</summary>
-    public enum ChoiceKind { None, Merchant, Altar, AltarOffer, UseItem }
+    public enum ChoiceKind { None, Merchant, Altar, AltarOffer, UseItem, Save, Load }
 
     public ChoiceKind Choice { get; private set; }
     public int ChoiceIndex { get; private set; }
@@ -1349,6 +1380,24 @@ public class TowerGame
         if (kind == ChoiceKind.UseItem)
         {
             if (at == 0) UseItem(choiceItem);          // 「はい」
+            return;
+        }
+        if (kind == ChoiceKind.Save)
+        {
+            if (at != 0) return;                       // 「いいえ」
+            // 原典（0x9b4e）は地図もまるごと書き出すので、組み立て済みの階を渡す。
+            TowerSave.Save(PhoneScreen.QuickSlot, Player, floors);
+            PlaySound(SoundCues.TakeItem);
+            Note(PhoneScreen.Saved);
+            return;
+        }
+        if (kind == ChoiceKind.Load)
+        {
+            if (at != 0) return;                       // 「いいえ」
+            if (!LoadSlot(PhoneScreen.QuickSlot))
+                Say(GameText.Instance.Message(TowerSave.EmptyMessageKey));
+            else
+                Note(PhoneScreen.Loaded);
             return;
         }
         if (kind == ChoiceKind.AltarOffer)

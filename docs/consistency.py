@@ -5,6 +5,11 @@ from collections import Counter
 os.chdir(os.path.expanduser("~/Code/MagicTower"))
 issues=[]
 checks = 0
+def PhoneScreen_left(src):
+    import re as _re
+    m=_re.search(r"LeftButtons\s*=\s*\{([^}]*)\}", src, _re.S)
+    return [t.strip().strip('"') for t in m.group(1).split(",")] if m else []
+
 def chk(ok,label,detail=""):
     global checks
     checks += 1
@@ -1320,6 +1325,29 @@ chk(_mus==["Block1.wav","Block2.wav","Block3.wav","Block4.wav","Block5.wav",
            "Boss10.wav","Boss20.wav","Boss40.wav","Boss49.wav","Boss50.wav"],
     "Java版の曲10本を書き出してある（かたまり5つ＋ボス戦5つ）", str(_mus))
 chk(os.path.exists("docs/make_music.py"),"曲を作り直せる道具がある（docs/make_music.py）")
+# 下の「セーブ」「ロード」のボタンと、起動時の題名画面（どちらも作者の指定）
+_ps=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+_tg2=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+_ib=open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read()
+chk("セーブしますか？" in _ps and "ロードしますか？" in _ps,
+    "セーブ／ロードはその場で「はい／いいえ」を聞く（作者の指定）")
+chk("ChoiceKind.Save" in _tg2 and "ChoiceKind.Load" in _tg2 and "AskSave" in _tg2,
+    "本線に「セーブしますか？」の問いかけがある")
+chk("saveButton" in _ib and "loadButton" in _ib,
+    "下の「セーブ」「ロード」のボタンが繋がっている")
+chk(PhoneScreen_left(_ps)[:2]==["セーブ","ロード"],
+    "下の左の並びの先頭がセーブとロード")
+_ta=open("Assets/Scripts/UI/TitleArt.cs",encoding="utf-8").read()
+chk("Touch to start game" in _ta,"題名で点滅させる言葉は作者の指定どおり")
+chk(_ta.count("Signboard")>0 and _ta.count("Picture")>0
+    and _ta.count("Tower")>0 and _ta.count("Original")>0,
+    "題名の案が4つ用意してある（看板／題名絵／塔／原典）")
+chk(os.path.exists("Assets/Sprites/Screens/Title_Logo.png")
+    and os.path.exists("docs/make_title.py"),
+    "題名の看板は MTMOJI から切り出してある（docs/make_title.py）")
+_tc2=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
+chk("AtTitle" in _tc2 and "BeginGame" in _tc2,
+    "題名を出している間は遊びを進めず、触ると最初から始まる")
 chk(all(os.path.exists("Assets/Resources/Music/"+m+".meta") for m in _mus),
     "曲の取り込み設定（.meta）も置いてある")
 chk(os.path.exists("docs/tools/MidiRender.swift"),
@@ -1946,8 +1974,8 @@ chk(open("docs/original/disk/MTE.EXE","rb").read().find(b"MTWAKU")<0,
 _scr=[[c.strip() for c in l.split("|")] for l in
       open("docs/original/screens.txt",encoding="utf-8") if l.strip() and not l.startswith("#")]
 chk(len(_scr)==13,"画面の絵は13枚",str(len(_scr)))
-chk(len(glob.glob("Assets/Sprites/Screens/*.png"))==23,
-    "Assets には枠・序章4枚・終わりの言葉5枚を足して23枚",
+chk(len(glob.glob("Assets/Sprites/Screens/*.png"))==24,
+    "Assets には枠・序章4枚・終わりの言葉5枚と題名の看板を足して24枚",
     str(len(glob.glob("Assets/Sprites/Screens/*.png"))))
 # 枠の中央が盤面と同じ大きさで空いている
 _lcg0=_p58.to_indices(*_p58.decode_all(open("docs/original/disk/LCG.P58","rb").read())[0])

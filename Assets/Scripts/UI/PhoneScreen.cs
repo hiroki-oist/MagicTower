@@ -84,6 +84,22 @@ public static class PhoneScreen
     /// </summary>
     public const string UseAsk = "{0}を使いますか？\n　　◎はい\n　　◎いいえ";
 
+    /// <summary>
+    /// 下の「セーブ」「ロード」を押したときに聞く言葉（作者の指定）。
+    /// 原典はメニューから8つのスロットを選ばせるが、こちらは**1つだけ**にして
+    /// その場で「はい／いいえ」を聞く。メニューの中は原典どおり8つのまま。
+    /// </summary>
+    public const string SaveAsk = "セーブしますか？\n　　◎はい\n　　◎いいえ";
+    public const string LoadAsk = "ロードしますか？\n　　◎はい\n　　◎いいえ";
+    public const string Saved   = "セーブしました。";
+    public const string Loaded  = "ロードしました。";
+
+    /// <summary>ボタンで使うスロット（原典のスロット1）。</summary>
+    public const int QuickSlot = 1;
+
+    /// <summary>下の左の並びの中の「セーブ」「ロード」の位置。</summary>
+    public const int SaveButtonIndex = 0, LoadButtonIndex = 1;
+
     /// <summary>持ち物の帯に一度に見せる数（残りは左右の矢印で送る）。</summary>
     public const int ItemsPerPage = 8;
 

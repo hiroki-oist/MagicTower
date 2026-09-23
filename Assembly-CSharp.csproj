@@ -136,6 +136,7 @@
     <Compile Include="Assets/Scripts/UI/AuthorStyle.cs" />
     <Compile Include="Assets/Scripts/Cutscenes.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/Benchmark02.cs" />
+    <Compile Include="Assets/Scripts/UI/TitleArt.cs" />
     <Compile Include="Assets/Scripts/PlayerState.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorLoader.cs" />
     <Compile Include="Assets/Scripts/UI/FullScreenView.cs" />
@@ -168,6 +169,7 @@
     <Compile Include="Assets/Scripts/UI/ScreenLayout.cs" />
     <Compile Include="Assets/Scripts/Battle/MagicAttack.cs" />
     <Compile Include="Assets/Scripts/Items/Altar.cs" />
+    <Compile Include="Assets/Scripts/UI/TitleView.cs" />
     <Compile Include="Assets/Scripts/Items/Fairy.cs" />
     <Compile Include="Assets/Scripts/Battle/BattlePresentation.cs" />
     <Compile Include="Assets/Scripts/UI/DPadView.cs" />

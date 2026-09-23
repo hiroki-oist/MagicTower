@@ -33,6 +33,7 @@ public class DPadView : MonoBehaviour
     void Update()
     {
         if (controller == null || pad == null) return;
+        if (controller.AtTitle) return;      // 題名を触ったその一手では動かさない
         var dir = Pressed();
         controller.TouchDir = dir;
         // 押している所だけ色を変える（真ん中を押しているときは決定ボタンだけ）

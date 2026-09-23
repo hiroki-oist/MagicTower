@@ -120,8 +120,13 @@ public class SceneWiringTests
             Assert.AreEqual("FullScreenLayer", title.parent.name,
                             "1枚絵は一番上の層に置く（帯に隠れないように）");
             Assert.AreSame(screen.parent, title.parent.parent, "層は同じ枠の中");
-            Assert.AreEqual(screen.parent.childCount - 1,
-                            title.parent.GetSiblingIndex(), "層は一番あと（＝一番上）");
+            // **一番上は起動時の題名画面**（作者の指定）。1枚絵の層はそのすぐ下。
+            var titleLayer = screen.parent.Find("TitleLayer");
+            Assert.IsNotNull(titleLayer, "起動時の題名の層が無い");
+            Assert.AreEqual(screen.parent.childCount - 1, titleLayer.GetSiblingIndex(),
+                            "題名の層が一番あと（＝一番上）");
+            Assert.AreEqual(screen.parent.childCount - 2,
+                            title.parent.GetSiblingIndex(), "1枚絵の層はそのすぐ下");
 
             // 縦画面（作者の指定）。盤面が画面の幅いっぱいなので**幅で合わせる**。
             var scaler = screen.GetComponentInParent<UnityEngine.UI.CanvasScaler>();

@@ -64,6 +64,7 @@
     <Compile Include="Assets/Tests/Editor/ScreenLayoutTests.cs" />
     <Compile Include="Assets/Tests/Editor/MonsterPanelTests.cs" />
     <Compile Include="Assets/Tests/Editor/NpcSweepTests.cs" />
+    <Compile Include="Assets/Tests/Editor/TitleViewTests.cs" />
     <Compile Include="Assets/Tests/Editor/ViewMatchesBoardTests.cs" />
     <Compile Include="Assets/Tests/Editor/CutsceneTests.cs" />
     <Compile Include="Assets/Tests/Editor/DialogueFlowTests.cs" />
@@ -78,6 +79,7 @@
     <Compile Include="Assets/Tests/Editor/SoundTests.cs" />
     <Compile Include="Assets/Tests/Editor/ViewCoroutineTests.cs" />
     <Compile Include="Assets/Tests/Editor/ItemPickupTests.cs" />
+    <Compile Include="Assets/Tests/Editor/QuickSaveTests.cs" />
     <Compile Include="Assets/Tests/Editor/HeroOrbPanelTests.cs" />
     <Compile Include="Assets/Tests/Editor/MenuSlotTests.cs" />
     <Compile Include="Assets/Tests/Editor/EquipIconSceneTests.cs" />

@@ -18,6 +18,8 @@ public class ItemBarView : MonoBehaviour
     [SerializeField] RectTransform content;
     [SerializeField] RectTransform leftArrow, rightArrow;
     [SerializeField] RectTransform damageButton;
+    /// <summary>下の左の並びの「セーブ」「ロード」（作者の指定）。</summary>
+    [SerializeField] RectTransform saveButton, loadButton;
     [SerializeField] RectTransform[] slots = new RectTransform[0];
 
     /// <summary>いま何マスぶん送っているか（テストから見る）。</summary>
@@ -30,6 +32,7 @@ public class ItemBarView : MonoBehaviour
 
     void Update()
     {
+        if (controller != null && controller.AtTitle) return;   // 題名の間は受けない
         Feedback();
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
@@ -41,6 +44,8 @@ public class ItemBarView : MonoBehaviour
             if (controller != null) controller.ShowDamage();
             return;
         }
+        if (Inside(saveButton, at)) { if (controller != null) controller.AskSave(); return; }
+        if (Inside(loadButton, at)) { if (controller != null) controller.AskLoad(); return; }
         if (!Inside(viewport, at)) return;
         for (int i = 0; i < slots.Length; i++)
             if (Inside(slots[i], at))

@@ -403,7 +403,7 @@ public static class TowerSceneBuilder
         int nb = PhoneScreen.LeftButtons.Length;
         float stack = bh * nb + bgap * (nb - 1);
         float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
-        RectTransform damageButton = null;
+        RectTransform damageButton = null, saveButton = null, loadButton = null;
         var pressable = new List<Object>
         {
             leftArrow.GetComponent<UnityEngine.UI.Image>(),
@@ -419,6 +419,8 @@ public static class TowerSceneBuilder
             pressable.Add(left.GetComponent<UnityEngine.UI.Image>());
             pressable.Add(right.GetComponent<UnityEngine.UI.Image>());
             if (i == PhoneScreen.DamageButtonIndex) damageButton = right;
+            if (i == PhoneScreen.SaveButtonIndex) saveButton = left;
+            if (i == PhoneScreen.LoadButtonIndex) loadButton = left;
         }
         // 中央の十字。**押すと歩く**（作者が選んだ絵。DPadView が触りを受ける）
         float dpad = PhoneScreen.DPadSize;
@@ -711,9 +713,14 @@ public static class TowerSceneBuilder
         barso.FindProperty("leftArrow").objectReferenceValue = leftArrow;
         barso.FindProperty("rightArrow").objectReferenceValue = rightArrow;
         barso.FindProperty("damageButton").objectReferenceValue = damageButton;
+        barso.FindProperty("saveButton").objectReferenceValue = saveButton;
+        barso.FindProperty("loadButton").objectReferenceValue = loadButton;
         FillObjects(barso.FindProperty("slots"), slotRects);
         FillObjects(barso.FindProperty("buttons"), pressable);
         barso.ApplyModifiedPropertiesWithoutUndo();
+
+        // 起動時の題名画面（作者の指定）。**一番最後に作って一番上に置く**。
+        BuildTitle(frame, font, controller);
 
         // 盤面の枠へカメラを合わせ、窓の入れ物も盤面の大きさに合わせる役（縦画面）
         var layout = canvasGo.AddComponent<PhoneLayoutView>();
@@ -985,6 +992,105 @@ public static class TowerSceneBuilder
     /// 画面いっぱいの1枚絵と2行の文字（題名・終幕）。ふだんは隠しておく。
     /// 文字の位置は原典が渡す値そのままで、x はバイト（＝8ドット）、y はドット。
     /// </summary>
+    /// <summary>
+    /// 起動時の題名画面（作者の指定。原典にこの画面は無い）。
+    /// 案は <see cref="TitleArt.Choice"/> で選ぶので、**どの案の部品も作っておいて**
+    /// 出し入れだけで切り替える。
+    /// </summary>
+    static void BuildTitle(RectTransform frame, TMP_FontAsset font,
+                           TowerController controller)
+    {
+        var layerGo = new GameObject("TitleLayer", typeof(RectTransform));
+        layerGo.transform.SetParent(frame, false);
+        var layer = layerGo.GetComponent<RectTransform>();
+        layer.anchorMin = Vector2.zero; layer.anchorMax = Vector2.one;
+        layer.offsetMin = Vector2.zero; layer.offsetMax = Vector2.zero;
+
+        // 地は枠いっぱい（石積みを敷く案があるので、盤面より広く取る）
+        var backGo = new GameObject("TitleBackdrop", typeof(RectTransform),
+                                    typeof(UnityEngine.UI.Image));
+        backGo.transform.SetParent(layer, false);
+        var backRt = backGo.GetComponent<RectTransform>();
+        backRt.anchorMin = Vector2.zero; backRt.anchorMax = Vector2.one;
+        backRt.offsetMin = Vector2.zero; backRt.offsetMax = Vector2.zero;
+        var backImg = backGo.GetComponent<UnityEngine.UI.Image>();
+        backImg.sprite = LoadSprite(TitleArt.BrickPath);
+        backImg.raycastTarget = false;
+
+        // 絵は原典の 640x400 のまま作って、枠の幅いっぱいへ真ん中に置く
+        var panelGo = new GameObject("TitlePanel", typeof(RectTransform));
+        panelGo.transform.SetParent(layer, false);
+        var prt = panelGo.GetComponent<RectTransform>();
+        prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0.5f);
+        prt.pivot = new Vector2(0f, 1f);
+        prt.sizeDelta = new Vector2(DialogueWindow.CanvasWidth, DialogueWindow.CanvasHeight);
+        float fit = PhoneScreen.ReferenceWidth / DialogueWindow.CanvasWidth;
+        prt.localScale = new Vector3(fit, fit, 1f);
+        prt.anchoredPosition = new Vector2(-DialogueWindow.CanvasWidth * fit / 2f,
+                                           DialogueWindow.CanvasHeight * fit / 2f);
+
+        var picture = TitleImage(prt, "TitlePicture", TitleArt.PicturePath,
+                                 320, 200, ScreenLayout.ScreenWidth, ScreenLayout.ScreenHeight);
+        var ground  = TitleImage(prt, "TitleGround", TitleArt.GroundPath,
+                                 320, 200, ScreenLayout.ScreenWidth, ScreenLayout.ScreenHeight);
+        // 塔は終幕の絵（320x400）を半分に縮めて地面の上に立たせる
+        var tower   = TitleImage(prt, "TitleTower", TitleArt.TowerPath, 320, 230, 160, 200);
+        var logo    = TitleImage(prt, "TitleLogo", TitleArt.LogoPath,
+                                 TitleArt.LogoAt.x, TitleArt.LogoAt.y,
+                                 TitleArt.LogoSize.x, TitleArt.LogoSize.y);
+
+        // 原典の題名画面の2行（案「原典」でだけ出す）
+        var t1 = Box(prt, font, "TitleLine1",
+                     new RectInt(TitleScreen.TitleDot.x, TitleScreen.TitleDot.y,
+                                 TitleScreen.Title.Length * ScreenLayout.TextCharWidth, 20),
+                     26f, TextAlignmentOptions.TopLeft);
+        var t2 = Box(prt, font, "TitleLine2",
+                     new RectInt(TitleScreen.CopyrightDot.x, TitleScreen.CopyrightDot.y,
+                                 TitleScreen.Copyright.Length * ScreenLayout.TextCharWidth, 20),
+                     26f, TextAlignmentOptions.TopLeft);
+        t1.text = TitleScreen.Title; t2.text = TitleScreen.Copyright;
+
+        // 点滅する「Touch to start game」。案ごとに空いている場所へ置く
+        var at = TitleArt.StartAt(TitleArt.Choice);
+        var start = Box(prt, font, "TitleStart",
+                        new RectInt(at.x - 200, at.y - 14, 400, 28),
+                        30f, TextAlignmentOptions.Center);
+        start.text = TitleArt.StartLine;
+
+        var view = layerGo.AddComponent<TitleView>();
+        var cso = new SerializedObject(controller);
+        cso.FindProperty("title").objectReferenceValue = view;
+        cso.ApplyModifiedPropertiesWithoutUndo();
+        var so = new SerializedObject(view);
+        so.FindProperty("controller").objectReferenceValue = controller;
+        so.FindProperty("backdrop").objectReferenceValue = backImg;
+        so.FindProperty("picture").objectReferenceValue = picture;
+        so.FindProperty("ground").objectReferenceValue = ground;
+        so.FindProperty("tower").objectReferenceValue = tower;
+        so.FindProperty("logo").objectReferenceValue = logo;
+        so.FindProperty("line1").objectReferenceValue = t1;
+        so.FindProperty("line2").objectReferenceValue = t2;
+        so.FindProperty("start").objectReferenceValue = start;
+        so.ApplyModifiedPropertiesWithoutUndo();
+    }
+
+    /// <summary>題名の絵を1枚。位置と大きさは原典の画面（640x400）の中の値で指定する。</summary>
+    static UnityEngine.UI.Image TitleImage(RectTransform panel, string name, string path,
+                                           int cx, int cy, int w, int h)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(panel, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.sizeDelta = ScreenLayout.SizeOnCanvas(new RectInt(0, 0, w, h));
+        rt.anchoredPosition = ScreenLayout.ToCanvas(new RectInt(cx - w / 2, cy - h / 2, w, h));
+        var img = go.GetComponent<UnityEngine.UI.Image>();
+        img.sprite = LoadSprite(path);
+        img.raycastTarget = false;
+        img.preserveAspect = true;
+        return img;
+    }
+
     static FullScreenView BuildFullScreen(RectTransform screen, TMP_FontAsset font,
                                 TowerController controller,
                                 TowerGame.PageKind showOn, string name, string artPath,
