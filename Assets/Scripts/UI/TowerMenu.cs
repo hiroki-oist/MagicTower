@@ -199,17 +199,9 @@ public static class TowerMenu
     }
 
     // ---- 知恵のオーブ ------------------------------------------------
-
-    /// <summary>持っている特殊アイテムの説明を並べる。</summary>
-    public static List<string> ItemKnowledge(PlayerState p)
-    {
-        var list = new List<string>();
-        if (p == null) return list;
-        foreach (SpecialItems.Kind k in System.Enum.GetValues(typeof(SpecialItems.Kind)))
-        {
-            if (k == SpecialItems.Kind.None || !p.Has(k)) continue;
-            list.Add(SpecialItems.MessageOf(k));
-        }
-        return list;
-    }
+    //
+    // 中身は <see cref="WisdomOrb"/>。**聞いた情報の読み返しだけ**で、
+    // 持ち物の能力の一覧は原典 0x8a46 に無い（説明のセリフ61はそう言っているが、
+    // 実際の処理は情報の読み返ししかしない）。ここに「手に入れた」の文言を
+    // 並べる助けを置いていたが、それを窓に出していたのは原典に無い振る舞いだった。
 }

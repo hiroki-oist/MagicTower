@@ -928,12 +928,8 @@ public class TowerGame
                 break;
             }
             case TowerMenu.Entry.WisdomOrb:
-            {
-                // 原典（0x8a46）は持ち物の能力と、聞いた情報の番号を並べる。
-                var text = WisdomOrb.Text(Player);
-                if (!string.IsNullOrEmpty(text)) Say(text);
+                ShowWisdom();
                 break;
-            }
             case TowerMenu.Entry.HeroOrb:
                 ShowHeroOrb();
                 break;
@@ -952,6 +948,19 @@ public class TowerGame
                 break;
         }
         return e;
+    }
+
+    /// <summary>
+    /// 知恵のオーブ。聞いた情報を**1件ずつ中身ごと**読み返す（原典 0x8a46）。
+    /// 原典は1件出すたびにキーを待つので、こちらも1件＝1ページで積む。
+    /// </summary>
+    /// <returns>出したか。</returns>
+    public bool ShowWisdom()
+    {
+        var pages = WisdomOrb.Pages(Player);
+        if (pages.Count == 0) return false;
+        foreach (var t in pages) Say(t);
+        return true;
     }
 
     /// <summary>
@@ -984,13 +993,7 @@ public class TowerGame
         if (pages.Count > 0 || IsMenuOpen) return false;
 
         if (kind == SpecialItems.Kind.HeroOrb) return ShowHeroOrb();
-        if (kind == SpecialItems.Kind.WisdomOrb)
-        {
-            var text = WisdomOrb.Text(Player);
-            if (string.IsNullOrEmpty(text)) return false;
-            Say(text);
-            return true;
-        }
+        if (kind == SpecialItems.Kind.WisdomOrb) return ShowWisdom();
         if (kind == SpecialItems.Kind.FlightOrb)
         {
             // メニューの「飛翔のオーブを使う」と同じ道を通す

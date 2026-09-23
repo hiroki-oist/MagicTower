@@ -2,14 +2,28 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// 知恵のオーブ。**持っているアイテムの能力**と、**それまでに聞いた情報の読み返し**。
+/// 知恵のオーブ。**それまでに聞いた情報の読み返し**。
 /// 原典の説明（セリフ61）:
 ///   「所有しているアイテムの持つ能力を知る事ができる。
 ///     他にそれまでに聞いた情報を記憶しており、必要な時に聞き出す事ができる。」
 ///
 /// 読み返しの表は原典 MTE.EXE 0x8a46 が抱えている **(フラグ, セリフ番号) 24件**で、
 /// データは Resources/WisdomInfo.txt（`docs/make_wisdom_info.py` が取り出す）。
-/// 原典はフラグが立っているものだけを「情報番号：n」付きで並べる。
+///
+/// 原典 0x8a46 の流れ:
+/// <code>
+///   0x95d8(10行, 上端50, セリフ53)      「今までに聞いた情報を順次表示します。」→ キー待ち
+///   表を上から順に（番号は**表の位置**そのもので、聞いていない分も数える）
+///     if (フラグ[表の値 + 0x1e] == 1) {
+///       0x958c(1, 0x46, "　情報番号：n")   ; 窓の上に番号を1行
+///       0x95d8(8行, 上端90, そのセリフ)    ; **中身をそのまま出す** → キー待ち
+///     }
+/// </code>
+/// **番号だけでなくセリフの中身を出す**のが原典。以前は番号の一覧だけを出していて、
+/// 「読みたいのは会話ログなのに」と報告された。
+/// また、**持ち物の能力はこの関数では出していない**（説明文はそう言っているが、
+/// 0x8a46 は聞いた情報の読み返ししかしない）。手に入れたときの文言を並べていたのも
+/// 原典に無い。
 /// </summary>
 public class WisdomOrb
 {
@@ -77,24 +91,27 @@ public class WisdomOrb
         return -1;
     }
 
+    /// <summary>前置きのセリフ（原典 0x8b3a が最初に出す 0x35）。</summary>
+    public const int IntroRecord = 53;
+
     /// <summary>
-    /// 窓に出す文字。原典と同じく「持っているアイテムの能力」のあとに
-    /// 「情報番号：」の並びが来る。
+    /// 窓に出す並び。原典と同じく
+    /// 「今までに聞いた情報を順次表示します。」→ 聞いた情報を1件ずつ、の順。
+    /// 1件は「　情報番号：n」の行とセリフの中身。**1件ずつキー待ち**なので、
+    /// ここでも1件＝1ページにして返す。
     /// </summary>
-    public static string Text(PlayerState p)
+    public static List<string> Pages(PlayerState p)
     {
-        var sb = new System.Text.StringBuilder();
-        foreach (var s in TowerMenu.ItemKnowledge(p))
+        var pages = new List<string>();
+        var intro = GameText.Instance.Dialogue(IntroRecord);
+        if (intro.HasValue) pages.Add(intro.Value.Body);
+        foreach (var i in Instance.Heard(p))
         {
-            if (sb.Length > 0) sb.Append('\n');
-            sb.Append(s);
+            var line = GameText.Instance.Dialogue(i.Record);
+            if (!line.HasValue) continue;
+            pages.Add(GameText.Instance.Message("orb_info_no") + i.Number
+                      + "\n" + line.Value.Body);
         }
-        var heard = Instance.Heard(p);
-        foreach (var i in heard)
-        {
-            if (sb.Length > 0) sb.Append('\n');
-            sb.Append(GameText.Instance.Message("orb_info_no")).Append(i.Number);
-        }
-        return sb.ToString();
+        return pages;
     }
 }

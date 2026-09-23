@@ -51,18 +51,38 @@ public class WisdomOrbTests
         Assert.AreEqual(-1, WisdomOrb.Instance.RecordOf(p, 99), "無い番号は -1");
     }
 
+    /// <summary>
+    /// 原典 0x8a46 は「今までに聞いた情報を順次表示します。」（セリフ53）のあと、
+    /// 聞いた情報を**1件ずつ、番号とセリフの中身**を出してキーを待つ。
+    /// 番号だけの一覧を出していて「読みたいのは会話ログなのに」と報告された。
+    /// </summary>
     [Test]
-    public void 持ち物の能力と情報番号が窓に出る()
+    public void 聞いた情報が中身ごと一件ずつ出る()
     {
         var p = new PlayerState { Floor = 1, Position = new Vector2Int(0, 0) };
         p.Give(SpecialItems.Kind.WisdomOrb);
         var first = new List<WisdomOrb.Info>(WisdomOrb.Instance.All)[0];
         p.EventFlags.Add(first.Flag);
 
-        var text = WisdomOrb.Text(p);
-        StringAssert.Contains("知恵のオーブ", text, "持ち物の能力");
-        StringAssert.Contains("情報番号", text);
-        StringAssert.Contains(first.Number.ToString(), text);
+        var pages = WisdomOrb.Pages(p);
+        Assert.AreEqual(2, pages.Count, "前置き1つ＋聞いた情報1件");
+        StringAssert.Contains("今までに聞いた情報", pages[0], "セリフ53が前置き");
+        StringAssert.Contains("情報番号", pages[1]);
+        StringAssert.Contains(first.Number.ToString(), pages[1]);
+        // **中身がそのまま入っている**のが肝
+        var body = GameText.Instance.Dialogue(first.Record).Value.Body;
+        StringAssert.Contains(body, pages[1], "セリフの中身がそのまま");
+        // 手に入れたときの文言は**出さない**（原典 0x8a46 は持ち物を触らない）
+        foreach (var t in pages)
+            StringAssert.DoesNotContain("手に入れた", t, "持ち物の取得文は出さない");
+    }
+
+    [Test]
+    public void 何も聞いていなければ前置きだけ()
+    {
+        var p = new PlayerState { Floor = 1, Position = new Vector2Int(0, 0) };
+        p.Give(SpecialItems.Kind.WisdomOrb);
+        Assert.AreEqual(1, WisdomOrb.Pages(p).Count);
     }
 
     [Test]

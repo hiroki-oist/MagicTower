@@ -1345,6 +1345,13 @@ chk(_ta.count("Signboard")>0 and _ta.count("Picture")>0
 chk(os.path.exists("Assets/Sprites/Screens/Title_Logo.png")
     and os.path.exists("docs/make_title.py"),
     "題名の看板は MTMOJI から切り出してある（docs/make_title.py）")
+# 知恵のオーブは**聞いた情報の中身**を1件ずつ出す（原典 0x8a46）
+_wo=open("Assets/Scripts/Items/WisdomOrb.cs",encoding="utf-8").read()
+chk("IntroRecord = 53" in _wo,"前置きは原典 0x8b3a が出すセリフ53")
+chk("Dialogue(i.Record)" in _wo and "ItemKnowledge" not in _wo,
+    "情報番号だけでなくセリフの中身を出し、持ち物の取得文は混ぜない")
+chk("ShowWisdom" in open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read(),
+    "知恵のオーブは1件ずつ積む（原典も1件ごとにキー待ち）")
 chk(os.path.exists("Assets/Sprites/Screens/Title_Tall.png"),
     "縦長の画面に合わせた題名絵がある（MTMOJI の帯を繰り返して伸ばしたもの）")
 chk("Style.Picture" in _ta.split("Choice =")[1].split(";")[0],

@@ -78,16 +78,6 @@ public class TowerMenuTests
     }
 
     [Test]
-    public void 知恵のオーブは持っている物の説明を並べる()
-    {
-        Assert.IsEmpty(TowerMenu.ItemKnowledge(player));
-        player.Give(SpecialItems.Kind.Cross);
-        player.Give(SpecialItems.Kind.LuckyCoin);
-        var k = TowerMenu.ItemKnowledge(player);
-        Assert.AreEqual(2, k.Count);
-    }
-
-    [Test]
     public void 訪問記録もセーブされる()
     {
         var dir = System.IO.Path.Combine(Application.temporaryCachePath, "mt_visit_test");
