@@ -63,7 +63,8 @@ public class TitleViewTests
     {
         Assert.AreEqual(new Vector2Int(300, 104), TitleArt.LogoSize);
         // docs/make_title.py の切り出し（166,84）〜（466,188）に字（173..460 / 91..183）が入る
-        Assert.LessOrEqual(TitleArt.LogoAt.x - TitleArt.LogoSize.x / 2, 173);
-        Assert.GreaterOrEqual(TitleArt.LogoAt.x + TitleArt.LogoSize.x / 2, 460);
+        var at = TitleArt.LogoAt(TitleArt.Style.Signboard);
+        Assert.LessOrEqual(at.x - TitleArt.LogoSize.x / 2, 173);
+        Assert.GreaterOrEqual(at.x + TitleArt.LogoSize.x / 2, 460);
     }
 }

@@ -1034,9 +1034,12 @@ public static class TowerSceneBuilder
         var ground  = TitleImage(prt, "TitleGround", TitleArt.GroundPath,
                                  320, 200, ScreenLayout.ScreenWidth, ScreenLayout.ScreenHeight);
         // 塔は終幕の絵（320x400）を半分に縮めて地面の上に立たせる
-        var tower   = TitleImage(prt, "TitleTower", TitleArt.TowerPath, 320, 230, 160, 200);
+        var tower   = TitleImage(prt, "TitleTower", TitleArt.TowerPath,
+                                 TitleArt.TowerAt.x, TitleArt.TowerAt.y,
+                                 TitleArt.TowerSize.x, TitleArt.TowerSize.y);
+        var logoAt  = TitleArt.LogoAt(TitleArt.Choice);
         var logo    = TitleImage(prt, "TitleLogo", TitleArt.LogoPath,
-                                 TitleArt.LogoAt.x, TitleArt.LogoAt.y,
+                                 logoAt.x, logoAt.y,
                                  TitleArt.LogoSize.x, TitleArt.LogoSize.y);
 
         // 原典の題名画面の2行（案「原典」でだけ出す）

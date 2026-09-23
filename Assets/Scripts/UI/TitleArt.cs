@@ -41,10 +41,18 @@ public static class TitleArt
 
     // ---- 原典の画面（640x400）の中での置き場所 ----
 
-    /// <summary>看板の中心（案「看板」「塔」）。</summary>
-    public static readonly Vector2Int LogoAt = new Vector2Int(320, 150);
     /// <summary>看板の大きさ（切り出したまま）。</summary>
     public static readonly Vector2Int LogoSize = new Vector2Int(300, 104);
+
+    /// <summary>看板の中心。塔の案は塔とぶつからないよう上へ寄せる。</summary>
+    public static Vector2Int LogoAt(Style s)
+    {
+        return s == Style.Tower ? new Vector2Int(320, 80) : new Vector2Int(320, 150);
+    }
+
+    /// <summary>塔の中心と大きさ（終幕の絵を縮めて地面の上に立たせる）。</summary>
+    public static readonly Vector2Int TowerAt = new Vector2Int(320, 245);
+    public static readonly Vector2Int TowerSize = new Vector2Int(130, 165);
 
     /// <summary>点滅する言葉の中心。案ごとに空いている場所が違う。</summary>
     public static Vector2Int StartAt(Style s)
