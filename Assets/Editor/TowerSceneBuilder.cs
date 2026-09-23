@@ -1017,6 +1017,34 @@ public static class TowerSceneBuilder
         backImg.sprite = LoadSprite(TitleArt.BrickPath);
         backImg.raycastTarget = false;
 
+        // 縦長にした題名絵（案「題名絵」）。**上端に合わせて幅いっぱい**に置き、
+        // 下へはみ出したぶんは画面の外。どの縦横比の端末でも下まで埋まる。
+        float tallH = PhoneScreen.ReferenceWidth
+                      * TitleArt.TallSize.y / (float)TitleArt.TallSize.x;
+        var tallGo = new GameObject("TitleTall", typeof(RectTransform),
+                                    typeof(UnityEngine.UI.Image));
+        tallGo.transform.SetParent(layer, false);
+        var tallRt = tallGo.GetComponent<RectTransform>();
+        tallRt.anchorMin = new Vector2(0f, 1f); tallRt.anchorMax = new Vector2(1f, 1f);
+        tallRt.pivot = new Vector2(0.5f, 1f);
+        tallRt.sizeDelta = new Vector2(0f, tallH);
+        tallRt.anchoredPosition = Vector2.zero;
+        var tallImg = tallGo.GetComponent<UnityEngine.UI.Image>();
+        tallImg.sprite = LoadSprite(TitleArt.TallPath);
+        tallImg.raycastTarget = false;
+
+        // その部屋の中で点滅させる言葉
+        float dot = PhoneScreen.ReferenceWidth / (float)TitleArt.TallSize.x;
+        var startTall = Box(layer, font, "TitleStartTall", new RectInt(0, 0, 400, 28),
+                            30f, TextAlignmentOptions.Center);
+        var stRt = startTall.rectTransform;
+        stRt.anchorMin = new Vector2(0.5f, 1f); stRt.anchorMax = new Vector2(0.5f, 1f);
+        stRt.pivot = new Vector2(0.5f, 0.5f);
+        stRt.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth * 0.8f, 80f);
+        stRt.anchoredPosition = new Vector2(0f, -TitleArt.TallStartY * dot);
+        startTall.text = TitleArt.StartLine;
+        startTall.fontSize = 56f;
+
         // 絵は原典の 640x400 のまま作って、枠の幅いっぱいへ真ん中に置く
         var panelGo = new GameObject("TitlePanel", typeof(RectTransform));
         panelGo.transform.SetParent(layer, false);
@@ -1068,6 +1096,8 @@ public static class TowerSceneBuilder
         so.FindProperty("controller").objectReferenceValue = controller;
         so.FindProperty("backdrop").objectReferenceValue = backImg;
         so.FindProperty("picture").objectReferenceValue = picture;
+        so.FindProperty("tall").objectReferenceValue = tallImg;
+        so.FindProperty("startTall").objectReferenceValue = startTall;
         so.FindProperty("ground").objectReferenceValue = ground;
         so.FindProperty("tower").objectReferenceValue = tower;
         so.FindProperty("logo").objectReferenceValue = logo;

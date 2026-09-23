@@ -21,7 +21,7 @@ public static class TitleArt
     public enum Style { Signboard, Picture, Tower, Original }
 
     /// <summary>今どの案を出すか（作者が選ぶ）。</summary>
-    public const Style Choice = Style.Signboard;
+    public const Style Choice = Style.Picture;
 
     /// <summary>点滅させる言葉（作者の指定）。</summary>
     public const string StartLine = "Touch to start game";
@@ -33,6 +33,17 @@ public static class TitleArt
     public const string LogoPath  = "Assets/Sprites/Screens/Title_Logo.png";
     /// <summary>題名の1枚絵（MTMOJI そのもの）。</summary>
     public const string PicturePath = "Assets/Sprites/Screens/Title_Text.png";
+    /// <summary>
+    /// その絵を**縦長の画面に合わせて縦に伸ばした**もの（docs/make_title.py が作る）。
+    /// 枠は封印扉のタイルでできていて y=256..288 の帯が1ドットも違わず繰り返せるので、
+    /// その帯を挟んで部屋を下へ伸ばしてある。題名は上に残る。
+    /// </summary>
+    public const string TallPath = "Assets/Sprites/Screens/Title_Tall.png";
+    public static readonly Vector2Int TallSize = new Vector2Int(640, 1424);
+    /// <summary>縦長の絵のどの高さに点滅を置くか（絵のドット）。部屋の真ん中あたり。</summary>
+    public const int TallStartY = 700;
+    /// <summary>絵の地の色（＝絵そのものの背景）。縦に足りないぶんをこれで埋める。</summary>
+    public static readonly Color Field = new Color32(0x44, 0x44, 0x44, 0xff);
     /// <summary>終幕の塔と、その足元の地面。</summary>
     public const string TowerPath  = "Assets/Sprites/Screens/Ending_Tower1.png";
     public const string GroundPath = "Assets/Sprites/Screens/Ending_Tower2.png";

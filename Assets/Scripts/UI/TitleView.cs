@@ -15,12 +15,14 @@ public class TitleView : MonoBehaviour
 {
     [SerializeField] TowerController controller;
     [SerializeField] UnityEngine.UI.Image backdrop;   // 地（黒／石積み）
-    [SerializeField] UnityEngine.UI.Image picture;    // 題名の1枚絵（MTMOJI）
+    [SerializeField] UnityEngine.UI.Image picture;    // 題名の1枚絵（MTMOJI・横長のまま）
+    [SerializeField] UnityEngine.UI.Image tall;       // 同じ絵を縦長にしたもの
     [SerializeField] UnityEngine.UI.Image ground;     // 終幕の地面
     [SerializeField] UnityEngine.UI.Image tower;      // 終幕の塔
     [SerializeField] UnityEngine.UI.Image logo;       // 「魔法の塔」の看板
     [SerializeField] TextMeshProUGUI line1, line2;    // 原典の2行
-    [SerializeField] TextMeshProUGUI start;           // 点滅する言葉
+    [SerializeField] TextMeshProUGUI start;           // 点滅する言葉（横長の絵の中）
+    [SerializeField] TextMeshProUGUI startTall;       // 〃（縦長の絵の中）
 
     /// <summary>まだ題名を出しているか。出ている間は遊びの入力を受けない。</summary>
     public bool IsShowing { get; private set; }
@@ -36,7 +38,10 @@ public class TitleView : MonoBehaviour
     /// <summary>案に合わせて、使う絵だけ出す。</summary>
     public void Apply(TitleArt.Style style)
     {
-        if (picture != null) picture.enabled = TitleArt.UsesPicture(style);
+        // 題名絵の案は**縦長に伸ばしたほう**を使う（画面が縦長なので）。
+        bool pic = TitleArt.UsesPicture(style);
+        if (tall    != null) tall.enabled    = pic;
+        if (picture != null) picture.enabled = false;
         if (ground  != null) ground.enabled  = TitleArt.UsesTower(style);
         if (tower   != null) tower.enabled   = TitleArt.UsesTower(style);
         if (logo    != null) logo.enabled    = TitleArt.UsesLogo(style);
@@ -44,13 +49,21 @@ public class TitleView : MonoBehaviour
         if (line2   != null) line2.enabled   = TitleArt.UsesLines(style);
         if (backdrop != null)
         {
-            // 石積みを敷くのは看板の案だけ。ほかは真っ黒。
+            // 石積みを敷くのは看板の案だけ。題名絵の案は**絵と同じ地の色**で埋めて
+            // 継ぎ目を消す。ほかは真っ黒。
             backdrop.enabled = true;
             backdrop.type = TitleArt.UsesBrick(style)
                             ? UnityEngine.UI.Image.Type.Tiled
                             : UnityEngine.UI.Image.Type.Simple;
-            backdrop.color = TitleArt.UsesBrick(style) ? Color.white : Color.black;
+            backdrop.color = TitleArt.UsesBrick(style) ? Color.white
+                           : pic ? TitleArt.Field : Color.black;
         }
+    }
+
+    /// <summary>今の案で点滅させる字。</summary>
+    TextMeshProUGUI Blinking
+    {
+        get { return TitleArt.UsesPicture(TitleArt.Choice) ? startTall : start; }
     }
 
     public void Show()
@@ -73,16 +86,19 @@ public class TitleView : MonoBehaviour
         if (!on)
         {
             if (backdrop != null) backdrop.enabled = false;
-            foreach (var img in new[] { picture, ground, tower, logo })
+            foreach (var img in new[] { picture, tall, ground, tower, logo })
                 if (img != null) img.enabled = false;
-            foreach (var t in new[] { line1, line2, start })
+            foreach (var t in new[] { line1, line2, start, startTall })
                 if (t != null) t.enabled = false;
             return;
         }
         Apply(TitleArt.Choice);
         if (line1 != null) line1.text = TitleScreen.Title;
         if (line2 != null) line2.text = TitleScreen.Copyright;
-        if (start != null) { start.enabled = true; start.text = TitleArt.StartLine; }
+        if (start != null) start.enabled = false;
+        if (startTall != null) startTall.enabled = false;
+        var blink = Blinking;
+        if (blink != null) { blink.enabled = true; blink.text = TitleArt.StartLine; }
     }
 
     void Update()
@@ -91,9 +107,10 @@ public class TitleView : MonoBehaviour
 
         // 点滅
         blink += Time.deltaTime;
-        if (start != null)
-            start.alpha = (blink % (TitleArt.BlinkSeconds * 2f)) < TitleArt.BlinkSeconds
-                          ? 1f : 0f;
+        var text = Blinking;
+        if (text != null)
+            text.alpha = (blink % (TitleArt.BlinkSeconds * 2f)) < TitleArt.BlinkSeconds
+                         ? 1f : 0f;
 
         // 触るかキーで始める。**必ず最初から**（作者の指定）。
         // 触りは**指を離したとき**に見る。押した瞬間に消してしまうと、その同じ一手が
