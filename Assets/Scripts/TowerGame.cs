@@ -1126,6 +1126,12 @@ public class TowerGame
     {
         var snap = TowerSave.Read(slot);
         if (snap == null || snap.Player == null) return false;
+        // 盤面が丸ごと入れ替わるので、見た目は**作り直し**が要る。
+        // ふだんの差分（ConsumeDirty）は「今の盤面への書き込み」を数えるもので、
+        // ここでは盤面そのものを捨てて組み直すため1件も残らない。
+        // これが抜けていて、**同じ階でロードすると倒した敵や拾った物が
+        // 画面に戻らなかった**（踏むと戦いになるので中身だけは正しかった）。
+        ViewNeedsRebuild = true;
         Player = snap.Player;
         // 倒した敵・開けた扉・拾った物を戻す。**組み立て直してから**差を当てる
         // （そうしないと今の盤面が残ってしまう）。
@@ -1137,6 +1143,20 @@ public class TowerGame
         }
         EnterFloor(Player.Floor, Player.Position);
         return true;
+    }
+
+    /// <summary>
+    /// 盤面を作り直す必要があるか（ロードで中身が丸ごと入れ替わったとき）。
+    /// 階が変わったときと同じく、見た目の層が作り直して渦巻きに描き出す。
+    /// </summary>
+    public bool ViewNeedsRebuild { get; private set; }
+
+    /// <summary>その印を受け取って下ろす。</summary>
+    public bool ConsumeViewRebuild()
+    {
+        bool need = ViewNeedsRebuild;
+        ViewNeedsRebuild = false;
+        return need;
     }
 
     /// <summary>

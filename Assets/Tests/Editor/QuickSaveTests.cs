@@ -44,7 +44,7 @@ public class QuickSaveTests
         StringAssert.Contains("セーブしますか？", g.CurrentPage);
         Assert.AreEqual(2, g.ChoiceCount);
 
-        g.ConfirmChoice();                                   // 0 番＝はい
+        g.ConfirmChoice(); g.NextPage();                                   // 0 番＝はい
         Assert.IsTrue(TowerSave.Exists(PhoneScreen.QuickSlot), "残っている");
         Assert.AreEqual(3, TowerSave.Load(PhoneScreen.QuickSlot).Floor);
     }
@@ -55,7 +55,7 @@ public class QuickSaveTests
         var g = Game(3, new Vector2Int(0, -5));
         g.AskSave();
         g.MoveChoice(1);                                     // 1 番＝いいえ
-        g.ConfirmChoice();
+        g.ConfirmChoice(); g.NextPage();
         Assert.IsFalse(TowerSave.Exists(PhoneScreen.QuickSlot));
     }
 
@@ -65,16 +65,43 @@ public class QuickSaveTests
         var g = Game(5, new Vector2Int(0, -5));
         g.Floor.Clear(new Vector2Int(0, -4));                // 倒したことにする
         g.AskSave();
-        g.ConfirmChoice();
+        g.ConfirmChoice(); g.NextPage();
 
         // 別の遊びで読み込む
         var h = Game(1, new Vector2Int(0, -5));
         Assert.IsTrue(h.AskLoad());
         StringAssert.Contains("ロードしますか？", h.CurrentPage);
-        h.ConfirmChoice();
+        h.ConfirmChoice(); h.NextPage();
 
         Assert.AreEqual(5, h.Player.Floor);
         Assert.IsTrue(h.Floor.IsCleared(new Vector2Int(0, -4)), "盤面も戻る");
+    }
+
+    /// <summary>
+    /// **同じ階でロードしても盤面を作り直す**。ロードは今の盤面を捨てて組み直すので、
+    /// ふだんの差分（ConsumeDirty）には1件も残らない。階が変わったときにしか
+    /// 作り直していなかったため、倒した敵や拾った物が画面に戻らなかった（作者の報告）。
+    /// </summary>
+    [Test]
+    public void 同じ階でロードしても作り直しの印が立つ()
+    {
+        var g = Game(5, new Vector2Int(0, -5));
+        var at = new Vector2Int(0, 4);              // 黄色の鍵が置いてあるマス
+        string wasThere = g.Floor.At(at);
+        g.AskSave();
+        g.ConfirmChoice(); g.NextPage();
+        Assert.IsFalse(g.ConsumeViewRebuild(), "セーブでは作り直さない");
+
+        g.Floor.Clear(at);                       // セーブのあとに倒した／拾った
+        g.Floor.ConsumeDirty();                  // 見た目へはもう映した
+
+        Assert.IsTrue(g.AskLoad());
+        g.ConfirmChoice(); g.NextPage();
+        Assert.AreEqual(wasThere, g.Floor.At(at), "中身は戻っている");
+        Assert.AreEqual(0, g.Floor.ConsumeDirty().Count,
+                        "差分では気づけない（盤面ごと組み直しているので）");
+        Assert.IsTrue(g.ConsumeViewRebuild(), "だから作り直しの印で知らせる");
+        Assert.IsFalse(g.ConsumeViewRebuild(), "印は1回で下りる");
     }
 
     [Test]
@@ -82,7 +109,7 @@ public class QuickSaveTests
     {
         var g = Game(1, new Vector2Int(0, -5));
         g.AskLoad();
-        g.ConfirmChoice();
+        g.ConfirmChoice(); g.NextPage();
         StringAssert.Contains("セーブデータがありません。", string.Join("\n", g.Log));
     }
 

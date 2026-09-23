@@ -423,7 +423,10 @@ public class TowerController : MonoBehaviour
     /// </summary>
     void AfterAction(int floorBefore, Vector2Int posBefore)
     {
-        if (Game.Player.Floor != floorBefore) RebuildView();
+        // ロードは階が同じでも盤面が入れ替わるので、そのときも作り直す
+        // （倒した敵や拾った物が画面に戻らない、という作者の報告）。
+        bool reload = Game.ConsumeViewRebuild();
+        if (reload || Game.Player.Floor != floorBefore) RebuildView();
         else SyncChangedCells();
         // 隣のマスへ1歩動いたときだけ滑らせる（原典 0xa276。階が変わる・
         // 戦闘の踏み込み・階段や門で飛ぶときは、原典もこの演出を通らない）
@@ -654,6 +657,7 @@ public class TowerController : MonoBehaviour
             }
 
         Game.Floor.ConsumeDirty();     // 作り直したので差分は無かったことにする
+        heldCells.Clear();             // 待たせていたマスも作り直しで片付く
         PlacePlayerView();
 
         // 原典は階に入ると盤面を渦巻きの順に1マスずつ描く（0xafa6）。
