@@ -95,19 +95,45 @@ public class FloorPickerTests
         Assert.AreEqual(5, g.FlightFloor);
     }
 
+    /// <summary>
+    /// ★作者の指定。押した向きへ印がそのまま動く。
+    /// 一覧は1段10階で左から右なので、左右が隣の階、上下が1段ぶん。
+    /// </summary>
     [Test]
-    public void 上下で一階ずつ左右で十階ずつ動く()
+    public void 押した向きへ印が動く()
     {
         var g = Game(5, 40);
         g.BeginFlight();
-        g.FlightMove(1);
-        Assert.AreEqual(6, g.FlightFloor, "上下は1階ずつ");
-        g.FlightMove(10);
-        Assert.AreEqual(16, g.FlightFloor, "左右は10階ずつ");
-        g.FlightMove(-10);
-        Assert.AreEqual(6, g.FlightFloor);
-        for (int i = 0; i < 10; i++) g.FlightMove(10);
+        g.FlightMove(1);                          // →
+        Assert.AreEqual(6, g.FlightFloor, "右は隣の階");
+        g.FlightMove(-1);                         // ←
+        Assert.AreEqual(5, g.FlightFloor, "左は1つ戻る");
+        g.FlightMove(FloorPicker.Columns);        // ↓
+        Assert.AreEqual(15, g.FlightFloor, "下は1段ぶん");
+        g.FlightMove(-FloorPicker.Columns);       // ↑
+        Assert.AreEqual(5, g.FlightFloor, "上は1段戻る");
+
+        // 一覧の上での位置も、ちゃんと1段ぶん動いている
+        var a = FloorPicker.CellOf(5);
+        var b = FloorPicker.CellOf(15);
+        Assert.AreEqual(a.x, b.x, "同じ列");
+        Assert.AreEqual(a.y + FloorPicker.RowPitch, b.y, "1段下");
+
+        for (int i = 0; i < 10; i++) g.FlightMove(FloorPicker.Columns);
         Assert.AreEqual(40, g.FlightFloor, "到達最高階で止まる");
+        for (int i = 0; i < 10; i++) g.FlightMove(-FloorPicker.Columns);
+        Assert.AreEqual(1, g.FlightFloor, "1階で止まる");
+    }
+
+    /// <summary>入力の向きと印の動きが食い違っていないか（配線の検査）。</summary>
+    [Test]
+    public void 入力の向きの割り当てが逆になっていない()
+    {
+        var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
+        StringAssert.Contains("move.y > 0 ? -FloorPicker.Columns : FloorPicker.Columns", src,
+                              "上で小さい階、下で大きい階");
+        StringAssert.Contains("Game.FlightMove(move.x > 0 ? 1 : -1)", src,
+                              "右で次の階、左で前の階");
     }
 
     [Test]

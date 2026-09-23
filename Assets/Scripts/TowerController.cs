@@ -423,7 +423,11 @@ public class TowerController : MonoBehaviour
 
     /// <summary>
     /// 飛翔のオーブの階選びの一手（作者の指定でメニューとは別の画面）。
-    /// 上下で1階ずつ、左右で10階ずつ動かして、決定で飛ぶ。
+    ///
+    /// **押した向きへ印がそのまま動く**（作者の指定）。一覧は1段10階で
+    /// 左から右へ並べてあるので、
+    ///   左右 … 隣の階（±1）／上下 … 1段ぶん（±10）
+    /// になる。押した向きと印の動きが食い違わないのが肝。
     /// **今いる階を選べば取りやめ**（原典も同じ階なら何も起きない）。
     /// </summary>
     bool StepFloorPicker()
@@ -432,8 +436,13 @@ public class TowerController : MonoBehaviour
 
         var move = ReadInputOnce();
         if (move == Vector2Int.zero) move = TakeStep();
-        if (move.y != 0) { Game.FlightMove(move.y); return true; }
-        if (move.x != 0) { Game.FlightMove(move.x > 0 ? 10 : -10); return true; }
+        // 上を押したら1段上＝小さい階、下を押したら1段下＝大きい階
+        if (move.y != 0)
+        {
+            Game.FlightMove(move.y > 0 ? -FloorPicker.Columns : FloorPicker.Columns);
+            return true;
+        }
+        if (move.x != 0) { Game.FlightMove(move.x > 0 ? 1 : -1); return true; }
         if (MenuKeyDown() || TakeConfirm()) { Game.ConfirmFlight(); return true; }
         return false;
     }

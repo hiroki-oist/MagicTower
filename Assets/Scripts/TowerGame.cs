@@ -1000,8 +1000,8 @@ public class TowerGame
     {
         if (Stage != MenuStage.FlightFloors || delta == 0) return;
         // 1つずつ動かす。**まとめて動かすと44階を飛ばす判定が抜ける**。
-        // 上下は1階ずつ（原典どおり）、左右は10階ずつ（一覧が1段10階なので、
-        // 段ごと跳べるようにした作者の指定）。
+        // 呼ぶ側（<see cref="TowerController"/>）が押した向きに合わせて
+        // ±1（左右＝隣の階）と ±10（上下＝一覧の1段）を渡す。
         int step = delta > 0 ? 1 : -1;
         for (int i = 0; i < Mathf.Abs(delta); i++)
         {
