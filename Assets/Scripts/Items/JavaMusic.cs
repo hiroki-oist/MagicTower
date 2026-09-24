@@ -55,18 +55,14 @@ public static class JavaMusic
     /// </summary>
     public const string EndingTrack = "Music/Ending";
 
-    /// <summary>その画面が終幕の一部なら終幕の曲。違えば null。</summary>
-    public static string EndingFor(TowerGame.PageKind? kind)
+    /// <summary>
+    /// 終幕なら終幕の曲。違えば null。
+    /// **24階の時空の門をくぐった瞬間**から鳴る（<see cref="TowerGame.EndingMusic"/>）ので、
+    /// 駆け上がる13秒もセリフ161〜170も、もうこの曲。
+    /// </summary>
+    public static string EndingFor(bool ending)
     {
-        if (!kind.HasValue) return null;
-        switch (kind.Value)
-        {
-            case TowerGame.PageKind.EndingTower:
-            case TowerGame.PageKind.EndingText:
-            case TowerGame.PageKind.FinalScreen:
-                return EndingTrack;
-        }
-        return null;
+        return ending ? EndingTrack : null;
     }
 
     /// <summary>

@@ -506,6 +506,9 @@ public class TowerGame
     {
         var steps = Cutscenes.Instance.Steps(name);
         if (steps == null) return false;
+        // ★曲は**時空の扉をくぐった瞬間**から終幕のものに変える（作者の指定）。
+        // 塔の絵まで待つと、駆け上がる13秒ぶん階の曲のままになってしまう。
+        if (name == Cutscenes.EndingScene) EndingMusic = true;
         // 地図の書き換えは**次に出すページの直前**に当てる。原典の場面は
         // 「ゼノを出す → セリフ110 → 魔導師を出す → セリフ111 → …
         //   → 5マスを床に戻す → 奪われる」の順に書いているので、
@@ -1169,7 +1172,7 @@ public class TowerGame
     {
         if (pages.Count > 0 || IsMenuOpen || IsChoosing) return false;
         Say(GoldShop.Text());
-        BeginChoice(ChoiceKind.GoldShop, GoldShop.Count + 1, default(Shop.Offer));
+        BeginChoice(ChoiceKind.GoldShop, GoldShop.ChoiceCount, default(Shop.Offer));
         return true;
     }
 
@@ -1420,7 +1423,8 @@ public class TowerGame
         }
         if (kind == ChoiceKind.GoldShop)
         {
-            if (at >= GoldShop.Count) return;          // 「やめる」
+            if (at == GoldShop.RestoreIndex) { Note(GoldShop.Restore()); return; }
+            if (at > GoldShop.RestoreIndex) return;     // 「やめる」
             var got = GoldShop.Buy(Player, at);
             if (!string.IsNullOrEmpty(got)) { PlaySound(SoundCues.TakeItem); Note(got); }
             return;
@@ -1455,6 +1459,12 @@ public class TowerGame
         var text = TowerNpc.Donate(Player, wish);
         if (!string.IsNullOrEmpty(text)) Say(text);
     }
+
+    /// <summary>
+    /// 終幕の曲にするか。**24階の時空の門をくぐった瞬間**に立つ（作者の指定）。
+    /// <see cref="BossMusic"/> と同じ仕組みで、曲を決めるのは見た目の側。
+    /// </summary>
+    public bool EndingMusic { get; private set; }
 
     /// <summary>ゲームオーバーの画面を出している最中か。</summary>
     public bool IsGameOver

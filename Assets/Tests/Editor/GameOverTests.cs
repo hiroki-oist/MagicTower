@@ -82,7 +82,9 @@ public class GameOverTests
     {
         // 原典は INITIAL.DAT を読み直す。入力側がそのやり直しを持っている。
         var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
-        StringAssert.Contains("if (Game.IsGameOver) { StartNewGame(); return; }", src);
+        // 倒れたら中断データも捨てて最初から
+        StringAssert.Contains(
+            "if (Game.IsGameOver) { TowerGame.DropResume(); StartNewGame(); return; }", src);
         StringAssert.Contains("INITIAL.DAT を読み直す", src);
     }
 

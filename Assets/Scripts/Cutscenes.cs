@@ -104,6 +104,9 @@ public class Cutscenes
     /// </summary>
     public const string BossAppearStep = "ボスが現れる";
 
+    /// <summary>終幕の場面の名前（24階の時空の門をくぐると始まる）。</summary>
+    public const string EndingScene = "終幕";
+
     /// <summary>終幕の1枚絵を表す行（原典 0xd45c）。</summary>
     public const string FinalScreenStep = "最後の画面";
 

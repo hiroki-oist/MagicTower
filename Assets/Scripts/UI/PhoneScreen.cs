@@ -110,14 +110,28 @@ public static class PhoneScreen
     //     『一度購入すれば、次回プレイからは無料で同じゴールドを購入できる』と書いて。
     //     400ゴールドを160円、1000ゴールドを320円、4000ゴールドを640円に」
 
-    /// <summary>課金の窓の見出し（1行18文字まで）。</summary>
+    /// <summary>
+    /// 課金の窓の見出し（1行18文字まで）。
+    ///
+    /// ⚠ Apple の審査指針（3.1.1）に合わせて**買い切りである**ことと、
+    /// **復元できる**ことを窓の中で言い切る。値段は下の <see cref="ShopYen"/> ではなく
+    /// **App Store から受け取った現地通貨の表示**に差し替えること（<see cref="GoldShop"/>）。
+    /// </summary>
     public static readonly string[] ShopIntro =
     {
         "ゴールドを購入します。",
-        "一度購入すれば、次回プレイ",
-        "からは無料で同じゴールドを",
-        "購入できます。",
+        "どれも買い切りです。一度購入",
+        "すれば、次回プレイからは無料",
+        "で同じゴールドを受け取れます",
+        "（機種を変えても復元できます）",
     };
+
+    /// <summary>「購入を復元する」の行。Apple の審査指針 3.1.1 で置くことが要る。</summary>
+    public const string ShopRestore = "購入を復元する";
+
+    /// <summary>復元したときの知らせ。</summary>
+    public const string ShopRestored = "購入を復元しました（{0}件）。";
+    public const string ShopNothingToRestore = "復元できる購入はありませんでした。";
 
     /// <summary>売り物。金額は円。</summary>
     public static readonly int[] ShopGold = { 400, 1000, 4000 };

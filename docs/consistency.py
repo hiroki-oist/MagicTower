@@ -1598,7 +1598,7 @@ chk('EndingTrack = "Music/Ending"' in _jm and "EndingFor" in _jm,
     "終幕の曲を別に持つ（Music/Ending ＝ A_050）")
 chk('{ 50, "Music/Boss50" }' not in _jm and '{ 50,' not in _jm,
     "50階のボス戦の欄は消した（50階に戦いは無い）")
-chk("JavaMusic.EndingFor(kind)" in _tc,
+chk("JavaMusic.EndingFor(Game.EndingMusic)" in _tc,
     "終幕だけは1枚絵の画面でも曲を決める")
 chk('("Ending",  "A_050", 21)' in open("docs/make_music.py",encoding="utf-8").read(),
     "作り直しの表も A_050 → Ending になっている")
@@ -1629,6 +1629,24 @@ chk("TowerSave.Exists(TowerSave.AutoSlot) && Game.LoadSlot(TowerSave.AutoSlot)" 
     "起ち上げたときに中断データがあればそこから続ける")
 chk("TowerGame.DropResume();          // 題名へ戻ったら中断データは捨てる" in _tc,
     "題名へ戻ったら中断データは捨てる")
+# ⚠ 起ち上げのときも通る StartNewGame で捨ててはいけない（捨ててから「あるか？」を
+#   見ることになり、いつも無いことになっていた＝3階まで進んで落としても1階から）。
+chk("TowerGame.DropResume();          // 最初から始めるので中断データは捨てる" not in _tc
+    and "TowerGame.DropResume();          // 題名から始めるので中断データは捨てる" in _tc,
+    "中断データを捨てるのは題名を触ったときで、起ち上げの StartNewGame では捨てない")
+# 終幕の曲は**時空の扉をくぐった瞬間**から（塔の絵まで待たない）
+chk("EndingScene" in open("Assets/Scripts/Cutscenes.cs",encoding="utf-8").read()
+    and "if (name == Cutscenes.EndingScene) EndingMusic = true;" in _tg4
+    and "JavaMusic.EndingFor(Game.EndingMusic)" in _tc,
+    "終幕の曲は時空の扉をくぐった瞬間から")
+# 課金は Apple の審査指針（3.1.1）に合わせて、買い切り・復元を窓の中で言い切る
+_gs=open("Assets/Scripts/Items/GoldShop.cs",encoding="utf-8").read()
+chk("買い切り" in _ps and "復元" in _ps,
+    "課金の窓は買い切りと復元を言い切る")
+chk("ShopRestore" in _gs and "RestoreIndex" in _gs and "public static string Restore()" in _gs,
+    "「購入を復元する」の口がある（審査指針 3.1.1）")
+chk("Product.displayPrice" in _gs and "Non-Consumable" in _gs,
+    "値段は App Store の現地表記に差し替えること／非消耗型で登録することを書いてある")
 # メニューの添え書き（作者の指定）
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("リセット" in _tm and "Note" in _tm,
@@ -2735,7 +2753,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=798
+MIN_CHECKS=804
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

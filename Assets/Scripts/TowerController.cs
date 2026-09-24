@@ -80,7 +80,11 @@ public class TowerController : MonoBehaviour
     /// 題名を触ったところから遊びを始める。**必ず最初から**（作者の指定）。
     /// 続きは下の「ロード」のボタンから読む。
     /// </summary>
-    public void BeginGame() { StartNewGame(); }
+    public void BeginGame()
+    {
+        TowerGame.DropResume();          // 題名から始めるので中断データは捨てる
+        StartNewGame();
+    }
 
     /// <summary>
     /// 最初から始める。原典のゲームオーバー（0x097ac）は
@@ -88,8 +92,11 @@ public class TowerController : MonoBehaviour
     /// </summary>
     void StartNewGame()
     {
+        // ⚠ ここで中断データを捨ててはいけない。**起ち上げのときも通る**ので、
+        //   捨ててから「あるか？」を見ることになり、いつも無いことになっていた
+        //   （3階まで進んで落としても1階から始まる、という報告）。
+        //   捨てるのは「題名を触って始めたとき」と「題名へ戻ったとき」。
         StopShows();
-        TowerGame.DropResume();          // 最初から始めるので中断データは捨てる
         Game = new TowerGame(PlayerState.NewGame());
         RebuildView();
         // 原典は序章のあと（ゼノに奪われた直後）に本編の曲を鳴らす。
@@ -332,7 +339,7 @@ public class TowerController : MonoBehaviour
                     else
                     {
                         // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
-                        if (Game.IsGameOver) { StartNewGame(); return; }
+                        if (Game.IsGameOver) { TowerGame.DropResume(); StartNewGame(); return; }
                         // 終幕の「Ｆｉｎ」のあとは題名へ戻す（作者の指定）。
                         // 原典（0xd45c）はキーを待ってパレットを真っ暗にして終わるだけ。
                         if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(); return; }
@@ -844,7 +851,7 @@ public class TowerController : MonoBehaviour
         if (!JavaMusic.Enabled || sound == null || Game == null) return;
         var kind = Game.CurrentKind;
         // 終幕だけは1枚絵の画面でも曲を決める（作者の指定で A_050）。
-        var ending = JavaMusic.EndingFor(kind);
+        var ending = JavaMusic.EndingFor(Game.EndingMusic);
         if (ending != null) { sound.PlayTrack(ending); return; }
         if (kind.HasValue && PhoneLayoutView.IsFullScreen(kind.Value)) return;
         // ボスの曲は**退路の門が閉まった時点**から（作者の指定）。

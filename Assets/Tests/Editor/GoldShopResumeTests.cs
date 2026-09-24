@@ -18,20 +18,24 @@ public class GoldShopResumeTests
     public void 窓には一度買えば次から無料と書いてある()
     {
         var t = string.Join("", PhoneScreen.ShopIntro);
-        StringAssert.Contains("一度購入すれば", t);
+        StringAssert.Contains("一度購入", t);
         StringAssert.Contains("無料", t);
+        StringAssert.Contains("買い切り", t, "非消耗型であることを言い切る");
+        StringAssert.Contains("復元", t, "復元できることを言い切る");
         foreach (var line in PhoneScreen.ShopIntro)
             Assert.LessOrEqual(line.Length, DialogueBox.CharsPerLine, line);
     }
 
     [Test]
-    public void 選べる行は売り物の数とやめるで四つ()
+    public void 選べる行は売り物と復元とやめる()
     {
         var p = new PlayerState { Hp = 100, Floor = 1 };
         var g = new TowerGame(p);
         Assert.IsTrue(g.AskGoldShop());
         Assert.IsTrue(g.IsChoosing);
-        Assert.AreEqual(GoldShop.Count + 1, g.ChoiceCount);
+        Assert.AreEqual(GoldShop.Count + 2, g.ChoiceCount, "品目＋復元＋やめる");
+        StringAssert.Contains(PhoneScreen.ShopRestore, GoldShop.Text(),
+                              "Apple の審査指針 3.1.1 で復元の口が要る");
         // 窓の本文にも売り物の行が並ぶ
         var text = GoldShop.Text();
         for (int i = 0; i < GoldShop.Count; i++)
