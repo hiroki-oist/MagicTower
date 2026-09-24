@@ -107,6 +107,12 @@ public class Cutscenes
     /// <summary>終幕の場面の名前（24階の時空の門をくぐると始まる）。</summary>
     public const string EndingScene = "終幕";
 
+    /// <summary>
+    /// 序章の場面の名前（原典 0x6ae0。3階でゼノに出会うところから2階の牢まで）。
+    /// ★この2つ（序章と終幕）の間は、触った合図の音を鳴らさない（作者の指定）。
+    /// </summary>
+    public const string PrologueScene = "ゼノとの初対面";
+
     /// <summary>終幕の1枚絵を表す行（原典 0xd45c）。</summary>
     public const string FinalScreenStep = "最後の画面";
 

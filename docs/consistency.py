@@ -916,8 +916,12 @@ _cueU={k: v for k, v in _cue.items() if v[0] >= 90}
 chk(len(_cueO)==22,"合図は22件（原典の呼び出し61か所を仕分けたもの）",str(len(_cueO)))
 chk(all(v[0] in _snd for v in _cueO.values()),"どの合図も実在する音を指す")
 chk(all(v[1].startswith("0x") for v in _cueO.values()),"どの合図にも原典の場所が控えてある")
-chk(len(_cueU)==1 and all(v[0] in _uisnd for v in _cueU.values()),
-    "原典に無い合図は「触る」1件だけで、譜面は UiSounds.txt にある")
+chk(len(_cueU)==2 and all(v[0] in _uisnd for v in _cueU.values()),
+    "原典に無い合図は「触る」「会話を送る」の2件で、譜面は UiSounds.txt にある")
+# 作者の指定：触る=91、会話を送る=95（会話はいちばん多く鳴るので別の音）
+chk(_cue["触る"][0]==91,"触ったとき・決めたときは音91")
+chk(_cue["会話を送る"][0]==95 and _cue["会話を送る"][0]!=_cue["触る"][0],
+    "会話を送るのは音95（決めたときとは別の音）")
 chk(_cue["階段"][0]==8,"階段は音8（原典 0x28e6、地形11/12の判定の直後）")
 chk(_cue["魔法攻撃"][0]==7,"魔法攻撃は音7（原典 0x1588 の3か所）")
 chk(_cue["斬りかかる"][0]==9 and _cue["命中"][0]==10,"戦闘は音9と音10（原典 0x6082）")
@@ -1685,8 +1689,8 @@ for _need, _why in [
      "選ばせている窓の印を動かすと鳴る"),
     ("{ PlayTap(); Game.ConfirmChoice(); Game.NextPage(); acted = true; }",
      "選ばせている窓で決めると鳴る"),
-    ("{ PlayTap(); dialogue.RevealAll(); acted = false; }",
-     "出している途中のセリフを全部出すときも鳴る"),
+    ("{ dialogue.RevealAll(); acted = false; }",
+     "出している途中のセリフを全部出すときは鳴らさない（送ったのではない）"),
     ("if (Input.GetKeyDown(KeyCode.Escape)) { PlayTap(); Game.MenuBack(); return true; }",
      "メニューを戻ると鳴る"),
     ("if (move.y != 0) { Game.MenuMove(-move.y); PlayTap(); return true; }",
@@ -1699,12 +1703,25 @@ for _need, _why in [
     chk(_need in _tc, _why)
 chk("""                    else
                     {
-                        PlayTap();""" in _tc,
-    "会話を送ると鳴る")
-chk("""    public void BeginGame()
-    {
-        PlayTap();""" in _tc,
-    "題名を触って始めるときも鳴る")
+                        PlayAdvance();""" in _tc,
+    "会話を送ると鳴る（決めたときとは別の音）")
+# 序章と終幕では鳴らさない（作者の指定）。合図を出す口は1つにまとめてある。
+_tgs=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("public bool InStoryScene" in _tgs
+    and "return pages.Count > 0 && pages.Peek().Story;" in _tgs,
+    "序章と終幕は積んだページの印で見分ける（会話の頁も含まれる）")
+chk('bool story = name == Cutscenes.PrologueScene || name == Cutscenes.EndingScene;' in _tgs
+    and 'PrologueScene = "ゼノとの初対面"' in open(
+        "Assets/Scripts/Cutscenes.cs",encoding="utf-8").read(),
+    "印を付けるのは序章と終幕の2つだけ（道中の場面では鳴る）")
+chk("if (Game != null && Game.InStoryScene) return;" in _tc
+    and _tc.count("sound.PlayCue(SoundCues.Tap)")==0,
+    "触った合図は序章と終幕では鳴らさない（見せ場の間合いを壊さない）")
+chk("public void PlayTap() { Cue(SoundCues.Tap); }" in _tc
+    and "public void PlayAdvance() { Cue(SoundCues.Advance); }" in _tc,
+    "合図を鳴らす口は Cue 1つにまとめてある")
+chk("PlayTap();\n        TowerGame.DropResume();" not in _tc,
+    "題名を触って始めるときは鳴らさない（その先が序章だから）")
 chk("ShopRowLines = 3" in _phs and "ShopRowGap" in _dw
     and "ShopFontScale" in _phs and "RoundBoxPath" in _phs,
     "品目の行は3行ぶんの高さ・字は大きめ・枠は角丸")

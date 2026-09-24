@@ -88,6 +88,11 @@ public class TowerGame
         /// （3階で踏み込んだ瞬間に曲が変わって一瞬止まる、という報告）。
         /// </summary>
         public string Cue;
+        /// <summary>
+        /// ★**物語の場面（序章と終幕）のページか**（作者の指定）。
+        /// ここでは触った合図の音を鳴らさない。<see cref="InStoryScene"/>。
+        /// </summary>
+        public bool Story;
     }
 
     readonly Queue<Page> pages = new Queue<Page>();
@@ -513,10 +518,13 @@ public class TowerGame
         // 「ゼノを出す → セリフ110 → 魔導師を出す → セリフ111 → …
         //   → 5マスを床に戻す → 奪われる」の順に書いているので、
         // ここでまとめて当ててしまうと出す順も消す順も崩れる。
+        // ★序章と終幕は「物語の場面」。積むページに印を付けておいて、
+        // その間は触った合図の音を鳴らさない（作者の指定）。会話の頁も含める。
+        bool story = name == Cutscenes.PrologueScene || name == Cutscenes.EndingScene;
         List<Cutscenes.MapStep> pendingMap = null;
         System.Func<Page, Page> withMap = page =>
         {
-            page.MapBefore = pendingMap; pendingMap = null; return page;
+            page.MapBefore = pendingMap; pendingMap = null; page.Story = story; return page;
         };
         foreach (var step in steps)
         {
@@ -1511,6 +1519,20 @@ public class TowerGame
     public bool IsFinalScreen
     {
         get { return pages.Count > 0 && pages.Peek().Kind == PageKind.FinalScreen; }
+    }
+
+    /// <summary>
+    /// ★**物語の場面（序章と終幕）を出している最中か**（作者の指定）。
+    /// ここでは触った合図の音を**一切鳴らさない**。原典に無い音なので、
+    /// 見せ場の間じゅう鳴っていると一枚絵の間合いを壊してしまう。
+    ///
+    /// 中身は **Cutscenes.txt の「ゼノとの初対面」と「終幕」で積んだページ全部**――
+    /// 一枚絵や題名だけでなく、**その中の会話も**含める（送るたびに鳴っては
+    /// 見せ場にならないので）。ゲームオーバーや道中の場面は入れない。
+    /// </summary>
+    public bool InStoryScene
+    {
+        get { return pages.Count > 0 && pages.Peek().Story; }
     }
 
     /// <summary>隣接マスの魔術士・魔導師から魔法攻撃を受ける。神盾があれば無効。</summary>

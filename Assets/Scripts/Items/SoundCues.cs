@@ -90,4 +90,13 @@ public class SoundCues
     /// 譜面は Resources/UiSounds.txt（原典の Sounds.txt とは別の表）。
     /// </summary>
     public const string Tap = "触る";
+
+    /// <summary>
+    /// ★**原典に無い合図**（作者の指定）。出し終えた会話を次へ送るときの音。
+    /// 決めたときの音とは**別の音**にしてある（会話はいちばん多く鳴るので、
+    /// 決定と同じ音だと煩い、という作者の指定）。
+    /// 出している途中の会話を「最後まで出す」ときは**鳴らさない**し、
+    /// 序章と終幕でも鳴らさない（<see cref="TowerGame.InStoryScene"/>）。
+    /// </summary>
+    public const string Advance = "会話を送る";
 }

@@ -24,20 +24,35 @@ public class SoundCueTests
     public void 合図の表は原典の音番号だけを指す()
     {
         var c = SoundCues.Instance;
-        // 22 は原典の61か所を仕分けた数。＋1 は**原典に無い**「触る」（作者の指定）。
-        Assert.AreEqual(23, c.Count, "61か所を仕分けた合図の数＋触る");
+        // 22 は原典の61か所を仕分けた数。＋2 は**原典に無い**「触る」と
+        // 「会話を送る」（作者の指定）。
+        Assert.AreEqual(24, c.Count, "61か所を仕分けた合図の数＋触る＋会話を送る");
         foreach (var name in c.Names)
         {
             int n = c.Number(name);
             Assert.IsNotNull(SoundBank.Instance.Get(n), $"{name} の音{n}が譜面にある");
-            if (name == SoundCues.Tap)
+            if (name == SoundCues.Tap || name == SoundCues.Advance)
             {
-                Assert.GreaterOrEqual(n, 90, "触るは原典に無い音（90番台）");
+                Assert.GreaterOrEqual(n, 90, $"{name} は原典に無い音（90番台）");
                 continue;
             }
             Assert.Less(n, 90, $"{name} は原典の音");
             Assert.IsNotNull(c.Source(name), $"{name} に原典の場所が控えてある");
         }
+    }
+
+    /// <summary>
+    /// 触ったときの音（作者の指定。原典に無い）。触る＝91、会話を送る＝95 で、
+    /// **別の音**にしてある（会話はいちばん多く鳴るので決定と同じだと煩い）。
+    /// </summary>
+    [Test]
+    public void 触る音と会話を送る音は別の番号()
+    {
+        var c = SoundCues.Instance;
+        Assert.AreEqual(91, c.Number(SoundCues.Tap), "触る＝音91");
+        Assert.AreEqual(95, c.Number(SoundCues.Advance), "会話を送る＝音95");
+        Assert.IsNotNull(SoundBank.Instance.Get(91));
+        Assert.IsNotNull(SoundBank.Instance.Get(95));
     }
 
     [Test]

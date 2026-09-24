@@ -57,15 +57,29 @@ public class TowerController : MonoBehaviour
     /// 何も起きない場面（まだ窓が出ていないとき）でも鳴ってしまう。
     /// 呼ぶのは──
     ///   ・帯のボタンと持ち物（<see cref="ItemBarView"/>。触った所＝すぐ効く所）
-    ///   ・題名を触って始めるとき（<see cref="BeginGame"/>）
     ///   ・選ばせている窓の印を動かす／決める
-    ///   ・会話を送る（出している途中なら「全部出す」ほうでも鳴らす）
     ///   ・メニューの上下・決定・戻る
     ///   ・飛翔のオーブの階選びの上下左右・決定・取りやめ
+    /// 会話を送るのだけは**別の音**（<see cref="PlayAdvance"/>）。
     /// </summary>
-    public void PlayTap()
+    public void PlayTap() { Cue(SoundCues.Tap); }
+
+    /// <summary>
+    /// 出し終えた会話を次へ送るときの音（作者の指定。原典には無い）。
+    /// 決めたときとは別の音にしてある。**出している途中を「最後まで出す」ときは
+    /// 鳴らさない**（作者の指定。あれは送ったのではなく急かしただけなので）。
+    /// </summary>
+    public void PlayAdvance() { Cue(SoundCues.Advance); }
+
+    /// <summary>
+    /// 合図を1つ鳴らす。ただし**序章と終幕では鳴らさない**（作者の指定）。
+    /// 原典に無い音なので、見せ場の一枚絵の間合いを壊さないようにする。
+    /// </summary>
+    void Cue(string cue)
     {
-        if (sound != null) sound.PlayCue(SoundCues.Tap);
+        if (sound == null) return;
+        if (Game != null && Game.InStoryScene) return;
+        sound.PlayCue(cue);
     }
 
     public TowerGame Game { get; private set; }
@@ -101,7 +115,8 @@ public class TowerController : MonoBehaviour
     /// </summary>
     public void BeginGame()
     {
-        PlayTap();
+        // 音は鳴らさない。題名を触ったその先は序章（＝物語の場面）で、
+        // そこでは合図の音を出さないと決めてある（作者の指定）。
         TowerGame.DropResume();          // 題名から始めるので中断データは捨てる
         StartNewGame();
     }
@@ -362,11 +377,13 @@ public class TowerController : MonoBehaviour
                     // ここは何も起きないので音も鳴らさない。
                     if (dialogue != null && dialogue.IsWaiting) acted = false;
                     // **出している途中なら、まず全部出す**。もう一度押すと送る。
+                    // **最後まで出すだけのときは鳴らさない**（作者の指定）。
+                    // 送ったのではなく急かしただけなので。
                     else if (dialogue != null && dialogue.IsTyping)
-                    { PlayTap(); dialogue.RevealAll(); acted = false; }
+                    { dialogue.RevealAll(); acted = false; }
                     else
                     {
-                        PlayTap();
+                        PlayAdvance();
                         // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
                         if (Game.IsGameOver) { TowerGame.DropResume(); StartNewGame(); return; }
                         // 終幕の「Ｆｉｎ」のあとは題名へ戻す（作者の指定）。

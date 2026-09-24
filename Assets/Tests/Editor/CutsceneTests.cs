@@ -270,6 +270,44 @@ public class ScenePlaythroughTests
         Assert.AreEqual(2, g.Player.Floor, "送り終わると2階にいる");
     }
 
+    /// <summary>
+    /// ★**序章と終幕の間は、触った合図の音を鳴らさない**（作者の指定）。
+    /// 原典に無い音なので、一枚絵と終わりの言葉の間合いを壊さないため。
+    /// **その中の会話も含める**（送るたびに鳴っては見せ場にならない）。
+    /// 見分けは <see cref="TowerGame.InStoryScene"/> 1か所にまとめてある。
+    /// </summary>
+    [Test]
+    public void 序章と終幕は会話も含めて物語の場面とみなす()
+    {
+        var g = Game(3, new Vector2Int(-1, -3));
+        Assert.IsFalse(g.InStoryScene, "何も出ていなければ物語の場面ではない");
+
+        Assert.IsTrue(g.PlayScene(Cutscenes.PrologueScene));
+        int guard = 0, seen = 0;
+        while (g.Current.HasValue && guard++ < 200)
+        {
+            Assert.IsTrue(g.InStoryScene, $"序章の{guard}枚目（{g.Current.Value.Kind}）");
+            seen++;
+            g.NextPage();
+        }
+        Assert.GreaterOrEqual(seen, 10, "序章は会話も一枚絵も通る");
+        Assert.IsFalse(g.InStoryScene, "送り終われば元どおり");
+
+        var e = Game(50, new Vector2Int(0, -1));
+        Assert.IsTrue(e.PlayScene(Cutscenes.EndingScene));
+        guard = 0;
+        while (e.Current.HasValue && guard++ < 200)
+        {
+            Assert.IsTrue(e.InStoryScene, $"終幕の{guard}枚目（{e.Current.Value.Kind}）");
+            e.NextPage();
+        }
+
+        // 道中の場面は物語の場面ではない（音は鳴る）
+        var m = Game(20, new Vector2Int(0, -2));
+        Assert.IsTrue(m.PlayScene("大魔導師の口上"));
+        Assert.IsFalse(m.InStoryScene, "道中の場面では鳴る");
+    }
+
     [Test]
     public void どの場面も最後まで送れる()
     {
