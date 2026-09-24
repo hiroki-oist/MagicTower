@@ -1609,13 +1609,14 @@ chk('{ "セーブ", "ロード", "メニュー" }' in _ps and '{ "商店", "飛�
 chk("ShopButtonIndex = 0" in _ps and "MenuButtonIndex = 2" in _ps,
     "「商店」は右の1つ目、「メニュー」は左の3つ目")
 # 課金（ゴールドの購入）。原典にも Java版にも無い、作者の指定。
+_phs=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
 chk("ShopGold = { 400, 1000, 4000 }" in _ps and "ShopYen  = { 160,  320,  640 }" in _ps,
     "400/1000/4000 ゴールドが 160/320/640 円")
 chk("一度購入すれば" in _ps and "無料" in _ps,
     "「一度購入すれば、次回プレイからは無料で同じゴールドを購入できる」と書いてある")
 # 課金の窓（作者の指定）: 金貨の絵を左に、名前は「◯◯ゴールドの引換券」、
 # 幅は広いほう、選択肢は枠で囲って選んでいない行を灰色に沈める（矢印は出さない）。
-chk('ShopItemName = "{0}ゴールドの引換券"' in _ps and 'ShopIndent = "　　"' in _ps,
+chk('ShopItemName = "{0}ゴールドの引換券"' in _phs and 'ShopIndent = "　　　"' in _phs,
     "品目は「◯◯ゴールドの引換券」で、頭に金貨を置く場所を空けてある")
 _db=open("Assets/Scripts/UI/DialogueBox.cs",encoding="utf-8").read()
 chk("WideCharsPerLine = 24" in _db and "public static string Visible" in _db
@@ -1636,7 +1637,6 @@ chk("optionCoins" in _dw and "OptionCoin" in _tsb and "<sprite" not in _gs,
 _as3=open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
 chk("if (cap == DialogueBox.WideCharsPerLine) return Even(cap);" in _as3,
     "広い窓は目一杯の幅で固定する（値段の長さで折り返さないように）")
-_phs=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
 _gshop=open("Assets/Scripts/Items/GoldShop.cs",encoding="utf-8").read()
 # ⚠ TMP の <pos> の札は解釈されず字として出てしまった（作者の報告）。
 #   飾りの札に頼らず、名前を全角空白で伸ばして値段の頭をそろえる。
@@ -1657,8 +1657,14 @@ chk("DialogueBox.Paginate(GoldShop.Text())" in _shot,
 # 広い窓の行が切られて値段の「.99」が次の行に落ちていた。
 chk("if (charsPerLine <= 0) charsPerLine = LimitFor(body);" in _db,
     "Paginate の折り返しの幅も本文から決める")
-chk("ShopRowLines = 2" in _phs and "ShopRowGap" in _dw,
-    "品目の行は2行ぶんの高さで、あいだに隙間を空ける")
+chk("ShopRowLines = 3" in _phs and "ShopRowGap" in _dw
+    and "ShopFontScale" in _phs and "RoundBoxPath" in _phs,
+    "品目の行は3行ぶんの高さ・字は大きめ・枠は角丸")
+chk(os.path.exists("Assets/Sprites/Hud/RoundBox.png")
+    and os.path.exists("docs/make_roundbox.py"),
+    "角丸の枠の絵がある（作り直せる）")
+chk("ApplyBodySize" in _dw and "1.084f" in _dw,
+    "字を大きくするときは行送りも詰める（枠と字がずれないように）")
 chk(os.path.exists("Assets/Scripts/Items/GoldShop.cs")
     and "ChoiceKind.GoldShop" in _tg4,
     "課金の窓は選ばせる窓の仕組みに乗せる")
@@ -2844,7 +2850,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=832
+MIN_CHECKS=836
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

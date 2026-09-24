@@ -114,11 +114,14 @@ public static class GoldShop
             sb.Append('　', wide - name.Length + PhoneScreen.ShopPriceGap);
             sb.Append(PriceText(i));
             sb.Append('\n');
-            // 品目のあいだを空ける（枠はこの空行まで含めて2行ぶんの高さになる）
-            sb.Append('\n');
+            // 品目のあいだを空ける（枠はこの空行まで含めて ShopRowLines 行ぶんの高さになる）
+            for (int k = 1; k < PhoneScreen.ShopRowLines; k++) sb.Append('\n');
         }
-        sb.Append("　　").Append(PhoneScreen.ShopRestore).Append('\n');
-        sb.Append("　　やめる");
+        // この2行だけ少し小さく（大きいままだと1行ぶんの枠に収まらない）
+        sb.Append("　　").Append(PhoneScreen.ShopSmall)
+          .Append(PhoneScreen.ShopRestore).Append(PhoneScreen.ShopSmallEnd).Append('\n');
+        sb.Append("　　").Append(PhoneScreen.ShopSmall)
+          .Append("やめる").Append(PhoneScreen.ShopSmallEnd);
         return sb.ToString();
     }
 

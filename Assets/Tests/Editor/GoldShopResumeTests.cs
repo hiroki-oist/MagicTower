@@ -21,7 +21,8 @@ public class GoldShopResumeTests
         StringAssert.Contains("一度購入", t);
         StringAssert.Contains("無料", t);
         StringAssert.Contains("買い切り", t, "非消耗型であることを言い切る");
-        StringAssert.Contains("復元", t, "復元できることを言い切る");
+        // 「復元できる」は窓の選択肢（購入を復元する）でも言い切っている
+        StringAssert.Contains("復元", GoldShop.Text(), "復元できることを言い切る");
         // 絵を入れる窓なので広いほう（DialogueBox.WideCharsPerLine）に収める
         foreach (var line in PhoneScreen.ShopIntro)
             Assert.LessOrEqual(line.Length, DialogueBox.WideCharsPerLine, line);

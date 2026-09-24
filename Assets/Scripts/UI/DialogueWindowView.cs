@@ -72,6 +72,8 @@ public class DialogueWindowView : MonoBehaviour
                 //   すでに行に分けてあるので、TMP が重ねて折り返すと値段だけが
                 //   次の行へ落ちる（作者の報告「.99が二行目に振り分けられる」）。
                 body.enableWordWrapping = !Boxed;
+                // 課金の窓だけ字を大きくする（作者の指定）
+                ApplyBodySize(Boxed);
                 body.text = shownText;
                 body.color = Text;
             }
@@ -103,6 +105,7 @@ public class DialogueWindowView : MonoBehaviour
         {
             body.enabled = true;
             body.enableWordWrapping = false;
+            ApplyBodySize(true);
             body.text = Dim(page, choice);
             body.color = Text;
             body.maxVisibleCharacters = int.MaxValue;
@@ -199,6 +202,33 @@ public class DialogueWindowView : MonoBehaviour
     /// <summary>沈める色。原典の窓の中と同じ濃さの灰。</summary>
     public const string DimOpen = "<color=#7a7a7aff>", DimClose = "</color>";
 
+    /// <summary>ふだんの字の大きさ（課金の窓で大きくしたあと戻すために控える）。</summary>
+    float bodySize;
+
+    /// <summary>
+    /// 課金の窓だけ字を大きくする（作者の指定）。
+    ///
+    /// ⚠ **行送りも一緒に詰める**。字を大きくすると TMP の行の高さも増えるので、
+    /// そのままだと1行ごとに数ドットずつ下へずれて、枠と字が合わなくなる
+    /// （実際にずれて、下の2行が窓からはみ出した）。
+    /// 行送りは `字の大きさ x (1.084 + 行間/100)` なので、
+    /// 行送りが <see cref="AuthorStyle.DialogueLineAdvance"/> のままになる行間を入れる。
+    /// </summary>
+    void ApplyBodySize(bool boxed)
+    {
+        if (body == null) return;
+        if (bodySize <= 0f) bodySize = body.fontSize;
+        if (!boxed)
+        {
+            body.fontSize = bodySize;
+            body.lineSpacing = AuthorStyle.DialogueLineSpacing;
+            return;
+        }
+        body.fontSize = bodySize * PhoneScreen.ShopFontScale;
+        float dots = AuthorStyle.DialogueTextDots * PhoneScreen.ShopFontScale;
+        body.lineSpacing = (AuthorStyle.DialogueLineAdvance / dots - 1.084f) * 100f;
+    }
+
     /// <summary>枠と枠のあいだに空ける隙間（ドット。作者の指定）。</summary>
     public const int ShopRowGap = 8;
 
@@ -232,8 +262,8 @@ public class DialogueWindowView : MonoBehaviour
                 int rows = item ? PhoneScreen.ShopRowLines : 1;
                 float half = item ? advance * 0.5f : 0f;
                 // 1行ぶんの選択肢は、字がはみ出さないぎりぎりまで詰める
-                float gap = item ? ShopRowGap : 2;
-                float y = -(top + advance * i - (item ? 3 : 2) - half)
+                float gap = item ? ShopRowGap : 4;
+                float y = -(top + advance * i - (item ? 3 : 1) - half)
                         * DialogueWindow.CanvasScale;
                 float h = (advance * rows + 2 - gap) * DialogueWindow.CanvasScale;
                 Box(optionEdges[shown], left * DialogueWindow.CanvasScale - 6f, y,
@@ -243,9 +273,8 @@ public class DialogueWindowView : MonoBehaviour
                 // 品目の行だけ、頭の空きに金貨を置く（高さに合わせて大きくする）
                 if (item && shown < optionCoins.Length && optionCoins[shown] != null)
                 {
-                    // 字下げ（全角2つ）に収まるよう、ほんの少し小さくして間を空ける
-                    float c = AuthorStyle.DialogueTextDots * PhoneScreen.ShopRowLines
-                            * 0.9f * DialogueWindow.CanvasScale;
+                    float c = AuthorStyle.DialogueTextDots * PhoneScreen.ShopCoinChars
+                            * DialogueWindow.CanvasScale;
                     Box(optionCoins[shown], left * DialogueWindow.CanvasScale,
                         y - (h - c) / 2f, c, c, Color.white);
                     coins = shown + 1;

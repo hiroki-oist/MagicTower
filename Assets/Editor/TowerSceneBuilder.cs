@@ -994,6 +994,10 @@ public static class TowerSceneBuilder
             fg.transform.SetSiblingIndex(1);
             var ei = eg.GetComponent<UnityEngine.UI.Image>();
             var fi = fg.GetComponent<UnityEngine.UI.Image>();
+            // 角丸（作者の指定）。9スライスの絵を白で作ってあるので色はここで掛ける。
+            var round = AssetDatabase.LoadAssetAtPath<Sprite>(PhoneScreen.RoundBoxPath);
+            ei.sprite = fi.sprite = round;
+            ei.type = fi.type = UnityEngine.UI.Image.Type.Sliced;
             ei.raycastTarget = fi.raycastTarget = false;
             ei.enabled = fi.enabled = false;
             edges.Add(ei); fills.Add(fi);

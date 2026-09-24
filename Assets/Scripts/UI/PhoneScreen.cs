@@ -120,8 +120,7 @@ public static class PhoneScreen
     public static readonly string[] ShopIntro =
     {
         "ゴールドを購入します。どれも買い切り。",
-        "一度購入すれば、次回プレイからは無料で",
-        "同じゴールドを受け取れます（復元可）",
+        "一度購入すれば次回から無料で受け取れます",
     };
 
     /// <summary>
@@ -135,7 +134,7 @@ public static class PhoneScreen
     /// **全角空白2つで始まる行＝選ばせている行**、という決まりにも合う
     /// （<see cref="DialogueWindowView.IsChoiceLine"/>）。
     /// </summary>
-    public const string ShopIndent = "　　";
+    public const string ShopIndent = "　　　";
 
     /// <summary>
     /// 品目の名前と値段のあいだに置く空き（全角）。
@@ -151,7 +150,24 @@ public static class PhoneScreen
     /// 本文では品目のあいだに空行を入れ、枠はその2行にまたがって置く。
     /// 金貨の絵も同じだけ大きくする。
     /// </summary>
-    public const int ShopRowLines = 2;
+    public const int ShopRowLines = 3;
+
+    /// <summary>課金の窓だけ字を大きくする割合（作者の指定）。</summary>
+    public const float ShopFontScale = 1.15f;
+
+    /// <summary>金貨の絵の大きさ（全角いくつぶんか。作者の指定で1.5倍にした）。</summary>
+    public const float ShopCoinChars = 2.7f;
+
+    /// <summary>
+    /// 「購入を復元する」「やめる」の2行だけ少し小さくする札。
+    /// 品目の行に合わせて字を大きくすると、この2行は1行ぶんの枠に収まらなくなる
+    /// （字の高さが行送りと同じになって、枠からはみ出す）。
+    /// ⚠ 字下げの**うしろ**に置くこと（行の頭が全角2つでないと選択肢と見なされない）。
+    /// </summary>
+    public const string ShopSmall = "<size=85%>", ShopSmallEnd = "</size>";
+
+    /// <summary>角丸の枠の絵（9スライス。`docs/make_roundbox.py` が作る）。</summary>
+    public const string RoundBoxPath = "Assets/Sprites/Hud/RoundBox.png";
 
     /// <summary>「購入を復元する」の行。Apple の審査指針 3.1.1 で置くことが要る。</summary>
     public const string ShopRestore = "購入を復元する";
