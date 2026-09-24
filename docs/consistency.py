@@ -1773,14 +1773,22 @@ chk("WriteResume" in _tg4 and "DropResume" in _tg4
 chk("void OnApplicationPause" in _tc and "OnApplicationQuit" in _tc,
     "アプリが後ろへ回るとき・終わるときにも書く")
 chk("TowerSave.Exists(TowerSave.AutoSlot) && Game.LoadSlot(TowerSave.AutoSlot)" in _tc,
-    "起ち上げたときに中断データがあればそこから続ける")
+    "中断データがあればそこから続ける")
+# ★題名は**必ず出す**（作者の報告「ゲーム開始時のタイトル画面が無くなってる」）。
+#   一時は起ち上げで中断データを読んで題名ごと飛ばしていた。続きにするかどうかは
+#   題名を触ったとき（BeginGame）に決める。
+chk("if (title != null) title.Hide();" not in _tc,
+    "起ち上げで題名を飛ばさない（中断データがあっても題名は出す）")
+_bg=_tc[_tc.index("public void BeginGame()"):]
+_bg=_bg[:_bg.index("void StartNewGame()")]
+chk("TowerSave.Exists(TowerSave.AutoSlot) && Game.LoadSlot(TowerSave.AutoSlot)" in _bg,
+    "続きにするかは題名を触ったときに決める")
 chk("TowerGame.DropResume();          // 題名へ戻ったら中断データは捨てる" in _tc,
-    "題名へ戻ったら中断データは捨てる")
+    "題名へ戻ったら中断データは捨てる（その道から来たら必ず最初から）")
 # ⚠ 起ち上げのときも通る StartNewGame で捨ててはいけない（捨ててから「あるか？」を
 #   見ることになり、いつも無いことになっていた＝3階まで進んで落としても1階から）。
-chk("TowerGame.DropResume();          // 最初から始めるので中断データは捨てる" not in _tc
-    and "TowerGame.DropResume();          // 題名から始めるので中断データは捨てる" in _tc,
-    "中断データを捨てるのは題名を触ったときで、起ち上げの StartNewGame では捨てない")
+chk("TowerGame.DropResume();          // 最初から始めるので中断データは捨てる" not in _tc,
+    "中断データを StartNewGame では捨てない（起ち上げのときも通るため）")
 # 終幕の曲は**時空の扉をくぐった瞬間**から（塔の絵まで待たない）
 chk("EndingScene" in open("Assets/Scripts/Cutscenes.cs",encoding="utf-8").read()
     and "if (name == Cutscenes.EndingScene) EndingMusic = true;" in _tg4
@@ -1800,9 +1808,16 @@ chk("リセット" in _tm and "Note" in _tm,
     "「タイトルへ戻る」の下に断りを添える")
 # App Store に出すための設え（作者の指定）
 _dbg2=open("Assets/Scripts/DebugPlay.cs",encoding="utf-8").read()
-chk("StrongAfterZeno = false" in _dbg2 and "KeysAfterZeno = false" in _dbg2
-    and "MakeEndgameSave = false" in _dbg2,
-    "調べもの用の細工はどれも切ってある（出すときは必ず false）")
+# ⚠ いまは**作者に通しで見てもらうため**に攻守300・鍵30本を入れてある
+#   （2026-09-25 の頼み）。セーブを上書きする細工だけは必ず切っておく
+#   （通しの途中経過が消えてしまうため）。
+chk("MakeEndgameSave = false" in _dbg2,
+    "セーブを上書きする細工は切ってある（通しの途中経過が消えるため）")
+_dbg_on=[n for n in ("StrongAfterZeno","KeysAfterZeno")
+         if f"{n} = true" in _dbg2]
+chk(not _dbg_on or "Apple へ出す前に両方 false へ戻すこと" in _dbg2,
+    "細工を入れている間は、戻す約束が DebugPlay の先頭に書いてある",
+    "入れてある細工=" + (",".join(_dbg_on) if _dbg_on else "なし"))
 _ib=open("Assets/Editor/IosBuild.cs",encoding="utf-8").read()
 chk('CompanyName = "Hiroki Sawada"' in _ib and "PlayerSettings.companyName" in _ib,
     "会社名を DefaultCompany のままにしない")

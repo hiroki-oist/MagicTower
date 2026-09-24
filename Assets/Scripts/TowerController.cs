@@ -98,26 +98,34 @@ public class TowerController : MonoBehaviour
         if (sound == null) sound = GetComponent<SoundPlayer>();
         if (sound == null) sound = gameObject.AddComponent<SoundPlayer>();
         StartNewGame();
-        // ★**中断データがあれば、そこから続ける**（作者の指定）。
-        // アプリを後ろへ回している間に端末がメモリから外して再起動になっても、
-        // 直前の位置で再開できるようにするため。題名は飛ばす。
-        if (TowerSave.Exists(TowerSave.AutoSlot) && Game.LoadSlot(TowerSave.AutoSlot))
-        {
-            Game.ConsumeViewRebuild();
-            RebuildView();
-            if (title != null) title.Hide();
-        }
+        // ⚠ ここで中断データを読んで題名を飛ばしてはいけない。
+        //   **題名は必ず出す**（作者の指定「ゲーム開始時のタイトル画面が無くなってる」）。
+        //   続きから始めるかどうかは、題名を触ったとき（<see cref="BeginGame"/>）に決める。
     }
 
     /// <summary>
-    /// 題名を触ったところから遊びを始める。**必ず最初から**（作者の指定）。
-    /// 続きは下の「ロード」のボタンから読む。
+    /// 題名を触ったところから遊びを始める。
+    ///
+    /// ★**中断データがあればそこから続ける。無ければ最初から**（作者の指定）。
+    /// アプリを落としても直前の位置から遊べるように、というのが中断データの趣旨だが、
+    /// 一時は**題名ごと飛ばして**いて「タイトル画面が無くなってる」と言われた。
+    /// 題名は必ず出して、続きにするかどうかはここで決める形に改めた。
+    ///
+    /// 「タイトルへ戻る」（<see cref="BackToTitle"/>）とゲームオーバーのときは
+    /// 中断データを捨ててあるので、**その道から来たときは必ず最初から**始まる。
+    /// 明示的なセーブは下の「ロード」のボタンから読む（別のスロット）。
     /// </summary>
     public void BeginGame()
     {
         // 音は鳴らさない。題名を触ったその先は序章（＝物語の場面）で、
         // そこでは合図の音を出さないと決めてある（作者の指定）。
-        TowerGame.DropResume();          // 題名から始めるので中断データは捨てる
+        if (TowerSave.Exists(TowerSave.AutoSlot) && Game.LoadSlot(TowerSave.AutoSlot))
+        {
+            Game.ConsumeViewRebuild();
+            RebuildView();
+            return;
+        }
+        TowerGame.DropResume();          // 読めなかった中断データは捨てる
         StartNewGame();
     }
 
