@@ -12,12 +12,13 @@ public class AppleStoreTests
     {
         Assert.AreEqual(GoldShop.Count, AppleStore.ProductIds.Length);
         foreach (var id in AppleStore.ProductIds)
-            StringAssert.StartsWith("com.magictower.remake.gold", id);
-        // 並びは安い順（PhoneScreen.ShopGold と同じ）
+            StringAssert.StartsWith("magicTowerGold", id);
+        // 並びは安い順（PhoneScreen.ShopGold と同じ）。
+        // ★App Store Connect に入れた字と**1文字でも違うと読めない**。
         CollectionAssert.AreEqual(
-            new[] { "com.magictower.remake.gold400",
-                    "com.magictower.remake.gold1000",
-                    "com.magictower.remake.gold4000" }, AppleStore.ProductIds);
+            new[] { "magicTowerGoldFourHundred",
+                    "magicTowerGoldOneThousand",
+                    "magicTowerGoldFourThousand" }, AppleStore.ProductIds);
     }
 
     [Test]
@@ -25,8 +26,8 @@ public class AppleStoreTests
     {
         AppleStore.Parse("{\"ready\":true,\"canPay\":true,\"busy\":false,\"msg\":\"\","
                        + "\"items\":["
-                       + "{\"id\":\"com.magictower.remake.gold400\",\"price\":\"¥160\",\"owned\":true},"
-                       + "{\"id\":\"com.magictower.remake.gold1000\",\"price\":\"¥320\",\"owned\":false}"
+                       + "{\"id\":\"magicTowerGoldFourHundred\",\"price\":\"¥160\",\"owned\":true},"
+                       + "{\"id\":\"magicTowerGoldOneThousand\",\"price\":\"¥320\",\"owned\":false}"
                        + "]}");
         Assert.IsTrue(AppleStore.Ready);
         Assert.IsTrue(AppleStore.CanPay);

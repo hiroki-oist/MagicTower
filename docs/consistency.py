@@ -1682,8 +1682,9 @@ chk("AppStore.canMakePayments" in _sw and "GoldShop.Available" in _tg4,
     "支払えない端末では商店を出さない（HIG）")
 chk("p.displayPrice" in _sw and "AppleStore.PriceOf(i)" in _gs,
     "値段は App Store の現地表記から出す（円を焼き込まない）")
-chk('"com.magictower.remake.gold400"' in _ap,
-    "品目の番号を持っている（App Store Connect に同じ字で登録する）")
+chk('"magicTowerGoldFourHundred"' in _ap and '"magicTowerGoldOneThousand"' in _ap
+    and '"magicTowerGoldFourThousand"' in _ap,
+    "品目の Product ID が App Store Connect に作ったものと同じ字")
 chk('targetOSVersionString = "15.0"' in _ib,
     "StoreKit 2 に合わせて iOS 15 以上")
 _pb=open("Assets/Editor/IosPostBuild.cs",encoding="utf-8").read()

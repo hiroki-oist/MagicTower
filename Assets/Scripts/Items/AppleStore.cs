@@ -14,15 +14,19 @@ using UnityEngine;
 public static class AppleStore
 {
     /// <summary>
-    /// App Store Connect に登録する品目の id。**非消耗型（Non-Consumable）**。
+    /// App Store Connect に登録する品目の Product ID。**非消耗型（Non-Consumable）**。
     /// 「一度買えば何度でも同じゴールドを受け取れる」ので、消耗型ではなくこちら。
     /// 並びは <see cref="PhoneScreen.ShopGold"/> と同じ（安い順）。
+    ///
+    /// ⚠ **App Store Connect に入れた字と1文字でも違うと品目を読めない**。
+    /// Product ID は作ったあと変えられず、消しても同じ字は二度と使えないので、
+    /// 向こうで作ったものに**こちらを合わせる**（作者が 2026-09-24 に作ったもの）。
     /// </summary>
     public static readonly string[] ProductIds =
     {
-        "com.magictower.remake.gold400",
-        "com.magictower.remake.gold1000",
-        "com.magictower.remake.gold4000",
+        "magicTowerGoldFourHundred",
+        "magicTowerGoldOneThousand",
+        "magicTowerGoldFourThousand",
     };
 
     /// <summary>いま読めている品目の状態。</summary>
