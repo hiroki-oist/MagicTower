@@ -1545,6 +1545,14 @@ chk("towerArt" in _fsv and "groundArt" in _fsv,
     "終幕の絵は塔と荒野を別々に持つ")
 chk("from - new Vector2(" in _fsv,
     "塔は**下へ**沈む（前は上へ流していた）")
+# 流すのは一度きり。流し終わると towerRun が空に戻るので、
+# 「走っていなければ始める」だけだと13秒ごとに回り続け、
+# 塔が沈んだあとも白がゆっくり明滅し続けていた（作者の報告）。
+chk("towerDone" in _fsv and "mine && !towerDone && towerRun == null" in _fsv,
+    "塔の演出は出番ごとに**一度きり**（繰り返さない）")
+# 縦長の画面では絵の上下に余白があるので、沈む塔が絵の外へ突き出して見えていた。
+chk("RectMask2D" in _tsb,
+    "終幕の絵は原典の 640x400 からはみ出したぶんを切り落とす")
 chk('"Assets/Sprites/Screens/Ending_Tower1.png"' in _tsb
     and '"Assets/Sprites/Screens/Ending_Tower2.png"' in _tsb,
     "塔(MTOWER1)と荒野(MTOWER2)の2枚ともシーンに入っている")
@@ -2641,7 +2649,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=770
+MIN_CHECKS=772
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

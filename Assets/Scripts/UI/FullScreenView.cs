@@ -86,6 +86,9 @@ public class FullScreenView : MonoBehaviour
     /// <summary>塔のはじめの位置（戻すときに使う）。</summary>
     Vector2 towerHome;
 
+    /// <summary>この出番ぶんの流しをもう始めたか（**一度きり**にするための印）。</summary>
+    bool towerDone;
+
     /// <summary>
     /// 塔の絵に重ねる白。原典はパレットで色を白へ寄せる（`Ending.TowerWhiteMix`）ので、
     /// こちらは同じ形になるよう**白い板を上から薄くかける**。
@@ -121,8 +124,19 @@ public class FullScreenView : MonoBehaviour
         }
 
         if (!scrollTower) return;
-        if (mine && towerRun == null && isActiveAndEnabled) towerRun = StartCoroutine(ScrollTower());
-        if (!mine && towerRun != null) { StopCoroutine(towerRun); towerRun = null; ResetTower(); }
+        // ★**一度きり**。流し終わると towerRun が空に戻るので、
+        // 「出番で走っていなければ始める」だけだと**13秒ごとに回り続け**、
+        // 塔が沈んだあとも白がゆっくり明滅していた（作者の報告）。
+        if (mine && !towerDone && towerRun == null && isActiveAndEnabled)
+        {
+            towerDone = true;
+            towerRun = StartCoroutine(ScrollTower());
+        }
+        if (!mine)
+        {
+            if (towerRun != null) { StopCoroutine(towerRun); towerRun = null; }
+            if (towerDone) { towerDone = false; ResetTower(); }
+        }
     }
 
     /// <summary>

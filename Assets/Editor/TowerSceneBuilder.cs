@@ -681,6 +681,11 @@ public static class TowerSceneBuilder
                         "", Ending.TitleDot, "", Ending.AnyKeyDot);
         if (towerScreen != null)
         {
+            // ★**原典の 640x400 からはみ出したぶんは切り落とす**。
+            // 縦長のスマホ画面では絵の上下に余白があるので、沈んでいく塔が
+            // 絵の下枠を越えて余白へ突き出して見えていた（作者の報告）。
+            towerScreen.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();
+
             var sky = towerScreen.transform.Find("Art").GetComponent<UnityEngine.UI.Image>();
             sky.color = Ending.SkyColor;                       // 絵は貼らず色だけ
 
