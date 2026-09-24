@@ -139,8 +139,14 @@ public static class PhoneScreen
     /// <summary>下の左の並びの中の「セーブ」「ロード」の位置。</summary>
     public const int SaveButtonIndex = 0, LoadButtonIndex = 1, MenuButtonIndex = 3;
 
-    /// <summary>持ち物の帯に一度に見せる数（残りは左右の矢印で送る）。</summary>
-    public const int ItemsPerPage = 8;
+    /// <summary>
+    /// 持ち物の帯に一度に見せる数（残りは左右の矢印で送る）。
+    /// ★作者の指定で 8 → **6**。8つだと1枠が 119単位＝iPhone で 44pt しかなく、
+    /// Apple の最小のタップ領域ちょうどで選びづらかった。6つなら 159単位＝59pt。
+    /// **並びは物体IDの順のまま**（持っていない所が空くのが、そのまま
+    /// 「まだ手に入れていないものがある」という手がかりになる、という作者の指定）。
+    /// </summary>
+    public const int ItemsPerPage = 6;
 
     /// <summary>帯の左右に置く矢印の幅。</summary>
     public const float ArrowWidth = 64f;

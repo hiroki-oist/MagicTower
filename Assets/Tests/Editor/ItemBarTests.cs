@@ -94,10 +94,14 @@ public class ItemBarTests
     }
 
     [Test]
-    public void 帯は八つずつ送る()
+    public void 帯は六つずつ送る()
     {
-        Assert.AreEqual(8, PhoneScreen.ItemsPerPage);
+        Assert.AreEqual(6, PhoneScreen.ItemsPerPage, "★作者の指定で6つずつ（1枠59pt）");
         Assert.AreEqual(15, ScreenLayout.ItemPanelSlots, "並ぶのは原典と同じ15");
+        // 1枠の幅。狭すぎると選びづらい（8つだと 119 ＝ iPhone で 44pt しかない）
+        float slot = (PhoneScreen.ReferenceWidth - PhoneScreen.ArrowWidth * 2f)
+                     / PhoneScreen.ItemsPerPage;
+        Assert.Greater(slot, 140f, "1枠が狭すぎない");
         // ★作者の指定で右のボタンはオーブの近道（持っていない間は灰色）
         Assert.AreEqual("飛翔", PhoneScreen.RightButtons[PhoneScreen.FlightButtonIndex]);
         Assert.AreEqual("勇者", PhoneScreen.RightButtons[PhoneScreen.HeroButtonIndex]);

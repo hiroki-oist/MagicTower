@@ -199,6 +199,19 @@ public class TowerController : MonoBehaviour
 
     void Update()
     {
+        Tick();
+        // ★**触りの1回ぶんは、その手のうちに使い切る。**
+        // 使われなかったぶんを次の手へ持ち越すと、押した覚えが残っていて、
+        // あとで開いた窓が勝手に決まる（決定を押してからセーブを押すと
+        // 勝手にセーブされる、という報告）。決定が効く場面でなければ捨てる。
+        // 触りの側（DPadView）がこの Update より後に走っても、次の手では読めるので
+        // 取りこぼさない。
+        TouchStep = Vector2Int.zero;
+        TouchConfirm = false;
+    }
+
+    void Tick()
+    {
         if (Game == null) return;
         // 題名を出している間は遊びを進めない（触ると最初から始まる）。
         // 曲だけは題名から鳴らして、始めてもそのまま続くようにしてある。

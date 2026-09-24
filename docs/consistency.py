@@ -2147,6 +2147,11 @@ chk("PhoneScreen.RowHeight" in _sb and "PhoneScreen.ItemBarHeight" in _sb,
 # 持ち物の帯（黒い地・左右に送る）と、触ったときの流れ（作者の指定）
 _ibv=open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read()
 chk("RectMask2D" in _sb,"帯からはみ出た絵は切り取る")
+_ps3=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+chk("ItemsPerPage = 6" in _ps3,"持ち物の帯は6つずつ送る（8つだと1枠が狭すぎた）")
+_tc3=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
+chk("TouchStep = Vector2Int.zero;\n        TouchConfirm = false;" in _tc3,
+    "触りの1回ぶんはその手のうちに使い切る（持ち越すと勝手に決まる）")
 chk("controller.TapItem" in _ibv and "Orb(SpecialItems.Kind.HeroOrb)" in _ibv,
     "帯の触りと右のオーブのボタンが本線に繋がっている")
 # 右の「飛翔」「勇者」はオーブの近道。持っていない間は灰色で、触ると知らせるだけ
