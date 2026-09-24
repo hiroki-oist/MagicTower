@@ -57,9 +57,12 @@ public class DialogueWindowView : MonoBehaviour
         if (!show) { Showing = null; waiting = typing = false; return; }
 
         PlaceCursor(page);
+        PlaceFrames(page);
         // 印の絵が無いときだけ、選んでいる行に文字の印を付ける
         var shownText = (cursor == null && controller.Game.IsChoosing)
                       ? WithMark(page, controller.Game) : page;
+        // 課金の窓だけは**矢印を出さず、選んでいない行を灰色に沈める**（作者の指定）
+        if (Boxed) shownText = Dim(page, controller.Game);
         if (page != Showing || (body != null && body.text != shownText))
         {
             Showing = page;
@@ -113,10 +116,97 @@ public class DialogueWindowView : MonoBehaviour
     }
 
     Sprite cursorFirst;
+    /// <summary>
+    /// **選択肢を枠で囲って出す窓**か（作者の指定。いまは課金の窓だけ）。
+    /// この窓では矢印を出さず、選んでいない行を灰色に沈める。
+    /// </summary>
+    bool Boxed
+    {
+        get
+        {
+            return controller != null && controller.Game != null
+                && controller.Game.Choice == TowerGame.ChoiceKind.GoldShop;
+        }
+    }
+
+    /// <summary>選択肢を囲む枠（外側の線と内側の地）。組み立て器が並べて入れる。</summary>
+    [SerializeField] UnityEngine.UI.Image[] optionEdges = new UnityEngine.UI.Image[0];
+    [SerializeField] UnityEngine.UI.Image[] optionFills = new UnityEngine.UI.Image[0];
+
+    /// <summary>
+    /// 選んでいない行を灰色に沈める（<see cref="Boxed"/> の窓だけ）。
+    /// 金貨の絵も同じ札で沈むので、絵ごとグレースケールになる。
+    /// </summary>
+    static string Dim(string page, TowerGame game)
+    {
+        if (string.IsNullOrEmpty(page)) return page;
+        var lines = page.Split('\n');
+        int seen = 0;
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (!IsChoiceLine(lines[i])) continue;
+            if (seen != game.ChoiceIndex)
+                lines[i] = DimOpen + lines[i] + DimClose;
+            seen++;
+        }
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>沈める色。原典の窓の中と同じ濃さの灰。</summary>
+    public const string DimOpen = "<color=#7a7a7aff>", DimClose = "</color>";
+
+    /// <summary>選択肢を囲む枠を置く。</summary>
+    void PlaceFrames(string page)
+    {
+        bool show = Boxed && controller.Game.IsChoosing;
+        int shown = 0;
+        if (show && panel != null)
+        {
+            int left    = AuthorStyle.Enabled ? AuthorStyle.DialogueTextLeft
+                                              : DialogueWindow.TextLeft;
+            int top     = AuthorStyle.Enabled ? AuthorStyle.DialogueTextTop
+                                              : DialogueWindow.TextTop;
+            int advance = AuthorStyle.Enabled ? AuthorStyle.DialogueLineAdvance
+                                              : ScreenLayout.LineAdvance;
+            float w = panel.sizeDelta.x - 2f * left * DialogueWindow.CanvasScale;
+            var lines = page.Split('\n');
+            for (int i = 0; i < lines.Length && shown < optionEdges.Length; i++)
+            {
+                if (!IsChoiceLine(lines[i])) continue;
+                float y = -(top + advance * i - 3) * DialogueWindow.CanvasScale;
+                float h = (advance + 2) * DialogueWindow.CanvasScale;
+                Box(optionEdges[shown], left * DialogueWindow.CanvasScale - 6f, y,
+                    w + 12f, h, PhoneScreen.SlotEdge);
+                Box(optionFills[shown], left * DialogueWindow.CanvasScale - 4f, y - 2f,
+                    w + 8f, h - 4f, PhoneScreen.SlotFill);
+                shown++;
+            }
+        }
+        for (int i = 0; i < optionEdges.Length; i++)
+        {
+            bool on = i < shown;
+            if (optionEdges[i] != null && optionEdges[i].enabled != on)
+                optionEdges[i].enabled = on;
+            if (optionFills[i] != null && optionFills[i].enabled != on)
+                optionFills[i].enabled = on;
+        }
+    }
+
+    static void Box(UnityEngine.UI.Image img, float x, float y, float w, float h, Color c)
+    {
+        if (img == null) return;
+        var rt = img.rectTransform;
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(x, y);
+        rt.sizeDelta = new Vector2(w, h);
+        img.color = c;
+    }
+
     void PlaceCursor(string page)
     {
         if (cursor == null) return;
-        int line = controller.Game.IsChoosing ? ChoiceLine(page, controller.Game) : -1;
+        // 枠で囲う窓では矢印を出さない（作者の指定）
+        int line = controller.Game.IsChoosing && !Boxed ? ChoiceLine(page, controller.Game) : -1;
         bool show = line >= 0;
         if (cursor.enabled != show) cursor.enabled = show;
         if (!show) return;

@@ -97,7 +97,9 @@ public static class GoldShop
         sb.Append('\n');
         for (int i = 0; i < Count; i++)
         {
-            sb.Append("　　").Append(Wide(GoldOf(i))).Append("ＧＯＬＤ");
+            // 「　[金貨]４００ゴールドの引換券　１６０円」
+            sb.Append('　').Append(PhoneScreen.ShopCoin);
+            sb.Append(string.Format(PhoneScreen.ShopItemName, Wide(GoldOf(i))));
             sb.Append(PriceText(i));
             sb.Append('\n');
         }

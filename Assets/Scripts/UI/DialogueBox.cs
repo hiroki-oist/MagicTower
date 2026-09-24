@@ -57,7 +57,7 @@ public static class DialogueBox
         foreach (var line in Wrap(body))
         {
             float w = 0f;
-            foreach (var ch in line) w += IsHalfWidth(ch) ? 0.5f : 1f;
+            foreach (var ch in Visible(line)) w += IsHalfWidth(ch) ? 0.5f : 1f;
             if (w > max) max = w;
         }
         return max;
@@ -79,13 +79,14 @@ public static class DialogueBox
     /// 本文を行に分ける。
     /// 原典の改行を優先し、1行が charsPerLine を超える場合だけ機械的に折り返す。
     /// </summary>
-    public static List<string> Wrap(string body, int charsPerLine = CharsPerLine)
+    public static List<string> Wrap(string body, int charsPerLine = 0)
     {
+        if (charsPerLine <= 0) charsPerLine = LimitFor(body);
         var lines = new List<string>();
         if (string.IsNullOrEmpty(body)) return lines;
         foreach (var seg in body.Replace("\r", "").Split('\n'))
         {
-            if (seg.Length <= charsPerLine) { lines.Add(seg); continue; }
+            if (Visible(seg).Length <= charsPerLine) { lines.Add(seg); continue; }
             for (int i = 0; i < seg.Length; i += charsPerLine)
             {
                 int n = Mathf.Min(charsPerLine, seg.Length - i);
@@ -93,6 +94,39 @@ public static class DialogueBox
             }
         }
         return lines;
+    }
+
+    /// <summary>
+    /// **自分で組んだ窓**（絵を入れる商店）だけ広くする。
+    /// 原典のセリフは 18文字で折り返されていて、こちらもそれに合わせている（0x94ba）が、
+    /// 課金の窓は原典に無いもので、絵と名前と値段を1行に並べたいので広くする。
+    /// 目印は `&lt;sprite` — 絵を入れているのはその窓だけ。
+    /// </summary>
+    public const int WideCharsPerLine = 24;
+
+    public static int LimitFor(string body)
+    {
+        return body != null && body.Contains("<sprite") ? WideCharsPerLine : CharsPerLine;
+    }
+
+    /// <summary>
+    /// 飾りの札（`&lt;sprite=0&gt;` など）を外して、**目に見えるぶんだけ**にする。
+    /// 絵の札は全角1文字ぶんとして数える（TMP も1文字として組む）。
+    /// </summary>
+    public static string Visible(string line)
+    {
+        if (string.IsNullOrEmpty(line) || line.IndexOf('<') < 0) return line ?? "";
+        var sb = new System.Text.StringBuilder();
+        for (int i = 0; i < line.Length; i++)
+        {
+            if (line[i] != '<') { sb.Append(line[i]); continue; }
+            int close = line.IndexOf('>', i);
+            if (close < 0) { sb.Append(line[i]); continue; }
+            // 絵の札だけは1文字ぶんの幅を持つ
+            if (line.Substring(i, close - i).StartsWith("<sprite")) sb.Append('　');
+            i = close;
+        }
+        return sb.ToString();
     }
 
     /// <summary>行をページ単位に分ける。DialogueHandler へはページごとに渡す。</summary>

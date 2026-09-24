@@ -236,7 +236,9 @@ public static class AuthorStyle
     {
         float chars = DialogueBox.MaxLineChars(page);
         if (chars <= 0f) chars = 1f;
-        if (chars > MaxDialogueChars) chars = MaxDialogueChars;   // 折り返しの幅で頭打ち
+        // 折り返しの幅で頭打ち。**絵を入れる窓（課金）だけは広い**（DialogueBox.LimitFor）。
+        int cap = DialogueBox.LimitFor(page);
+        if (chars > cap) chars = cap;
         return Even(chars);
     }
 

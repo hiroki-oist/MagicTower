@@ -22,8 +22,12 @@ public class GoldShopResumeTests
         StringAssert.Contains("無料", t);
         StringAssert.Contains("買い切り", t, "非消耗型であることを言い切る");
         StringAssert.Contains("復元", t, "復元できることを言い切る");
+        // 絵を入れる窓なので広いほう（DialogueBox.WideCharsPerLine）に収める
         foreach (var line in PhoneScreen.ShopIntro)
-            Assert.LessOrEqual(line.Length, DialogueBox.CharsPerLine, line);
+            Assert.LessOrEqual(line.Length, DialogueBox.WideCharsPerLine, line);
+        foreach (var line in DialogueBox.Wrap(GoldShop.Text()))
+            Assert.LessOrEqual(DialogueBox.Visible(line).Length,
+                               DialogueBox.WideCharsPerLine, line);
     }
 
     [Test]
@@ -39,7 +43,11 @@ public class GoldShopResumeTests
         // 窓の本文にも売り物の行が並ぶ
         var text = GoldShop.Text();
         for (int i = 0; i < GoldShop.Count; i++)
-            StringAssert.Contains(GoldShop.Wide(GoldShop.GoldOf(i)) + "ＧＯＬＤ", text);
+            StringAssert.Contains(GoldShop.Wide(GoldShop.GoldOf(i)) + "ゴールドの引換券", text);
+        // 行の頭に金貨の絵（TMP の絵札）を置く（作者の指定）
+        Assert.AreEqual(GoldShop.Count,
+                        text.Split(new[] { PhoneScreen.ShopCoin }, System.StringSplitOptions.None)
+                            .Length - 1, "品目の数だけ金貨を置く");
     }
 
     [Test]
@@ -58,6 +66,36 @@ public class GoldShopResumeTests
     {
         Assert.AreEqual("１０００", GoldShop.Wide(1000));
         Assert.AreEqual("１６０", GoldShop.Wide(160));
+    }
+
+    /// <summary>
+    /// 課金の窓は**選択肢を枠で囲い、矢印を出さず、選んでいない行を灰色に沈める**
+    /// （作者の指定）。窓の幅も広いほうを使う。
+    /// </summary>
+    [Test]
+    public void 課金の窓は枠で囲って選んでいない行を沈める()
+    {
+        var view = System.IO.File.ReadAllText("Assets/Scripts/UI/DialogueWindowView.cs");
+        StringAssert.Contains("ChoiceKind.GoldShop", view, "その窓だけの扱い");
+        StringAssert.Contains("optionEdges", view);
+        StringAssert.Contains("static string Dim(", view, "選んでいない行を沈める");
+        StringAssert.Contains("!Boxed", view, "枠の窓では矢印を出さない");
+
+        // 窓の幅は広いほう（絵を入れるため）
+        var text = GoldShop.Text();
+        Assert.AreEqual(DialogueBox.WideCharsPerLine, DialogueBox.LimitFor(text));
+        Assert.AreEqual(DialogueBox.CharsPerLine, DialogueBox.LimitFor("ふつうのセリフ"));
+        Assert.Greater(AuthorStyle.WidthFor(text),
+                       AuthorStyle.WidthFor("ふつうの窓はこれまでどおり"), "課金の窓は広い");
+    }
+
+    /// <summary>飾りの札は幅に数えない（絵の札だけ1文字ぶん）。</summary>
+    [Test]
+    public void 絵の札は一文字ぶんとして数える()
+    {
+        Assert.AreEqual("　あ", DialogueBox.Visible("<sprite=0>あ"));
+        Assert.AreEqual("あ", DialogueBox.Visible("<color=#777777>あ</color>"));
+        Assert.AreEqual("ふつう", DialogueBox.Visible("ふつう"));
     }
 
     /// <summary>中断データ。書いて読み直すと同じ状態になる。</summary>

@@ -120,11 +120,19 @@ public static class PhoneScreen
     public static readonly string[] ShopIntro =
     {
         "ゴールドを購入します。",
-        "どれも買い切りです。一度購入",
-        "すれば、次回プレイからは無料",
-        "で同じゴールドを受け取れます",
-        "（機種を変えても復元できます）",
+        "どれも買い切りです。一度購入すれば、",
+        "次回プレイからは無料で同じゴールドを",
+        "受け取れます（機種を変えても復元可）",
     };
+
+    /// <summary>
+    /// 品目の名前（作者の指定）。App Store Connect の表示名と同じ書き方にそろえる。
+    /// 頭に金貨の絵（<see cref="GoldIconPath"/> を TMP の絵札にしたもの）を置く。
+    /// </summary>
+    public const string ShopItemName = "{0}ゴールドの引換券";
+
+    /// <summary>その行の頭に置く金貨の絵の札（TMP の SpriteAsset の1枚目）。</summary>
+    public const string ShopCoin = "<sprite=0>";
 
     /// <summary>「購入を復元する」の行。Apple の審査指針 3.1.1 で置くことが要る。</summary>
     public const string ShopRestore = "購入を復元する";
