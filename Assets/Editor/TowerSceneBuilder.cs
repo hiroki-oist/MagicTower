@@ -843,7 +843,7 @@ public static class TowerSceneBuilder
         img.color = DialogueWindowView.Fill;
 
         var tmp = WindowBody(panelGo, font);
-        tmp.richText = true;        // 項目だけ大きく出す（TowerMenu.Big）
+        tmp.richText = true;        // 行ごとに大きさを変える（TowerMenu.Rows）
 
         // 選んでいる行に置く印（原典 PICTURE.P58 の4枚目。0x9e78 が -0x337 から貼る）
         var curGo = new GameObject("Cursor", typeof(RectTransform), typeof(UnityEngine.UI.Image));

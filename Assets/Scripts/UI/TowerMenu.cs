@@ -28,6 +28,8 @@ public static class TowerMenu
     {
         HeroOrb, FlightOrb, WisdomOrb, SpecialItems,
         Load, Save, Resume, Quit,
+        /// <summary>★作者の指定（原典に無い）。セーブはそのままで最初から遊び直す。</summary>
+        Restart,
     }
 
     /// <summary>
@@ -93,15 +95,18 @@ public static class TowerMenu
     /// <summary>
     /// 今出すべき項目。
     ///
-    /// ★**作者の指定で「ゲームに戻る」「ゲーム終了」の2つだけ**にしてある。
+    /// ★**作者の指定で3つだけ**にしてある。
     /// 原典は上の一覧のとおり8項目だが、スマホ版では
     ///   オーブ3種と道具 … 持ち物の帯を触る
     ///   セーブ・ロード   … 下のボタン
-    /// で足りるので、メニューに二重に置かない。
+    /// で足りるので、メニューに二重に置かない。残す3つは
+    ///   ゲームに戻る     … 原典の「　　ゲームに戻る」
+    ///   最初から遊ぶ     … セーブはそのままで、遊びだけ最初の画面へ
+    ///   タイトルへ戻る   … 題名へ戻り、**セーブデータも消す**
     /// </summary>
     public static List<Entry> Entries(PlayerState p)
     {
-        return new List<Entry> { Entry.Resume, Entry.Quit };
+        return new List<Entry> { Entry.Resume, Entry.Restart, Entry.Quit };
     }
 
     /// <summary>項目に出す文字。原典の文言そのまま。</summary>
@@ -118,8 +123,23 @@ public static class TowerMenu
             case Entry.Save:         return t.Message("menu_save");
             case Entry.Resume:       return t.Message("menu_return");
             // ★作者の指定。原典は「　　ゲーム終了」（DOS へ戻る）
+            case Entry.Restart:      return PhoneScreen.RestartGame;
             case Entry.Quit:         return PhoneScreen.BackToTitle;
             default: return "";
+        }
+    }
+
+    /// <summary>
+    /// その項目の下に添える断り（作者の指定）。無い項目は null。
+    /// **選べない行**なので、印はここを飛ばして次の項目へ動く。
+    /// </summary>
+    public static string NoteOf(Entry e)
+    {
+        switch (e)
+        {
+            case Entry.Restart: return PhoneScreen.RestartNote;
+            case Entry.Quit:    return PhoneScreen.BackToTitleNote;
+            default: return null;
         }
     }
 
@@ -133,15 +153,14 @@ public static class TowerMenu
     public const int WindowLines = 11, TopEdge = 50;
 
     /// <summary>
-    /// ★作者の指定。項目が2つになったので窓は**5行**に詰め、代わりに項目の
-    /// **文字を大きく**する（小さすぎる、という報告）。
+    /// ★作者の指定。項目を大きな字で出す（小さすぎる、という報告）ので、
+    /// 窓の行数は**中身の高さから決める**（<see cref="PhoneWindowLines"/>）。
     ///
     /// 大きくするのは項目だけで、見出しは原典のまま。見出しは15文字あり、
     /// 窓の幅（320ドット、文字の入る幅は約296ドット）に 16ドット角で
     /// ちょうど収まる大きさなので、これ以上大きくすると溢れる。
     /// 項目は「　　ゲームに戻る」の8文字なので 1.9 倍でも収まる。
     /// </summary>
-    public const int PhoneWindowLines = 6;
     public const float TextScale = 1.9f;
 
     /// <summary>
@@ -156,27 +175,14 @@ public static class TowerMenu
     /// </summary>
     public const int MenuLeft = 152, MenuWidth = 336;
 
-    /// <summary>項目1行を大きく出すための書き方（TMP の大きさ指定）。</summary>
-    public static string Big(string line) { return Sized(line, TextScale); }
-
-    /// <summary>見出しを少し大きく出すための書き方。</summary>
-    public static string Heading(string line) { return Sized(line, TitleScale); }
-
     /// <summary>添え書きの字（項目より小さく）。</summary>
     public const float NoteScale = 1.05f;
-    public static string Small(string line) { return Sized(line, NoteScale); }
 
     /// <summary>
-    /// 「タイトルへ戻る」の下に添える断り（作者の指定）。
-    /// 選べる行ではない — 印は項目の数までしか動かない。
+    /// 1行を指定の大きさで出すための書き方（TMP の大きさ指定）。
+    /// どの行をどの大きさにするかは <see cref="Rows"/> が持っている。
     /// </summary>
-    public static readonly string[] Note =
-    {
-        "　（ゲームをリセットして",
-        "　　最初から遊べます）",
-    };
-
-    static string Sized(string line, float scale)
+    public static string Sized(string line, float scale)
     {
         return $"<size={Mathf.RoundToInt(scale * 100f)}%>{line}</size>";
     }
@@ -199,14 +205,74 @@ public static class TowerMenu
     public static string Text(PlayerState p)
     {
         var sb = new System.Text.StringBuilder();
-        sb.Append(Title());
-        foreach (var e in Entries(p))
+        foreach (var row in Rows(p))
         {
-            sb.Append('\n');
-            sb.Append(Label(e));
+            if (sb.Length > 0) sb.Append('\n');
+            sb.Append(row.Text);
         }
-        foreach (var line in Note) { sb.Append('\n'); sb.Append(line); }
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// 窓に出す1行。**選べる行かどうかと字の大きさをここで持つ**。
+    /// 以前は「1行目が見出し／終わりの何行かが添え書き／その間が項目」という
+    /// 暗黙の決まりで数えていたが、項目ごとに添え書きが付くと成り立たない。
+    /// </summary>
+    public struct Row
+    {
+        /// <summary>出す文字（印はまだ付いていない）。</summary>
+        public string Text;
+        /// <summary>字の大きさ（原寸の何倍か）。</summary>
+        public float Scale;
+        /// <summary>何番目の項目か。**選べない行（見出し・添え書き）は -1**。</summary>
+        public int Item;
+    }
+
+    /// <summary>窓に出す行を上から順に。</summary>
+    public static List<Row> Rows(PlayerState p)
+    {
+        var rows = new List<Row>
+        {
+            new Row { Text = Title(), Scale = TitleScale, Item = -1 }
+        };
+        var entries = Entries(p);
+        for (int i = 0; i < entries.Count; i++)
+        {
+            rows.Add(new Row { Text = Label(entries[i]), Scale = TextScale, Item = i });
+            var note = NoteOf(entries[i]);
+            if (note != null)
+                rows.Add(new Row { Text = note, Scale = NoteScale, Item = -1 });
+        }
+        return rows;
+    }
+
+    /// <summary>
+    /// メニューの本文の1行ぶんの高さ（ドット）。**実測**（`TowerScreenshot.CaptureMenu`
+    /// が組んだ高さを書き出す）。会話の窓とは字の大きさが違うので、
+    /// <see cref="AuthorStyle.DialogueLineAdvance"/> とは別の値になる。
+    /// </summary>
+    public const float LineDots = 20f;
+
+    /// <summary>窓の上下に残す余白（ドット）。</summary>
+    public const int PadDots = 10;
+
+    /// <summary>
+    /// 窓の行数。**中身の高さ（字の大きさの合計）から決める**。
+    /// 項目が増えたり添え書きが付いたりしても、窓が足りなくならないようにする。
+    /// 窓の高さは 32 + 20×行数（<see cref="DialogueWindow.Height"/>）なので、
+    /// 中身が収まる**いちばん小さい行数**を選ぶ（余ると下に間延びして見える）。
+    /// </summary>
+    public static int PhoneWindowLines
+    {
+        get
+        {
+            float h = 0f;
+            foreach (var row in Rows(null)) h += row.Scale;
+            float need = h * LineDots + PadDots;
+            for (int n = 1; n < 24; n++)
+                if (DialogueWindow.Height(n) >= need) return n;
+            return WindowLines;
+        }
     }
 
     /// <summary>メニューの窓の位置と大きさ（作者の指定）。</summary>

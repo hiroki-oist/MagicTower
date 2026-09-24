@@ -254,7 +254,10 @@ public class QuitMenuTests
     public void 入力の側が終わりを受け取る()
     {
         var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
-        StringAssert.Contains("if (Game.Quitting) BackToTitle();", src);
+        StringAssert.Contains("if (Game.Quitting) BackToTitle(true);", src);
+        StringAssert.Contains("else if (picked == TowerMenu.Entry.Restart) RestartFromStart();", src);
+        // 終幕のあとは題名へ戻るが、**セーブデータは消さない**（作者の指定）
+        StringAssert.Contains("BackToTitle(false);", src);
         StringAssert.Contains("title.Show()", src);
         StringAssert.Contains("Application.Quit()", src, "原典どおりの口は残してある");
     }
@@ -264,8 +267,9 @@ public class QuitMenuTests
     {
         // 「出しているのに何も起きない」項目を作らない。
         // 商人・祭壇・アイテム・終了は、この形で3つ見落としていた。
-        // ★今メニューに出しているのは「ゲームに戻る」「ゲーム終了」の2つだけなので、
-        //   見るのもその2つ（残りの項目は文言だけ原典から残してある）。
+        // ★今メニューに出しているのは「ゲームに戻る」「最初から遊ぶ」
+        //   「タイトルへ戻る」の3つだけなので、見るのもその3つ
+        //   （残りの項目は文言だけ原典から残してある）。
         var src = System.IO.File.ReadAllText("Assets/Scripts/TowerGame.cs");
         foreach (var e in TowerMenu.Entries(new PlayerState()))
             StringAssert.Contains($"TowerMenu.Entry.{e}", src, $"{e} の枝が無い");

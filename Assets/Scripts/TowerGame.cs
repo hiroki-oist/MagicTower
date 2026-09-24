@@ -955,6 +955,9 @@ public class TowerGame
         switch (e)
         {
             case TowerMenu.Entry.Resume: CloseMenu(); break;
+            // ★作者の指定（原典に無い）。セーブはそのままで最初の画面へ。
+            // 実際に組み直すのは入力の側（本線は「そうしたい」と言うだけ）。
+            case TowerMenu.Entry.Restart: CloseMenu(); break;
             case TowerMenu.Entry.Quit:
                 // 原典はここで DOS へ戻る。こちらは**入力の側**が受け取って
                 // 遊びを閉じる（本線は「終わりたい」と言うだけにして、

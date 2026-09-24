@@ -20,8 +20,12 @@ public class MenuWindowView : MonoBehaviour
     /// 選んでいる行に置く印。**原典は PICTURE.P58 の4枚目**（16x16、剣を横にした形）を
     /// `0x9e78` が変位 -0x337 から貼る。鍵3枚の次に並んでいて間隔も合う。
     /// 絵が繋がっていないときのために、文字の印も残してある。
+    ///
+    /// ⚠ 以前は「▶」(U+25B6) を使っていたが、**この字は原典の書体に無い**
+    /// （JIS X 0208 に入っているのは ▲▼△▽ だけ）ので、実機では豆腐（□）に
+    /// なっていた。選ばせる窓と同じ「◎」に揃えてある。
     /// </summary>
-    public const string Cursor = "▶";
+    public const string Cursor = "◎";
 
     /// <summary>原典の印の絵。無ければ文字の印になる。</summary>
     [SerializeField] UnityEngine.UI.Image cursor;
@@ -71,36 +75,62 @@ public class MenuWindowView : MonoBehaviour
     }
 
     /// <summary>
-    /// 窓に出す文字。見出しはそのまま、**項目だけ大きく**する（作者の指定）。
-    /// 印は文字の「▶」を使う。行ごとに大きさが違うので、
-    /// 絵の印（原典の小さな剣）では位置が合わせられない。
+    /// 窓に出す文字。**大きさは行の表（<see cref="TowerMenu.Rows"/>）どおり**に付ける。
+    /// 見出し・項目・添え書きで大きさが違う。印は文字の「▶」を使う
+    /// （行ごとに高さが違うので、絵の印では位置が合わせられない）。
     /// </summary>
     public static string Display(TowerGame g)
     {
         var lines = Compose(g).Split('\n');
-        if (lines.Length > 0) lines[0] = TowerMenu.Heading(lines[0]);
-        // 末尾の添え書き（「ゲームをリセットして…」）だけ小さく出す。
-        int notes = TowerMenu.Note.Length;
-        for (int i = 1; i < lines.Length; i++)
-            lines[i] = i < lines.Length - notes ? TowerMenu.Big(lines[i])
-                                                : TowerMenu.Small(lines[i]);
-        return string.Join("\n", lines);
-    }
-
-    /// <summary>選んでいる行の先頭2文字を印に置き換える。</summary>
-    public static string Compose(TowerGame g)
-    {
-        var lines = g.MenuStageText.Split('\n');
-        // 1行目は見出し。段によって「今選んでいる行」が違う（本体・アイテム・スロット）。
-        int pick = g.MenuStageIndex + 1;
-        for (int i = 1; i < lines.Length; i++)
+        var rows = TowerMenu.Rows(g.Player);
+        for (int i = 0; i < lines.Length; i++)
         {
-            if (i != pick) continue;
-            var t = lines[i];
-            lines[i] = t.StartsWith("　　") ? Cursor + "　" + t.Substring(2) : Cursor + t;
+            float scale = i < rows.Count ? rows[i].Scale : TowerMenu.TextScale;
+            lines[i] = TowerMenu.Sized(lines[i], scale);
         }
         return string.Join("\n", lines);
     }
+
+    /// <summary>
+    /// 選んでいる**項目**の行の先頭2文字を印に置き換える。
+    /// 添え書きの行は選べないので、行の表で項目の番号から行を引く。
+    /// </summary>
+    public static string Compose(TowerGame g)
+    {
+        var lines = g.MenuStageText.Split('\n');
+        var rows = TowerMenu.Rows(g.Player);
+        int pick = -1;
+        for (int i = 0; i < rows.Count; i++)
+            if (rows[i].Item == g.MenuStageIndex) { pick = i; break; }
+        if (pick >= 0 && pick < lines.Length)
+        {
+            var t = lines[pick];
+            lines[pick] = t.StartsWith("　　") ? Cursor + "　" + t.Substring(2) : Cursor + t;
+        }
+        return string.Join("\n", lines);
+    }
+
+    /// <summary>
+    /// **写しを撮るための口**（エディタから使う）。遊んでいないと本線が無いので、
+    /// 外から遊びの状態を渡して、**本線とまったく同じ組み方**（<see cref="Display"/>）で
+    /// 窓を出す。道を分けると「写しでは収まっているのに実機では溢れる」が起きる。
+    /// </summary>
+    public void Preview(TowerGame g)
+    {
+        if (panel != null) panel.gameObject.SetActive(true);
+        Layout();
+        PlaceCursor(g);
+        if (body != null)
+        {
+            body.text = Display(g);
+            body.color = DialogueWindowView.Text;
+        }
+        if (background != null) background.color = DialogueWindowView.Fill;
+        shown = null;
+    }
+
+    /// <summary>組まれた文字（写しを撮るときに行数を数えるため）。</summary>
+    public TMP_Text Body { get { return body; } }
 
     void Layout()
     {

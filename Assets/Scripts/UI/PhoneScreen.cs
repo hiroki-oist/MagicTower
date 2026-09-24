@@ -197,6 +197,16 @@ public static class PhoneScreen
     public const string BackToTitle = "　　タイトルへ戻る";
 
     /// <summary>
+    /// メニューの2つ目の項目（作者の指定。原典に無い）。
+    /// **セーブデータはそのままで、遊びだけ最初の画面に戻す。**
+    /// </summary>
+    public const string RestartGame = "　　最初から遊ぶ";
+
+    /// <summary>それぞれの項目の下に添える断り（作者の指定）。</summary>
+    public const string RestartNote = "　（セーブデータはそのまま）";
+    public const string BackToTitleNote = "　（セーブデータも消して初めから）";
+
+    /// <summary>
     /// 持ち物の帯を触ったときに聞く言葉（作者の指定。原典にこの入口は無い）。
     /// 「◎」は原典の選ばせる窓と同じ印で、見た目の層がこの行を数えて印を置く。
     /// </summary>

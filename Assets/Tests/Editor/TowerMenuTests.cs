@@ -18,11 +18,11 @@ public class TowerMenuTests
     }
 
     [Test]
-    public void 項目は戻ると終了の二つだけ()
+    public void 項目は戻ると最初からとタイトルの三つだけ()
     {
         var e = TowerMenu.Entries(player);
         CollectionAssert.AreEqual(
-            new[] { TowerMenu.Entry.Resume, TowerMenu.Entry.Quit }, e);
+            new[] { TowerMenu.Entry.Resume, TowerMenu.Entry.Restart, TowerMenu.Entry.Quit }, e);
     }
 
     [Test]
@@ -31,7 +31,7 @@ public class TowerMenuTests
         player.Give(SpecialItems.Kind.HeroOrb);
         player.Give(SpecialItems.Kind.FlightOrb);
         player.Give(SpecialItems.Kind.WisdomOrb);
-        Assert.AreEqual(2, TowerMenu.Entries(player).Count,
+        Assert.AreEqual(3, TowerMenu.Entries(player).Count,
                         "オーブは持ち物の帯から使う");
     }
 
@@ -125,7 +125,7 @@ public class TowerMenuTests
         Assert.GreaterOrEqual(w.xMin, 144, "盤面の幅に収まる");
         Assert.LessOrEqual(w.xMax, 496);
         Assert.AreEqual(50, w.yMin);
-        // ★項目が2つになったので窓も4行ぶんに詰めた（原典は 0xb 固定）
+        // ★窓の高さは中身から決める（原典は 0xb 固定）
         Assert.AreEqual(DialogueWindow.Height(TowerMenu.PhoneWindowLines), w.height);
         Assert.IsTrue(DialogueWindow.Fits(w));
     }
@@ -137,16 +137,25 @@ public class TowerMenuTests
         p.Give(SpecialItems.Kind.HeroOrb);
         var lines = TowerMenu.Text(p).Split('\n');
 
+        // ★作者の指定で3項目。それぞれの下に添え書き（選べる行ではない）。
         Assert.AreEqual("メニューの選択をしてください。", lines[0], "見出しは原典のまま");
         Assert.AreEqual("　　ゲームに戻る", lines[1]);
-        Assert.AreEqual("　　タイトルへ戻る", lines[2]);
-        // 「タイトルへ戻る」の下に添え書き（作者の指定。選べる行ではない）
-        Assert.AreEqual(3 + TowerMenu.Note.Length, lines.Length);
-        for (int i = 0; i < TowerMenu.Note.Length; i++)
-            Assert.AreEqual(TowerMenu.Note[i], lines[3 + i]);
-        StringAssert.Contains("リセット", string.Join("", TowerMenu.Note));
-        Assert.AreEqual(2, TowerMenu.Entries(p).Count, "選べるのは2つだけ");
+        Assert.AreEqual("　　最初から遊ぶ", lines[2]);
+        Assert.AreEqual(PhoneScreen.RestartNote, lines[3]);
+        Assert.AreEqual("　　タイトルへ戻る", lines[4]);
+        Assert.AreEqual(PhoneScreen.BackToTitleNote, lines[5]);
+        Assert.AreEqual(6, lines.Length);
+        StringAssert.Contains("セーブデータはそのまま", PhoneScreen.RestartNote);
+        StringAssert.Contains("消して", PhoneScreen.BackToTitleNote);
+        Assert.AreEqual(3, TowerMenu.Entries(p).Count, "選べるのは3つ");
         Assert.LessOrEqual(lines.Length, TowerMenu.PhoneWindowLines, "窓に収まる");
+
+        // 添え書きの行は選べない。行の表の Item がそれを持っている。
+        var rows = TowerMenu.Rows(p);
+        Assert.AreEqual(lines.Length, rows.Count, "行の表と文章の行数が合う");
+        var items = new System.Collections.Generic.List<int>();
+        for (int i = 0; i < rows.Count; i++) if (rows[i].Item >= 0) items.Add(i);
+        CollectionAssert.AreEqual(new[] { 1, 2, 4 }, items, "選べるのは項目の行だけ");
     }
 
     /// <summary>原典の8項目の文言は（メニューには出さないが）そのまま持っている。</summary>
@@ -267,6 +276,14 @@ public class TowerMenuTests
         lines = MenuWindowView.Compose(g).Split('\n');
         StringAssert.StartsWith("　　", lines[1], "元に戻る");
         StringAssert.StartsWith(MenuWindowView.Cursor, lines[2]);
+        StringAssert.Contains("最初から遊ぶ", lines[2]);
+
+        // ★添え書きの行は**飛ばす**。印は3行目ではなく「タイトルへ戻る」に付く。
+        g.MenuMove(1);
+        lines = MenuWindowView.Compose(g).Split('\n');
+        StringAssert.StartsWith("　（", lines[3], "添え書きには付かない");
+        StringAssert.StartsWith(MenuWindowView.Cursor, lines[4]);
+        StringAssert.Contains("タイトルへ戻る", lines[4]);
     }
 
     [Test]

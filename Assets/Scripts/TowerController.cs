@@ -402,7 +402,10 @@ public class TowerController : MonoBehaviour
                         if (Game.IsGameOver) { TowerGame.DropResume(); StartNewGame(); return; }
                         // 終幕の「Ｆｉｎ」のあとは題名へ戻す（作者の指定）。
                         // 原典（0xd45c）はキーを待ってパレットを真っ暗にして終わるだけ。
-                        if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(); return; }
+                        // ★終幕を見終わったら題名へ戻す。**セーブデータは消さない**
+                        //   （作者の指定）。原典（0xd45c）はキーを待って
+                        //   パレットを真っ暗にして終わるだけ。
+                        if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(false); return; }
                         Game.NextPage();
                     }
                 }
@@ -549,9 +552,12 @@ public class TowerController : MonoBehaviour
         if (MenuKeyDown() || TakeConfirm())
         {
             PlayTap();
-            Game.MenuConfirm();
+            var picked = Game.MenuConfirm();
             // ★作者の指定で「タイトルへ戻る」。原典は DOS へ戻る項目だった。
-            if (Game.Quitting) BackToTitle();
+            // こちらは**セーブデータも消して**題名へ戻る。
+            if (Game.Quitting) BackToTitle(true);
+            // 「最初から遊ぶ」は**セーブデータはそのまま**で、遊びだけ最初の画面へ。
+            else if (picked == TowerMenu.Entry.Restart) RestartFromStart();
             return true;
         }
         return false;
@@ -649,15 +655,38 @@ public class TowerController : MonoBehaviour
 
     /// <summary>
     /// 題名画面へ戻る（作者の指定。原典のこの項目は DOS へ戻る「ゲーム終了」）。
-    /// 題名を触ると必ず最初から始まるので、続きは下の「ロード」から読む。
+    ///
+    /// 中断データは**どちらの道でも捨てる** — 題名に戻ったのに、触ると
+    /// さっきの続きが始まってしまうため。
     /// </summary>
-    void BackToTitle()
+    /// <param name="wipeSave">
+    /// 手のセーブ（下の「セーブ」「ロード」のボタンが使うスロット）も消すか。
+    ///   メニューの「タイトルへ戻る」… **消す**（作者の指定「セーブデータもリセット」）
+    ///   終幕を見終わったあと        … **消さない**（作者の指定）
+    /// </param>
+    void BackToTitle(bool wipeSave)
     {
         Game.CloseMenu();
         Game.ClearQuitting();
         TowerGame.DropResume();          // 題名へ戻ったら中断データは捨てる
+        if (wipeSave) TowerSave.Delete(PhoneScreen.QuickSlot);
         StopShows();
         if (title != null) title.Show();
+    }
+
+    /// <summary>
+    /// 「最初から遊ぶ」（作者の指定。原典に無い）。
+    /// **セーブデータはそのまま**で、遊びだけ最初の画面（1階の出発点）へ戻す。
+    /// 題名には戻らない。
+    ///
+    /// 中断データだけは捨てる。あれは「いま遊んでいる続き」を指しているので、
+    /// 最初からにしたのに、アプリを開き直すと前の続きが始まってしまう。
+    /// </summary>
+    void RestartFromStart()
+    {
+        Game.CloseMenu();
+        TowerGame.DropResume();
+        StartNewGame();
     }
 
     /// <summary>

@@ -76,7 +76,49 @@ public static class TowerScreenshot
     /// </summary>
     public static void CaptureShop() { shop = true; Capture(false); }
 
-    static bool shop;
+    /// <summary>
+    /// **メニューの窓の写しを撮る**。本線と同じ道（MenuWindowView.Preview →
+    /// Display）を通すので、ここで窓に収まっていれば実機でも収まる。
+    ///
+    ///   Unity -batchmode -quit -projectPath . -executeMethod TowerScreenshot.CaptureMenu
+    /// </summary>
+    public static void CaptureMenu() { menu = true; Capture(false); }
+
+    static bool shop, menu;
+
+    static void ShowMenu()
+    {
+        if (!menu) return;
+        var title = Object.FindObjectOfType<TitleView>(true);
+        if (title != null) title.Hide();
+        var view = Object.FindObjectOfType<MenuWindowView>(true);
+        if (view == null) { Debug.LogWarning("メニューの窓が見つからない"); return; }
+        var g = new TowerGame(new PlayerState
+        {
+            Hp = 1000, Attack = 100, Defense = 100,
+            Floor = 3, Position = new Vector2Int(0, -3),
+        });
+        g.OpenMenu();
+        view.Preview(g);
+        view.transform.SetAsLastSibling();
+
+        var body = view.Body;
+        if (body == null) { Debug.LogWarning("本文が繋がっていない"); return; }
+        body.ForceMeshUpdate();
+        var win = TowerMenu.Window;
+        Debug.Log($"■メニュー: 行数 = {body.textInfo.lineCount}"
+                + $" / 窓 = {win.width}x{win.height}ドット（{TowerMenu.PhoneWindowLines}行）"
+                + $" / 組んだ高さ = {body.preferredHeight:0.0}"
+                + $" / 枠の高さ = {body.rectTransform.rect.height:0.0}");
+        for (int i = 0; i < body.textInfo.lineCount; i++)
+        {
+            var li = body.textInfo.lineInfo[i];
+            var sb = new System.Text.StringBuilder();
+            for (int c = li.firstCharacterIndex; c <= li.lastCharacterIndex; c++)
+                sb.Append(body.textInfo.characterInfo[c].character);
+            Debug.Log($"■{i}: {sb}");
+        }
+    }
 
     static void ShowShop()
     {
@@ -176,6 +218,7 @@ public static class TowerScreenshot
         ShowDpad();
         ShowFullScreen();
         ShowShop();
+        ShowMenu();
         if (damagePanel) FillDamagePanel();
 
         var canvas = Object.FindObjectOfType<Canvas>();

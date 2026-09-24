@@ -1632,8 +1632,9 @@ chk("JavaEnding = false" in _as2,
     "いまの終幕は**原典 PC98版**（作者の指定で Java版から戻した）")
 # 終幕の「Ｆｉｎ」を送ると題名へ戻る（作者の指定）。
 # 原典 0xd45c はキーを待ってパレットを真っ暗にして終わるだけ。
-chk("IsFinalScreen" in _tg4 and "if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(); return; }" in _tc,
-    "「Ｆｉｎ」を送ると題名へ戻る")
+chk("IsFinalScreen" in _tg4
+    and "if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(false); return; }" in _tc,
+    "「Ｆｉｎ」を送ると題名へ戻る（セーブデータは消さない。作者の指定）")
 # 終幕の曲は A_050（作者の指定）。もともと「50階のボス戦」に当ててあったが
 # 50階に戦いは無いので鳴る機会が無く、終幕へ移した。
 _jm=open("Assets/Scripts/Items/JavaMusic.cs",encoding="utf-8").read()
@@ -1804,8 +1805,11 @@ chk("Product.displayPrice" in _gs and "Non-Consumable" in _gs,
     "値段は App Store の現地表記に差し替えること／非消耗型で登録することを書いてある")
 # メニューの添え書き（作者の指定）
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
-chk("リセット" in _tm and "Note" in _tm,
-    "「タイトルへ戻る」の下に断りを添える")
+chk("NoteOf" in _tm and "RestartNote" in _tm and "BackToTitleNote" in _tm,
+    "「最初から遊ぶ」「タイトルへ戻る」の下に断りを添える")
+_phs2=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+chk("セーブデータはそのまま" in _phs2 and "セーブデータも消して" in _phs2,
+    "断りは「そのまま」と「消して」を言い分けている（作者の指定）")
 # App Store に出すための設え（作者の指定）
 _dbg2=open("Assets/Scripts/DebugPlay.cs",encoding="utf-8").read()
 # ⚠ いまは**作者に通しで見てもらうため**に攻守300・鍵30本を入れてある
@@ -2598,9 +2602,8 @@ chk("DPadBottomMargin" in _ps2 and "PhoneScreen.DPadBottomMargin" in _sb,
 _tm2=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("PhoneScreen.BackToTitle" in _tm2,
     "メニューの最後は「タイトルへ戻る」（原典の「ゲーム終了」から差し替え）")
-chk("TitleScale" in _tm2 and "TowerMenu.Heading" in
-    open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read(),
-    "メニューの見出しも大きくしてある")
+chk("TitleScale" in _tm2 and "TitleScale, Item = -1" in _tm2,
+    "メニューの見出しも大きくしてある（行の表が大きさを持つ）")
 _dpv=open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read()
 chk("GetMouseButtonUp(0)" in _dpv and "pressedConfirm" in _dpv,
     "決定は押して離すまで効かない（指を一度浮かす）")
@@ -2694,11 +2697,17 @@ chk("MenuMove" in _tg3 and "MenuConfirm" in _tg3,"選ぶ場所を動かして決
 chk(os.path.exists("Assets/Scripts/UI/MenuWindowView.cs"),"メニューを描く役がある")
 chk("BuildMenuWindow" in _sb,"シーンにメニューの窓を組み込んでいる")
 chk("LoadRecord = 50, SaveRecord = 51" in _tg3,"スロット選択はセリフ50/51")
-chk("Entry.Resume, Entry.Quit" in open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read(),
-    "メニューの項目は「ゲームに戻る」「ゲーム終了」の2つだけ（作者の指定）")
-chk("PhoneWindowLines" in open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
-    and "TowerMenu.Big" in open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read(),
+chk("Entry.Resume, Entry.Restart, Entry.Quit" in _tm2,
+    "メニューの項目は「ゲームに戻る」「最初から遊ぶ」「タイトルへ戻る」の3つ（作者の指定）")
+chk("PhoneWindowLines" in _tm2 and "TextScale = 1.9f" in _tm2
+    and "rows[i].Scale" in open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read(),
     "項目の文字を大きくしてある（小さすぎる、という報告）")
+# 窓の高さは中身から出す（項目や添え書きが増えても足りなくならない）
+chk("for (int n = 1; n < 24; n++)" in _tm2 and "DialogueWindow.Height(n) >= need" in _tm2,
+    "メニューの窓は中身が収まるいちばん小さい行数にする")
+# 印の字は原典の書体にあるものだけ（▶ は JIS X 0208 に無く豆腐になっていた）
+chk('Cursor = "◎"' in open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read(),
+    "メニューの印は書体にある字（▶ は出ない）")
 for _r in (50,51):
     _b=[l.split(" | ",1)[1] for l in open("Assets/Resources/Dialogue.txt",encoding="utf-8")
         if l.startswith(f"{_r} | ")][0].rstrip("\n")
@@ -2876,10 +2885,15 @@ chk("リターン" not in PhoneScreen_flight(),"案内から「リターンで�
 # メニューに**出している**項目に「選んでも何も起きない」枝を作らない
 # （以前は8項目のうち3つが繋がっていなかった）。今出しているのは2つだけで、
 # 残りの Entry は原典の文言を残すためだけに持っている。
-_noarm=[v for v in ("Resume","Quit") if f"TowerMenu.Entry.{v}" not in _tg4]
+_noarm=[v for v in ("Resume","Restart","Quit") if f"TowerMenu.Entry.{v}" not in _tg4]
 chk(not _noarm,"メニューに出している項目はどれも本線に枝がある",str(_noarm))
-chk("public bool Quitting" in _tg4 and "if (Game.Quitting) BackToTitle();" in _ctrl,
-    "最後の項目が題名画面へ戻るところまで繋がっている（原典は DOS へ戻る）")
+chk("public bool Quitting" in _tg4 and "if (Game.Quitting) BackToTitle(true);" in _ctrl,
+    "「タイトルへ戻る」は題名へ戻ってセーブデータも消す（原典は DOS へ戻る）")
+chk("TowerSave.Delete(PhoneScreen.QuickSlot);" in _ctrl,
+    "消すのは下のボタンが使うスロット（ほかに手の届くスロットは無い）")
+chk("void RestartFromStart()" in _ctrl
+    and "else if (picked == TowerMenu.Entry.Restart) RestartFromStart();" in _ctrl,
+    "「最初から遊ぶ」はセーブを残したまま最初の画面へ戻る")
 chk("if (pages.Count == 0 && IsChoosing) Choice = ChoiceKind.None;" in _tg4,
     "選ばせている窓を決めずに閉じたら印を残さない")
 chk("game.IsChoosing" in open("Assets/Editor/TowerPlaythrough.cs",encoding="utf-8").read(),
