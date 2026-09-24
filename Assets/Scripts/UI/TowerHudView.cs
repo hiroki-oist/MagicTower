@@ -64,6 +64,14 @@ public class TowerHudView : MonoBehaviour
     /// </summary>
     [SerializeField] UnityEngine.UI.Image[] itemSlots = new UnityEngine.UI.Image[0];
 
+    /// <summary>
+    /// ★作者が選んだ「石壁に彫った棚」。ますの縁と地。
+    /// **持っていないますも沈んだ石として見せる**ので、物体ID順に並べた空きが
+    /// そのまま「まだ手に入れていないものがある」という手がかりになる。
+    /// </summary>
+    [SerializeField] UnityEngine.UI.Image[] itemSlotEdges = new UnityEngine.UI.Image[0];
+    [SerializeField] UnityEngine.UI.Image[] itemSlotFills = new UnityEngine.UI.Image[0];
+
     /// <summary>鍵の絵を並べる入れ物。原典は数字ではなく絵を本数ぶん出す（0x9ff8）。</summary>
     [SerializeField] RectTransform keyIcons;
     [SerializeField] Sprite keyRed;
@@ -166,10 +174,16 @@ public class TowerHudView : MonoBehaviour
     {
         for (int i = 0; i < itemSlots.Length; i++)
         {
-            var img = itemSlots[i];
-            if (img == null) continue;
             var kind = SpecialItems.PanelKind(i);
-            img.enabled = kind != SpecialItems.Kind.None && p.Has(kind);
+            bool have = kind != SpecialItems.Kind.None && p.Has(kind);
+            var img = itemSlots[i];
+            if (img != null) img.enabled = have;
+            if (i < itemSlotEdges.Length && itemSlotEdges[i] != null)
+                itemSlotEdges[i].color = have ? PhoneScreen.SlotEdge
+                                              : PhoneScreen.EmptySlotEdge;
+            if (i < itemSlotFills.Length && itemSlotFills[i] != null)
+                itemSlotFills[i].color = have ? PhoneScreen.SlotFill
+                                              : PhoneScreen.EmptySlotFill;
         }
     }
 

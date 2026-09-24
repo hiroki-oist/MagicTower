@@ -151,8 +151,23 @@ public static class PhoneScreen
     /// <summary>帯の左右に置く矢印の幅。</summary>
     public const float ArrowWidth = 64f;
 
-    /// <summary>帯の地の色（見せてもらった画面に合わせて黒）。</summary>
-    public static readonly Color ItemBarFill = new Color32(0x0c, 0x0c, 0x12, 0xff);
+    // ---- 持ち物の帯（★作者が選んだ「石壁に彫った棚」）----
+    //
+    // 地は**上下の帯と同じ石積み**を地続きに敷き、ますだけを彫り込む。
+    // 持っていない枠も沈んだ石として見えるので、物体ID順に並べた空きが
+    // そのまま「まだ手に入れていないものがある」という手がかりになる。
+    // 以前は真っ黒な地（#0c0c12）で、上下の石積みからも窓からも浮いていた。
+
+    /// <summary>ますの縁（封印扉のタイル ID4 の青灰から）。</summary>
+    public static readonly Color SlotEdge      = new Color32(0x8f, 0x8f, 0xb4, 0xff);
+    /// <summary>ますの地（持っているとき）。</summary>
+    public static readonly Color SlotFill      = new Color32(0x3b, 0x3b, 0x46, 0xff);
+    /// <summary>空いているますの縁と地（沈ませる）。</summary>
+    public static readonly Color EmptySlotEdge = new Color32(0x5a, 0x5a, 0x72, 0xff);
+    public static readonly Color EmptySlotFill = new Color32(0x2c, 0x2c, 0x34, 0xff);
+
+    /// <summary>ますの外の余白と、縁の太さ（画布の単位）。</summary>
+    public const float SlotInsetX = 5f, SlotInsetY = 6f, SlotEdgeWidth = 3f;
 
     /// <summary>
     /// 移動の十字キーの絵。**作者が6案から選んだもの**（B＝黒い円盤に矢印と中央のつまみ）。

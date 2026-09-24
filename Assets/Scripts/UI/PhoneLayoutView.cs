@@ -60,8 +60,10 @@ public class PhoneLayoutView : MonoBehaviour
         float extra = slack * PhoneScreen.BottomSlackShare;
         float frameHeight = PhoneScreen.ReferenceHeight + extra;
         frame.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth, frameHeight);
-        // **上端は中央に置いたときと同じ場所**に留める（下へ伸ばすだけ）
-        frame.anchoredPosition = new Vector2(0f, -extra / 2f);
+        // **上端は中央に置いたときと同じ場所**に留める（下へ伸ばすだけ）。
+        // 枠は画布の中央から `extra/2` だけ下がることになる。
+        float frameDrop = extra / 2f;
+        frame.anchoredPosition = new Vector2(0f, -frameDrop);
 
         float side = PhoneScreen.MapSide(frame.rect.width, frame.rect.height);
         // 上の帯は原典の欄の高さのまま。**余ったぶんは全部下**へ。
@@ -85,7 +87,13 @@ public class PhoneLayoutView : MonoBehaviour
             boardCamera.rect = new Rect(0f, 0f, 1f, 1f);
             boardCamera.orthographicSize = canvasHeight * perUnit / 2f;
             var p = boardCamera.transform.position;
-            boardCamera.transform.position = new Vector3(0f, -center * perUnit, p.z);
+            // ⚠ `center` は**枠の中心から**の高さ。カメラは画布の中心を基準に動かすので、
+            //   枠を下げたぶん（frameDrop）を引いてから渡す。これを忘れていたので
+            //   盤面が上の帯に半マスぶん潜り込み、**一番上の列が隠れていた**
+            //   （フィールドが全部見えない、という作者の報告）。
+            float boardFromCanvasCenter = center - frameDrop;
+            boardCamera.transform.position =
+                new Vector3(0f, -boardFromCanvasCenter * perUnit, p.z);
         }
 
         // 会話やメニューの窓・戦闘の帯・1枚絵は原典の座標（640x400）で置いてあるので、

@@ -348,16 +348,15 @@ public static class TowerSceneBuilder
                .objectReferenceValue = TileById(55 + rank);
         }
 
-        // --- 下の帯: 持ち物の帯（黒い地・左右に送れる）とボタン ---
-        // 地
-        var barGo = new GameObject("ItemBar", typeof(RectTransform),
-                                   typeof(UnityEngine.UI.Image));
+        // --- 下の帯: 持ち物の帯とボタン ---
+        // ★作者が選んだ「石壁に彫った棚」。**地は敷かない**——下の帯の石積みを
+        //   そのまま透かして地続きに見せ、ますだけを彫り込む（PhoneScreen 参照）。
+        var barGo = new GameObject("ItemBar", typeof(RectTransform));
         barGo.transform.SetParent(bottom, false);
         var barRt = barGo.GetComponent<RectTransform>();
         barRt.anchorMin = barRt.anchorMax = barRt.pivot = new Vector2(0f, 1f);
         barRt.anchoredPosition = Vector2.zero;
         barRt.sizeDelta = new Vector2(w, PhoneScreen.ItemBarHeight);
-        barGo.GetComponent<UnityEngine.UI.Image>().color = PhoneScreen.ItemBarFill;
 
         // 左右の矢印（押すと1画面ぶん送る）
         var leftArrow = Arrow(barRt, font, "ArrowLeft", true);
@@ -386,17 +385,25 @@ public static class TowerSceneBuilder
         var slots = vso.FindProperty("itemSlots");
         slots.arraySize = ScreenLayout.ItemPanelSlots;
         var slotRects = new List<Object>();
+        var slotEdges = new List<Object>();
+        var slotFills = new List<Object>();
         for (int i = 0; i < ScreenLayout.ItemPanelSlots; i++)
         {
             var id = ScreenLayout.ItemPanelObjectId(i);
+            UnityEngine.UI.Image edge, fill;
             var img = Slot(contentRt, $"Item{id}", islot * i, 0f,
-                           islot, PhoneScreen.ItemBarHeight);
+                           islot, PhoneScreen.ItemBarHeight, out edge, out fill);
+            slotEdges.Add(edge);
+            slotFills.Add(fill);
             var sprite = TileById(id);
             if (sprite != null) img.sprite = sprite;
             img.enabled = false;                      // 持っていない間は出さない
             slots.GetArrayElementAtIndex(i).objectReferenceValue = img;
             slotRects.Add(img.transform.parent);      // 触り判定は枠のほう
         }
+
+        FillObjects(vso.FindProperty("itemSlotEdges"), slotEdges);
+        FillObjects(vso.FindProperty("itemSlotFills"), slotFills);
 
         // ボタンはどれも**まだ繋がっていない**（作者の指定。移動もキーボードの矢印のまま）
         float bw = PhoneScreen.SideButtonWidth, bh = 84f, bgap = 12f;
@@ -1499,7 +1506,11 @@ public static class TowerSceneBuilder
         rt.pivot = new Vector2(left ? 0f : 1f, 0.5f);
         rt.anchoredPosition = Vector2.zero;
         rt.sizeDelta = new Vector2(PhoneScreen.ArrowWidth, 0f);
-        go.GetComponent<UnityEngine.UI.Image>().color = new Color(1f, 1f, 1f, 0.08f);
+        // ★「石壁に彫った棚」に合わせて、矢印も右のボタンと同じ紫の板にする
+        //   （以前は薄い白の四角で、帯の中に浮いていた）。
+        go.GetComponent<UnityEngine.UI.Image>().color = PhoneScreen.SlotEdge;
+        Panel(rt, "Fill", PhoneScreen.SlotEdgeWidth, PhoneScreen.SlotInsetY,
+              PhoneScreen.RightButton);
         var t = CellText(rt, font, 0f, TextAlignmentOptions.Center);
         t.text = left ? "←" : "→";   // PixelMplus に ◀▶ は無い
         t.fontSizeMax = 40f;
@@ -1523,10 +1534,25 @@ public static class TowerSceneBuilder
     }
 
     /// <summary>絵ひとつぶんの小さな枠（持ち物の帯に並べる）。</summary>
+    /// <summary>
+    /// 持ち物のます1つ（★作者が選んだ「石壁に彫った棚」）。
+    /// 石に彫り込んだ形にするため、**縁の板の上に地の板を重ねて**四角い枠を作り、
+    /// その上に道具の絵を置く。持っていないますは縁も地も沈んだ色にする
+    /// （<see cref="TowerHudView"/> が色を切り替える）。
+    /// </summary>
     static UnityEngine.UI.Image Slot(Transform parent, string name, float x, float y,
-                                     float w, float h)
+                                     float w, float h,
+                                     out UnityEngine.UI.Image edge,
+                                     out UnityEngine.UI.Image fill)
     {
         var rt = Cell(parent, name, x, y, w, h, new Color(0f, 0f, 0f, 0f));
+
+        edge = Panel(rt, "Edge", PhoneScreen.SlotInsetX, PhoneScreen.SlotInsetY,
+                     PhoneScreen.SlotEdge);
+        fill = Panel(edge.rectTransform, "Fill",
+                     PhoneScreen.SlotEdgeWidth, PhoneScreen.SlotEdgeWidth,
+                     PhoneScreen.SlotFill);
+
         var go = new GameObject("Icon", typeof(RectTransform), typeof(UnityEngine.UI.Image));
         go.transform.SetParent(rt, false);
         var irt = go.GetComponent<RectTransform>();
@@ -1534,6 +1560,22 @@ public static class TowerSceneBuilder
         irt.offsetMin = new Vector2(4f, 4f); irt.offsetMax = new Vector2(-4f, -4f);
         var img = go.GetComponent<UnityEngine.UI.Image>();
         img.preserveAspect = true;
+        img.raycastTarget = false;
+        return img;
+    }
+
+    /// <summary>親いっぱいに、上下左右を詰めて敷く一枚板。</summary>
+    static UnityEngine.UI.Image Panel(Transform parent, string name,
+                                      float insetX, float insetY, Color color)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(parent, false);
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one;
+        rt.offsetMin = new Vector2(insetX, insetY);
+        rt.offsetMax = new Vector2(-insetX, -insetY);
+        var img = go.GetComponent<UnityEngine.UI.Image>();
+        img.color = color;
         img.raycastTarget = false;
         return img;
     }

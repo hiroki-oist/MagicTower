@@ -2149,6 +2149,14 @@ _ibv=open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read()
 chk("RectMask2D" in _sb,"帯からはみ出た絵は切り取る")
 _ps3=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
 chk("ItemsPerPage = 6" in _ps3,"持ち物の帯は6つずつ送る（8つだと1枠が狭すぎた）")
+# ★作者が選んだ「石壁に彫った棚」
+chk("ItemBarFill" not in _ps3 and "SlotEdge" in _ps3 and "EmptySlotFill" in _ps3,
+    "持ち物の帯は真っ黒な地をやめて、石に彫ったますにしてある")
+chk('new GameObject("ItemBar", typeof(RectTransform));' in _sb,
+    "帯に地を敷かない（下の帯の石積みを地続きに透かす）")
+_hud=open("Assets/Scripts/UI/TowerHudView.cs",encoding="utf-8").read()
+chk("itemSlotEdges" in _hud and "EmptySlotEdge" in _hud,
+    "持っていないますも沈んだ石として見せる（空きが手がかりになる）")
 _tc3=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("TouchStep = Vector2Int.zero;\n        TouchConfirm = false;" in _tc3,
     "触りの1回ぶんはその手のうちに使い切る（持ち越すと勝手に決まる）")
