@@ -212,6 +212,10 @@ public class TowerController : MonoBehaviour
             return sliding
                    || drawing
                    || Game.HasPendingView
+                   // ★**合体の10コマ（20階のボス）もここに数える**。数えていなかったので、
+                   // 合体を見せている裏で場面が先へ進み、地図も「待つ」も合体中に
+                   // 使い切っていた（セリフが合体の直後に出てしまう報告がこれ）。
+                   || (bossView != null && bossView.IsPlaying)
                    || (doorView != null && doorView.IsPlaying)
                    || (walkView != null && walkView.IsPlaying)
                    || (battle != null && battle.IsPlaying)
@@ -229,6 +233,7 @@ public class TowerController : MonoBehaviour
             bool busy = sliding
                    || drawing
                    || Game.HasPendingView          // 渡したばかりで、まだ動き出していない
+                   || (bossView != null && bossView.IsPlaying)   // 合体の10コマ（20階）
                    || (doorView != null && doorView.IsPlaying)
                    || (walkView != null && walkView.IsPlaying)
                    || (battle != null && battle.IsPlaying)
@@ -239,13 +244,14 @@ public class TowerController : MonoBehaviour
             // 戦闘の帯と重なって次のできごとが起きたりするのが落ち着かないため。
             if (busy)
             {
+                // ⚠ **合体（20階）はここで間を作らない**。ここで待たせると、
+                // その間は地図も書けないので **合体が消えたあと空っぽの3マス**が
+                // できてしまう。合体は「終わったらその場にバンパイアが残り、
+                // そこから台本の『待つ』ぶん置いてセリフ」が原典の順（0x3044）。
                 float wait = drawing ? AuthorStyle.SettleAfterDrawSeconds
-                           : (bossView != null && bossView.IsPlaying)
-                             ? AuthorStyle.SettleAfterBossSeconds
                            : (battle != null && battle.IsPlaying)
                              || (band != null && band.IsShowing)
                              || (blinkView != null && blinkView.IsPlaying)
-                             || (bossView != null && bossView.IsPlaying)
                              ? AuthorStyle.SettleSeconds : 0f;
                 if (wait > 0f) settleUntil = Time.time + wait;
             }

@@ -18,12 +18,21 @@ using UnityEngine;
 ///
 /// **一度に1人ずつ**しか歩かない。原典は骸骨を1体ずつ寄せてくる（0x4096 の輪）ので、
 /// 積まれた順に並べて流す。
+///
+/// ★**絵も2コマで動かす**（作者の報告「10階の骸骨が動かない」「32階の騎士の画像が
+/// 止まってる」）。原典 0xa276 は1マス滑らせる間に 0x92a4 を6回呼ぶので、
+/// 歩いている本人も盤面の物と同じように**1コマ目と2コマ目が入れ替わる**。
+/// こちらは主人公と同じ見せ方（1マスの半ばで入れ替える。<see cref="TowerController"/>）に
+/// 揃えてある。立ち止まっている間も、盤面と同じ拍子で入れ替える
+/// （原典では立ち止まった相手は地図に書かれていて、盤面の仕掛けが塗り直すため）。
 /// </summary>
 public class NpcWalkView : MonoBehaviour
 {
     [SerializeField] TowerController controller;
     [SerializeField] FloorLoader loader;
     [SerializeField] FloorPrefabRegistry registry;
+    /// <summary>2コマの絵を引くところ（盤面の敵と人と同じ表）。</summary>
+    [SerializeField] MonsterAnimator monsters;
 
     /// <summary>歩いている最中か。会話の窓はこれが終わるまで待つ。</summary>
     public bool IsPlaying { get { return running || queue.Count > 0; } }
@@ -34,6 +43,9 @@ public class NpcWalkView : MonoBehaviour
     /// <summary>着いたあとも立たせてある人（マス → 絵）。</summary>
     readonly Dictionary<Vector2Int, GameObject> standing =
         new Dictionary<Vector2Int, GameObject>();
+
+    /// <summary>その絵がどの名前のものか（2コマ目を引くのに要る）。</summary>
+    readonly Dictionary<GameObject, string> keyOf = new Dictionary<GameObject, string>();
 
     void LateUpdate()
     {
@@ -46,6 +58,27 @@ public class NpcWalkView : MonoBehaviour
 
         if (!running && queue.Count > 0 && isActiveAndEnabled)
             StartCoroutine(Walk(queue.Dequeue()));
+
+        // 立ち止まっている人も、盤面の物と同じ拍子で2コマを入れ替える。
+        // 原典では立った相手は地図に書かれていて 0x92a4 が塗り直すので、
+        // ここだけ止まっていると「1人だけ絵が固まっている」ように見える。
+        if (monsters != null)
+            foreach (var pair in standing)
+                Paint(pair.Value, monsters.FrameAt(pair.Key) ? 0 : 1);
+    }
+
+    /// <summary>その絵を1コマ目(0)／2コマ目(1)に貼り替える。</summary>
+    void Paint(GameObject who, int frame)
+    {
+        if (who == null || monsters == null) return;
+        string key;
+        if (!keyOf.TryGetValue(who, out key)) return;
+        Sprite first, second;
+        if (!monsters.TryFrames(key, out first, out second)) return;
+        var sr = who.GetComponent<SpriteRenderer>();
+        if (sr == null) return;
+        var want = frame == 0 ? first : second;
+        if (want != null && sr.sprite != want) sr.sprite = want;
     }
 
     /// <summary>そのマスに立たせてある人（場面で歩いてきた相手）。無ければ null。</summary>
@@ -61,7 +94,7 @@ public class NpcWalkView : MonoBehaviour
         GameObject who;
         if (!standing.TryGetValue(at, out who)) return;
         standing.Remove(at);
-        if (who != null) Destroy(who);
+        if (who != null) { keyOf.Remove(who); Destroy(who); }
     }
 
     IEnumerator Walk(TowerGame.NpcWalk walk)
@@ -79,6 +112,7 @@ public class NpcWalkView : MonoBehaviour
         GameObject mover;
         if (standing.TryGetValue(walk.From, out mover)) standing.Remove(walk.From);
         else mover = Spawn(walk.Prefab, walk.From);
+        if (mover != null) keyOf[mover] = walk.Prefab;
         var at = walk.From;
         foreach (var to in walk.Path)
         {
@@ -91,7 +125,7 @@ public class NpcWalkView : MonoBehaviour
         }
         else
         {
-            if (mover != null) Destroy(mover);
+            if (mover != null) { keyOf.Remove(mover); Destroy(mover); }
             if (real != null) real.SetActive(true);
         }
         running = false;
@@ -104,15 +138,21 @@ public class NpcWalkView : MonoBehaviour
         var a = new Vector3(from.x, from.y, -1f);
         var b = new Vector3(to.x, to.y, -1f);
         float dur = MonsterAnimation.StepSeconds(false) * (slow ? 2f : 1f);
+        // 主人公と同じで、1マスの**半ばで2コマ目に入れ替える**（原典 0xa276 は
+        // 滑らせる間に 0x92a4 を6回呼ぶ）。横に歩くときだけ入れ替えるのが原典だが、
+        // 縦でも入れ替えるのは作者の指定（<see cref="AuthorStyle.WalkAnimationBothWays"/>）。
+        bool swap = AuthorStyle.WalkAnimationBothWays || (from.y == to.y && from.x != to.x);
         float t = 0f;
         while (t < dur)
         {
             if (who == null) yield break;
             t += Time.deltaTime;
-            who.transform.position = Vector3.Lerp(a, b, Mathf.Clamp01(t / dur));
+            float k = Mathf.Clamp01(t / dur);
+            who.transform.position = Vector3.Lerp(a, b, k);
+            if (swap) Paint(who, k <= 0.5f ? 0 : 1);
             yield return null;
         }
-        if (who != null) who.transform.position = b;
+        if (who != null) { who.transform.position = b; Paint(who, 0); }
     }
 
     GameObject Spawn(string key, Vector2Int at)

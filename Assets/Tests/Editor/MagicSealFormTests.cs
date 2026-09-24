@@ -99,7 +99,9 @@ public class MagicSealFormTests
 
 /// <summary>
 /// 台本の「待つ」（作者の指定）。絵を出してからセリフを出すまでの間を空ける。
-/// 20階はバンパイアを地図に書いてから1秒おいてセリフ121を出す。
+/// 20階はバンパイアを地図に書いてから**0.5秒**おいてセリフ121を出す
+/// （作者の指定「合体が終わってから0.5秒後」）。合体の10コマが終わるまで
+/// 場面が先へ進まないことは <see cref="TowerController"/> の ViewBusy が見る。
 /// </summary>
 public class ScenePauseTests
 {
@@ -118,7 +120,7 @@ public class ScenePauseTests
         Assert.Less(boss, put, "合体の動きのあとに盤面へ書く");
         Assert.Less(put, wait, "**書いてから**待つ（ここが逆だと絵と同時に喋る）");
         Assert.Less(wait, line, "待ってからセリフ");
-        Assert.AreEqual("待つ 60", steps[wait], "1秒");
+        Assert.AreEqual("待つ 30", steps[wait], "0.5秒（作者の指定）");
     }
 
     [Test]

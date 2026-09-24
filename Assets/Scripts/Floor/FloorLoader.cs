@@ -31,6 +31,15 @@ public class FloorLoader : MonoBehaviour
     /// <summary>生成したオブジェクトの親。</summary>
     public Transform Container { get { return container != null ? container : transform; } }
 
+    /// <summary>
+    /// 盤面の物を作ったり消したりするたびに1つ増える番号。
+    /// **盤面の中身が変わったことを外から知る**ための印で、
+    /// 2コマの動き（<see cref="MonsterAnimator"/>）がこれを見て拾い直す。
+    /// これが無いと、場面で現れた相手（10階の骸骨）は
+    /// **主人公が次に動くまで絵が止まったまま**だった（作者の報告）。
+    /// </summary>
+    public int Version { get; private set; }
+
     public void Load(int floorNumber)
     {
         var data = FloorData.Load(floorNumber);
@@ -41,6 +50,7 @@ public class FloorLoader : MonoBehaviour
     public void Build(FloorData data)
     {
         Clear();
+        Version++;
         Current = data;
         if (registry == null)
         {
@@ -143,6 +153,7 @@ public class FloorLoader : MonoBehaviour
             else DestroyImmediate(c.gameObject);
         }
         if (!string.IsNullOrEmpty(kind)) Spawn(kind, pos.x, pos.y);
+        Version++;
     }
 
     /// <summary>

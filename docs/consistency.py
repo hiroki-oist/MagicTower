@@ -1466,6 +1466,36 @@ _fsv=open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read()
 chk("panel.SetActive" not in _fsv and "gameObject.SetActive" not in _fsv,
     "1枚絵の役は**自分の入れ物を消さない**（消すと自分の LateUpdate も止まる）")
 chk("SetVisible" in _fsv,"出し入れは絵と文字の側で行う")
+# 作者の報告（2026-09-24 その3）— 骸骨が動かない／バンパイア／32階の騎士が止まる
+_ctrl=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
+_npc=open("Assets/Scripts/UI/NpcWalkView.cs",encoding="utf-8").read()
+_mani=open("Assets/Scripts/Floor/MonsterAnimator.cs",encoding="utf-8").read()
+_fl=open("Assets/Scripts/Floor/FloorLoader.cs",encoding="utf-8").read()
+# ①合体の10コマを「動いている最中」に数える。数えていなかったので、合体の裏で
+#   場面が先へ進み、地図も「待つ」も合体中に使い切っていた（セリフが合体直後に出た）。
+chk(_ctrl.count("(bossView != null && bossView.IsPlaying)")==2,
+    "合体の10コマ（20階）は ViewMoving と ViewBusy の両方に数える")
+chk("? AuthorStyle.SettleAfterBossSeconds" not in _ctrl,
+    "合体のあとの間は台本の「待つ」に任せる（ここで待つと3マスが空になる）")
+chk("待つ 30 ; 121" in open("Assets/Resources/Cutscenes.txt",encoding="utf-8").read(),
+    "20階は合体のあと0.5秒おいてセリフ121（作者の指定）")
+# ②歩いている人の絵も2コマで動かす（盤面と同じ表を引く）
+chk("public bool TryFrames(string key" in _mani and "public bool FrameAt(Vector2Int cell)" in _mani,
+    "2コマの絵を引く口が MonsterAnimator にある（表は1か所）")
+chk("if (swap) Paint(who, k <= 0.5f ? 0 : 1);" in _npc
+    and "MonsterAnimator monsters" in _npc,
+    "場面で歩く人も主人公と同じに1マスの半ばで2コマ目へ入れ替える")
+chk("monsters.FrameAt(pair.Key)" in _npc,
+    "立ち止まっている人も盤面と同じ拍子で入れ替える")
+chk('wkso.FindProperty("monsters")' in open(
+        "Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read(),
+    "歩く人の役に2コマの表を繋いである")
+# ③盤面の中身が変わったら拾い直す（場面で現れた相手が動かなかった）
+chk("public int Version { get; private set; }" in _fl and _fl.count("Version++")>=2,
+    "盤面の物を作り消しするたびに版が上がる")
+chk("if (seenVersion != loader.Version)" in _mani,
+    "版が変わったら2コマの仕掛けが拾い直す（場面で現れた相手も動く）")
+
 # 作者の報告（その6）
 _tg6=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("pendingEvaluate && pages.Count == 0 && !ViewMoving" in _tg6,

@@ -94,10 +94,12 @@ public static class TowerSceneBuilder
         if (sprite2 != null) cso.FindProperty("playerSprite2").objectReferenceValue = sprite2;
         cso.ApplyModifiedPropertiesWithoutUndo();
 
-        BuildHud(tower, controller, cam);
-
         // 盤面の敵と人は2コマで動く（原典 0x92a4）。
+        // ★**帯や場面の役より先に作る** — 歩いていく人の絵もこの表を引くので、
+        //   あとから作ると NpcWalkView の参照が空のままになる。
         BuildMonsterAnimator(tower, controller, loader);
+
+        BuildHud(tower, controller, cam);
         // 移動の演出はコマごとにその動きを進めるので、入力の側から参照を持たせる
         var mso = new SerializedObject(controller);
         mso.FindProperty("monsters").objectReferenceValue =
@@ -595,6 +597,10 @@ public static class TowerSceneBuilder
             controller.GetComponent<FloorLoader>();
         wkso.FindProperty("registry").objectReferenceValue =
             Resources.Load<FloorPrefabRegistry>("FloorPrefabRegistry");
+        // 歩いている人の絵も2コマで動かすので、盤面と同じ表を見せる
+        // （作者の報告「骸骨が動かない」「32階の騎士の画像が止まってる」）。
+        wkso.FindProperty("monsters").objectReferenceValue =
+            controller.GetComponent<MonsterAnimator>();
         wkso.ApplyModifiedPropertiesWithoutUndo();
 
         // 場面は1本道。歩きと点滅が終わるまで次の手へ進まないようにする。

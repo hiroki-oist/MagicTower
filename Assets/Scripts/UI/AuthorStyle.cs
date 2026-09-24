@@ -168,7 +168,13 @@ public static class AuthorStyle
     /// <summary>盤面を描き出したあとの間（秒）。暗転が明けてすぐだと誰の声か分からない。</summary>
     public static readonly float SettleAfterDrawSeconds = 1f;
 
-    /// <summary>ボスが現れたあとの間（秒）。合体の直後にすぐ喋られると落ち着かない。</summary>
+    /// <summary>
+    /// ⚠ **もう使っていない**。ボスが現れたあとの間は、台本（Cutscenes.txt）の
+    /// 「待つ 30」＝0.5秒に移した（作者の指定「合体が終わってから0.5秒後」）。
+    /// ここで待たせると、その間は地図も書けないので**合体が消えたあと
+    /// 空っぽの3マス**ができてしまう。原典 0x3044 の順は
+    /// 「10コマ → 地図にバンパイアを書く → 60回待つ → セリフ121」。
+    /// </summary>
     public static readonly float SettleAfterBossSeconds = 1f;
 
     /// <summary>
