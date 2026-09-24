@@ -1481,6 +1481,19 @@ chk("maxVisibleCharacters" in _dwv and "TypeCharsPerSecond" in _dwv,
 _tc=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
 chk("if (!drawing) SyncChangedCells();" in _tc,
     "描き出しの最中は地図を映さない（暗転中に商店が浮かんで見えた）")
+# 盤面の作り直しは「この一手で階が変わったか」ではなく
+# **「見た目が映している階と本線の階が合っているか」**で決める。
+# 場面の中でも階は変わる（序章で2階の牢へ、終幕で24階から50階へ駆け上がる）が、
+# そこは AfterAction を通らないので、前の判定では作り直されず
+# 24階の盤面のまま止まって見えていた（作者の報告）。
+chk("int shownFloor" in _tc and "shownFloor = Game.Player.Floor;" in _tc,
+    "見た目が映している階を覚えておく（RebuildView が入れる）")
+chk(_tc.count("Game.Player.Floor != shownFloor") == 2
+    and "Game.Player.Floor != floorBefore" not in _tc,
+    "作り直しの判定は shownFloor と比べる（Tick と AfterAction の2か所）")
+chk(_tc.index("Game.Pump(ViewBusy, ViewMoving);")
+    < _tc.index("Game.ConsumeViewRebuild() || Game.Player.Floor != shownFloor"),
+    "場面を進めた**直後**に見るので、場面の中で階が変わってもその場で作り直す")
 chk("dialogue.IsWaiting" in _tc and "dialogue.RevealAll()" in _tc,
     "まだ出ていないセリフは決定で飛ばせない／出している途中なら全部出す")
 chk("Game.HasPendingView" in _tc,
@@ -2584,7 +2597,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=754
+MIN_CHECKS=757
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

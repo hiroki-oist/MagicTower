@@ -220,6 +220,16 @@ public class TowerController : MonoBehaviour
         if (AtTitle) { UpdateMusic(); return; }
         // 場面の続きを進める。原典の場面は1本道で、絵が動き終わってから次の行に進む。
         Game.Pump(ViewBusy, ViewMoving);
+        // ★**見た目が映している階**と本線の階がずれたら、その場で作り直す。
+        // 階が変わるのは入力の後始末（AfterAction）だけではない — **場面の中でも変わる**
+        // （序章でゼノに奪われて2階の牢へ、終幕で24階から50階まで駆け上がる）。
+        // そこは AfterAction を通らないうえ、下の floorBefore は Pump の**あと**に
+        // 読むので「変わっていない」ことになり、誰も作り直さないまま前の階の盤面が
+        // 残っていた（作者の報告「24階で時空の扉を通ってからスクリーンに変化が無い」）。
+        //
+        // 【設計方針・全体に適用】作り直しの判定は「この一手で階が変わったか」ではなく
+        // **「見た目が映している階（shownFloor）と本線の階が合っているか」**で行う。
+        if (Game.ConsumeViewRebuild() || Game.Player.Floor != shownFloor) RebuildView();
         // 場面の途中で書き換わった地図を、その場で見た目に映す
         // （一手の後始末を待っていると、歩く先のマスがまだ空のままになる）。
         // **描き出しの最中は映さない** — 渦巻きに描いている途中で作り直すと、
@@ -494,7 +504,7 @@ public class TowerController : MonoBehaviour
         // ロードは階が同じでも盤面が入れ替わるので、そのときも作り直す
         // （倒した敵や拾った物が画面に戻らない、という作者の報告）。
         bool reload = Game.ConsumeViewRebuild();
-        if (reload || Game.Player.Floor != floorBefore) RebuildView();
+        if (reload || Game.Player.Floor != shownFloor) RebuildView();
         else SyncChangedCells();
         // 隣のマスへ1歩動いたときだけ滑らせる（原典 0xa276。階が変わる・
         // 戦闘の踏み込み・階段や門で飛ぶときは、原典もこの演出を通らない）
@@ -718,9 +728,16 @@ public class TowerController : MonoBehaviour
     /// （開けた扉・倒した敵・イベントで出た物・開いた牢）を上から反映する。
     /// `TowerGame` は階ごとの盤面を覚えているので、そちらを正として差を当てる。
     /// </summary>
+    /// <summary>
+    /// いま見た目が映している階。<see cref="RebuildView"/> が入れる。
+    /// これと本線の階がずれている間は、盤面が前の階のまま残っていることになる。
+    /// </summary>
+    int shownFloor = -1;
+
     public void RebuildView()
     {
         if (loader == null || Game == null) return;
+        shownFloor = Game.Player.Floor;
         var data = FloorData.Load(Game.Player.Floor);
         loader.Build(data);
 
