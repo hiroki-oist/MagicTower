@@ -1638,9 +1638,10 @@ chk("if (cap == DialogueBox.WideCharsPerLine) return Even(cap);" in _as3,
     "広い窓は目一杯の幅で固定する（値段の長さで折り返さないように）")
 _phs=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
 _gshop=open("Assets/Scripts/Items/GoldShop.cs",encoding="utf-8").read()
-chk('ShopPriceColumn = "<pos=66%>"' in _phs
-    and "PhoneScreen.ShopPriceColumn" in _gshop,
-    "値段は決まった列に置く")
+# ⚠ TMP の <pos> の札は解釈されず字として出てしまった（作者の報告）。
+#   飾りの札に頼らず、名前を全角空白で伸ばして値段の頭をそろえる。
+chk("ShopPriceGap" in _phs and "<pos" not in _gshop and "<pos" not in _phs,
+    "値段の頭は全角空白でそろえる（位置を指す札は使わない）")
 chk(os.path.exists("Assets/Scripts/Items/GoldShop.cs")
     and "ChoiceKind.GoldShop" in _tg4,
     "課金の窓は選ばせる窓の仕組みに乗せる")

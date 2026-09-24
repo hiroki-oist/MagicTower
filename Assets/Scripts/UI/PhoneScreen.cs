@@ -139,11 +139,13 @@ public static class PhoneScreen
     public const string ShopIndent = "　　";
 
     /// <summary>
-    /// 値段を出す横の位置（窓の幅に対する割合）。ここで桁をそろえる。
-    /// 現地の表記は長さがまちまち（`$0.99` / `¥160` / `R$ 29,90`）なので、
-    /// 名前のうしろに続けず**決まった列**に置く。
+    /// 品目の名前と値段のあいだに置く空き（全角）。
+    ///
+    /// ⚠ はじめ TMP の `&lt;pos=66%&gt;` で列をそろえようとしたが、
+    /// **その札は解釈されずそのまま字として出てしまった**（作者の報告）。
+    /// 飾りの札に頼らず、**名前を全角空白で伸ばして桁をそろえる**。
     /// </summary>
-    public const string ShopPriceColumn = "<pos=66%>";
+    public const int ShopPriceGap = 2;
 
     /// <summary>「購入を復元する」の行。Apple の審査指針 3.1.1 で置くことが要る。</summary>
     public const string ShopRestore = "購入を復元する";

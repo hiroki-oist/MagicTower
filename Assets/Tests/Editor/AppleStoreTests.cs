@@ -96,14 +96,25 @@ public class AppleStoreTests
         Assert.Greater(wide, AuthorStyle.WidthFor("ふつうのセリフ"));
     }
 
-    /// <summary>値段は決まった列に置く（名前のうしろに続けない）。</summary>
+    /// <summary>
+    /// 値段の頭をそろえる。⚠ TMP の `&lt;pos&gt;` の札は解釈されず字として出てしまったので、
+    /// **飾りの札を使わず全角空白で伸ばす**（作者の報告）。
+    /// </summary>
     [Test]
-    public void 値段は決まった列に置く()
+    public void 値段の頭がそろっている()
     {
-        StringAssert.Contains(PhoneScreen.ShopPriceColumn, GoldShop.Text());
-        StringAssert.StartsWith("<pos=", PhoneScreen.ShopPriceColumn);
-        // 幅を数えるときは札を外す
-        Assert.AreEqual("あ160円", DialogueBox.Visible("あ<pos=66%>160円"));
+        var text = GoldShop.Text();
+        StringAssert.DoesNotContain("<pos", text, "位置を指す札は使わない");
+        int at = -1;
+        foreach (var line in text.Split('\n'))
+        {
+            if (!line.Contains("ゴールドの引換券")) continue;
+            int i = line.IndexOf("券") + 1;
+            while (i < line.Length && line[i] == '　') i++;
+            if (at < 0) at = i;
+            Assert.AreEqual(at, i, "値段の頭が同じ位置: " + line);
+        }
+        Assert.Greater(at, 0, "品目の行がある");
     }
 
     /// <summary>買えたことが分かってから渡す（シートを出した時点では渡さない）。</summary>

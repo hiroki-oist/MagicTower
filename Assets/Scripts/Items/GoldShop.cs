@@ -96,14 +96,23 @@ public static class GoldShop
         sb.Append(DialogueBox.WideMark);          // この窓は広く出す
         foreach (var line in PhoneScreen.ShopIntro) sb.Append(line).Append('\n');
         sb.Append('\n');
+        // 名前はいちばん長いものに合わせて全角空白で伸ばし、値段の頭をそろえる。
+        // （飾りの札で列を指すやり方は TMP が解釈してくれなかった）
+        int wide = 0;
         for (int i = 0; i < Count; i++)
         {
-            // 「[金貨]４００ゴールドの引換券　１６０円」
+            int n = string.Format(PhoneScreen.ShopItemName, Wide(GoldOf(i))).Length;
+            if (n > wide) wide = n;
+        }
+        for (int i = 0; i < Count; i++)
+        {
+            // 「[金貨]４００ゴールドの引換券　　　$0.99」
             // 頭の全角2つは金貨の絵を重ねる場所（絵は DialogueWindowView が置く）
             sb.Append(PhoneScreen.ShopIndent);
-            sb.Append(string.Format(PhoneScreen.ShopItemName, Wide(GoldOf(i))));
-            // 値段は決まった列に置く（現地の表記で長さが変わるため）
-            sb.Append(PhoneScreen.ShopPriceColumn).Append(PriceText(i));
+            var name = string.Format(PhoneScreen.ShopItemName, Wide(GoldOf(i)));
+            sb.Append(name);
+            sb.Append('　', wide - name.Length + PhoneScreen.ShopPriceGap);
+            sb.Append(PriceText(i));
             sb.Append('\n');
         }
         sb.Append("　　").Append(PhoneScreen.ShopRestore).Append('\n');
