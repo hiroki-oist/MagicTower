@@ -68,6 +68,62 @@ public static class TowerScreenshot
 
     static string fullScreen;
 
+    /// <summary>
+    /// **課金の窓の写しを撮る**。本線と同じ道（DialogueWindowView.PreviewBoxed）を通すので、
+    /// ここで1行に収まっていれば実機でも収まる。
+    ///
+    ///   Unity -batchmode -quit -projectPath . -executeMethod TowerScreenshot.CaptureShop
+    /// </summary>
+    public static void CaptureShop() { shop = true; Capture(false); }
+
+    static bool shop;
+
+    static void ShowShop()
+    {
+        if (!shop) return;
+        // 題名が前に出ているので退ける
+        var title = Object.FindObjectOfType<TitleView>(true);
+        if (title != null) title.Hide();
+        var win = Object.FindObjectOfType<DialogueWindowView>(true);
+        if (win == null) { Debug.LogWarning("会話の窓が見つからない"); return; }
+        // ★**実機と同じ値段の字**で組ませる（米国ストアの表記がいちばん長い）。
+        //   環境変数 MT_SHOP_PRICES で差し替えられる（「,」区切りで3つ）。
+        var env = System.Environment.GetEnvironmentVariable("MT_SHOP_PRICES");
+        var prices = string.IsNullOrEmpty(env)
+                   ? new[] { "$0.99", "$1.99", "$5.99" } : env.Split(',');
+        AppleStore.PreviewLive = true;
+        var sb2 = new System.Text.StringBuilder(
+            "{\"ready\":true,\"canPay\":true,\"busy\":false,\"msg\":\"\",\"items\":[");
+        for (int i = 0; i < AppleStore.ProductIds.Length; i++)
+        {
+            if (i > 0) sb2.Append(',');
+            sb2.Append("{\"id\":\"").Append(AppleStore.ProductIds[i])
+               .Append("\",\"price\":\"")
+               .Append(prices[System.Math.Min(i, prices.Length - 1)].Trim())
+               .Append("\",\"owned\":false}");
+        }
+        sb2.Append("]}");
+        AppleStore.Parse(sb2.ToString());
+        win.PreviewBoxed(GoldShop.Text(), 0);
+        win.transform.SetAsLastSibling();
+        // 何行で組まれたかを書き出す（1品目が1行に収まっているかの手がかり）
+        var body = win.Body;
+        if (body == null) { Debug.LogWarning("本文が繋がっていない"); return; }
+        body.ForceMeshUpdate();
+        if (body.textInfo == null) { Debug.LogWarning("本文がまだ組まれていない"); return; }
+        Debug.Log($"■課金の窓: 組まれた行数 = {body.textInfo.lineCount}"
+                + $" / 本文の行数 = {GoldShop.Text().Split('\n').Length}"
+                + $" / 窓の幅 = {AuthorStyle.WidthFor(GoldShop.Text())}ドット");
+        for (int i = 0; i < body.textInfo.lineCount; i++)
+        {
+            var li = body.textInfo.lineInfo[i];
+            var sb = new System.Text.StringBuilder();
+            for (int c = li.firstCharacterIndex; c <= li.lastCharacterIndex; c++)
+                sb.Append(body.textInfo.characterInfo[c].character);
+            Debug.Log($"■{i}: {sb}");
+        }
+    }
+
     /// <summary>名前の1枚絵と、その後ろの黒地を出す。</summary>
     static void ShowFullScreen()
     {
@@ -114,6 +170,7 @@ public static class TowerScreenshot
         FillSample();
         ShowDpad();
         ShowFullScreen();
+        ShowShop();
         if (damagePanel) FillDamagePanel();
 
         var canvas = Object.FindObjectOfType<Canvas>();

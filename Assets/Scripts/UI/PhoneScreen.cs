@@ -119,10 +119,9 @@ public static class PhoneScreen
     /// </summary>
     public static readonly string[] ShopIntro =
     {
-        "ゴールドを購入します。",
-        "どれも買い切りです。一度購入すれば、",
-        "次回プレイからは無料で同じゴールドを",
-        "受け取れます（機種を変えても復元可）",
+        "ゴールドを購入します。どれも買い切り。",
+        "一度購入すれば、次回プレイからは無料で",
+        "同じゴールドを受け取れます（復元可）",
     };
 
     /// <summary>
@@ -146,6 +145,13 @@ public static class PhoneScreen
     /// 飾りの札に頼らず、**名前を全角空白で伸ばして桁をそろえる**。
     /// </summary>
     public const int ShopPriceGap = 2;
+
+    /// <summary>
+    /// 品目の行は**2行ぶんの高さ**で見せる（作者の指定）。
+    /// 本文では品目のあいだに空行を入れ、枠はその2行にまたがって置く。
+    /// 金貨の絵も同じだけ大きくする。
+    /// </summary>
+    public const int ShopRowLines = 2;
 
     /// <summary>「購入を復元する」の行。Apple の審査指針 3.1.1 で置くことが要る。</summary>
     public const string ShopRestore = "購入を復元する";

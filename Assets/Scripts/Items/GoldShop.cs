@@ -114,6 +114,8 @@ public static class GoldShop
             sb.Append('　', wide - name.Length + PhoneScreen.ShopPriceGap);
             sb.Append(PriceText(i));
             sb.Append('\n');
+            // 品目のあいだを空ける（枠はこの空行まで含めて2行ぶんの高さになる）
+            sb.Append('\n');
         }
         sb.Append("　　").Append(PhoneScreen.ShopRestore).Append('\n');
         sb.Append("　　やめる");

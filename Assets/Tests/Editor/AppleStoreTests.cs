@@ -117,6 +117,27 @@ public class AppleStoreTests
         Assert.Greater(at, 0, "品目の行がある");
     }
 
+    /// <summary>
+    /// 本文はこちらで行に分けてあるので、**TMP に重ねて折り返させない**。
+    /// 折り返させると値段だけが次の行へ落ちる（作者の報告「.99が二行目に」）。
+    /// 実際の組まれ方は `TowerScreenshot.CaptureShop` で写しを撮って確かめる。
+    /// </summary>
+    [Test]
+    public void 課金の窓はTMPに折り返させない()
+    {
+        var view = System.IO.File.ReadAllText("Assets/Scripts/UI/DialogueWindowView.cs");
+        StringAssert.Contains("body.enableWordWrapping = !Boxed;", view);
+        StringAssert.Contains("PreviewBoxed", view, "写しの道具が同じ道を通れる");
+        var shot = System.IO.File.ReadAllText("Assets/Editor/TowerScreenshot.cs");
+        StringAssert.Contains("CaptureShop", shot);
+        StringAssert.Contains("MT_SHOP_PRICES", shot, "実機と同じ値段の字で組ませる");
+
+        // 本文の行数（品目のあいだに空行が1つずつ入る）
+        var lines = GoldShop.Text().Split('\n');
+        Assert.AreEqual(PhoneScreen.ShopIntro.Length + 1
+                        + GoldShop.Count * PhoneScreen.ShopRowLines + 2, lines.Length);
+    }
+
     /// <summary>買えたことが分かってから渡す（シートを出した時点では渡さない）。</summary>
     [Test]
     public void 買えたことが分かってから渡す()

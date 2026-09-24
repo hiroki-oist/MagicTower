@@ -1642,6 +1642,14 @@ _gshop=open("Assets/Scripts/Items/GoldShop.cs",encoding="utf-8").read()
 #   飾りの札に頼らず、名前を全角空白で伸ばして値段の頭をそろえる。
 chk("ShopPriceGap" in _phs and "<pos" not in _gshop and "<pos" not in _phs,
     "値段の頭は全角空白でそろえる（位置を指す札は使わない）")
+# 本文はこちらで行に分けてあるので TMP に重ねて折り返させない。
+# 実際の組まれ方は TowerScreenshot.CaptureShop で写しを撮って確かめる。
+chk("body.enableWordWrapping = !Boxed;" in _dw and "PreviewBoxed" in _dw,
+    "課金の窓は TMP に折り返させない／写しの道具から同じ道を通せる")
+chk("CaptureShop" in open("Assets/Editor/TowerScreenshot.cs",encoding="utf-8").read(),
+    "課金の窓の写しを撮る道具がある")
+chk("ShopRowLines = 2" in _phs and "ShopRowGap" in _dw,
+    "品目の行は2行ぶんの高さで、あいだに隙間を空ける")
 chk(os.path.exists("Assets/Scripts/Items/GoldShop.cs")
     and "ChoiceKind.GoldShop" in _tg4,
     "課金の窓は選ばせる窓の仕組みに乗せる")
@@ -2827,7 +2835,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=827
+MIN_CHECKS=830
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

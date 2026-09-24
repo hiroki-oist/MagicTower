@@ -46,11 +46,18 @@ public static class AppleStore
     public static string Message { get; private set; }
     public static Item[] Items = new Item[0];
 
+    /// <summary>
+    /// **写しを撮るとき**だけ、実機と同じ道を通らせる（`TowerScreenshot`）。
+    /// 値段の字は <see cref="Parse"/> で入れる。ふだんは false。
+    /// </summary>
+    public static bool PreviewLive;
+
     /// <summary>実機の iOS で動いているか（見本ではなく本物の StoreKit を通すか）。</summary>
     public static bool Live
     {
         get
         {
+            if (PreviewLive) return true;
 #if UNITY_IOS && !UNITY_EDITOR
             return true;
 #else

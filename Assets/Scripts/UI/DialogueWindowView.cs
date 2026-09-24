@@ -62,16 +62,53 @@ public class DialogueWindowView : MonoBehaviour
         var shownText = (cursor == null && controller.Game.IsChoosing)
                       ? WithMark(page, controller.Game) : page;
         // 課金の窓だけは**矢印を出さず、選んでいない行を灰色に沈める**（作者の指定）
-        if (Boxed) shownText = Dim(page, controller.Game);
+        if (Boxed) shownText = Dim(page, controller.Game.ChoiceIndex);
         if (page != Showing || (body != null && body.text != shownText))
         {
             Showing = page;
-            if (body != null) { body.text = shownText; body.color = Text; }
+            if (body != null)
+            {
+                // ★**この窓では TMP に折り返させない**。本文はこちらで（DialogueBox で）
+                //   すでに行に分けてあるので、TMP が重ねて折り返すと値段だけが
+                //   次の行へ落ちる（作者の報告「.99が二行目に振り分けられる」）。
+                body.enableWordWrapping = !Boxed;
+                body.text = shownText;
+                body.color = Text;
+            }
             if (background != null)
                 background.color = AuthorStyle.Enabled ? AuthorFill : Fill;
             Layout(page);
             StartOpening(page);
         }
+    }
+
+    /// <summary>
+    /// **写しを撮るための入口**（`TowerScreenshot`）。遊ばずに、課金の窓を組んだ形で出す。
+    /// 本線と同じ <see cref="Dim"/> と <see cref="PlaceFrames"/> を通すので、
+    /// ここで見えたものが実機でもそのまま出る。
+    /// </summary>
+    /// <summary>写しの道具から本文の組まれ方を見るための口。</summary>
+    public TMPro.TMP_Text Body { get { return body; } }
+
+    public void PreviewBoxed(string page, int choice)
+    {
+        if (panel == null) return;
+        panel.gameObject.SetActive(true);
+        var r = Rect(page);
+        panel.anchoredPosition = DialogueWindow.ToCanvas(r);
+        panel.sizeDelta = DialogueWindow.SizeOnCanvas(r);
+        if (background != null)
+            background.color = AuthorStyle.Enabled ? AuthorFill : Fill;
+        if (body != null)
+        {
+            body.enabled = true;
+            body.enableWordWrapping = false;
+            body.text = Dim(page, choice);
+            body.color = Text;
+            body.maxVisibleCharacters = int.MaxValue;
+        }
+        if (cursor != null) cursor.enabled = false;
+        PlaceFrames(page, true);
     }
 
     /// <summary>選んでいる行が本文の何行目か。無ければ -1。</summary>
@@ -144,7 +181,7 @@ public class DialogueWindowView : MonoBehaviour
     /// 選んでいない行を灰色に沈める（<see cref="Boxed"/> の窓だけ）。
     /// 金貨の絵も同じ札で沈むので、絵ごとグレースケールになる。
     /// </summary>
-    static string Dim(string page, TowerGame game)
+    public static string Dim(string page, int choice)
     {
         if (string.IsNullOrEmpty(page)) return page;
         var lines = page.Split('\n');
@@ -152,7 +189,7 @@ public class DialogueWindowView : MonoBehaviour
         for (int i = 0; i < lines.Length; i++)
         {
             if (!IsChoiceLine(lines[i])) continue;
-            if (seen != game.ChoiceIndex)
+            if (seen != choice)
                 lines[i] = DimOpen + lines[i] + DimClose;
             seen++;
         }
@@ -162,10 +199,19 @@ public class DialogueWindowView : MonoBehaviour
     /// <summary>沈める色。原典の窓の中と同じ濃さの灰。</summary>
     public const string DimOpen = "<color=#7a7a7aff>", DimClose = "</color>";
 
+    /// <summary>枠と枠のあいだに空ける隙間（ドット。作者の指定）。</summary>
+    public const int ShopRowGap = 8;
+
     /// <summary>選択肢を囲む枠を置く。</summary>
-    void PlaceFrames(string page)
+    void PlaceFrames(string page) { PlaceFrames(page, Boxed && controller.Game.IsChoosing); }
+
+    /// <summary>
+    /// 選択肢を囲む枠を置く。**写しの道具からも同じ道を通す**ので、
+    /// 本線（TowerGame）に頼らず「出すかどうか」だけを受け取る。
+    /// </summary>
+    public void PlaceFrames(string page, bool boxed)
     {
-        bool show = Boxed && controller.Game.IsChoosing;
+        bool show = boxed;
         int shown = 0, coins = 0;
         if (show && panel != null)
         {
@@ -180,17 +226,26 @@ public class DialogueWindowView : MonoBehaviour
             for (int i = 0; i < lines.Length && shown < optionEdges.Length; i++)
             {
                 if (!IsChoiceLine(lines[i])) continue;
-                float y = -(top + advance * i - 3) * DialogueWindow.CanvasScale;
-                float h = (advance + 2) * DialogueWindow.CanvasScale;
+                // ★品目の行は**2行ぶんの高さ**（作者の指定）。字の行を真ん中にしたいので、
+                //   半行ぶん上から始めて2行ぶんの高さを取る。空行はそのぶんを受け持つ。
+                bool item = shown < GoldShop.Count;
+                int rows = item ? PhoneScreen.ShopRowLines : 1;
+                float half = item ? advance * 0.5f : 0f;
+                // 1行ぶんの選択肢は、字がはみ出さないぎりぎりまで詰める
+                float gap = item ? ShopRowGap : 2;
+                float y = -(top + advance * i - (item ? 3 : 2) - half)
+                        * DialogueWindow.CanvasScale;
+                float h = (advance * rows + 2 - gap) * DialogueWindow.CanvasScale;
                 Box(optionEdges[shown], left * DialogueWindow.CanvasScale - 6f, y,
                     w + 12f, h, PhoneScreen.SlotEdge);
                 Box(optionFills[shown], left * DialogueWindow.CanvasScale - 4f, y - 2f,
                     w + 8f, h - 4f, PhoneScreen.SlotFill);
-                // 品目の行だけ、頭の空きに金貨を置く
-                if (shown < GoldShop.Count && shown < optionCoins.Length
-                    && optionCoins[shown] != null)
+                // 品目の行だけ、頭の空きに金貨を置く（高さに合わせて大きくする）
+                if (item && shown < optionCoins.Length && optionCoins[shown] != null)
                 {
-                    float c = AuthorStyle.DialogueTextDots * DialogueWindow.CanvasScale;
+                    // 字下げ（全角2つ）に収まるよう、ほんの少し小さくして間を空ける
+                    float c = AuthorStyle.DialogueTextDots * PhoneScreen.ShopRowLines
+                            * 0.9f * DialogueWindow.CanvasScale;
                     Box(optionCoins[shown], left * DialogueWindow.CanvasScale,
                         y - (h - c) / 2f, c, c, Color.white);
                     coins = shown + 1;
