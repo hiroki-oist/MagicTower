@@ -132,6 +132,7 @@ public static class PhoneScreen
     /// <summary>復元したときの知らせ。</summary>
     public const string ShopRestored = "購入を復元しました（{0}件）。";
     public const string ShopNothingToRestore = "復元できる購入はありませんでした。";
+    public const string ShopRestoring = "購入を復元しています……";
 
     /// <summary>売り物。金額は円。</summary>
     public static readonly int[] ShopGold = { 400, 1000, 4000 };

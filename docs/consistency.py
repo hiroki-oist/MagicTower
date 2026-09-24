@@ -1668,6 +1668,33 @@ chk(os.path.exists("Assets/Editor/IosPostBuild.cs")
 chk(os.path.exists("docs/make_icon.py")
     and len(glob.glob("docs/icon_candidates/*.png"))>=4,
     "アイコンの候補が原典の絵から作れる")
+chk(os.path.exists("Assets/Sprites/Icon.png")
+    and 'PICK = "Icon_5_夜の塔_文字大.png"' in open("docs/make_icon.py",encoding="utf-8").read(),
+    "作者が選んだ案（⑤夜の塔・文字大）が Assets に入っている")
+# 課金は Apple In-App Purchase（StoreKit 2）を通す
+_sw=open("Assets/Plugins/iOS/MagicTowerStore.swift",encoding="utf-8").read()
+_ap=open("Assets/Scripts/Items/AppleStore.cs",encoding="utf-8").read()
+chk("import StoreKit" in _sw and "product.purchase()" in _sw,
+    "支払いは StoreKit を通す（3.1.1）")
+chk("AppStore.sync()" in _sw and "Transaction.currentEntitlements" in _sw,
+    "復元と権利の読み直しがある（非消耗型に必須）")
+chk("AppStore.canMakePayments" in _sw and "GoldShop.Available" in _tg4,
+    "支払えない端末では商店を出さない（HIG）")
+chk("p.displayPrice" in _sw and "AppleStore.PriceOf(i)" in _gs,
+    "値段は App Store の現地表記から出す（円を焼き込まない）")
+chk('"com.magictower.remake.gold400"' in _ap,
+    "品目の番号を持っている（App Store Connect に同じ字で登録する）")
+chk('targetOSVersionString = "15.0"' in _ib,
+    "StoreKit 2 に合わせて iOS 15 以上")
+_pb=open("Assets/Editor/IosPostBuild.cs",encoding="utf-8").read()
+chk("SWIFT_VERSION" in _pb,
+    "Swift を組み上げる設定を書き出しのあとに入れる")
+# Swift を入れると Xcode が Debug の本体を dylib にしようとして、Unity の main.mm が
+# 見ている __mh_execute_header が無くなり繋がらない。実行ファイルのまま作らせる。
+chk("ENABLE_DEBUG_DYLIB" in _pb and "__mh_execute_header" in _pb,
+    "Debug の本体を dylib にさせない（Swift を入れると既定で dylib になる）")
+chk("SetIcon()" in _ib and "SetIconsForTargetGroup" in _ib,
+    "アイコンを全部の欄へ入れる（入れないと Unity のロゴのまま出る）")
 chk('"Assets/Sprites/Screens/Ending_Tower1.png"' in _tsb
     and '"Assets/Sprites/Screens/Ending_Tower2.png"' in _tsb,
     "塔(MTOWER1)と荒野(MTOWER2)の2枚ともシーンに入っている")
@@ -2770,7 +2797,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=809
+MIN_CHECKS=819
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

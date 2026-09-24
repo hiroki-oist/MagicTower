@@ -130,6 +130,9 @@ def cut_letters(img):
     return w, h, out
 
 
+# 看板のうち「魔法の塔」の4文字だけの高さ（下の英字の行を落とす）。
+KANJI_H = 80
+
 NIGHT = (0, 0, 34)          # 終幕のパレットの索引0
 STONE = (0x44, 0x44, 0x44)  # 原典の地の灰
 
@@ -169,15 +172,79 @@ def candidates():
     blit(d, None, logo[0], logo[1], logo[2], (N - 300 * 3) // 2, N - 104 * 3 - 40, 3)
     made.append(("Icon_4_石積みと塔.png", d))
 
+    # ⑤⑥ 英字の行を落として「魔法の塔」の4文字だけ大きく使う。
+    #     アイコンは 60 ドットまで縮むので、小さい英字は必ず潰れる。
+    kw, kh, kr = crop(logo[0], logo[1], logo[2], 0, 0, 300, KANJI_H)
+
+    e = blank(NIGHT)
+    blit(e, None, jw, jh, jr, 0, 0, N / float(jw))
+    blit(e, None, kw, kh, kr, (N - 300 * 3) // 2, N - KANJI_H * 3 - 90, 3)
+    made.append(("Icon_5_夜の塔_文字大.png", e))
+
+    f = blank(STONE)
+    tile_bg(f, f"{HUD}/Brick.png", 4)
+    blit(f, None, kw, kh, kr, (N - 300 * 3) // 2, (N - KANJI_H * 3) // 2, 3)
+    made.append(("Icon_6_看板_文字大.png", f))
+
     return made
+
+
+# ★作者が選んだ案（2026-09-24）。`--install` でここの1枚を Assets へ入れる。
+PICK = "Icon_5_夜の塔_文字大.png"
+INSTALL = f"{ROOT}/Assets/Sprites/Icon.png"
+
+ICON_META = """fileFormatVersion: 2
+guid: {guid}
+TextureImporter:
+  internalIDToNameTable: []
+  externalObjects: {{}}
+  serializedVersion: 12
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+  textureType: 0
+  textureShape: 1
+  spriteMode: 0
+  alphaIsTransparency: 0
+  npotScale: 0
+  isReadable: 1
+  streamingMipmaps: 0
+  platformSettings:
+  - serializedVersion: 3
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 100
+  userData:
+  assetBundleName:
+  assetBundleVariant:
+"""
 
 
 def main():
     os.makedirs(OUT, exist_ok=True)
-    for name, rows in candidates():
+    made = candidates()
+    for name, rows in made:
         write_rgba(os.path.join(OUT, name), N, N, rows)
         print(" ", name)
     print(f"{OUT} に書き出した")
+    if "--install" in sys.argv:
+        import hashlib
+        rows = dict(made)[PICK]
+        write_rgba(INSTALL, N, N, rows)
+        meta = INSTALL + ".meta"
+        if not os.path.exists(meta):
+            guid = hashlib.md5(b"MagicTower/Icon.png").hexdigest()
+            open(meta, "w").write(ICON_META.format(guid=guid))
+        print(f"{PICK} → {INSTALL}")
 
 
 if __name__ == "__main__":

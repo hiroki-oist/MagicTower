@@ -46,6 +46,41 @@ public static class IosBuild
     [MenuItem("MagicTower/iOS 実機向けに書き出す")]
     public static void BuildDevice() { Build(iOSSdkVersion.DeviceSDK); }
 
+    /// <summary>アイコンの元絵（1024x1024）。作り方は `docs/make_icon.py`。</summary>
+    public const string IconPath = "Assets/Sprites/Icon.png";
+
+    /// <summary>
+    /// アイコンを全部の欄へ入れる。Unity は欄ごとに大きさが違うが、
+    /// **同じ1枚**を入れておけば書き出すときにそれぞれの大きさへ縮めてくれる。
+    /// 入れないと Unity のロゴのまま出てしまう（App Store には出せない）。
+    /// </summary>
+    static void SetIcon()
+    {
+        var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(IconPath);
+        if (tex == null) { Debug.LogWarning("アイコンが無い: " + IconPath); return; }
+        foreach (iOSTargetDevice dev in new[] { iOSTargetDevice.iPhoneAndiPad })
+        {
+            foreach (var kind in new[] { iOSIconKind.Application, iOSIconKind.Settings,
+                                         iOSIconKind.Spotlight, iOSIconKind.Notification,
+                                         iOSIconKind.Marketing })
+            {
+                int n = PlayerSettings.GetIconSizesForTargetGroup(
+                            BuildTargetGroup.iOS, (IconKind)(int)kind).Length;
+                if (n == 0) continue;
+                var icons = new Texture2D[n];
+                for (int i = 0; i < n; i++) icons[i] = tex;
+                PlayerSettings.SetIconsForTargetGroup(
+                    BuildTargetGroup.iOS, icons, (IconKind)(int)kind);
+            }
+            break;
+        }
+        Debug.Log("アイコンを入れた: " + IconPath);
+    }
+
+    /// <summary>iOS のアイコンの欄（UnityEditor.IconKind に合わせた並び）。</summary>
+    enum iOSIconKind { Application = 0, Settings = 1, Notification = 2, Spotlight = 3,
+                       Store = 4, Marketing = 5 }
+
     static void Build(iOSSdkVersion sdk)
     {
         PlayerSettings.productName = ProductName;
@@ -58,7 +93,8 @@ public static class IosBuild
         PlayerSettings.SetArchitecture(BuildTargetGroup.iOS, 1);
         Debug.Log($"iOS の作り: SDK={sdk} / Architecture="
                 + PlayerSettings.GetArchitecture(BuildTargetGroup.iOS));
-        PlayerSettings.iOS.targetOSVersionString = "13.0";
+        // ★StoreKit 2（Apple In-App Purchase）は iOS 15 から。
+        PlayerSettings.iOS.targetOSVersionString = "15.0";
         // 実機向けは Xcode に署名を任せる（Apple ID を入れて Team を選ぶだけで通る）。
         PlayerSettings.iOS.appleEnableAutomaticSigning = sdk == iOSSdkVersion.DeviceSDK;
         // 署名する組。**この場で証明書から拾う**（誰の機械かを書き込まないため）。
@@ -82,6 +118,7 @@ public static class IosBuild
         var build = System.Environment.GetEnvironmentVariable("IOS_BUILD_NUMBER");
         PlayerSettings.iOS.buildNumber = string.IsNullOrEmpty(build) ? DefaultBuildNumber : build;
         PlayerSettings.bundleVersion = Version;
+        SetIcon();
         // 起動画面は Unity が作る storyboard（無地）に任せる。
         // ⚠ Unity の既定（iOSLaunchScreenType.Default）は**黒地に何も無い画面**で、
         //    App Store の規定は満たす。凝った起動画面が要るなら

@@ -11,18 +11,18 @@ using UnityEngine;
 /// 「一度買えば次からは無料」は**端末に覚えておく**（`PlayerPrefs`）。
 /// セーブデータではなく端末に付くので、最初から遊び直しても買い直しにならない。
 ///
-/// ⚠ **実際の支払いはまだ繋いでいない**（触ると買えたことにする見本）。
-/// App Store に出すときは、Apple の審査指針に合わせて次の3つが要る:
-///   1. **In-App Purchase を通す**（3.1.1）。ゲーム内の物をアプリの外の支払いで
-///      売ることはできない。品目は「買い切りで何度でも受け取れる」ので
-///      **非消耗型（Non-Consumable）**として登録する。
-///   2. **「購入を復元する」を置く**（3.1.1）。非消耗型は復元できることが必須。
-///      いまは端末の覚え書きを読み直すだけなので、StoreKit の
-///      `AppStore.sync()` / `Transaction.currentEntitlements` に差し替える。
-///   3. **値段は App Store から受け取ったものを出す**。ここの
-///      <see cref="PhoneScreen.ShopYen"/> は見本で、実機では
-///      `Product.displayPrice`（現地通貨・現地表記）をそのまま出すこと。
-///      国によって金額も通貨も変わるので、円を焼き込んではいけない。
+/// **支払いは Apple In-App Purchase（StoreKit 2）を通す**（<see cref="AppleStore"/>、
+/// 実体は `Assets/Plugins/iOS/MagicTowerStore.swift`）。Apple の決まりで:
+///   1. **3.1.1** ゲーム内の物をアプリの外の支払いで売ることはできない。品目は
+///      「買い切りで何度でも受け取れる」ので **非消耗型（Non-Consumable）**で登録する。
+///   2. **3.1.1** 非消耗型は復元できることが必須 → 「購入を復元する」の行。
+///   3. **HIG** 値段は App Store から受け取った現地表記（`Product.displayPrice`）を出す。
+///      <see cref="PhoneScreen.ShopYen"/> の円は**エディタで見るときの見本**で、
+///      実機ではそちらを使わない。
+///   4. **HIG** 支払いができない端末では商店を出さない（`AppStore.canMakePayments`）。
+///   5. **HIG** 確認のシートは作らない。Apple のシートに任せる。
+///
+/// エディタとシミュレータでは StoreKit を呼べないので、端末の覚え書きだけで動く見本になる。
 /// </summary>
 public static class GoldShop
 {
@@ -34,19 +34,37 @@ public static class GoldShop
 
     static string KeyOf(int i) { return "GoldShop_" + PhoneScreen.ShopGold[i]; }
 
-    /// <summary>もう買ってあるか（買ってあれば次からは無料）。</summary>
+    /// <summary>
+    /// もう買ってあるか（買ってあれば次からは無料）。
+    /// 実機では **App Store の権利**（`Transaction.currentEntitlements`）が正で、
+    /// 端末の覚え書きはその写し。機種を変えても復元すれば戻る。
+    /// </summary>
     public static bool Bought(int i)
     {
-        return i >= 0 && i < Count && PlayerPrefs.GetInt(KeyOf(i), 0) != 0;
+        if (i < 0 || i >= Count) return false;
+        if (AppleStore.Live) return AppleStore.Owned(i);
+        return PlayerPrefs.GetInt(KeyOf(i), 0) != 0;
     }
 
-    /// <summary>買ったことを端末に覚えさせる。</summary>
+    /// <summary>買ったことを端末に覚えさせる（エディタで見るときの見本の道）。</summary>
     public static void MarkBought(int i)
     {
         if (i < 0 || i >= Count) return;
         PlayerPrefs.SetInt(KeyOf(i), 1);
         PlayerPrefs.Save();
     }
+
+    /// <summary>
+    /// 商店を出せるか。**支払いができない端末では出さない**（HIG）。
+    /// ペアレンタルコントロールなどで `canMakePayments` が false になる。
+    /// </summary>
+    public static bool Available
+    {
+        get { return !AppleStore.Live || AppleStore.CanPay; }
+    }
+
+    /// <summary>支払いができない端末で「商店」を触ったときの知らせ。</summary>
+    public const string Unavailable = "この端末では購入ができない設定になっています。";
 
     /// <summary>
     /// その品目の値段の字。
@@ -56,7 +74,13 @@ public static class GoldShop
     public static string PriceText(int i)
     {
         if (Bought(i)) return PhoneScreen.ShopFree;
-        return "　" + Wide(YenOf(i)) + "円";
+        if (AppleStore.Live)
+        {
+            var price = AppleStore.PriceOf(i);
+            // まだ App Store から読めていないうちは値段を出さない（嘘の値段を出さないため）
+            return string.IsNullOrEmpty(price) ? "　…" : "　" + price;
+        }
+        return "　" + Wide(YenOf(i)) + "円";     // エディタで見るときの見本
     }
 
     /// <summary>選ばせる行の数（品目＋復元＋やめる）。</summary>
@@ -83,26 +107,46 @@ public static class GoldShop
     }
 
     /// <summary>
-    /// 購入を復元する。⚠ いまは端末の覚え書きを数え直すだけ。
-    /// 実機では StoreKit に問い合わせて、そこから覚え書きを作り直すこと。
+    /// 購入を復元する（審査指針 3.1.1 で非消耗型には必須）。
+    /// 実機は `AppStore.sync()` に投げ、結果は次の <see cref="AppleStore.Poll"/> で入る。
     /// </summary>
     public static string Restore()
     {
+        if (AppleStore.Live) { AppleStore.Restore(); return PhoneScreen.ShopRestoring; }
         int n = 0;
         for (int i = 0; i < Count; i++) if (Bought(i)) n++;
         return n > 0 ? string.Format(PhoneScreen.ShopRestored, n)
                      : PhoneScreen.ShopNothingToRestore;
     }
 
-    /// <summary>買う。買えたら手に入れた言葉を返す。</summary>
-    public static string Buy(PlayerState player, int i)
+    /// <summary>
+    /// 選ばれた品目を処理する。
+    ///   もう買ってある … その場でゴールドを渡す（何度でも受け取れる）
+    ///   まだ買っていない … **Apple の購入のシートを出す**。ここでは何も渡さない
+    ///                      （渡すのは、買えたことが分かってから <see cref="Claim"/> で）
+    /// 返すのは知らせる一言。何も出さないなら null。
+    /// </summary>
+    public static string Pick(PlayerState player, int i)
     {
         if (player == null || i < 0 || i >= Count) return null;
+        if (Bought(i)) return Claim(player, i);
+        if (AppleStore.Live) { AppleStore.Buy(i); return null; }
+        // エディタで見るときの見本。実機ではここを通らない
         MarkBought(i);
+        return Claim(player, i);
+    }
+
+    /// <summary>買ってある品目のゴールドを受け取る。</summary>
+    public static string Claim(PlayerState player, int i)
+    {
+        if (player == null || i < 0 || i >= Count) return null;
         player.Gold += GoldOf(i);
         player.ClampStats();
         return string.Format(PhoneScreen.ShopBought, Wide(GoldOf(i)));
     }
+
+    /// <summary>昔の名前（試験が使う）。</summary>
+    public static string Buy(PlayerState player, int i) { return Pick(player, i); }
 
     /// <summary>数字を全角にする（原典の窓は全角で数を書く）。</summary>
     public static string Wide(int n)

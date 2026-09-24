@@ -113,6 +113,8 @@ public class TowerController : MonoBehaviour
         // （実機で遅くなったという報告がこれ）。60に上げてそろえる。
         Application.targetFrameRate = TargetFrameRate;
         WarmUp();
+        // 課金の品目を読み始める（Apple In-App Purchase。実機の iOS だけ動く）
+        AppleStore.Start();
         // 調べもの用のセーブを1つ用意しておく（作者の頼み）。表を読んだあとでないと作れない。
         if (DebugPlay.MakeEndgameSave) DebugEndgameSave.WriteTo(PhoneScreen.QuickSlot);
     }
@@ -232,6 +234,10 @@ public class TowerController : MonoBehaviour
     void Tick()
     {
         if (Game == null) return;
+        // 課金の様子を読み直して、買えていたらその場でゴールドを渡す。
+        // 呼び返しを使わず毎コマ読む形にしてある（AppleStore の説明を参照）。
+        AppleStore.Poll();
+        Game.ClaimBought();
         // 題名を出している間は遊びを進めない（触ると最初から始まる）。
         // 曲だけは題名から鳴らして、始めてもそのまま続くようにしてある。
         if (AtTitle) { UpdateMusic(); return; }

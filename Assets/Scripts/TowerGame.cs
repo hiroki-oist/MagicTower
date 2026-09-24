@@ -1171,10 +1171,33 @@ public class TowerGame
     public bool AskGoldShop()
     {
         if (pages.Count > 0 || IsMenuOpen || IsChoosing) return false;
+        // ★支払いができない端末では商店を出さない（Apple の HIG）。
+        if (!GoldShop.Available) { Say(GoldShop.Unavailable); return true; }
         Say(GoldShop.Text());
         BeginChoice(ChoiceKind.GoldShop, GoldShop.ChoiceCount, default(Shop.Offer));
         return true;
     }
+
+    /// <summary>Apple の購入のシートを出して、まだ結果を待っている品目。無ければ -1。</summary>
+    int pendingBuy = -1;
+
+    /// <summary>
+    /// 買えたことが分かったら、その場でゴールドを渡す。
+    /// 入力の側が毎コマ <see cref="AppleStore.Poll"/> のあとに呼ぶ。
+    /// </summary>
+    public void ClaimBought()
+    {
+        if (pendingBuy < 0) return;
+        if (!GoldShop.Bought(pendingBuy)) return;       // まだ買えていない／やめた
+        var got = GoldShop.Claim(Player, pendingBuy);
+        pendingBuy = -1;
+        if (string.IsNullOrEmpty(got)) return;
+        PlaySound(SoundCues.TakeItem);
+        Note(got);
+    }
+
+    /// <summary>購入を待つのをやめる（窓を閉じたとき）。</summary>
+    public void DropPendingBuy() { pendingBuy = -1; }
 
     /// <summary>
     /// **中断データを書く**（作者の指定。原典には無い）。
@@ -1425,8 +1448,16 @@ public class TowerGame
         {
             if (at == GoldShop.RestoreIndex) { Note(GoldShop.Restore()); return; }
             if (at > GoldShop.RestoreIndex) return;     // 「やめる」
-            var got = GoldShop.Buy(Player, at);
-            if (!string.IsNullOrEmpty(got)) { PlaySound(SoundCues.TakeItem); Note(got); }
+            // 買ってあればその場で受け取る。まだなら Apple の購入のシートが出るので、
+            // ここでは何も渡さない（渡すのは買えたことが分かってから ClaimBought で）。
+            pendingBuy = at;
+            var got = GoldShop.Pick(Player, at);
+            if (!string.IsNullOrEmpty(got))
+            {
+                pendingBuy = -1;
+                PlaySound(SoundCues.TakeItem);
+                Note(got);
+            }
             return;
         }
         if (kind == ChoiceKind.Load)

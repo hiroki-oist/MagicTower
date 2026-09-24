@@ -27,6 +27,37 @@ public static class IosPostBuild
 
         File.WriteAllText(plist, text);
         Debug.Log("Info.plist に App Store 用の項目を足した");
+
+        // ③ Swift（課金の実体 MagicTowerStore.swift）を組み上げるための設定。
+        //    Unity は .swift を Xcode プロジェクトに入れてくれるが、
+        //    Swift の版と**標準ライブラリを同梱する指定**は自分で入れる必要がある。
+        SetSwift(path);
+    }
+
+    /// <summary>Swift を使うための build setting を入れる。</summary>
+    static void SetSwift(string path)
+    {
+        var pbxPath = UnityEditor.iOS.Xcode.PBXProject.GetPBXProjectPath(path);
+        if (!File.Exists(pbxPath)) { Debug.LogWarning("pbxproj が無い"); return; }
+        var proj = new UnityEditor.iOS.Xcode.PBXProject();
+        proj.ReadFromFile(pbxPath);
+        foreach (var guid in new[] { proj.GetUnityMainTargetGuid(),
+                                     proj.GetUnityFrameworkTargetGuid() })
+        {
+            proj.SetBuildProperty(guid, "SWIFT_VERSION", "5.0");
+            proj.SetBuildProperty(guid, "ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES", "YES");
+            proj.SetBuildProperty(guid, "SWIFT_OPTIMIZATION_LEVEL", "-Onone");
+            // ⚠ **Swift を入れると Xcode が Debug の本体を dylib で作ろうとする**
+            //   （ENABLE_DEBUG_DYLIB。プレビュー用の仕掛け）。Unity の main.mm は
+            //   `__mh_execute_header`（実行ファイルにしか無い印）を見ているので、
+            //   dylib にされると繋がらずに落ちる:
+            //     Undefined symbols: "__mh_execute_header", referenced from:
+            //       UnityFrameworkLoad() in main.o
+            //   実行ファイルのまま作らせる。
+            proj.SetBuildProperty(guid, "ENABLE_DEBUG_DYLIB", "NO");
+        }
+        proj.WriteToFile(pbxPath);
+        Debug.Log("Swift の設定を入れた（SWIFT_VERSION / 標準ライブラリの同梱）");
     }
 
     /// <summary>その鍵がまだ無ければ足す（あるものは触らない）。</summary>
