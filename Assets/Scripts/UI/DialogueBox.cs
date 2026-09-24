@@ -134,9 +134,13 @@ public static class DialogueBox
 
     /// <summary>行をページ単位に分ける。DialogueHandler へはページごとに渡す。</summary>
     public static List<string> Paginate(string body,
-                                        int charsPerLine = CharsPerLine,
+                                        int charsPerLine = 0,
                                         int linesPerPage = LinesPerPage)
     {
+        // ★**折り返しの幅は本文から決める**（<see cref="LimitFor"/>）。
+        //   ここだけ 18 に決め打ちしていたので、広い窓（課金）の行が
+        //   18文字で切られ、値段の「.99」だけが次の行に落ちていた（作者の報告）。
+        if (charsPerLine <= 0) charsPerLine = LimitFor(body);
         var lines = Wrap(body, charsPerLine);
         var pages = new List<string>();
         for (int i = 0; i < lines.Count; i += linesPerPage)

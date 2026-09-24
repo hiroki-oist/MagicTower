@@ -104,7 +104,12 @@ public static class TowerScreenshot
         }
         sb2.Append("]}");
         AppleStore.Parse(sb2.ToString());
-        win.PreviewBoxed(GoldShop.Text(), 0);
+        // ★**本線とまったく同じ道**を通す。TowerGame.Say は本文を
+        //   DialogueBox.Paginate に通してから窓へ渡すので、ここも同じにする。
+        //   （ここを素通りさせていたせいで「写しでは1行、実機では2行」を見逃した）
+        var paged = DialogueBox.Paginate(GoldShop.Text());
+        Debug.Log($"■課金の窓: ページ数 = {paged.Count}");
+        win.PreviewBoxed(paged[0], 0);
         win.transform.SetAsLastSibling();
         // 何行で組まれたかを書き出す（1品目が1行に収まっているかの手がかり）
         var body = win.Body;
@@ -112,7 +117,7 @@ public static class TowerScreenshot
         body.ForceMeshUpdate();
         if (body.textInfo == null) { Debug.LogWarning("本文がまだ組まれていない"); return; }
         Debug.Log($"■課金の窓: 組まれた行数 = {body.textInfo.lineCount}"
-                + $" / 本文の行数 = {GoldShop.Text().Split('\n').Length}"
+                + $" / 本文の行数 = {paged[0].Split('\n').Length}"
                 + $" / 窓の幅 = {AuthorStyle.WidthFor(GoldShop.Text())}ドット");
         for (int i = 0; i < body.textInfo.lineCount; i++)
         {

@@ -1646,8 +1646,17 @@ chk("ShopPriceGap" in _phs and "<pos" not in _gshop and "<pos" not in _phs,
 # 実際の組まれ方は TowerScreenshot.CaptureShop で写しを撮って確かめる。
 chk("body.enableWordWrapping = !Boxed;" in _dw and "PreviewBoxed" in _dw,
     "課金の窓は TMP に折り返させない／写しの道具から同じ道を通せる")
-chk("CaptureShop" in open("Assets/Editor/TowerScreenshot.cs",encoding="utf-8").read(),
+_shot=open("Assets/Editor/TowerScreenshot.cs",encoding="utf-8").read()
+chk("CaptureShop" in _shot,
     "課金の窓の写しを撮る道具がある")
+# ★写しは**本線とまったく同じ道**を通す（TowerGame.Say → DialogueBox.Paginate）。
+#   ここを素通りさせていたせいで「写しでは1行、実機では2行」を見逃した。
+chk("DialogueBox.Paginate(GoldShop.Text())" in _shot,
+    "写しも Paginate を通す（本線と同じ道）")
+# 折り返しの幅は本文から決める。ここだけ18に決め打ちしていたので、
+# 広い窓の行が切られて値段の「.99」が次の行に落ちていた。
+chk("if (charsPerLine <= 0) charsPerLine = LimitFor(body);" in _db,
+    "Paginate の折り返しの幅も本文から決める")
 chk("ShopRowLines = 2" in _phs and "ShopRowGap" in _dw,
     "品目の行は2行ぶんの高さで、あいだに隙間を空ける")
 chk(os.path.exists("Assets/Scripts/Items/GoldShop.cs")
@@ -2835,7 +2844,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=830
+MIN_CHECKS=832
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

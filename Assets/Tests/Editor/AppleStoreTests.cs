@@ -138,6 +138,41 @@ public class AppleStoreTests
                         + GoldShop.Count * PhoneScreen.ShopRowLines + 2, lines.Length);
     }
 
+    /// <summary>
+    /// ★**本線が通る道（TowerGame.Say → DialogueBox.Paginate）で1行に収まるか**。
+    ///
+    /// ここが本命の見張り。窓へ渡る前に `Paginate` が 18文字で切っていたせいで、
+    /// 値段の「.99」だけが次の行に落ちていた（作者の報告「私の端末では2行のまま」）。
+    /// 写しの道具も同じ道を通すようにしてある。
+    /// </summary>
+    [Test]
+    public void 本線が通る道で品目が一行に収まる()
+    {
+        // 実機でいちばん長くなる表記（米国ストア）で確かめる
+        AppleStore.PreviewLive = true;
+        try
+        {
+            AppleStore.Parse("{\"ready\":true,\"canPay\":true,\"busy\":false,\"msg\":\"\","
+                + "\"items\":["
+                + "{\"id\":\"magicTowerGoldFourHundred\",\"price\":\"$0.99\",\"owned\":false},"
+                + "{\"id\":\"magicTowerGoldOneThousand\",\"price\":\"$1.99\",\"owned\":false},"
+                + "{\"id\":\"magicTowerGoldFourThousand\",\"price\":\"$5.99\",\"owned\":false}]}");
+
+            var body = GoldShop.Text();
+            var pages = DialogueBox.Paginate(body);
+            Assert.AreEqual(1, pages.Count, "1ページに収まる");
+            Assert.AreEqual(body.Split('\n').Length, pages[0].Split('\n').Length,
+                            "行が増えていない＝どこも折り返されていない");
+            foreach (var line in pages[0].Split('\n'))
+                Assert.LessOrEqual(DialogueBox.Visible(line).Length,
+                                   DialogueBox.WideCharsPerLine, line);
+            // 値段だけが落ちた行ができていないこと
+            foreach (var line in pages[0].Split('\n'))
+                Assert.IsFalse(line.StartsWith(".") || line.StartsWith("99"), line);
+        }
+        finally { AppleStore.PreviewLive = false; }
+    }
+
     /// <summary>買えたことが分かってから渡す（シートを出した時点では渡さない）。</summary>
     [Test]
     public void 買えたことが分かってから渡す()
