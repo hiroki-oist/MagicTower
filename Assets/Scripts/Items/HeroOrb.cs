@@ -64,13 +64,20 @@ public static class HeroOrb
         {
             var e = TowerBattle.LoadEnemy(name);
             if (e == null) continue;
-            // 原典は攻撃力と防御力を**そのまま**使う。十字架やドラゴンスレイヤーの
-            // 補正は入らないので、実際の戦いとは食い違うことがある。
+            int ehp = e.MaxHP, eatk = e.Attack, edef = e.Defense;
+            // ★**サイコロの五の目は数値そのものに効く**。原典 0x5cdb は
+            // **モンスター表（DS:0x63c から14バイト/件）の ID91 を 800/500/100 に書き換える**
+            // ので、同じ表を読むこの窓（0x8c2a）にも**書き換え後の値が出る**。
+            // ここを通していなかったので、五の目を作ってもゼノは 8000/5000/1000 のままに
+            // 見えていた（作者の報告）。
+            MagicSeal.Adjust(player, name, ref ehp, ref eatk, ref edef);
+            // 一方、**十字架・ドラゴンスレイヤー・幸運の金貨は入らない**のが原典。
+            // 0x8c2a は攻撃力と防御力をそのまま使い、補正を掛ける枝が無い。
             // 原典の説明（レコード60）も「特殊なアイテムを持っている場合には
-            // 実際に受けるダメージと異なる場合がある」と断っている。
+            // 実際に受けるダメージと異なる場合がある」と**わざわざ断っている**。
             var kind = BattleRules.KindFromTag(name);
             var p = BattleRules.Predict(player.Attack, player.Defense,
-                                        e.MaxHP, e.Attack, e.Defense, e.Coin,
+                                        ehp, eatk, edef, e.Coin,
                                         kind, BattleRules.Charms.None);
             rows.Add(new Row
             {
@@ -79,7 +86,7 @@ public static class HeroOrb
                 Name = e.Name,
                 Gold = e.Coin,
                 Turns = p.PlayerHits,
-                Hp = e.MaxHP, Attack = e.Attack, Defense = e.Defense,
+                Hp = ehp, Attack = eatk, Defense = edef,
                 CanAttack = p.CanWin,
                 Damage = p.CanWin ? p.DamageTaken : 0,
             });

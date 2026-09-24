@@ -842,9 +842,9 @@ for _n in ("戦闘の演出を最後まで流せる","駆け上がりを最後�
 
 # 手で遊んで見つかった3件（配置のずれ・絵の大きさ・画面が付いてこない）
 _tc=open("Assets/Scripts/TowerController.cs",encoding="utf-8").read()
-# 後始末を呼ぶのは「キーの一手」と「持ち物の帯を触ったとき」の2か所だけ
-chk("AfterAction" in _tc and _tc.count("AfterAction(floorBefore, posBefore)")==2,
-    "一手ぶんの後始末を通る入口は2つだけ（キーの一手と、持ち物を触ったとき）",
+# 後始末を呼ぶのは「キーの一手」「持ち物の帯を触ったとき」「終幕のひとりでの送り」の3か所
+chk("AfterAction" in _tc and _tc.count("AfterAction(floorBefore, posBefore)")==3,
+    "一手ぶんの後始末を通る入口は3つだけ（キーの一手・持ち物・終幕のひとりでの送り）",
     str(_tc.count("AfterAction(floorBefore, posBefore)")))
 # 1マスぶんの滑らかな移動（0xa276）。滑らせている間は入力を受けない
 chk("if (sliding || drawing) return;" in _tc and "IEnumerator Slide(" in _tc,
@@ -1553,6 +1553,20 @@ chk("towerDone" in _fsv and "mine && !towerDone && towerRun == null" in _fsv,
 # 縦長の画面では絵の上下に余白があるので、沈む塔が絵の外へ突き出して見えていた。
 chk("RectMask2D" in _tsb,
     "終幕の絵は原典の 640x400 からはみ出したぶんを切り落とす")
+# 終幕は塔の絵から終わりの言葉までキーを待たない（原典 0xcfc5〜0xd27a に
+# 出てくるのは垂直帰線待ちだけで、キー待ち lcall 0x107e,0x4fa は 0xd274 の1回だけ）。
+_end=open("Assets/Scripts/Ending.cs",encoding="utf-8").read()
+chk("AutoSeconds" in _end and "WordsSeconds" in _end and "TowerHoldSeconds" in _end,
+    "終幕はひとりでに進む（1枚ごとの秒数を持つ）")
+chk("autoReady" in _tc and "TickAutoAdvance" in _tc,
+    "その頃合いは本線を進めた直後に数える（演出の途中で止まらないように）")
+# 勇者のオーブは**モンスター表そのもの**を読む。原典 0x5cdb が五の目でその表の
+# ID91 を 800/500/100 に書き換えるので、この窓にも書き換え後の値が出る。
+_ho=open("Assets/Scripts/Items/HeroOrb.cs",encoding="utf-8").read()
+chk("MagicSeal.Adjust(player, name, ref ehp, ref eatk, ref edef);" in _ho,
+    "勇者のオーブにも五の目の書き換えが効く")
+chk("BattleRules.Charms.None" in _ho,
+    "十字架・ドラゴンスレイヤー・幸運の金貨は入れない（原典 0x8c2a／説明レコード60）")
 chk('"Assets/Sprites/Screens/Ending_Tower1.png"' in _tsb
     and '"Assets/Sprites/Screens/Ending_Tower2.png"' in _tsb,
     "塔(MTOWER1)と荒野(MTOWER2)の2枚ともシーンに入っている")
@@ -2649,7 +2663,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=772
+MIN_CHECKS=776
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

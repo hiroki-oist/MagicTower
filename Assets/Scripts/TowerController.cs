@@ -230,6 +230,9 @@ public class TowerController : MonoBehaviour
         // 【設計方針・全体に適用】作り直しの判定は「この一手で階が変わったか」ではなく
         // **「見た目が映している階（shownFloor）と本線の階が合っているか」**で行う。
         if (Game.ConsumeViewRebuild() || Game.Player.Floor != shownFloor) RebuildView();
+        // 終幕は触らなくても進む（原典はキーを一度も待たない。<see cref="Ending.AutoSeconds"/>）。
+        // 数えるのはここ — 下の分岐は演出の途中だと素通りするので、そこで数えると止まる。
+        autoReady = TickAutoAdvance();
         // 場面の途中で書き換わった地図を、その場で見た目に映す
         // （一手の後始末を待っていると、歩く先のマスがまだ空のままになる）。
         // **描き出しの最中は映さない** — 渦巻きに描いている途中で作り直すと、
@@ -285,6 +288,8 @@ public class TowerController : MonoBehaviour
 
         if (Game.IsShowingPage)
         {
+            // ひとりでに進む画面（終幕の塔の絵と終わりの言葉）。原典はここでキーを待たない。
+            if (autoReady) { Game.NextPage(); AfterAction(floorBefore, posBefore); return; }
             // 会話や演出が出ている間は、どのキーでも1つ送るだけ（原典もキー待ち）。
             // **送った拍子に階が変わることがある**（序章でゼノに奪われて2階の牢に移る、
             // 終幕で50階まで駆け上がる）ので、送ったあとも必ず見た目を合わせ直す。
@@ -499,6 +504,30 @@ public class TowerController : MonoBehaviour
     /// 会話を送っただけ・メニューを触っただけでも階が変わることがある
     /// （序章のゼノ、飛翔のオーブ、終幕の駆け上がり）ので、入口はここ1つにまとめてある。
     /// </summary>
+    /// <summary>ひとりでに進む頃合いになったか（終幕）。</summary>
+    bool autoReady;
+
+    TowerGame.PageKind? autoKind;
+    int autoRecord;
+    float autoSince;
+
+    /// <summary>
+    /// いま出ている画面が「ひとりでに進む」ものなら、出てからの時間を数えて頃合いを返す。
+    /// 画面が変わったら数え直す。
+    /// </summary>
+    bool TickAutoAdvance()
+    {
+        var kind = Game.CurrentKind;
+        if (!kind.HasValue) { autoKind = null; return false; }
+        int record = Game.CurrentRecord;
+        if (autoKind != kind || autoRecord != record)
+        {
+            autoKind = kind; autoRecord = record; autoSince = Time.time;
+        }
+        float need = Ending.AutoSeconds(kind.Value, record);
+        return need > 0f && Time.time - autoSince >= need;
+    }
+
     void AfterAction(int floorBefore, Vector2Int posBefore)
     {
         // ロードは階が同じでも盤面が入れ替わるので、そのときも作り直す

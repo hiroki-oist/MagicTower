@@ -111,6 +111,7 @@
     <Compile Include="Assets/Editor/TowerSceneBuilder.cs" />
     <Compile Include="Assets/Tests/Editor/SceneWiringTests.cs" />
     <Compile Include="Assets/Tests/Editor/GameOverTests.cs" />
+    <Compile Include="Assets/Tests/Editor/EndingAutoTests.cs" />
     <Compile Include="Assets/Tests/Editor/BlinkTests.cs" />
     <Compile Include="Assets/Tests/Editor/FeedbackFixTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerNpcTests.cs" />

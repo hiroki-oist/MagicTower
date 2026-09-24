@@ -163,6 +163,41 @@ public static class Ending
         161, 162, 163, 164, 165, 166, 167, 168, 169, 170,
     };
 
+    // ------------------------------------------------------------ ひとりでに進む所
+    //
+    // ★**終幕は塔の絵から終わりの言葉まで、キーを一度も待たない**。
+    // 原典 0xc4d8 の後半（0xcfc5〜0xd27a）に出てくるのは
+    //   `lcall 0xf5f,0x3f2`（垂直帰線をN回待つ）と `lcall 0xf5f,0x3d9`（1回待つ）だけで、
+    //   キー待ち（`lcall 0x107e,0x4fa`）は**いちばん最後の1回**しか無い。
+    //     0xd064 / 0xd07e  0x3c(60) 待ち ＝ 1秒
+    //     0xd0dc〜0xd20f    終わりの言葉を段落ごとに1行ずつ出す（`0x3d9` を挟む輪）
+    //     0xd216 / 0xd250  0x3c 待ち
+    //     0xd25c           音2（題名の曲）を鳴らす
+    //     0xd268           0x258(600) 待ち ＝ 10秒
+    //     0xd274           **ここで初めてキー待ち** → 最後の画面（0xd45c）
+    // つまり「触らなくても勝手に進む」のが原典の姿。こちらは1枚絵を送る形なので、
+    // **その1枚ごとに待つ秒数**として持つ（長さは動画 Part2 t≈1801〜1822 から。
+    // 白4秒 → 段落3秒・3秒・4秒 → 4段落そろえて6秒）。
+
+    /// <summary>塔が沈みきってから終わりの言葉へ移るまで（原典 0xd064 の 0x3c）。</summary>
+    public const float TowerHoldSeconds = 1f;
+
+    /// <summary>終わりの言葉の1枚ごとに待つ秒数（0枚目＝まっ白から4段落そろうまで）。</summary>
+    public static readonly float[] WordsSeconds = { 4f, 3f, 3f, 4f, 6f };
+
+    /// <summary>
+    /// その画面がひとりでに進むまでの秒数。0 なら触るまで待つ
+    /// （最後の画面だけは原典も「Ｈｉｔ　ａｎｙ　ｋｅｙ！」でキーを待つ）。
+    /// </summary>
+    public static float AutoSeconds(TowerGame.PageKind kind, int record)
+    {
+        if (kind == TowerGame.PageKind.EndingTower)
+            return TowerDuration + TowerHoldSeconds;
+        if (kind == TowerGame.PageKind.EndingText)
+            return WordsSeconds[Mathf.Clamp(record, 0, WordsSeconds.Length - 1)];
+        return 0f;
+    }
+
     /// <summary>最後の画面に出る文字（原典 DS:0x1ab7 / DS:0x1ace）。</summary>
     public const string TitleLine = "迷宮ＲＰＧ『魔法の塔』";
     public const string AnyKeyLine = "Ｈｉｔ　ａｎｙ　ｋｅｙ！";
