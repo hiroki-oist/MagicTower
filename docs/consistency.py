@@ -1651,6 +1651,23 @@ chk("Product.displayPrice" in _gs and "Non-Consumable" in _gs,
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("リセット" in _tm and "Note" in _tm,
     "「タイトルへ戻る」の下に断りを添える")
+# App Store に出すための設え（作者の指定）
+_dbg2=open("Assets/Scripts/DebugPlay.cs",encoding="utf-8").read()
+chk("StrongAfterZeno = false" in _dbg2 and "KeysAfterZeno = false" in _dbg2
+    and "MakeEndgameSave = false" in _dbg2,
+    "調べもの用の細工はどれも切ってある（出すときは必ず false）")
+_ib=open("Assets/Editor/IosBuild.cs",encoding="utf-8").read()
+chk('CompanyName = "Hiroki Sawada"' in _ib and "PlayerSettings.companyName" in _ib,
+    "会社名を DefaultCompany のままにしない")
+chk("buildNumber" in _ib and "IOS_BUILD_NUMBER" in _ib,
+    "ビルド番号を入れられる（提出のたびに上げる）")
+chk(os.path.exists("Assets/Editor/IosPostBuild.cs")
+    and "ITSAppUsesNonExemptEncryption" in
+        open("Assets/Editor/IosPostBuild.cs",encoding="utf-8").read(),
+    "輸出コンプライアンスを Info.plist に書き込む")
+chk(os.path.exists("docs/make_icon.py")
+    and len(glob.glob("docs/icon_candidates/*.png"))>=4,
+    "アイコンの候補が原典の絵から作れる")
 chk('"Assets/Sprites/Screens/Ending_Tower1.png"' in _tsb
     and '"Assets/Sprites/Screens/Ending_Tower2.png"' in _tsb,
     "塔(MTOWER1)と荒野(MTOWER2)の2枚ともシーンに入っている")
@@ -2753,7 +2770,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=804
+MIN_CHECKS=809
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

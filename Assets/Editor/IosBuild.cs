@@ -24,7 +24,21 @@ public static class IosBuild
 
     /// <summary>アプリの名前と id（実機に入れるときは id を自分のものに変える）。</summary>
     public const string ProductName = "MagicTower";
+
+    /// <summary>
+    /// **Bundle ID**。App Store Connect に登録するのと同じ字でなければならない。
+    /// 逆順のドメイン名にするのが決まりなので、持っているドメインに合わせて変えること。
+    /// </summary>
     public const string BundleId = "com.magictower.remake";
+
+    /// <summary>作り手の名前（Xcode の書き出しと bundle の既定値に出る）。</summary>
+    public const string CompanyName = "Hiroki Sawada";
+
+    /// <summary>App Store に出す版の数字（CFBundleShortVersionString）。</summary>
+    public const string Version = "1.0";
+
+    /// <summary>ビルド番号（CFBundleVersion）。提出のたびに上げる。</summary>
+    public const string DefaultBuildNumber = "1";
 
     [MenuItem("MagicTower/iOS シミュレータ向けに書き出す")]
     public static void BuildSimulator() { Build(iOSSdkVersion.SimulatorSDK); }
@@ -59,6 +73,20 @@ public static class IosBuild
         PlayerSettings.allowedAutorotateToLandscapeLeft = false;
         PlayerSettings.allowedAutorotateToLandscapeRight = false;
         PlayerSettings.statusBarHidden = true;
+
+        // ------------------------------------------------ App Store に出すための設え
+        // 会社名は bundle の既定値や Xcode の書き出しに出るので、DefaultCompany のままにしない。
+        PlayerSettings.companyName = CompanyName;
+        // ビルド番号は**提出のたびに上げる**（同じ番号は受け付けられない）。
+        // 環境変数 IOS_BUILD_NUMBER があればそれを使う。
+        var build = System.Environment.GetEnvironmentVariable("IOS_BUILD_NUMBER");
+        PlayerSettings.iOS.buildNumber = string.IsNullOrEmpty(build) ? DefaultBuildNumber : build;
+        PlayerSettings.bundleVersion = Version;
+        // 起動画面は Unity が作る storyboard（無地）に任せる。
+        // ⚠ Unity の既定（iOSLaunchScreenType.Default）は**黒地に何も無い画面**で、
+        //    App Store の規定は満たす。凝った起動画面が要るなら
+        //    Player Settings の Launch Screen に絵を差すこと。
+        PlayerSettings.iOS.appleEnableAutomaticSigning = sdk == iOSSdkVersion.DeviceSDK;
 
         var opts = new BuildPlayerOptions
         {

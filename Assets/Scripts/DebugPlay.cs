@@ -16,7 +16,7 @@ public static class DebugPlay
     /// ゼノに奪われたあとの攻撃力・防御力を <see cref="StrongStat"/> にする。
     /// **false が原典どおり**（攻10 / 防10、原典 0x06f1b〜0x06f49）。
     /// </summary>
-    public static readonly bool StrongAfterZeno = true;
+    public static readonly bool StrongAfterZeno = false;   // ★出すとき false（原典どおり攻10/防10）
 
     /// <summary>
     /// そのときの攻撃力・防御力。
@@ -45,7 +45,7 @@ public static class DebugPlay
     /// 作者からの頼み（2026-09-22）:
     /// 「デバッグ用として鍵の数は武器取り上げられた後の初期値を30ずつでお願い」
     /// </summary>
-    public static readonly bool KeysAfterZeno = true;
+    public static readonly bool KeysAfterZeno = false;     // ★出すとき false（原典どおり鍵0本）
 
     /// <summary>そのときの鍵の本数（黄・紫・赤とも同じ）。</summary>
     public const int StartKeys = 30;
@@ -59,7 +59,7 @@ public static class DebugPlay
     /// ⚠ **起動するたびに上書きする**ので、途中経過をそこへセーブしても
     /// 次に立ち上げると調べもの用の状態に戻る。見終わったら false に。
     /// </summary>
-    public static readonly bool MakeEndgameSave = true;
+    public static readonly bool MakeEndgameSave = false;   // ★出すとき false（セーブを上書きするため）
 
     /// <summary>
     /// その調べもの用のセーブを**どこから**始めるか。
