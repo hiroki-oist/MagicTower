@@ -32,6 +32,7 @@ echo "== 5. 画面いっぱいの1枚絵（枠・序章・終幕）"
 python3 docs/make_screens.py      # 枠 / 終幕の塔 / 終幕の1枚絵
 python3 docs/make_prologue.py     # 序章の4枚
 python3 docs/make_ending.py       # 終わりの言葉の5枚
+python3 docs/make_ending_java.py  # Java版の終幕17枚（塔が沈む15枚＋言葉＋The End）
 
 echo "== 6. プレハブ（絵を指すだけの入れ物）と、尺度の揃え直し"
 python3 docs/make_prefabs.py

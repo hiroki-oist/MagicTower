@@ -150,6 +150,19 @@ public static class AuthorStyle
     /// </summary>
     public static readonly float SwapSeconds = 2f;
 
+    /// <summary>
+    /// 終幕を**Java版（2001年の公式移植）のものにする**か（作者の指定）。
+    ///
+    /// Java版は塔が沈むところを **edata01〜15 の15枚**で描いてあり、1枚ずつ
+    /// 40x40 のマス目のモザイクで溶かして切り替える。終わりの言葉（edata17）は
+    /// 段落に分かれない1枚絵で、最後は「The End」（edata18）。
+    ///
+    /// ⚠ 原典 PC98版は MTOWER1（塔）と MTOWER2（荒野）を重ねて塔だけを
+    /// 15ドットずつ26回下げ、パレットで白へ寄せる作り（0x0ce83）。
+    /// false にすればそちらに戻る。
+    /// </summary>
+    public static readonly bool JavaEnding = true;
+
     /// <summary>盤面を描き出したあとの間（秒）。暗転が明けてすぐだと誰の声か分からない。</summary>
     public static readonly float SettleAfterDrawSeconds = 1f;
 

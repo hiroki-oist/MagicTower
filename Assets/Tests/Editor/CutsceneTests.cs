@@ -243,12 +243,13 @@ public class ScenePlaythroughTests
         var g = Game(50, new Vector2Int(0, -1));
         var kinds = Drain(g, "終幕");
 
-        // 駆け上がる → セリフ161〜170 → 塔の絵 → 終わりの言葉×4 → 最後の画面
+        // 駆け上がる → セリフ161〜170 → 塔の絵 → 終わりの言葉 → 最後の画面
+        // （終わりの言葉は原典なら段落4つ、Java版（作者の指定）なら1枚絵）
         Assert.AreEqual(10, kinds.FindAll(k => k == TowerGame.PageKind.Dialogue).Count,
                         "ゼノとの最後のやりとりは10ページ");
         Assert.AreEqual(1, kinds.FindAll(k => k == TowerGame.PageKind.EndingTower).Count,
                         "塔の絵は1枚");
-        Assert.AreEqual(Cutscenes.EndingTextParagraphs,
+        Assert.AreEqual(Ending.WordsPages,
                         kinds.FindAll(k => k == TowerGame.PageKind.EndingText).Count,
                         "終わりの言葉は段落の数だけ");
         Assert.AreEqual(TowerGame.PageKind.FinalScreen, kinds[kinds.Count - 1],

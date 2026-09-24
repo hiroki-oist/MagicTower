@@ -559,8 +559,9 @@ public class TowerGame
             }
             if (step == Cutscenes.EndingTextStep)
             {
-                // 終わりの言葉は段落が1つずつ現れる
-                for (int shown = 1; shown <= Cutscenes.EndingTextParagraphs; shown++)
+                // 終わりの言葉。原典は段落が1つずつ現れる。
+                // Java版（作者の指定）は段落に分かれない1枚絵なので1枚だけ。
+                for (int shown = 1; shown <= Ending.WordsPages; shown++)
                     pages.Enqueue(withMap(new Page
                     {
                         Kind = PageKind.EndingText, Text = "", Record = shown

@@ -679,7 +679,8 @@ public static class TowerSceneBuilder
         var towerScreen = BuildFullScreen(full, font, controller, TowerGame.PageKind.EndingTower,
                         "EndingTowerScreen", "",
                         "", Ending.TitleDot, "", Ending.AnyKeyDot);
-        if (towerScreen != null)
+        if (towerScreen != null && AuthorStyle.JavaEnding) BuildJavaEnding(towerScreen);
+        if (towerScreen != null && !AuthorStyle.JavaEnding)
         {
             // ★**原典の 640x400 からはみ出したぶんは切り落とす**。
             // 縦長のスマホ画面では絵の上下に余白があるので、沈んでいく塔が
@@ -716,10 +717,15 @@ public static class TowerSceneBuilder
             tso.FindProperty("whiteVeil").objectReferenceValue = veil;
             tso.ApplyModifiedPropertiesWithoutUndo();
         }
+        // 終わりの言葉。Java版は段落に分かれない1枚絵（edata17）、原典は段落が1つずつ。
         BuildFullScreen(full, font, controller, TowerGame.PageKind.EndingText,
-                        "EndingTextScreen", "Assets/Sprites/Screens/Ending_Text_0.png",
+                        "EndingTextScreen",
+                        AuthorStyle.JavaEnding
+                            ? "Assets/Sprites/Screens/EndJava_Words.png"
+                            : "Assets/Sprites/Screens/Ending_Text_0.png",
                         "", Ending.TitleDot, "", Ending.AnyKeyDot,
-                        new[] { "Assets/Sprites/Screens/Ending_Text_0.png",
+                        AuthorStyle.JavaEnding ? null
+                        : new[] { "Assets/Sprites/Screens/Ending_Text_0.png",
                                 "Assets/Sprites/Screens/Ending_Text_1.png",
                                 "Assets/Sprites/Screens/Ending_Text_2.png",
                                 "Assets/Sprites/Screens/Ending_Text_3.png",
@@ -729,10 +735,14 @@ public static class TowerSceneBuilder
                         "GameOverScreen", "",
                         GameOverScreen.Line, GameOverScreen.Dot,
                         "", GameOverScreen.Dot);
+        // 最後の画面。Java版は「The End」の1枚絵（edata18）で文字も焼き込んである。
         BuildFullScreen(full, font, controller, TowerGame.PageKind.FinalScreen,
-                        "EndingScreen", "Assets/Sprites/Screens/Ending_Art.png",
-                        Ending.TitleLine,  Ending.TitleDot,
-                        Ending.AnyKeyLine, Ending.AnyKeyDot);
+                        "EndingScreen",
+                        AuthorStyle.JavaEnding
+                            ? "Assets/Sprites/Screens/EndJava_End.png"
+                            : "Assets/Sprites/Screens/Ending_Art.png",
+                        AuthorStyle.JavaEnding ? "" : Ending.TitleLine,  Ending.TitleDot,
+                        AuthorStyle.JavaEnding ? "" : Ending.AnyKeyLine, Ending.AnyKeyDot);
 
         // 十字キーの触りを受ける役（押しっぱなしで歩き続ける）
         var padView = canvasGo.AddComponent<DPadView>();
@@ -1242,6 +1252,65 @@ public static class TowerSceneBuilder
         img.raycastTarget = false;
         img.preserveAspect = true;
         return img;
+    }
+
+    /// <summary>
+    /// Java版の終幕（作者の指定）。塔が沈む15枚を、40x40のマス目のモザイクで溶かして送る。
+    /// 下地の1枚（<see cref="FullScreenView"/> の Art）の上に 16x10＝160枚の小さな板を置き、
+    /// それぞれが次の1枚の自分の場所だけを映す（RawImage の uvRect）。
+    /// </summary>
+    static void BuildJavaEnding(FullScreenView screen)
+    {
+        // 原典の 640x400 からはみ出したぶんは切り落とす（縦長の画面では上下に余白がある）
+        screen.gameObject.AddComponent<UnityEngine.UI.RectMask2D>();
+
+        int w = (int)DialogueWindow.CanvasWidth, h = (int)DialogueWindow.CanvasHeight;
+        int cell = Ending.JavaMosaic;
+        int cols = w / cell, rows = h / cell;
+
+        var holder = new GameObject("Mosaic", typeof(RectTransform));
+        holder.transform.SetParent(screen.transform, false);
+        var hrt = holder.GetComponent<RectTransform>();
+        hrt.anchorMin = hrt.anchorMax = hrt.pivot = new Vector2(0f, 1f);
+        hrt.anchoredPosition = Vector2.zero;
+        hrt.sizeDelta = new Vector2(w, h);
+
+        var cells = new UnityEngine.UI.RawImage[cols * rows];
+        for (int y = 0; y < rows; y++)
+            for (int x = 0; x < cols; x++)
+            {
+                var go = new GameObject($"Cell_{x}_{y}", typeof(RectTransform),
+                                        typeof(UnityEngine.UI.RawImage));
+                go.transform.SetParent(holder.transform, false);
+                var rt = go.GetComponent<RectTransform>();
+                rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+                rt.anchoredPosition = new Vector2(x * cell, -y * cell);
+                rt.sizeDelta = new Vector2(cell, cell);
+                var raw = go.GetComponent<UnityEngine.UI.RawImage>();
+                // 絵の中の自分の場所だけを映す（uv は下が 0）
+                raw.uvRect = new Rect((float)x / cols, 1f - (float)(y + 1) / rows,
+                                      1f / cols, 1f / rows);
+                raw.raycastTarget = false;
+                raw.enabled = false;
+                cells[y * cols + x] = raw;
+            }
+
+        var view = screen.gameObject.AddComponent<EndingMovieView>();
+        var so = new SerializedObject(view);
+        so.FindProperty("controller").objectReferenceValue =
+            Object.FindObjectOfType<TowerController>();
+        so.FindProperty("back").objectReferenceValue =
+            screen.transform.Find("Art").GetComponent<UnityEngine.UI.Image>();
+        var cp = so.FindProperty("cells");
+        cp.arraySize = cells.Length;
+        for (int i = 0; i < cells.Length; i++)
+            cp.GetArrayElementAtIndex(i).objectReferenceValue = cells[i];
+        var fp = so.FindProperty("frames");
+        fp.arraySize = Ending.JavaFrames;
+        for (int i = 0; i < Ending.JavaFrames; i++)
+            fp.GetArrayElementAtIndex(i).objectReferenceValue =
+                LoadSprite($"Assets/Sprites/Screens/EndJava_{i + 1:00}.png");
+        so.ApplyModifiedPropertiesWithoutUndo();
     }
 
     /// <summary>

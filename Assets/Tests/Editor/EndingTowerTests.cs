@@ -85,7 +85,18 @@ public class EndingTowerTests
                         Assert.AreEqual("EndingTowerScreen", v.name);
                     }
                 }
-            Assert.AreEqual(1, scrolling, "流れるのは終幕の塔の絵だけ");
+            // Java版の終幕（作者の指定）では塔を流さず、15枚をモザイクで送る
+            // （EndingMovieView）。原典の流しに戻すと scrollTower が1つだけ立つ。
+            if (AuthorStyle.JavaEnding)
+            {
+                Assert.AreEqual(0, scrolling, "Java版の終幕では流さない");
+                int movies = 0;
+                foreach (var go in scene.GetRootGameObjects())
+                    foreach (var m in go.GetComponentsInChildren<EndingMovieView>(true))
+                    { movies++; Assert.AreEqual("EndingTowerScreen", m.name); }
+                Assert.AreEqual(1, movies, "Java版の動きは終幕の絵だけ");
+            }
+            else Assert.AreEqual(1, scrolling, "流れるのは終幕の塔の絵だけ");
             // 白へ寄せる板は、流れる1枚だけが持っていること
             int veils = 0;
             foreach (var go in scene.GetRootGameObjects())
@@ -99,7 +110,8 @@ public class EndingTowerTests
                     Assert.IsTrue(so.FindProperty("scrollTower").boolValue,
                                   "白へ寄せるのは流れる絵だけ");
                 }
-            Assert.AreEqual(1, veils, "白へ寄せる板は1枚だけ");
+            // 白へ寄せるのは原典の流しの作り。Java版の終幕では使わない
+            Assert.AreEqual(AuthorStyle.JavaEnding ? 0 : 1, veils, "白へ寄せる板は1枚だけ");
         }
         finally
         {

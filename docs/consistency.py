@@ -1567,6 +1567,24 @@ chk("MagicSeal.Adjust(player, name, ref ehp, ref eatk, ref edef);" in _ho,
     "勇者のオーブにも五の目の書き換えが効く")
 chk("BattleRules.Charms.None" in _ho,
     "十字架・ドラゴンスレイヤー・幸運の金貨は入れない（原典 0x8c2a／説明レコード60）")
+# Java版の終幕（作者の指定）。MTower.class の OpenningZeno(4) が
+# data2/edata01〜15（塔が沈む15枚）を 40x40 のモザイクで送り、
+# edata17（終わりの言葉）→ edata18（The End）で終わる。
+_as2=open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
+chk("JavaEnding" in _as2 and "AuthorStyle.JavaEnding" in _end,
+    "終幕を Java版にするかは AuthorStyle に置く（false で原典に戻る）")
+chk(all(os.path.exists(f"Assets/Sprites/Screens/EndJava_{i:02d}.png") for i in range(1,16)),
+    "塔が沈む15枚（edata01〜15）が取り込んである")
+chk(os.path.exists("Assets/Sprites/Screens/EndJava_Words.png")
+    and os.path.exists("Assets/Sprites/Screens/EndJava_End.png"),
+    "終わりの言葉（edata17）と The End（edata18）も取り込んである")
+chk(os.path.exists("docs/make_ending_java.py") and os.path.exists("docs/gif.py"),
+    "その絵は GIF から作り直せる（docs/gif.py ＋ docs/make_ending_java.py）")
+chk("JavaMosaic = 40" in _end,
+    "切り替えは 40x40 のマス目（Java版の PixelGrabber と同じ）")
+_emv=open("Assets/Scripts/UI/EndingMovieView.cs",encoding="utf-8").read()
+chk("Ending.JavaFrameSeconds" in _emv and "uvRect" not in _emv,
+    "モザイクの板は組み立て器が uvRect で切る（役は出し入れだけ）")
 chk('"Assets/Sprites/Screens/Ending_Tower1.png"' in _tsb
     and '"Assets/Sprites/Screens/Ending_Tower2.png"' in _tsb,
     "塔(MTOWER1)と荒野(MTOWER2)の2枚ともシーンに入っている")
@@ -1721,7 +1739,8 @@ chk(os.path.exists("docs/rebuild_assets.sh"),"原典から一式を作り直す�
 # シーンが要る1枚絵は、どれも作り直す手順の中に生成器がある
 _need=sorted(set(re.findall(r'Assets/Sprites/Screens/[A-Za-z0-9_]+\.png',
                             open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read())))
-chk(len(_need)==13,"シーンが使う1枚絵は13枚（終幕の塔 Ending_Tower1 を足した）",str(len(_need)))
+chk(len(_need)==15,"シーンが使う1枚絵は15枚（Java版の終幕の言葉と The End を足した）"
+    ,str(len(_need)))
 chk(all(os.path.exists(_q) for _q in _need),"その12枚が揃っている",
     str([_q for _q in _need if not os.path.exists(_q)]))
 _rb=open("docs/rebuild_assets.sh",encoding="utf-8").read()
@@ -2138,8 +2157,8 @@ chk(open("docs/original/disk/MTE.EXE","rb").read().find(b"MTWAKU")<0,
 _scr=[[c.strip() for c in l.split("|")] for l in
       open("docs/original/screens.txt",encoding="utf-8") if l.strip() and not l.startswith("#")]
 chk(len(_scr)==13,"画面の絵は13枚",str(len(_scr)))
-chk(len(glob.glob("Assets/Sprites/Screens/*.png"))==25,
-    "Assets には枠・序章4枚・終わりの言葉5枚と題名の看板・縦長を足して25枚",
+chk(len(glob.glob("Assets/Sprites/Screens/*.png"))==42,
+    "Assets には枠・序章4枚・終わりの言葉5枚・題名の看板と縦長・Java版の終幕17枚で42枚",
     str(len(glob.glob("Assets/Sprites/Screens/*.png"))))
 # 枠の中央が盤面と同じ大きさで空いている
 _lcg0=_p58.to_indices(*_p58.decode_all(open("docs/original/disk/LCG.P58","rb").read())[0])
@@ -2663,7 +2682,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=776
+MIN_CHECKS=782
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

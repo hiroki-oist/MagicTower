@@ -9,21 +9,33 @@ using UnityEngine;
 public class EndingAutoTests
 {
     [Test]
-    public void 塔の絵は流し終わってから進む()
+    public void 塔の絵は動きが終わってから進む()
     {
         float t = Ending.AutoSeconds(TowerGame.PageKind.EndingTower, 0);
-        Assert.Greater(t, Ending.TowerDuration, "13秒の流しが終わる前に進んではいけない");
-        Assert.AreEqual(Ending.TowerDuration + Ending.TowerHoldSeconds, t, 0.001f);
+        if (AuthorStyle.JavaEnding)
+        {
+            // Java版は15枚のモザイク送り。全部出し終える前に進んではいけない
+            Assert.Greater(t, Ending.JavaFrames * Ending.JavaFrameSeconds);
+            Assert.AreEqual(Ending.JavaMovieSeconds, t, 0.001f);
+        }
+        else
+        {
+            Assert.Greater(t, Ending.TowerDuration, "13秒の流しが終わる前に進んではいけない");
+            Assert.AreEqual(Ending.TowerDuration + Ending.TowerHoldSeconds, t, 0.001f);
+        }
     }
 
     [Test]
     public void 終わりの言葉は一枚ずつひとりでに進む()
     {
-        for (int i = 0; i < Ending.WordsSeconds.Length; i++)
+        for (int i = 0; i < Ending.WordsPages; i++)
             Assert.Greater(Ending.AutoSeconds(TowerGame.PageKind.EndingText, i), 0f, $"{i}枚目");
-        // 最後の1枚はいちばん長く見せる（4段落そろったところ）
-        Assert.AreEqual(Ending.WordsSeconds[Ending.WordsSeconds.Length - 1],
-                        Max(Ending.WordsSeconds));
+        if (AuthorStyle.JavaEnding)
+            Assert.AreEqual(1, Ending.WordsPages, "Java版の終わりの言葉は1枚絵");
+        else
+            // 最後の1枚はいちばん長く見せる（4段落そろったところ）
+            Assert.AreEqual(Ending.WordsSeconds[Ending.WordsSeconds.Length - 1],
+                            Max(Ending.WordsSeconds));
     }
 
     static float Max(float[] v)

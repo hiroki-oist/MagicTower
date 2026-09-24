@@ -163,6 +163,54 @@ public static class Ending
         161, 162, 163, 164, 165, 166, 167, 168, 169, 170,
     };
 
+    // ------------------------------------------------------------ Java版の終幕
+    //
+    // ★作者の指定「エンディングは全てJava準拠にしたい」。
+    //
+    // Java版 MTower.class の `eventMT` は、最上階（PC98版の50階）で会話が終わると
+    // `OpenningZeno(4)` → `OpenningZeno(5)` を呼ぶ。その中で読むのが
+    // `data2/edata01.gif`〜`edata18.gif`:
+    //   edata01〜15 … **塔が地面へ沈んでいく15枚**（1枚ずつ描いてある）
+    //   edata16/17  … 終わりの言葉（英語／日本語。旗は mapObject[76][121]）
+    //   edata18     … 「The End」（(C)1998-2000 Oz &amp; Kenichi ／ (C)1996 N.W ／ See you again!）
+    // 1枚ごとの切り替えは **40x40 のマス目のモザイク**で溶かし、`twait(100)` ずつ待つ。
+    //
+    // ⚠ 原典 PC98版はこれと作りが違う（MTOWER1 と MTOWER2 を重ねて塔だけを
+    //    15ドットずつ26回下げ、パレットで白へ寄せる）。**どちらを使うかは
+    //    <see cref="AuthorStyle.JavaEnding"/>**。絵は `docs/make_ending_java.py` が
+    //    GIF から書き出す（`Assets/Sprites/Screens/EndJava_*.png`）。
+
+    /// <summary>塔が沈んでいく絵の枚数（edata01〜15）。</summary>
+    public const int JavaFrames = 15;
+
+    /// <summary>モザイクのマスの大きさ（ドット）。Java版の PixelGrabber と同じ 40x40。</summary>
+    public const int JavaMosaic = 40;
+
+    /// <summary>
+    /// 1枚ぶんの時間（秒）。Java版の `twait(100)` は**待ちだけ**で、
+    /// その前に 640x400 の画素を組み直す時間（2001年の Java では数百ミリ秒）が乗る。
+    /// 見て分かる速さに合わせて 0.4 秒にしてある。
+    /// </summary>
+    public const float JavaFrameSeconds = 0.4f;
+
+    /// <summary>最後の1枚（沈みきったところ）を見せておく時間（秒）。</summary>
+    public const float JavaLastHoldSeconds = 1.5f;
+
+    /// <summary>終わりの言葉（edata17）を見せておく時間（秒）。Java版は1枚絵。</summary>
+    public const float JavaWordsSeconds = 12f;
+
+    /// <summary>塔が沈む絵ぜんぶにかかる時間（秒）。</summary>
+    public static float JavaMovieSeconds
+    {
+        get { return JavaFrames * JavaFrameSeconds + JavaLastHoldSeconds; }
+    }
+
+    /// <summary>終わりの言葉を何枚に分けて出すか（Java版は1枚絵、原典は段落4つ）。</summary>
+    public static int WordsPages
+    {
+        get { return AuthorStyle.JavaEnding ? 1 : Cutscenes.EndingTextParagraphs; }
+    }
+
     // ------------------------------------------------------------ ひとりでに進む所
     //
     // ★**終幕は塔の絵から終わりの言葉まで、キーを一度も待たない**。
@@ -192,9 +240,11 @@ public static class Ending
     public static float AutoSeconds(TowerGame.PageKind kind, int record)
     {
         if (kind == TowerGame.PageKind.EndingTower)
-            return TowerDuration + TowerHoldSeconds;
+            return AuthorStyle.JavaEnding ? JavaMovieSeconds
+                                          : TowerDuration + TowerHoldSeconds;
         if (kind == TowerGame.PageKind.EndingText)
-            return WordsSeconds[Mathf.Clamp(record, 0, WordsSeconds.Length - 1)];
+            return AuthorStyle.JavaEnding ? JavaWordsSeconds
+                   : WordsSeconds[Mathf.Clamp(record, 0, WordsSeconds.Length - 1)];
         return 0f;
     }
 
