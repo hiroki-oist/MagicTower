@@ -17,7 +17,11 @@ public class ItemBarView : MonoBehaviour
     [SerializeField] RectTransform viewport;
     [SerializeField] RectTransform content;
     [SerializeField] RectTransform leftArrow, rightArrow;
-    [SerializeField] RectTransform damageButton;
+    /// <summary>右の「勇者」「飛翔」（オーブの近道。作者の指定）。</summary>
+    [SerializeField] RectTransform heroButton, flightButton;
+    /// <summary>その2つの枠と字（持っていない間は灰色に沈ませる）。</summary>
+    [SerializeField] UnityEngine.UI.Image heroImage, flightImage;
+    [SerializeField] TMPro.TMP_Text heroLabel, flightLabel;
     /// <summary>下の左の並びの「セーブ」「ロード」（作者の指定）。</summary>
     [SerializeField] RectTransform saveButton, loadButton, menuButton;
     [SerializeField] RectTransform[] slots = new RectTransform[0];
@@ -34,16 +38,14 @@ public class ItemBarView : MonoBehaviour
     {
         if (controller != null && controller.AtTitle) return;   // 題名の間は受けない
         Feedback();
+        PaintOrbs();
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
 
         if (Inside(leftArrow, at))  { Scroll(-1); return; }
         if (Inside(rightArrow, at)) { Scroll(+1); return; }
-        if (Inside(damageButton, at))
-        {
-            if (controller != null) controller.ShowDamage();
-            return;
-        }
+        if (Inside(heroButton, at))   { Orb(SpecialItems.Kind.HeroOrb); return; }
+        if (Inside(flightButton, at)) { Orb(SpecialItems.Kind.FlightOrb); return; }
         if (Inside(saveButton, at)) { if (controller != null) controller.AskSave(); return; }
         if (Inside(loadButton, at)) { if (controller != null) controller.AskLoad(); return; }
         if (Inside(menuButton, at)) { if (controller != null) controller.ToggleMenu(); return; }
@@ -54,6 +56,38 @@ public class ItemBarView : MonoBehaviour
                 if (controller != null) controller.TapItem(i);
                 return;
             }
+    }
+
+    /// <summary>
+    /// 右のオーブのボタン。持っていれば持ち物の帯を触ったのと同じ扱い、
+    /// 持っていなければ知らせるだけ（作者の指定）。
+    /// </summary>
+    void Orb(SpecialItems.Kind kind)
+    {
+        if (controller == null || controller.Game == null) return;
+        if (controller.Game.Player.Has(kind)) controller.TapItem(kind);
+        else controller.NoteLockedOrb(kind);
+    }
+
+    /// <summary>持っていないオーブのボタンを灰色にする。</summary>
+    void PaintOrbs()
+    {
+        if (controller == null || controller.Game == null) return;
+        Paint(heroImage, heroLabel, controller.Game.Player.Has(SpecialItems.Kind.HeroOrb));
+        Paint(flightImage, flightLabel,
+              controller.Game.Player.Has(SpecialItems.Kind.FlightOrb));
+    }
+
+    void Paint(UnityEngine.UI.Image img, TMPro.TMP_Text label, bool owned)
+    {
+        if (img == null) return;
+        var c = owned ? PhoneScreen.RightButton : PhoneScreen.LockedButton;
+        // 押している間の濃い色は Feedback が上から塗るので、控えの色も合わせて直す
+        int i = System.Array.IndexOf(buttons, img);
+        if (colors != null && i >= 0 && i < colors.Length) colors[i] = c;
+        if (i != held) img.color = c;
+        if (label != null)
+            label.color = owned ? PhoneScreen.ButtonText : PhoneScreen.LockedText;
     }
 
     /// <summary>1画面ぶん送る。端で止まる。</summary>

@@ -391,6 +391,23 @@ public class TowerController : MonoBehaviour
         Game.ShowHeroOrb();
     }
 
+    /// <summary>持ち物の帯の道具を触ったとき（種別で渡す版）。</summary>
+    public void TapItem(SpecialItems.Kind kind)
+    {
+        if (Game == null || AtTitle) return;
+        Game.TapItem(kind);
+    }
+
+    /// <summary>
+    /// まだ持っていないオーブのボタンを触ったとき（作者の指定）。
+    /// 「〜を手に入れると使用可能になります。」と知らせるだけ。
+    /// </summary>
+    public void NoteLockedOrb(SpecialItems.Kind kind)
+    {
+        if (Game == null || AtTitle) return;
+        Game.NoteLockedOrb(kind);
+    }
+
     /// <summary>下の「セーブ」のボタン（作者の指定）。「セーブしますか？」と聞く。</summary>
     public void AskSave() { if (Game != null && !AtTitle) Game.AskSave(); }
 

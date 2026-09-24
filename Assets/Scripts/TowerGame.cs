@@ -1121,6 +1121,14 @@ public class TowerGame
     }
 
     /// <summary>
+    /// まだ持っていないオーブのボタンを触ったとき（作者の指定。原典にこの入口は無い）。
+    /// </summary>
+    public void NoteLockedOrb(SpecialItems.Kind kind)
+    {
+        Note(string.Format(PhoneScreen.OrbLocked, TowerMenu.OrbName(kind)));
+    }
+
+    /// <summary>
     /// 下の「セーブ」のボタン（作者の指定）。その場で「セーブしますか？」と聞く。
     /// 原典のメニューは8つのスロットを選ばせるが、こちらは1つだけにしてある。
     /// </summary>

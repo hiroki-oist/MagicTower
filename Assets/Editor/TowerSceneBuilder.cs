@@ -403,8 +403,8 @@ public static class TowerSceneBuilder
         int nb = PhoneScreen.LeftButtons.Length;
         float stack = bh * nb + bgap * (nb - 1);
         float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
-        RectTransform damageButton = null, saveButton = null, loadButton = null,
-                      menuButton = null;
+        RectTransform heroButton = null, flightButton = null,
+                      saveButton = null, loadButton = null, menuButton = null;
         var pressable = new List<Object>
         {
             leftArrow.GetComponent<UnityEngine.UI.Image>(),
@@ -412,24 +412,26 @@ public static class TowerSceneBuilder
         };
         for (int i = 0; i < nb; i++)
         {
-            float by = btop + (bh + bgap) * i;
-            var left = Placeholder(bottom, font, "Left" + i, pad, by, bw, bh,
-                                   PhoneScreen.LeftButtons[i], PhoneScreen.LeftButton);
-            var right = Placeholder(bottom, font, "Right" + i, w - pad - bw, by, bw, bh,
-                                    PhoneScreen.RightButtons[i], PhoneScreen.RightButton);
+            // ★帯の**下端から**測って置く。端末が縦長で帯が伸びても、操作系は
+            //   画面の下端に貼り付いたまま（余りは盤面との間に空く）。
+            float by = PhoneScreen.BottomHeight - (btop + (bh + bgap) * i) - bh;
+            var left = Bottomed(bottom, font, "Left" + i, pad, by, bw, bh,
+                                PhoneScreen.LeftButtons[i], PhoneScreen.LeftButton);
+            var right = Bottomed(bottom, font, "Right" + i, w - pad - bw, by, bw, bh,
+                                 PhoneScreen.RightButtons[i], PhoneScreen.RightButton);
             pressable.Add(left.GetComponent<UnityEngine.UI.Image>());
             pressable.Add(right.GetComponent<UnityEngine.UI.Image>());
-            if (i == PhoneScreen.DamageButtonIndex) damageButton = right;
+            if (i == PhoneScreen.HeroButtonIndex) heroButton = right;
+            if (i == PhoneScreen.FlightButtonIndex) flightButton = right;
             if (i == PhoneScreen.SaveButtonIndex) saveButton = left;
             if (i == PhoneScreen.LoadButtonIndex) loadButton = left;
             if (i == PhoneScreen.MenuButtonIndex) menuButton = left;
         }
         // 中央の十字。**押すと歩く**（作者が選んだ絵。DPadView が触りを受ける）
         float dpad = PhoneScreen.DPadSize;
-        var padRt = Placeholder(bottom, font, "DPad", (w - dpad) / 2f,
-                                PhoneScreen.ItemBarHeight
-                                + (PhoneScreen.ButtonsHeight - dpad) / 2f,
-                                dpad, dpad, "", new Color(0f, 0f, 0f, 0f));
+        var padRt = Bottomed(bottom, font, "DPad", (w - dpad) / 2f,
+                             (PhoneScreen.ButtonsHeight - dpad) / 2f,
+                             dpad, dpad, "", new Color(0f, 0f, 0f, 0f));
         // **5枚に分けて重ねる**（上・右・下・左の扇と、真ん中の決定ボタン）。
         // 押している所だけ色を変えられるようにするため。
         var padParts = new List<Object>();
@@ -715,7 +717,16 @@ public static class TowerSceneBuilder
         barso.FindProperty("content").objectReferenceValue = contentRt;
         barso.FindProperty("leftArrow").objectReferenceValue = leftArrow;
         barso.FindProperty("rightArrow").objectReferenceValue = rightArrow;
-        barso.FindProperty("damageButton").objectReferenceValue = damageButton;
+        barso.FindProperty("heroButton").objectReferenceValue = heroButton;
+        barso.FindProperty("flightButton").objectReferenceValue = flightButton;
+        barso.FindProperty("heroImage").objectReferenceValue =
+            heroButton != null ? heroButton.GetComponent<UnityEngine.UI.Image>() : null;
+        barso.FindProperty("flightImage").objectReferenceValue =
+            flightButton != null ? flightButton.GetComponent<UnityEngine.UI.Image>() : null;
+        barso.FindProperty("heroLabel").objectReferenceValue =
+            heroButton != null ? heroButton.GetComponentInChildren<TextMeshProUGUI>() : null;
+        barso.FindProperty("flightLabel").objectReferenceValue =
+            flightButton != null ? flightButton.GetComponentInChildren<TextMeshProUGUI>() : null;
         barso.FindProperty("saveButton").objectReferenceValue = saveButton;
         barso.FindProperty("loadButton").objectReferenceValue = loadButton;
         barso.FindProperty("menuButton").objectReferenceValue = menuButton;
@@ -1576,6 +1587,20 @@ public static class TowerSceneBuilder
     /// **押しても何も起きない**飾りのボタン（作者の指定）。
     /// 下の4つ＋4つと十字、上の段の丸2つがこれ。移動は当面キーボードの矢印のまま。
     /// </summary>
+    /// <summary>
+    /// 下の帯の**下端から**測って置く枠（作者の指定）。端末が縦長で帯が伸びても、
+    /// 操作系は画面の下端に貼り付いたままになる。
+    /// </summary>
+    static RectTransform Bottomed(Transform parent, TMP_FontAsset font, string name,
+                                  float x, float yFromBottom, float w, float h,
+                                  string label, Color fill)
+    {
+        var rt = Placeholder(parent, font, name, x, 0f, w, h, label, fill);
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 0f);
+        rt.anchoredPosition = new Vector2(x, yFromBottom + PhoneScreen.Pad);
+        return rt;
+    }
+
     static RectTransform Placeholder(Transform parent, TMP_FontAsset font, string name,
                                      float x, float y, float w, float h,
                                      string label, Color fill)

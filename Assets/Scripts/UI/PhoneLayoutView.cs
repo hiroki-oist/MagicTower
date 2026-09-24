@@ -45,11 +45,18 @@ public class PhoneLayoutView : MonoBehaviour
     {
         if (frame == null || mapArea == null) return;
 
-        // 枠はいつも 1080x1920。窓に入らないぶんは縮む（画布の側が拡大率を合わせる）。
-        frame.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth, PhoneScreen.ReferenceHeight);
+        // 枠は幅 1080、高さは**画布いっぱい**（ただし 1920 は下回らない）。
+        // ★作者の指定。縦長の端末では 9:16 より余るので、その余りを**下の帯**に回して
+        //   操作系を画面の下端まで広げる（下にたくさん空いている、という報告）。
+        var canvasRt = frame.parent as RectTransform;
+        float frameHeight = Mathf.Max(PhoneScreen.ReferenceHeight,
+                                      canvasRt != null ? canvasRt.rect.height
+                                                       : PhoneScreen.ReferenceHeight);
+        frame.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth, frameHeight);
 
         float side = PhoneScreen.MapSide(frame.rect.width, frame.rect.height);
-        float center = (PhoneScreen.BottomHeight - PhoneScreen.TopHeight) / 2f;
+        // 上の帯は原典の欄の高さのまま。**余ったぶんは全部下**へ。
+        float center = frame.rect.height / 2f - (PhoneScreen.TopHeight + side / 2f);
         mapArea.sizeDelta = new Vector2(side, side);
         mapArea.anchoredPosition = new Vector2(0f, center);
 
@@ -64,8 +71,7 @@ public class PhoneLayoutView : MonoBehaviour
         {
             // 画面いっぱいに写したまま、**盤面の枠にちょうど11マス**が来るようにする。
             // 1画布単位あたりの世界の長さ = 11 / 枠の一辺
-            var canvas = frame.parent as RectTransform;
-            float canvasHeight = canvas != null ? canvas.rect.height : frame.rect.height;
+            float canvasHeight = canvasRt != null ? canvasRt.rect.height : frame.rect.height;
             float perUnit = PhoneScreen.MapCells / side;
             boardCamera.rect = new Rect(0f, 0f, 1f, 1f);
             boardCamera.orthographicSize = canvasHeight * perUnit / 2f;

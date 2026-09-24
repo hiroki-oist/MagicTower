@@ -72,6 +72,21 @@ public static class TowerMenu
         return "";
     }
 
+    /// <summary>
+    /// オーブの名前。原典のメニューの文言「　　勇者のオーブを使う」から
+    /// 前後を落として取る（勝手な文字を足さないため）。
+    /// </summary>
+    public static string OrbName(SpecialItems.Kind kind)
+    {
+        string key = kind == SpecialItems.Kind.HeroOrb   ? "menu_orb_hero"
+                   : kind == SpecialItems.Kind.FlightOrb ? "menu_orb_fly"
+                   : kind == SpecialItems.Kind.WisdomOrb ? "menu_orb_wis" : null;
+        if (key == null) return ItemName(kind);
+        var t = GameText.Instance.Message(key).Trim('　', ' ');
+        const string tail = "を使う";
+        return t.EndsWith(tail) ? t.Substring(0, t.Length - tail.Length) : t;
+    }
+
     /// <summary>並びの数（やめるを含む）。</summary>
     public static int ItemCount { get { return Usable.Length + 1; } }
 

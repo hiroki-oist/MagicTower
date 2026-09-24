@@ -2147,8 +2147,24 @@ chk("PhoneScreen.RowHeight" in _sb and "PhoneScreen.ItemBarHeight" in _sb,
 # 持ち物の帯（黒い地・左右に送る）と、触ったときの流れ（作者の指定）
 _ibv=open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read()
 chk("RectMask2D" in _sb,"帯からはみ出た絵は切り取る")
-chk("controller.TapItem" in _ibv and "controller.ShowDamage" in _ibv,
-    "帯の触りと「ダメージ表示」が本線に繋がっている")
+chk("controller.TapItem" in _ibv and "Orb(SpecialItems.Kind.HeroOrb)" in _ibv,
+    "帯の触りと右のオーブのボタンが本線に繋がっている")
+# 右の「飛翔」「勇者」はオーブの近道。持っていない間は灰色で、触ると知らせるだけ
+_ps2=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+chk('"飛翔"' in _ps2 and '"勇者"' in _ps2,"右のボタンは「飛翔」「勇者」")
+chk("LockedButton" in _ps2 and "OrbLocked" in _ps2 and "PaintOrbs" in _ibv,
+    "持っていないオーブのボタンは灰色にして、触ると知らせる")
+# 十字の真ん中は「決定の丸」「何も起きない輪」「扇」の3段（作者の指定）
+chk("DPadConfirmZone" in _ps2 and "InConfirmZone" in _ps2,
+    "決定の丸と、その外の何も起きない輪がある")
+_dpv=open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read()
+chk("GetMouseButtonUp(0)" in _dpv and "pressedConfirm" in _dpv,
+    "決定は押して離すまで効かない（指を一度浮かす）")
+_plv=open("Assets/Scripts/UI/PhoneLayoutView.cs",encoding="utf-8").read()
+chk("Mathf.Max(PhoneScreen.ReferenceHeight" in _plv,
+    "縦長の端末では余った高さを下の帯に回す")
+chk("static RectTransform Bottomed" in _sb,
+    "下の操作系は帯の下端から測って置く（画面の下端に貼り付く）")
 _tgi=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("ChoiceKind.UseItem" in _tgi,"使い切りの道具は「使いますか？」と聞いてから使う")
 chk("kind == SpecialItems.Kind.HeroOrb) return ShowHeroOrb()" in _tgi,

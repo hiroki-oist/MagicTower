@@ -41,11 +41,22 @@ public class DPadView : MonoBehaviour
                      && Inside(pad, (Vector2)Input.mousePosition);
         Light(!onPad ? -1 : PhoneScreen.PartOf(dir));
 
+        // **十字の真ん中の「決定」は、押して離すまで効かない**（作者の指定）。
+        // 矢印を狙って少し内側を押してしまっても、指を動かして離せば決定にならない。
+        // 「指を一度も浮かさずに全部押せる」のを、決定だけやめた形。
+        if (Input.GetMouseButtonDown(0)) pressedConfirm = InConfirm();
+        if (Input.GetMouseButtonUp(0))
+        {
+            bool fire = pressedConfirm && InConfirm();
+            pressedConfirm = false;
+            if (fire) { controller.TouchConfirm = true; return; }
+        }
+
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
         if (dir != Vector2Int.zero) { controller.TouchStep = dir; return; }
-        // **十字の真ん中は「決定」**（会話を送る／選んだものを決める）。
-        if (Inside(pad, at)) { controller.TouchConfirm = true; return; }
+        // 十字の中（決定の丸と、その外の何も起きない輪）は上で見ているので何もしない。
+        if (Inside(pad, at)) return;
         // 帯の上（ボタンや持ち物）は、それぞれの受け口に任せる。
         // 盤面のあたりを触ったときも「決定・送り」。
         if (Inside(topBand, at) || Inside(bottomBand, at)) return;
@@ -72,6 +83,20 @@ public class DPadView : MonoBehaviour
     {
         return rt != null && rt.gameObject.activeInHierarchy
             && RectTransformUtility.RectangleContainsScreenPoint(rt, screenPoint, null);
+    }
+
+    /// <summary>押し始めが決定の丸の中だったか。</summary>
+    bool pressedConfirm;
+
+    /// <summary>いま触っている所が決定の丸の中か。</summary>
+    bool InConfirm()
+    {
+        if (pad == null) return false;
+        var corners = new Vector3[4];
+        pad.GetWorldCorners(corners);
+        var center = (Vector2)(corners[0] + corners[2]) * 0.5f;
+        float radius = (corners[2].x - corners[0].x) * 0.5f;
+        return PhoneScreen.InConfirmZone((Vector2)Input.mousePosition - center, radius);
     }
 
     Vector2Int Pressed()
