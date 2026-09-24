@@ -96,6 +96,8 @@ public class TowerController : MonoBehaviour
         // （実機で遅くなったという報告がこれ）。60に上げてそろえる。
         Application.targetFrameRate = TargetFrameRate;
         WarmUp();
+        // 調べもの用のセーブを1つ用意しておく（作者の頼み）。表を読んだあとでないと作れない。
+        if (DebugPlay.MakeEndgameSave) DebugEndgameSave.WriteTo(PhoneScreen.QuickSlot);
     }
 
     /// <summary>

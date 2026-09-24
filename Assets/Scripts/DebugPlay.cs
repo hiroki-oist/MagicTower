@@ -49,4 +49,15 @@ public static class DebugPlay
 
     /// <summary>そのときの鍵の本数（黄・紫・赤とも同じ）。</summary>
     public const int StartKeys = 30;
+
+    /// <summary>
+    /// 起動のたびに**調べもの用のセーブ**を
+    /// <see cref="PhoneScreen.QuickSlot"/>（セーブ／ロードのボタンが使うスロット）へ書く。
+    /// 中身は <see cref="DebugEndgameSave"/>。
+    ///
+    /// 作者の頼み（2026-09-24）「49階ボス〜エンディングまでだけ見たい」。
+    /// ⚠ **起動するたびに上書きする**ので、途中経過をそこへセーブしても
+    /// 次に立ち上げると調べもの用の状態に戻る。見終わったら false に。
+    /// </summary>
+    public static readonly bool MakeEndgameSave = true;
 }

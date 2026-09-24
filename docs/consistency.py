@@ -1490,6 +1490,18 @@ chk("AfterBattleStep" in _tg4,
     "倒した後始末は斬り合いの絵が終わってから当てる（褒美が戦闘開始と同時に出ていた）")
 chk("Player.Rank = r.Rank" in _tg4,
     "妖精にもらった称号を覚えておく（出し方は作者と相談中）")
+# 調べもの用のセーブ（作者の頼み。49階ボス〜終幕だけ見たい）。
+# 見終わったら DebugPlay.MakeEndgameSave を false に戻す。
+_dbg=open("Assets/Scripts/DebugPlay.cs",encoding="utf-8").read()
+_dbe=open("Assets/Scripts/DebugEndgameSave.cs",encoding="utf-8").read()
+chk("MakeEndgameSave" in _dbg and "DebugEndgameSave.WriteTo(PhoneScreen.QuickSlot)" in
+    open("Assets/Scripts/TowerController.cs",encoding="utf-8").read(),
+    "調べもの用のセーブはボタンが使うスロットへ書く（旗は DebugPlay に置く）")
+chk("Untouched = { 24, 26 }" in _dbe and "DragonFloor = 35" in _dbe
+    and "LastCleared = 48" in _dbe,
+    "24階・26階・35階のドラゴンは手付かず、48階までを片付ける")
+chk("k != SpecialItems.Kind.DragonSlayer" in _dbe,
+    "持ち物はドラゴンスレイヤー以外の14種")
 # 倒して相手のマスへ踏み込んだあとの魔法攻撃（作者の指定＝Java版に合わせる）。
 # 原典 PC98版は 0x61ef〜0x6232 で踏み込んでから 0x1588 を呼ばないので無傷だったが、
 # Java版は attackMonster が座標を書かない＝あとから歩いて入るので必ず食らう。
@@ -2572,7 +2584,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=751
+MIN_CHECKS=754
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。
