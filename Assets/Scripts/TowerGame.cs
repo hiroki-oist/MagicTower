@@ -185,8 +185,22 @@ public class TowerGame
         {
             return blinks.Count > 0 || walks.Count > 0 || doorOpens.Count > 0
                    || bossAppears.Count > 0 || vanishes.Count > 0 || deathQueued
-                   || PlayerSlide != null;
+                   || pauseFrames > 0 || PlayerSlide != null;
         }
+    }
+
+    /// <summary>
+    /// 台本の「待つ」で渡された長さ（垂直帰線の回数＝1/60秒）。
+    /// 見た目の層が受け取って、その間だけ次の段へ進ませない。
+    /// </summary>
+    int pauseFrames;
+
+    /// <summary>渡された待ちを受け取って下ろす。</summary>
+    public int ConsumePauseFrames()
+    {
+        int n = pauseFrames;
+        pauseFrames = 0;
+        return n;
     }
 
     /// <summary>積んだ点滅を取り出して空にする。</summary>
@@ -239,6 +253,20 @@ public class TowerGame
                 // 見せるのは見た目の層（BattleView）。ここは**間を作る**のが仕事なので、
                 // 渡した印を立てて、動き終わるまで次（ＧＡＭＥ　ＯＶＥＲ）へ進ませない。
                 viewTicket++;
+            }
+            else if (e.Effect != null && e.Effect.StartsWith(FleeStep))
+            {
+                var arg = e.Effect.Substring(FleeStep.Length);
+                int split = arg.IndexOf(")(");
+                Vector2Int from, to;
+                if (split > 0
+                    && Cutscenes.TryParseCell(arg.Substring(0, split + 1), "", out from)
+                    && Cutscenes.TryParseCell(arg.Substring(split + 1), "", out to))
+                {
+                    var who = Floor.At(from);
+                    Floor.Clear(from);
+                    Floor.Put(to, who);
+                }
             }
             else if (e.Effect != null && e.Effect.StartsWith(ClearCellStep))
             {
@@ -361,6 +389,12 @@ public class TowerGame
             {
                 PlaySound(e.Effect.Substring(Cutscenes.SoundPrefix.Length).Trim());
             }
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.WaitPrefix))
+            {
+                int n;
+                if (int.TryParse(e.Effect.Substring(Cutscenes.WaitPrefix.Length).Trim(), out n))
+                    pauseFrames += n;
+            }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.VanishPrefix))
             {
                 Vector2Int at;
@@ -404,6 +438,15 @@ public class TowerGame
     /// </summary>
     public const string AfterBattleStep = "戦闘の後始末";
 
+    /// <summary>相手が1マス下がる段（47階・43階）。書き方は "下がる(x,y)(x,y)"。</summary>
+    public const string FleeStep = "下がる";
+
+    /// <summary>
+    /// 下がるまでの間（垂直帰線の回数＝1/60秒）。**作者の指定**で 0.3秒。
+    /// 原典は間を置かずにその場で書き換える。
+    /// </summary>
+    public const int FleeWaitFrames = 18;
+
     /// <summary>そのマスを空ける段（妖精は読み終えてから消える）。</summary>
     public const string ClearCellStep = "マスを空ける";
 
@@ -442,7 +485,7 @@ public class TowerGame
         {
             return walks.Count + doorOpens.Count + blinks.Count
                    + bossAppears.Count + vanishes.Count + viewTicket
-                   + (deathQueued ? 1 : 0)
+                   + (deathQueued ? 1 : 0) + (pauseFrames > 0 ? 1 : 0)
                    + (PlayerSlide != null ? 1 : 0);
         }
     }
@@ -475,7 +518,8 @@ public class TowerGame
                 || step.StartsWith(Cutscenes.DoorOpenPrefix)
                 || step.StartsWith(Cutscenes.DoorClosePrefix)
                 || step.StartsWith(Cutscenes.VanishPrefix)
-                || step.StartsWith(Cutscenes.SoundPrefix))
+                || step.StartsWith(Cutscenes.SoundPrefix)
+                || step.StartsWith(Cutscenes.WaitPrefix))
             {
                 pages.Enqueue(withMap(new Page
                 {
@@ -1496,11 +1540,23 @@ public class TowerGame
         // 隣のものが**もう1マス先へ逃げる**（原典 47階 0x2102〜0x2150）。
         if (ev.FleeDir != Vector2Int.zero)
         {
+            // ★作者の指定で**ひと呼吸おいてから**下がらせる。原典はその場で書き換える
+            //   ので、踏み込んだ瞬間に相手が動いて「隣にいないのに魔法を受けている」
+            //   ように見えた。魔法を受けた知らせ（Say）のあとに並ぶので、
+            //   「隣に来る → 魔法 → 下がる」の順に見える。
             var from = Player.Position + ev.FleeDir;
             var to = from + ev.FleeDir;
-            var who = Floor.At(from);
-            Floor.Clear(from);
-            Floor.Put(to, who);
+            pages.Enqueue(new Page
+            {
+                Kind = PageKind.Effect, Text = null, Record = -1,
+                Effect = Cutscenes.WaitPrefix + FleeWaitFrames
+            });
+            pages.Enqueue(new Page
+            {
+                Kind = PageKind.Effect, Text = null, Record = -1,
+                Effect = FleeStep + "(" + from.x + "," + from.y + ")"
+                         + "(" + to.x + "," + to.y + ")"
+            });
         }
         // 表に書いてある音を順に鳴らす。
         // ⚠ 原典は43階だけ音6と音11の間に 0x1e（30コマ）待つが、こちらは間を置かない。
@@ -1545,14 +1601,18 @@ public class TowerGame
     }
 
     /// <summary>
-    /// サイコロの５の目ができていれば魔を封じる    /// <summary>
     /// サイコロの５の目ができていれば魔を封じる（原典 0x5cdb）。移動のたびに見る。
+    ///
+    /// ⚠ **主人公の立ち位置は見ない**。原典 0x5cdf〜0x5d5e は「階が49」「印がまだ」
+    /// 「上下左右4マスが床」「四隅4マスが床でない」の4つしか見ていない。
+    /// ここで「中央 (0,+3) に立っていること」まで求めていたが、**中央にはゼノが居る**
+    /// ので永久に成り立たず、五の目を作っても弱くならなかった（作者の報告）。
+    /// 五の目は「四隅の魔導師4体＋中央のゼノ」で、**ゼノを閉じ込める形**。
     /// </summary>
     public bool CheckMagicSeal()
     {
         if (Player.Floor != MagicSeal.Floor) return false;
         if (Player.EventFlags.Contains(MagicSeal.FlagId)) return false;
-        if (Player.Position != MagicSeal.Center) return false;
         if (!MagicSeal.IsFormed(Floor)) return false;
 
         Player.EventFlags.Add(MagicSeal.FlagId);

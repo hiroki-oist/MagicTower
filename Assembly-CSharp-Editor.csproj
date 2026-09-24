@@ -93,6 +93,7 @@
     <Compile Include="Assets/Tests/Editor/ItemBarTests.cs" />
     <Compile Include="Assets/Tests/Editor/HudLayoutTests.cs" />
     <Compile Include="Assets/Tests/Editor/SoundCoverageTests.cs" />
+    <Compile Include="Assets/Tests/Editor/MagicSealFormTests.cs" />
     <Compile Include="Assets/Tests/Editor/DoorAnimationTests.cs" />
     <Compile Include="Assets/Tests/Editor/PositionEventsTests.cs" />
     <Compile Include="Assets/Tests/Editor/MasterHintsTests.cs" />

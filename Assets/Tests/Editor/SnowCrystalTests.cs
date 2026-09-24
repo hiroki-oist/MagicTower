@@ -121,11 +121,25 @@ public class FleeingEnemyTests
         Assert.AreEqual("Enemy_ID151", g.Floor.At(new Vector2Int(-5, -3)), "はじめは真上");
         g.ConsumeSounds();
         Assert.IsTrue(g.CheckPositionEvent(), "発火する");
+        Settle(g);                                   // ★下がるのはひと呼吸あと
         Assert.AreEqual(FloorState.Floor, g.Floor.At(new Vector2Int(-5, -3)));
         Assert.AreEqual("Enemy_ID151", g.Floor.At(new Vector2Int(-5, -2)), "もう1マス上へ");
         Assert.Contains(6, new System.Collections.Generic.List<int>(g.Sounds), "音6");
 
         Assert.IsFalse(g.CheckPositionEvent(), "同じ所ではもう起きない");
+    }
+
+    /// <summary>
+    /// 相手が下がるのは**ひと呼吸あと**（作者の指定）。積んだ段を最後まで流す。
+    /// </summary>
+    static void Settle(TowerGame g)
+    {
+        for (int i = 0; i < 30 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+        }
+        g.ConsumePauseFrames();
     }
 
     [Test]
@@ -145,6 +159,7 @@ public class FleeingEnemyTests
         {
             g.Player.Position = new Vector2Int(-5, y);
             Assert.IsTrue(g.CheckPositionEvent(), $"y={y} では逃げる");
+            Settle(g);
         }
         Assert.AreEqual("Enemy_ID151", g.Floor.At(new Vector2Int(-5, 4)), "最後は (-5,+4)");
         g.Player.Position = new Vector2Int(-5, 3);

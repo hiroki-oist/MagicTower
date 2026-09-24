@@ -222,6 +222,12 @@ public class TowerController : MonoBehaviour
             shownPos = Game.Player.Position;
             PlacePlayerView();
         }
+        // 台本の「待つ」。ここで受け取って、その間は次の段へ進ませない
+        // （絵を出してからセリフを出すまでの間を空けるため）。
+        int pause = Game.ConsumePauseFrames();
+        if (pause > 0)
+            settleUntil = Mathf.Max(settleUntil,
+                                    Time.time + pause * MonsterAnimation.FrameSeconds);
         if (sound != null) sound.Flush(Game);   // 場面の途中で積まれた音もその場で鳴らす
         UpdateMusic();
         // 場面が主人公を動かす1歩（10階の押し上げ）

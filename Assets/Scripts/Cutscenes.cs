@@ -76,6 +76,14 @@ public class Cutscenes
     /// </summary>
     public const string SoundPrefix = "音 ";
 
+    /// <summary>
+    /// ただ待つ段。書き方は "待つ N"（N は垂直帰線の回数＝1/60秒）。
+    /// 原典も場面の合間に `lcall 0xf5f,0x3f2` で待っている。
+    /// **絵を出してからセリフを出すまでの間**を空けるのに使う
+    /// （20階でバンパイアが現れた直後にセリフが出てしまう、という作者の報告）。
+    /// </summary>
+    public const string WaitPrefix = "待つ ";
+
     /// <summary>"閃光 (x,y)" のマスを読む。書いていなければ false（主人公のマス）。</summary>
     public static bool TryParseFlash(string step, out Vector2Int at)
     {

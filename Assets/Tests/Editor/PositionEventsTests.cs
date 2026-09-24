@@ -145,6 +145,12 @@ public class PositionEventsTests
         Assert.AreEqual(new Vector2Int(-5, -3), g.Player.Position);
         Assert.AreEqual(5000 - MagicAttack.WizardADamage, g.Player.Hp,
                         "隣に来た魔術士Ａから200");
+        // ★下がるのはひと呼吸あと（作者の指定）。積んだ段を流してから見る
+        for (int i = 0; i < 30 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+        }
         Assert.IsTrue(g.Floor.IsCleared(new Vector2Int(-5, -2)), "居たマスは空く");
         Assert.AreEqual("Enemy_ID151", g.Floor.At(new Vector2Int(-5, -1)),
                         "もう1マス上へ下がる");
@@ -188,7 +194,8 @@ public class PositionEventsTests
                  || t.StartsWith(Cutscenes.VanishPrefix)
                  || t.StartsWith(Cutscenes.BattlePrefix)
                  || t == Cutscenes.RushStep
-                 || t.StartsWith(Cutscenes.SoundPrefix)) continue;  // セリフ以外の段
+                 || t.StartsWith(Cutscenes.SoundPrefix)
+                 || t.StartsWith(Cutscenes.WaitPrefix)) continue;  // セリフ以外の段
                 Vector2Int at; string kind;
                 if (Cutscenes.TryParseMap(t, out at, out kind))
                 {
