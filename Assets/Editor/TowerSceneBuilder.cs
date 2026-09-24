@@ -429,8 +429,10 @@ public static class TowerSceneBuilder
         }
         // 中央の十字。**押すと歩く**（作者が選んだ絵。DPadView が触りを受ける）
         float dpad = PhoneScreen.DPadSize;
+        // 帯の下端から一定だけ上げて置く。**ButtonsHeight から測ると、十字を
+        // 大きくしたときに下へはみ出す**（実際にはみ出した、という報告）。
         var padRt = Bottomed(bottom, font, "DPad", (w - dpad) / 2f,
-                             (PhoneScreen.ButtonsHeight - dpad) / 2f,
+                             PhoneScreen.DPadBottomMargin,
                              dpad, dpad, "", new Color(0f, 0f, 0f, 0f));
         // **5枚に分けて重ねる**（上・右・下・左の扇と、真ん中の決定ボタン）。
         // 押している所だけ色を変えられるようにするため。

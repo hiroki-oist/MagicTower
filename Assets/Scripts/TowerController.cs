@@ -436,9 +436,8 @@ public class TowerController : MonoBehaviour
         if (MenuKeyDown() || TakeConfirm())
         {
             Game.MenuConfirm();
-            // 「ゲーム終了」。原典は DOS へ戻るので、こちらは遊びを閉じる
-            // （エディタで試している間は再生を止める）。
-            if (Game.Quitting) QuitGame();
+            // ★作者の指定で「タイトルへ戻る」。原典は DOS へ戻る項目だった。
+            if (Game.Quitting) BackToTitle();
             return true;
         }
         return false;
@@ -505,6 +504,18 @@ public class TowerController : MonoBehaviour
         else { PlacePlayerView(); shownPos = Game.Player.Position; }
 
         if (sound != null) sound.Flush(Game);      // 本線が積んだ音を鳴らす
+    }
+
+    /// <summary>
+    /// 題名画面へ戻る（作者の指定。原典のこの項目は DOS へ戻る「ゲーム終了」）。
+    /// 題名を触ると必ず最初から始まるので、続きは下の「ロード」から読む。
+    /// </summary>
+    void BackToTitle()
+    {
+        Game.CloseMenu();
+        Game.ClearQuitting();
+        StopShows();
+        if (title != null) title.Show();
     }
 
     /// <summary>遊びを閉じる。原典のメニューの「ゲーム終了」（DOS へ戻る）に当たる。</summary>

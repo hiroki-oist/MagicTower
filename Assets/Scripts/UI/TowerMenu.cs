@@ -117,7 +117,8 @@ public static class TowerMenu
             case Entry.Load:         return t.Message("menu_load");
             case Entry.Save:         return t.Message("menu_save");
             case Entry.Resume:       return t.Message("menu_return");
-            case Entry.Quit:         return t.Message("menu_quit");
+            // ★作者の指定。原典は「　　ゲーム終了」（DOS へ戻る）
+            case Entry.Quit:         return PhoneScreen.BackToTitle;
             default: return "";
         }
     }
@@ -143,10 +144,27 @@ public static class TowerMenu
     public const int PhoneWindowLines = 5;
     public const float TextScale = 1.9f;
 
+    /// <summary>
+    /// 見出しの大きさ。項目に比べて小さすぎる、という報告で上げた。
+    /// 見出しは15文字あるので、窓の幅に収まるぶんだけ（<see cref="Window"/> を広げてある）。
+    /// </summary>
+    public const float TitleScale = 1.25f;
+
+    /// <summary>
+    /// ★作者の指定でメニューの窓だけ会話の窓より広げてある（見出しを大きくするため）。
+    /// 盤面の幅（原典の画面で x=144〜496）に収まる範囲。
+    /// </summary>
+    public const int MenuLeft = 152, MenuWidth = 336;
+
     /// <summary>項目1行を大きく出すための書き方（TMP の大きさ指定）。</summary>
-    public static string Big(string line)
+    public static string Big(string line) { return Sized(line, TextScale); }
+
+    /// <summary>見出しを少し大きく出すための書き方。</summary>
+    public static string Heading(string line) { return Sized(line, TitleScale); }
+
+    static string Sized(string line, float scale)
     {
-        return $"<size={Mathf.RoundToInt(TextScale * 100f)}%>{line}</size>";
+        return $"<size={Mathf.RoundToInt(scale * 100f)}%>{line}</size>";
     }
 
     /// <summary>選ぶ印の位置（0x68b:0x35c8 に渡す 0x52 と 0x17）。</summary>
@@ -176,11 +194,10 @@ public static class TowerMenu
         return sb.ToString();
     }
 
-    /// <summary>メニューの窓の位置と大きさ（作者の指定で4行ぶん）。</summary>
+    /// <summary>メニューの窓の位置と大きさ（作者の指定）。</summary>
     public static RectInt Window
     {
-        get { return new RectInt(DialogueWindow.Left, TopEdge,
-                                 DialogueWindow.Width,
+        get { return new RectInt(MenuLeft, TopEdge, MenuWidth,
                                  DialogueWindow.Height(PhoneWindowLines)); }
     }
 

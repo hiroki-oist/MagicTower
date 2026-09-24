@@ -2155,8 +2155,18 @@ chk('"飛翔"' in _ps2 and '"勇者"' in _ps2,"右のボタンは「飛翔」「
 chk("LockedButton" in _ps2 and "OrbLocked" in _ps2 and "PaintOrbs" in _ibv,
     "持っていないオーブのボタンは灰色にして、触ると知らせる")
 # 十字の真ん中は「決定の丸」「何も起きない輪」「扇」の3段（作者の指定）
+chk("57f / 120f" in _ps2 and "71f / 120f" in _ps2,
+    "十字の当たりが絵（docs/make_dpad.py の 64±7 / 半径120）と同じ")
 chk("DPadConfirmZone" in _ps2 and "InConfirmZone" in _ps2,
     "決定の丸と、その外の何も起きない輪がある")
+chk("DPadBottomMargin" in _ps2 and "PhoneScreen.DPadBottomMargin" in _sb,
+    "十字は帯の下端から一定だけ上げて置く（はみ出さない）")
+_tm2=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
+chk("PhoneScreen.BackToTitle" in _tm2,
+    "メニューの最後は「タイトルへ戻る」（原典の「ゲーム終了」から差し替え）")
+chk("TitleScale" in _tm2 and "TowerMenu.Heading" in
+    open("Assets/Scripts/UI/MenuWindowView.cs",encoding="utf-8").read(),
+    "メニューの見出しも大きくしてある")
 _dpv=open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read()
 chk("GetMouseButtonUp(0)" in _dpv and "pressedConfirm" in _dpv,
     "決定は押して離すまで効かない（指を一度浮かす）")
@@ -2434,8 +2444,8 @@ chk("リターン" not in PhoneScreen_flight(),"案内から「リターンで�
 # 残りの Entry は原典の文言を残すためだけに持っている。
 _noarm=[v for v in ("Resume","Quit") if f"TowerMenu.Entry.{v}" not in _tg4]
 chk(not _noarm,"メニューに出している項目はどれも本線に枝がある",str(_noarm))
-chk("public bool Quitting" in _tg4 and "if (Game.Quitting) QuitGame();" in _ctrl,
-    "「ゲーム終了」が遊びを閉じるところまで繋がっている")
+chk("public bool Quitting" in _tg4 and "if (Game.Quitting) BackToTitle();" in _ctrl,
+    "最後の項目が題名画面へ戻るところまで繋がっている（原典は DOS へ戻る）")
 chk("if (pages.Count == 0 && IsChoosing) Choice = ChoiceKind.None;" in _tg4,
     "選ばせている窓を決めずに閉じたら印を残さない")
 chk("game.IsChoosing" in open("Assets/Editor/TowerPlaythrough.cs",encoding="utf-8").read(),

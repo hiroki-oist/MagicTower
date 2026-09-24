@@ -29,9 +29,12 @@ public class DPadTests
     [Test]
     public void 斜めはずれの大きいほうに倒す()
     {
+        // 当たりは絵と同じで、半径の 59% より内側は扇ではない（何も起きない輪）
         float r = 100f;
-        Assert.AreEqual(new Vector2Int(1, 0), PhoneScreen.DirFromTap(new Vector2(50, 40), r));
-        Assert.AreEqual(new Vector2Int(0, -1), PhoneScreen.DirFromTap(new Vector2(-30, -50), r));
+        Assert.AreEqual(new Vector2Int(1, 0), PhoneScreen.DirFromTap(new Vector2(75, 40), r));
+        Assert.AreEqual(new Vector2Int(0, -1), PhoneScreen.DirFromTap(new Vector2(-40, -75), r));
+        Assert.AreEqual(Vector2Int.zero, PhoneScreen.DirFromTap(new Vector2(-30, -50), r),
+                        "絵の隙間（中央のボタンと扇の間）は何も起きない");
     }
 
     [Test]

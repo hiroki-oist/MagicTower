@@ -83,7 +83,10 @@ public static class PhoneScreen
     /// ★作者の指定で十字を大きくした（決定と矢印を離すため）。
     /// 下の帯は端末が縦長なら余ったぶんだけ伸びる（<see cref="PhoneLayoutView"/>）。
     /// </summary>
-    public const float SideButtonWidth = 190f, DPadSize = 520f;
+    public const float SideButtonWidth = 190f, DPadSize = 480f;
+
+    /// <summary>十字キーを下の帯の下端からどれだけ上げるか。</summary>
+    public const float DPadBottomMargin = 24f;
 
     /// <summary>
     /// 右のボタンのうち、オーブの近道になっているもの（作者の指定）。
@@ -99,6 +102,12 @@ public static class PhoneScreen
 
     /// <summary>まだ持っていないオーブのボタンを触ったときの知らせ（作者の指定）。</summary>
     public const string OrbLocked = "{0}を手に入れると使用可能になります。";
+
+    /// <summary>
+    /// メニューの最後の項目（作者の指定）。原典は「　　ゲーム終了」で DOS へ戻るが、
+    /// スマホに「終了」は要らないので**題名画面へ戻る**にした。
+    /// </summary>
+    public const string BackToTitle = "　　タイトルへ戻る";
 
     /// <summary>
     /// 持ち物の帯を触ったときに聞く言葉（作者の指定。原典にこの入口は無い）。
@@ -169,19 +178,18 @@ public static class PhoneScreen
         return 3;
     }
 
-    /// <summary>
-    /// 十字キーの真ん中の「押しても動かない」部分（半径に対する割合）。
-    /// ★作者の指定でここを広げた。**外側の扇との間に何も起きない輪**を作って、
-    /// 矢印を狙って少し内側を押しても決定にならないようにするため
-    /// （間違えて決定をよく押してしまう、という報告）。
-    /// </summary>
-    public const float DPadDeadZone = 0.36f;
+    // 十字キーの当たりは**絵と同じ**にしてある（docs/make_dpad.py）。
+    //   1枚 240ドット（半径120）／中央のボタンの絵は半径 64-7 = 57
+    //   ／扇の絵が始まるのは半径 64+7 = 71
+    // 絵と当たりがずれていると「真ん中のボタンを押したのに歩く」「絵の隙間なのに
+    // 歩く」が起きる。以前は 0.20 / 0.36 で、**絵の中央ボタンの外周が扇扱い**
+    // だった（決定のつもりが歩いてしまう、という報告）。
 
-    /// <summary>
-    /// **決定になる**のはここまで（半径に対する割合）。
-    /// <see cref="DPadDeadZone"/> との間は「何も起きない輪」。
-    /// </summary>
-    public const float DPadConfirmZone = 0.20f;
+    /// <summary>扇（歩く）が始まる半径の割合。ここより内側では歩かない。</summary>
+    public const float DPadDeadZone = 71f / 120f;
+
+    /// <summary>**決定になる**のはここまで（真ん中のボタンの絵の大きさ）。</summary>
+    public const float DPadConfirmZone = 57f / 120f;
 
     /// <summary>真ん中の「決定」の丸の中か。輪の中（決定でも扇でもない所）は何も起きない。</summary>
     public static bool InConfirmZone(Vector2 delta, float radius)

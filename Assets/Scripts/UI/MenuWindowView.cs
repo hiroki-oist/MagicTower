@@ -78,6 +78,7 @@ public class MenuWindowView : MonoBehaviour
     public static string Display(TowerGame g)
     {
         var lines = Compose(g).Split('\n');
+        if (lines.Length > 0) lines[0] = TowerMenu.Heading(lines[0]);
         for (int i = 1; i < lines.Length; i++) lines[i] = TowerMenu.Big(lines[i]);
         return string.Join("\n", lines);
     }

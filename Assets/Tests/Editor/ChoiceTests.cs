@@ -247,11 +247,16 @@ public class QuitMenuTests
     }
 
     [Test]
+    /// <summary>
+    /// ★作者の指定で最後の項目は「タイトルへ戻る」。原典は DOS へ戻る「ゲーム終了」で、
+    /// その口（QuitGame）は残してあるが、メニューからは題名へ戻る。
+    /// </summary>
     public void 入力の側が終わりを受け取る()
     {
         var src = System.IO.File.ReadAllText("Assets/Scripts/TowerController.cs");
-        StringAssert.Contains("if (Game.Quitting) QuitGame();", src);
-        StringAssert.Contains("Application.Quit()", src);
+        StringAssert.Contains("if (Game.Quitting) BackToTitle();", src);
+        StringAssert.Contains("title.Show()", src);
+        StringAssert.Contains("Application.Quit()", src, "原典どおりの口は残してある");
     }
 
     [Test]

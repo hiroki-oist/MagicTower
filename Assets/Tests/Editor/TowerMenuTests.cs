@@ -41,7 +41,10 @@ public class TowerMenuTests
         Assert.AreEqual("メニューの選択をしてください。", TowerMenu.Title());
         Assert.AreEqual("　　勇者のオーブを使う", TowerMenu.Label(TowerMenu.Entry.HeroOrb));
         Assert.AreEqual("　　スペシャル・アイテムを使う", TowerMenu.Label(TowerMenu.Entry.SpecialItems));
-        Assert.AreEqual("　　ゲーム終了", TowerMenu.Label(TowerMenu.Entry.Quit));
+        // ★作者の指定。原典は「　　ゲーム終了」（DOS へ戻る）
+        Assert.AreEqual("　　タイトルへ戻る", TowerMenu.Label(TowerMenu.Entry.Quit));
+        Assert.AreEqual("　　ゲーム終了", GameText.Instance.Message("menu_quit"),
+                        "原典の文言はデータに残してある");
     }
 
     [Test]
@@ -114,8 +117,13 @@ public class TowerMenuTests
     public void 窓は会話と同じ形で画面に収まる()
     {
         var w = TowerMenu.Window;
-        Assert.AreEqual(160, w.xMin, "会話の窓と同じ左端");
-        Assert.AreEqual(320, w.width);
+        // ★見出しを大きくするため、メニューの窓だけ会話の窓より広げてある
+        Assert.AreEqual(TowerMenu.MenuLeft, w.xMin);
+        Assert.AreEqual(TowerMenu.MenuWidth, w.width);
+        Assert.LessOrEqual(w.xMin, 160, "会話の窓より広い");
+        Assert.GreaterOrEqual(w.xMax, 480);
+        Assert.GreaterOrEqual(w.xMin, 144, "盤面の幅に収まる");
+        Assert.LessOrEqual(w.xMax, 496);
         Assert.AreEqual(50, w.yMin);
         // ★項目が2つになったので窓も4行ぶんに詰めた（原典は 0xb 固定）
         Assert.AreEqual(DialogueWindow.Height(TowerMenu.PhoneWindowLines), w.height);
@@ -131,7 +139,7 @@ public class TowerMenuTests
 
         Assert.AreEqual("メニューの選択をしてください。", lines[0], "見出しは原典のまま");
         Assert.AreEqual("　　ゲームに戻る", lines[1]);
-        Assert.AreEqual("　　ゲーム終了", lines[2]);
+        Assert.AreEqual("　　タイトルへ戻る", lines[2]);
         Assert.AreEqual(3, lines.Length);
         Assert.LessOrEqual(lines.Length, TowerMenu.PhoneWindowLines, "窓に収まる");
     }
@@ -202,7 +210,7 @@ public class TowerMenuTests
         var g = new TowerGame(p);
         StringAssert.StartsWith("メニューの選択をしてください。", g.MenuText);
         StringAssert.Contains("　　ゲームに戻る", g.MenuText);
-        StringAssert.Contains("　　ゲーム終了", g.MenuText);
+        StringAssert.Contains("　　タイトルへ戻る", g.MenuText);
     }
 
     static TowerGame Open(params SpecialItems.Kind[] orbs)

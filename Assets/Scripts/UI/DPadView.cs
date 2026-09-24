@@ -45,6 +45,9 @@ public class DPadView : MonoBehaviour
         // 矢印を狙って少し内側を押してしまっても、指を動かして離せば決定にならない。
         // 「指を一度も浮かさずに全部押せる」のを、決定だけやめた形。
         if (Input.GetMouseButtonDown(0)) pressedConfirm = InConfirm();
+        // **途中で丸から出たら取り消す**。押しっぱなしのまま滑らせて戻ってきても
+        // 決定にならない（スライドで決定が押せてしまう、という報告）。
+        if (pressedConfirm && Input.GetMouseButton(0) && !InConfirm()) pressedConfirm = false;
         if (Input.GetMouseButtonUp(0))
         {
             bool fire = pressedConfirm && InConfirm();

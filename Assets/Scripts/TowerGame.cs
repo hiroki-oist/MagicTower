@@ -1005,6 +1005,9 @@ public class TowerGame
     /// </summary>
     public bool Quitting { get; private set; }
 
+    /// <summary>その印を下ろす（題名へ戻ったあと）。</summary>
+    public void ClearQuitting() { Quitting = false; }
+
     /// <summary>今の段で印を置く行（0から）。見出しは数えない。</summary>
     public int MenuStageIndex { get { return MenuIndex; } }
 
