@@ -1264,9 +1264,22 @@ _cs_say=[n for n in _cs_steps
          and not n.startswith("地図 ") and not n.startswith("歩き ")
          and not n.startswith("開く ") and not n.startswith("閉まる ")
          and not n.startswith("消す ") and not n.startswith("戦闘 ")
-         and not n.startswith("音 ") and not n.startswith("閃光")]
+         and not n.startswith("音 ") and not n.startswith("閃光")
+         and not n.startswith("待つ ")]
 chk(all(int(n) in _dlg for n in _cs_say),
     "場面のセリフ番号が Dialogue.txt に実在する（「題名」「奪われる」は別仕立て）")
+# ★作者の指定: 20階はバンパイアを盤面に書いてから待ってセリフを出す
+_boss20=[r[2] for r in _cs if r[0].strip()=="ボス登場"][0].split(";")
+_i_put=[i for i,t in enumerate(_boss20) if "(+0,+0)=ID95" in t][0]
+_i_wait=[i for i,t in enumerate(_boss20) if t.strip().startswith("待つ ")][0]
+_i_say=[i for i,t in enumerate(_boss20) if t.strip()=="121"][0]
+chk(_i_put<_i_wait<_i_say,
+    "20階はボスを盤面に書く→待つ→セリフ121の順（絵と同時に喋らない）")
+_tg5=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
+chk("FleeWaitFrames = 18" in _tg5,
+    "47階・43階の相手はひと呼吸（0.3秒）おいてから下がる")
+chk("Player.Position != MagicSeal.Center" not in _tg5,
+    "サイコロの５の目は主人公の立ち位置を見ない（中央に居るのはゼノ）")
 # 10階「骸骨に囲まれる」の台本（原典 0x3e0a。書き出しは docs/make_boss_skeletons.py）
 _bs=[l.split("#")[0].strip() for l in
      open("Assets/Resources/BossSkeletons.txt",encoding="utf-8").read().split("\n")]
