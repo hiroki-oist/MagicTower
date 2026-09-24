@@ -94,14 +94,20 @@ public class ItemBarTests
     }
 
     [Test]
-    public void 帯は六つずつ送る()
+    public void 帯は八つずつ送ってちょうど二ページ()
     {
-        Assert.AreEqual(6, PhoneScreen.ItemsPerPage, "★作者の指定で6つずつ（1枠59pt）");
-        Assert.AreEqual(15, ScreenLayout.ItemPanelSlots, "並ぶのは原典と同じ15");
-        // 1枠の幅。狭すぎると選びづらい（8つだと 119 ＝ iPhone で 44pt しかない）
+        Assert.AreEqual(8, PhoneScreen.ItemsPerPage, "★作者の指定で8つずつ");
+        Assert.AreEqual(15, ScreenLayout.ItemPanelSlots, "掘るますは原典と同じ15");
+        // 16個ぶんの場所を取って**ちょうど2ページ**。余る1つは掘らずに石のまま
+        Assert.AreEqual(16, PhoneScreen.ItemBarPositions);
+        Assert.AreEqual(PhoneScreen.ItemsPerPage * 2, PhoneScreen.ItemBarPositions,
+                        "ちょうど2ページに収まる");
+        Assert.AreEqual(ScreenLayout.ItemPanelSlots + 1, PhoneScreen.ItemBarPositions,
+                        "余るのは1つだけ（15で打ち止めなのが見える）");
+        // 1枠の幅。iPhone では 44pt（Apple の最小のタップ領域ちょうど）
         float slot = (PhoneScreen.ReferenceWidth - PhoneScreen.ArrowWidth * 2f)
                      / PhoneScreen.ItemsPerPage;
-        Assert.Greater(slot, 140f, "1枠が狭すぎない");
+        Assert.AreEqual(119f, slot, 0.5f);
         // ★作者の指定で右のボタンはオーブの近道（持っていない間は灰色）
         Assert.AreEqual("飛翔", PhoneScreen.RightButtons[PhoneScreen.FlightButtonIndex]);
         Assert.AreEqual("勇者", PhoneScreen.RightButtons[PhoneScreen.HeroButtonIndex]);

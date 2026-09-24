@@ -2148,7 +2148,8 @@ chk("PhoneScreen.RowHeight" in _sb and "PhoneScreen.ItemBarHeight" in _sb,
 _ibv=open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read()
 chk("RectMask2D" in _sb,"帯からはみ出た絵は切り取る")
 _ps3=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
-chk("ItemsPerPage = 6" in _ps3,"持ち物の帯は6つずつ送る（8つだと1枠が狭すぎた）")
+chk("ItemsPerPage = 8" in _ps3 and "ItemBarPositions = 16" in _ps3,
+    "持ち物の帯は8つずつのちょうど2ページ（16個ぶんの場所を取り、余る1つは掘らない）")
 # ★作者が選んだ「石壁に彫った棚」
 chk("ItemBarFill" not in _ps3 and "SlotEdge" in _ps3 and "EmptySlotFill" in _ps3,
     "持ち物の帯は真っ黒な地をやめて、石に彫ったますにしてある")

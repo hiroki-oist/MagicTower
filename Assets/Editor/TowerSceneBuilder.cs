@@ -380,7 +380,9 @@ public static class TowerSceneBuilder
         contentRt.anchorMax = new Vector2(0f, 1f);
         contentRt.pivot = new Vector2(0f, 0.5f);
         contentRt.anchoredPosition = Vector2.zero;
-        contentRt.sizeDelta = new Vector2(islot * ScreenLayout.ItemPanelSlots, 0f);
+        // **16個ぶん**の幅を取る。ますを掘るのは15だけで、余る1つは石のまま
+        // （持ち物が15で打ち止めなのを見た目で伝える。作者の指定）。
+        contentRt.sizeDelta = new Vector2(islot * PhoneScreen.ItemBarPositions, 0f);
 
         var slots = vso.FindProperty("itemSlots");
         slots.arraySize = ScreenLayout.ItemPanelSlots;

@@ -141,12 +141,19 @@ public static class PhoneScreen
 
     /// <summary>
     /// 持ち物の帯に一度に見せる数（残りは左右の矢印で送る）。
-    /// ★作者の指定で 8 → **6**。8つだと1枠が 119単位＝iPhone で 44pt しかなく、
-    /// Apple の最小のタップ領域ちょうどで選びづらかった。6つなら 159単位＝59pt。
+    /// ★作者の指定で **8つ＝ちょうど2ページ**。1枠は 119単位＝iPhone で 44pt。
     /// **並びは物体IDの順のまま**（持っていない所が空くのが、そのまま
     /// 「まだ手に入れていないものがある」という手がかりになる、という作者の指定）。
     /// </summary>
-    public const int ItemsPerPage = 6;
+    public const int ItemsPerPage = 8;
+
+    /// <summary>
+    /// 帯に取る「場所」の数。持ち物は15しか無いので**16個ぶんの幅**を取り、
+    /// 最後の1つは**掘らずに石のまま**にしてある（作者の指定）。
+    /// 8つずつのちょうど2ページに収まり、2ページ目の端に開いた石が
+    /// 「持ち物は15で打ち止め」を見た目で伝える。
+    /// </summary>
+    public const int ItemBarPositions = 16;
 
     /// <summary>帯の左右に置く矢印の幅。</summary>
     public const float ArrowWidth = 64f;
