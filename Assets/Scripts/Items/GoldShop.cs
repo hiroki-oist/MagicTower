@@ -93,12 +93,14 @@ public static class GoldShop
     public static string Text()
     {
         var sb = new System.Text.StringBuilder();
+        sb.Append(DialogueBox.WideMark);          // この窓は広く出す
         foreach (var line in PhoneScreen.ShopIntro) sb.Append(line).Append('\n');
         sb.Append('\n');
         for (int i = 0; i < Count; i++)
         {
-            // 「　[金貨]４００ゴールドの引換券　１６０円」
-            sb.Append('　').Append(PhoneScreen.ShopCoin);
+            // 「[金貨]４００ゴールドの引換券　１６０円」
+            // 頭の全角2つは金貨の絵を重ねる場所（絵は DialogueWindowView が置く）
+            sb.Append(PhoneScreen.ShopIndent);
             sb.Append(string.Format(PhoneScreen.ShopItemName, Wide(GoldOf(i))));
             sb.Append(PriceText(i));
             sb.Append('\n');

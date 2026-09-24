@@ -44,10 +44,12 @@ public class GoldShopResumeTests
         var text = GoldShop.Text();
         for (int i = 0; i < GoldShop.Count; i++)
             StringAssert.Contains(GoldShop.Wide(GoldShop.GoldOf(i)) + "ゴールドの引換券", text);
-        // 行の頭に金貨の絵（TMP の絵札）を置く（作者の指定）
-        Assert.AreEqual(GoldShop.Count,
-                        text.Split(new[] { PhoneScreen.ShopCoin }, System.StringSplitOptions.None)
-                            .Length - 1, "品目の数だけ金貨を置く");
+        // 品目の行は全角2つで字下げしてある（選ばせている行の決まり＋金貨を置く場所）
+        int items = 0;
+        foreach (var line in text.Split('\n'))
+            if (line.StartsWith(PhoneScreen.ShopIndent)
+                && line.Contains("ゴールドの引換券")) items++;
+        Assert.AreEqual(GoldShop.Count, items, "品目の行が字下げしてある");
     }
 
     [Test]
@@ -78,6 +80,7 @@ public class GoldShopResumeTests
         var view = System.IO.File.ReadAllText("Assets/Scripts/UI/DialogueWindowView.cs");
         StringAssert.Contains("ChoiceKind.GoldShop", view, "その窓だけの扱い");
         StringAssert.Contains("optionEdges", view);
+        StringAssert.Contains("optionCoins", view, "金貨は普通の絵で置く");
         StringAssert.Contains("static string Dim(", view, "選んでいない行を沈める");
         StringAssert.Contains("!Boxed", view, "枠の窓では矢印を出さない");
 
@@ -93,7 +96,7 @@ public class GoldShopResumeTests
     [Test]
     public void 絵の札は一文字ぶんとして数える()
     {
-        Assert.AreEqual("　あ", DialogueBox.Visible("<sprite=0>あ"));
+        Assert.AreEqual("あ", DialogueBox.Visible("<nobr>あ"));
         Assert.AreEqual("あ", DialogueBox.Visible("<color=#777777>あ</color>"));
         Assert.AreEqual("ふつう", DialogueBox.Visible("ふつう"));
     }

@@ -1615,20 +1615,22 @@ chk("一度購入すれば" in _ps and "無料" in _ps,
     "「一度購入すれば、次回プレイからは無料で同じゴールドを購入できる」と書いてある")
 # 課金の窓（作者の指定）: 金貨の絵を左に、名前は「◯◯ゴールドの引換券」、
 # 幅は広いほう、選択肢は枠で囲って選んでいない行を灰色に沈める（矢印は出さない）。
-chk('ShopItemName = "{0}ゴールドの引換券"' in _ps and 'ShopCoin = "<sprite=0>"' in _ps,
-    "品目は金貨の絵つきの「◯◯ゴールドの引換券」")
+chk('ShopItemName = "{0}ゴールドの引換券"' in _ps and 'ShopIndent = "　　"' in _ps,
+    "品目は「◯◯ゴールドの引換券」で、頭に金貨を置く場所を空けてある")
 _db=open("Assets/Scripts/UI/DialogueBox.cs",encoding="utf-8").read()
-chk("WideCharsPerLine = 24" in _db and "public static string Visible" in _db,
-    "絵を入れる窓だけ広くし、飾りの札は幅に数えない")
+chk("WideCharsPerLine = 24" in _db and "public static string Visible" in _db
+    and 'WideMark = "<nobr>"' in _db,
+    "目印のある窓だけ広くし、飾りの札は幅に数えない")
 chk("CharsPerLine = 18" in _db,
     "原典の折り返しは18文字のまま（0x94ba）")
 _dw=open("Assets/Scripts/UI/DialogueWindowView.cs",encoding="utf-8").read()
 chk("ChoiceKind.GoldShop" in _dw and "optionEdges" in _dw and "static string Dim(" in _dw,
     "課金の窓は枠で囲い、選んでいない行を沈める")
 chk("!Boxed" in _dw, "その窓では矢印を出さない")
-chk(os.path.exists("Assets/Resources/GoldSprite.asset")
-    and "BuildGoldSprite" in _tsb,
-    "金貨の絵を TMP の絵札にして本文に混ぜられる")
+# ⚠ 金貨は TMP の絵札（<sprite>）ではなく**普通の絵**で置く。
+#   絵札にしたら本文ごと描かれなくなった（作者の報告の黒い窓）。
+chk("optionCoins" in _dw and "OptionCoin" in _tsb and "<sprite" not in _gs,
+    "金貨は普通の絵で置く（TMP の絵札は使わない）")
 chk(os.path.exists("Assets/Scripts/Items/GoldShop.cs")
     and "ChoiceKind.GoldShop" in _tg4,
     "課金の窓は選ばせる窓の仕組みに乗せる")

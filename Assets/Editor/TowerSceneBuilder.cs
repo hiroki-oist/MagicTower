@@ -929,50 +929,6 @@ public static class TowerSceneBuilder
         return new RectInt(r.x - window.x, r.y - window.y, r.width, r.height);
     }
 
-    /// <summary>
-    /// 金貨の絵を TMP の絵札（SpriteAsset）にして返す。1枚だけ入った表。
-    /// 元絵は `Assets/Sprites/Hud/Icon_Gold.png`（原典の枠の左の欄から切り出したもの）で、
-    /// 上の帯の所持金の欄でも使っている**ゲームの中の金貨そのもの**。
-    /// </summary>
-    static TMP_SpriteAsset BuildGoldSprite()
-    {
-        const string path = "Assets/Resources/GoldSprite.asset";
-        var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(PhoneScreen.GoldIconPath);
-        if (tex == null) { Debug.LogWarning("金貨の絵が無い"); return null; }
-
-        var asset = ScriptableObject.CreateInstance<TMP_SpriteAsset>();
-        asset.name = "GoldSprite";
-        // ⚠ 古い形の表（spriteInfoList）が null のままだと、TMP が「古い札を直す」道へ
-        //   入って NullReferenceException になる（TMP_SpriteAsset.UpgradeSpriteAsset）。
-        //   空の表を入れておくと、そのまま新しい形として扱われる。
-        asset.spriteInfoList = new List<TMP_Sprite>();
-        asset.spriteSheet = tex;
-        asset.material = new Material(Shader.Find("TextMeshPro/Sprite")) { mainTexture = tex };
-        asset.material.name = "GoldSprite Material";
-
-        // 文字の大きさに合わせて置く。字の高さの8割ぶん持ち上げると行に馴染む。
-        var glyph = new TMP_SpriteGlyph
-        {
-            index = 0,
-            metrics = new UnityEngine.TextCore.GlyphMetrics(
-                tex.width, tex.height, 0f, tex.height * 0.85f, tex.width),
-            glyphRect = new UnityEngine.TextCore.GlyphRect(0, 0, tex.width, tex.height),
-            scale = 1f,
-            atlasIndex = 0,
-        };
-        asset.spriteGlyphTable.Add(glyph);
-        asset.spriteCharacterTable.Add(new TMP_SpriteCharacter(0, glyph)
-        {
-            name = "gold", scale = 1f,
-        });
-        asset.UpdateLookupTables();
-
-        AssetDatabase.CreateAsset(asset, path);
-        AssetDatabase.AddObjectToAsset(asset.material, asset);
-        AssetDatabase.SaveAssets();
-        return AssetDatabase.LoadAssetAtPath<TMP_SpriteAsset>(path);
-    }
-
     /// <summary>選択肢を囲む枠をいくつ持っておくか（課金の窓の行数ぶん）。</summary>
     const int OptionFrames = 6;
 
@@ -1003,9 +959,6 @@ public static class TowerSceneBuilder
         else img.color = DialogueWindowView.Fill;
 
         var tmp = WindowBody(panelGo, font, AuthorStyle.Enabled);
-        // 課金の窓に出す**金貨の絵**（原典の枠の左の欄から切り出したもの）。
-        // TMP の `<sprite=0>` で本文に混ぜられるようにする。
-        tmp.spriteAsset = BuildGoldSprite();
 
         var win = screen.gameObject.AddComponent<DialogueWindowView>();
         var wso = new SerializedObject(win);
@@ -1045,8 +998,23 @@ public static class TowerSceneBuilder
             ei.enabled = fi.enabled = false;
             edges.Add(ei); fills.Add(fi);
         }
+        // 品目の行の頭に置く金貨の絵（上の帯の所持金の欄と同じ絵）。
+        // ⚠ TMP の絵札（<sprite>）でやると**本文ごと描かれなくなった**ので普通の絵で置く。
+        var coins = new List<Object>();
+        for (int i = 0; i < OptionFrames; i++)
+        {
+            var cg = new GameObject("OptionCoin" + i, typeof(RectTransform),
+                                    typeof(UnityEngine.UI.Image));
+            cg.transform.SetParent(panelGo.transform, false);
+            var ci = cg.GetComponent<UnityEngine.UI.Image>();
+            ci.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(PhoneScreen.GoldIconPath);
+            ci.raycastTarget = false;
+            ci.enabled = false;
+            coins.Add(ci);
+        }
         FillObjects(wso.FindProperty("optionEdges"), edges);
         FillObjects(wso.FindProperty("optionFills"), fills);
+        FillObjects(wso.FindProperty("optionCoins"), coins);
         wso.ApplyModifiedPropertiesWithoutUndo();
         // 決定の扱い（まだ出ていない／出し終わる前）を見るために本線へ繋ぐ
         var cso = new SerializedObject(controller);

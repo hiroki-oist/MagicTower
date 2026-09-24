@@ -134,6 +134,13 @@ public class DialogueWindowView : MonoBehaviour
     [SerializeField] UnityEngine.UI.Image[] optionFills = new UnityEngine.UI.Image[0];
 
     /// <summary>
+    /// 品目の行の頭に置く**金貨の絵**（上の帯の所持金の欄と同じ絵）。
+    /// ⚠ TMP の絵札（`&lt;sprite&gt;`）でやろうとしたら**本文ごと描かれなくなった**ので、
+    /// 普通の絵として置いている（作者の報告「商店がわけわからないUIになってる」）。
+    /// </summary>
+    [SerializeField] UnityEngine.UI.Image[] optionCoins = new UnityEngine.UI.Image[0];
+
+    /// <summary>
     /// 選んでいない行を灰色に沈める（<see cref="Boxed"/> の窓だけ）。
     /// 金貨の絵も同じ札で沈むので、絵ごとグレースケールになる。
     /// </summary>
@@ -159,7 +166,7 @@ public class DialogueWindowView : MonoBehaviour
     void PlaceFrames(string page)
     {
         bool show = Boxed && controller.Game.IsChoosing;
-        int shown = 0;
+        int shown = 0, coins = 0;
         if (show && panel != null)
         {
             int left    = AuthorStyle.Enabled ? AuthorStyle.DialogueTextLeft
@@ -179,6 +186,15 @@ public class DialogueWindowView : MonoBehaviour
                     w + 12f, h, PhoneScreen.SlotEdge);
                 Box(optionFills[shown], left * DialogueWindow.CanvasScale - 4f, y - 2f,
                     w + 8f, h - 4f, PhoneScreen.SlotFill);
+                // 品目の行だけ、頭の空きに金貨を置く
+                if (shown < GoldShop.Count && shown < optionCoins.Length
+                    && optionCoins[shown] != null)
+                {
+                    float c = AuthorStyle.DialogueTextDots * DialogueWindow.CanvasScale;
+                    Box(optionCoins[shown], left * DialogueWindow.CanvasScale,
+                        y - (h - c) / 2f, c, c, Color.white);
+                    coins = shown + 1;
+                }
                 shown++;
             }
         }
@@ -189,6 +205,12 @@ public class DialogueWindowView : MonoBehaviour
                 optionEdges[i].enabled = on;
             if (optionFills[i] != null && optionFills[i].enabled != on)
                 optionFills[i].enabled = on;
+        }
+        for (int i = 0; i < optionCoins.Length; i++)
+        {
+            bool on = i < coins;
+            if (optionCoins[i] != null && optionCoins[i].enabled != on)
+                optionCoins[i].enabled = on;
         }
     }
 

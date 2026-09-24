@@ -100,18 +100,23 @@ public static class DialogueBox
     /// **自分で組んだ窓**（絵を入れる商店）だけ広くする。
     /// 原典のセリフは 18文字で折り返されていて、こちらもそれに合わせている（0x94ba）が、
     /// 課金の窓は原典に無いもので、絵と名前と値段を1行に並べたいので広くする。
-    /// 目印は `&lt;sprite` — 絵を入れているのはその窓だけ。
+    /// 目印は本文の頭に置く <see cref="WideMark"/>。
     /// </summary>
     public const int WideCharsPerLine = 24;
 
+    /// <summary>
+    /// 「この窓は広く出す」の目印。TMP の `&lt;nobr&gt;`（折り返さない）を使う —
+    /// 見た目には何も出ず、<see cref="Visible"/> が外すので幅にも数えない。
+    /// </summary>
+    public const string WideMark = "<nobr>";
+
     public static int LimitFor(string body)
     {
-        return body != null && body.Contains("<sprite") ? WideCharsPerLine : CharsPerLine;
+        return body != null && body.StartsWith(WideMark) ? WideCharsPerLine : CharsPerLine;
     }
 
     /// <summary>
-    /// 飾りの札（`&lt;sprite=0&gt;` など）を外して、**目に見えるぶんだけ**にする。
-    /// 絵の札は全角1文字ぶんとして数える（TMP も1文字として組む）。
+    /// 飾りの札（`&lt;nobr&gt;` や `&lt;color&gt;` など）を外して、**目に見えるぶんだけ**にする。
     /// </summary>
     public static string Visible(string line)
     {
@@ -122,8 +127,6 @@ public static class DialogueBox
             if (line[i] != '<') { sb.Append(line[i]); continue; }
             int close = line.IndexOf('>', i);
             if (close < 0) { sb.Append(line[i]); continue; }
-            // 絵の札だけは1文字ぶんの幅を持つ
-            if (line.Substring(i, close - i).StartsWith("<sprite")) sb.Append('　');
             i = close;
         }
         return sb.ToString();

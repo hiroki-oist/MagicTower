@@ -131,8 +131,12 @@ public static class PhoneScreen
     /// </summary>
     public const string ShopItemName = "{0}ゴールドの引換券";
 
-    /// <summary>その行の頭に置く金貨の絵の札（TMP の SpriteAsset の1枚目）。</summary>
-    public const string ShopCoin = "<sprite=0>";
+    /// <summary>
+    /// 品目の行の頭に空けておく幅（全角2つ）。ここに金貨の絵を重ねる。
+    /// **全角空白2つで始まる行＝選ばせている行**、という決まりにも合う
+    /// （<see cref="DialogueWindowView.IsChoiceLine"/>）。
+    /// </summary>
+    public const string ShopIndent = "　　";
 
     /// <summary>「購入を復元する」の行。Apple の審査指針 3.1.1 で置くことが要る。</summary>
     public const string ShopRestore = "購入を復元する";
