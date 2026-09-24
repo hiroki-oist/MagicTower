@@ -38,6 +38,12 @@ public static class PhoneScreen
     public const float ItemBarHeight = 110f, ButtonsHeight = 430f;
     public static float BottomHeight { get { return ItemBarHeight + ButtonsHeight; } }
 
+    /// <summary>
+    /// 9:16 より縦長の端末で下に空くぶんのうち、**下の帯に回す割合**（作者の指定）。
+    /// 上の余白はノッチ避けに残したいので全部は使わない。
+    /// </summary>
+    public const float BottomSlackShare = 0.5f;
+
     /// <summary>盤面のマス数（原典と同じ11x11）。</summary>
     public const int MapCells = ScreenLayout.MapCells;
 

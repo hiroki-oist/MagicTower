@@ -45,14 +45,23 @@ public class PhoneLayoutView : MonoBehaviour
     {
         if (frame == null || mapArea == null) return;
 
-        // 枠は幅 1080、高さは**画布いっぱい**（ただし 1920 は下回らない）。
-        // ★作者の指定。縦長の端末では 9:16 より余るので、その余りを**下の帯**に回して
-        //   操作系を画面の下端まで広げる（下にたくさん空いている、という報告）。
+        // 枠は幅 1080、高さは 1920 に**下だけ少し**足したもの（作者の指定）。
+        //
+        // 9:16 より縦長の端末では上下に余りが出る。以前は 1080x1920 を中央に置いて
+        // 上下に同じだけ余白を残していた。**上の余白はノッチ避けにちょうどよい**ので
+        // そのまま残し、下の余りの**半分だけ**を下の帯に回す。
+        // 一度「余り全部を下へ」にしたら、上の帯が画面の上端まで上がって
+        // ノッチに隠れ、操作系も下がりすぎた（作者の報告）。
         var canvasRt = frame.parent as RectTransform;
-        float frameHeight = Mathf.Max(PhoneScreen.ReferenceHeight,
-                                      canvasRt != null ? canvasRt.rect.height
-                                                       : PhoneScreen.ReferenceHeight);
+        float canvasH = canvasRt != null ? canvasRt.rect.height
+                                         : PhoneScreen.ReferenceHeight;
+        // 中央に置いたときに上下へ空くぶん
+        float slack = Mathf.Max(0f, canvasH - PhoneScreen.ReferenceHeight) / 2f;
+        float extra = slack * PhoneScreen.BottomSlackShare;
+        float frameHeight = PhoneScreen.ReferenceHeight + extra;
         frame.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth, frameHeight);
+        // **上端は中央に置いたときと同じ場所**に留める（下へ伸ばすだけ）
+        frame.anchoredPosition = new Vector2(0f, -extra / 2f);
 
         float side = PhoneScreen.MapSide(frame.rect.width, frame.rect.height);
         // 上の帯は原典の欄の高さのまま。**余ったぶんは全部下**へ。

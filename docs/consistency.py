@@ -2161,8 +2161,8 @@ _dpv=open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read()
 chk("GetMouseButtonUp(0)" in _dpv and "pressedConfirm" in _dpv,
     "決定は押して離すまで効かない（指を一度浮かす）")
 _plv=open("Assets/Scripts/UI/PhoneLayoutView.cs",encoding="utf-8").read()
-chk("Mathf.Max(PhoneScreen.ReferenceHeight" in _plv,
-    "縦長の端末では余った高さを下の帯に回す")
+chk("BottomSlackShare" in _plv and "frame.anchoredPosition" in _plv,
+    "縦長の端末では下に空いたぶんの半分だけ下の帯に回す（上の余白はノッチ避けに残す）")
 chk("static RectTransform Bottomed" in _sb,
     "下の操作系は帯の下端から測って置く（画面の下端に貼り付く）")
 _tgi=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
