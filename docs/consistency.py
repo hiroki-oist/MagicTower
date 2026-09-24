@@ -1585,6 +1585,12 @@ chk("JavaMosaic = 40" in _end,
 _emv=open("Assets/Scripts/UI/EndingMovieView.cs",encoding="utf-8").read()
 chk("Ending.JavaFrameSeconds" in _emv and "uvRect" not in _emv,
     "モザイクの板は組み立て器が uvRect で切る（役は出し入れだけ）")
+chk("JavaEnding = false" in _as2,
+    "いまの終幕は**原典 PC98版**（作者の指定で Java版から戻した）")
+# 終幕の「Ｆｉｎ」を送ると題名へ戻る（作者の指定）。
+# 原典 0xd45c はキーを待ってパレットを真っ暗にして終わるだけ。
+chk("IsFinalScreen" in _tg4 and "if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(); return; }" in _tc,
+    "「Ｆｉｎ」を送ると題名へ戻る")
 chk('"Assets/Sprites/Screens/Ending_Tower1.png"' in _tsb
     and '"Assets/Sprites/Screens/Ending_Tower2.png"' in _tsb,
     "塔(MTOWER1)と荒野(MTOWER2)の2枚ともシーンに入っている")
@@ -1765,7 +1771,12 @@ for _cs in glob.glob("Assets/Scripts/**/*.cs",recursive=True):
     for _u in glob.glob("Assets/Scenes/*.unity")+glob.glob("Assets/Prefab/**/*.prefab",recursive=True):
         if _g.group(1) in open(_u,encoding="utf-8",errors="replace").read(): _hit=True; break
     if not _hit: _dead.append(_n)
-chk(not _dead,"シーンにもプレハブにも載らない MonoBehaviour は残さない",str(_dead))
+# 入り切りで**どちらか一方だけ**がシーンに載る役は、載っていなくてよい。
+#   EndingMovieView … Java版の終幕（AuthorStyle.JavaEnding）。いまは原典の方を組んでいる。
+_SWITCHED={"EndingMovieView"}
+_dead=[n for n in _dead if n not in _SWITCHED]
+chk(not _dead,"シーンにもプレハブにも載らない MonoBehaviour は残さない（切り替えの役は除く）",
+    str(_dead))
 # 敵と人の絵は必ず背景が抜けている。抜く色は種別で決まる（0xabe6 の 0x11 / 0x88 ＝ 索引1 / 8）。
 # 左上の1点で背景を決めていたころ、そこに絵が来ている赤スライム(ID63)だけ
 # 透過が付かず灰色の四角が残っていた。
@@ -2682,7 +2693,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=782
+MIN_CHECKS=784
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

@@ -161,7 +161,9 @@ public static class AuthorStyle
     /// 15ドットずつ26回下げ、パレットで白へ寄せる作り（0x0ce83）。
     /// false にすればそちらに戻る。
     /// </summary>
-    public static readonly bool JavaEnding = true;
+    /// ⚠ **作者の指定でいまは false（原典 PC98版の終幕）**。2026-09-24 に一度 true に
+    /// したが、見比べて「エンディングはやっぱりPC98版でお願いします」となった。
+    public static readonly bool JavaEnding = false;
 
     /// <summary>盤面を描き出したあとの間（秒）。暗転が明けてすぐだと誰の声か分からない。</summary>
     public static readonly float SettleAfterDrawSeconds = 1f;

@@ -1429,6 +1429,16 @@ public class TowerGame
         get { return pages.Count > 0 && pages.Peek().Kind == PageKind.GameOver; }
     }
 
+    /// <summary>
+    /// 終幕の最後の画面（「Ｆｉｎ」＝原典 0xd45c）を出している最中か。
+    /// 原典はここでキーを待って**パレットを真っ暗にして終わる**。
+    /// こちらは題名へ戻す（作者の指定）。
+    /// </summary>
+    public bool IsFinalScreen
+    {
+        get { return pages.Count > 0 && pages.Peek().Kind == PageKind.FinalScreen; }
+    }
+
     /// <summary>隣接マスの魔術士・魔導師から魔法攻撃を受ける。神盾があれば無効。</summary>
     void ApplyMagicAttack()
     {

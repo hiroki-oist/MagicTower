@@ -323,6 +323,9 @@ public class TowerController : MonoBehaviour
                     {
                         // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
                         if (Game.IsGameOver) { StartNewGame(); return; }
+                        // 終幕の「Ｆｉｎ」のあとは題名へ戻す（作者の指定）。
+                        // 原典（0xd45c）はキーを待ってパレットを真っ暗にして終わるだけ。
+                        if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(); return; }
                         Game.NextPage();
                     }
                 }
