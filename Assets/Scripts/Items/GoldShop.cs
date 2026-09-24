@@ -78,9 +78,9 @@ public static class GoldShop
         {
             var price = AppleStore.PriceOf(i);
             // まだ App Store から読めていないうちは値段を出さない（嘘の値段を出さないため）
-            return string.IsNullOrEmpty(price) ? "　…" : "　" + price;
+            return string.IsNullOrEmpty(price) ? "…" : price;
         }
-        return "　" + Wide(YenOf(i)) + "円";     // エディタで見るときの見本
+        return Wide(YenOf(i)) + "円";            // エディタで見るときの見本
     }
 
     /// <summary>選ばせる行の数（品目＋復元＋やめる）。</summary>
@@ -102,7 +102,8 @@ public static class GoldShop
             // 頭の全角2つは金貨の絵を重ねる場所（絵は DialogueWindowView が置く）
             sb.Append(PhoneScreen.ShopIndent);
             sb.Append(string.Format(PhoneScreen.ShopItemName, Wide(GoldOf(i))));
-            sb.Append(PriceText(i));
+            // 値段は決まった列に置く（現地の表記で長さが変わるため）
+            sb.Append(PhoneScreen.ShopPriceColumn).Append(PriceText(i));
             sb.Append('\n');
         }
         sb.Append("　　").Append(PhoneScreen.ShopRestore).Append('\n');

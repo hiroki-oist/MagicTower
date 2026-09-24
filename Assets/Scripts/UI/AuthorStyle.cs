@@ -234,11 +234,16 @@ public static class AuthorStyle
     /// <summary>本文の一番長い行に合う窓の横幅（ドット）。</summary>
     public static int WidthFor(string page)
     {
+        int cap = DialogueBox.LimitFor(page);
+        // ★**広い窓（課金）は目一杯の幅で固定する**。
+        //   本文に合わせて詰めると、値段が現地の表記（`$0.99` `R$ 29,90` など）で
+        //   長さが変わるたびに足りなくなって折り返してしまう
+        //   （作者の報告: 「$0.9」で切れて次の行に「9」が落ちていた）。
+        //   ⚠ TMP の `<nobr>` は**漢字かなの折り返しは止めない**ので、幅で解くしかない。
+        if (cap == DialogueBox.WideCharsPerLine) return Even(cap);
         float chars = DialogueBox.MaxLineChars(page);
         if (chars <= 0f) chars = 1f;
-        // 折り返しの幅で頭打ち。**絵を入れる窓（課金）だけは広い**（DialogueBox.LimitFor）。
-        int cap = DialogueBox.LimitFor(page);
-        if (chars > cap) chars = cap;
+        if (chars > cap) chars = cap;          // ふつうの窓は折り返しの幅で頭打ち
         return Even(chars);
     }
 

@@ -78,6 +78,34 @@ public class AppleStoreTests
         StringAssert.Contains("product.purchase()", swift, "確認のシートは Apple に任せる");
     }
 
+    /// <summary>
+    /// **広い窓は目一杯の幅で固定する**。本文に合わせて詰めると、値段が現地の表記
+    /// （`$0.99` / `¥160` / `R$ 29,90`）で長さが変わるたびに足りなくなって折り返す
+    /// （作者の報告: 「$0.9」で切れて次の行に「9」が落ちていた）。
+    /// </summary>
+    [Test]
+    public void 課金の窓は目一杯の幅で固定する()
+    {
+        int wide = AuthorStyle.WidthFor(GoldShop.Text());
+        // 値段が短かろうと長かろうと同じ幅
+        AppleStore.Parse("{\"ready\":true,\"canPay\":true,\"busy\":false,\"msg\":\"\","
+                       + "\"items\":[{\"id\":\"magicTowerGoldFourHundred\","
+                       + "\"price\":\"R$ 29,90\",\"owned\":false}]}");
+        Assert.AreEqual(wide, AuthorStyle.WidthFor(GoldShop.Text()));
+        // ふつうの窓より広い
+        Assert.Greater(wide, AuthorStyle.WidthFor("ふつうのセリフ"));
+    }
+
+    /// <summary>値段は決まった列に置く（名前のうしろに続けない）。</summary>
+    [Test]
+    public void 値段は決まった列に置く()
+    {
+        StringAssert.Contains(PhoneScreen.ShopPriceColumn, GoldShop.Text());
+        StringAssert.StartsWith("<pos=", PhoneScreen.ShopPriceColumn);
+        // 幅を数えるときは札を外す
+        Assert.AreEqual("あ160円", DialogueBox.Visible("あ<pos=66%>160円"));
+    }
+
     /// <summary>買えたことが分かってから渡す（シートを出した時点では渡さない）。</summary>
     [Test]
     public void 買えたことが分かってから渡す()

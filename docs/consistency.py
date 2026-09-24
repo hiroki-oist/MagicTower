@@ -1631,6 +1631,16 @@ chk("!Boxed" in _dw, "その窓では矢印を出さない")
 #   絵札にしたら本文ごと描かれなくなった（作者の報告の黒い窓）。
 chk("optionCoins" in _dw and "OptionCoin" in _tsb and "<sprite" not in _gs,
     "金貨は普通の絵で置く（TMP の絵札は使わない）")
+# 値段は現地の表記（$0.99 / ¥160 / R$ 29,90）で長さが変わるので、
+# 窓は目一杯の幅で固定し、値段は決まった列に置く。
+_as3=open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
+chk("if (cap == DialogueBox.WideCharsPerLine) return Even(cap);" in _as3,
+    "広い窓は目一杯の幅で固定する（値段の長さで折り返さないように）")
+_phs=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+_gshop=open("Assets/Scripts/Items/GoldShop.cs",encoding="utf-8").read()
+chk('ShopPriceColumn = "<pos=66%>"' in _phs
+    and "PhoneScreen.ShopPriceColumn" in _gshop,
+    "値段は決まった列に置く")
 chk(os.path.exists("Assets/Scripts/Items/GoldShop.cs")
     and "ChoiceKind.GoldShop" in _tg4,
     "課金の窓は選ばせる窓の仕組みに乗せる")
@@ -2816,7 +2826,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=825
+MIN_CHECKS=827
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

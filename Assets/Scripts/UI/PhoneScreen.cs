@@ -138,6 +138,13 @@ public static class PhoneScreen
     /// </summary>
     public const string ShopIndent = "　　";
 
+    /// <summary>
+    /// 値段を出す横の位置（窓の幅に対する割合）。ここで桁をそろえる。
+    /// 現地の表記は長さがまちまち（`$0.99` / `¥160` / `R$ 29,90`）なので、
+    /// 名前のうしろに続けず**決まった列**に置く。
+    /// </summary>
+    public const string ShopPriceColumn = "<pos=66%>";
+
     /// <summary>「購入を復元する」の行。Apple の審査指針 3.1.1 で置くことが要る。</summary>
     public const string ShopRestore = "購入を復元する";
 
@@ -154,7 +161,7 @@ public static class PhoneScreen
     public const string ShopBought = "{0}ＧＯＬＤを手に入れた！";
 
     /// <summary>もう買ってあるものの値段のかわりに出す字。</summary>
-    public const string ShopFree = "　無料";
+    public const string ShopFree = "無料";
 
     /// <summary>
     /// メニューの最後の項目（作者の指定）。原典は「　　ゲーム終了」で DOS へ戻るが、
