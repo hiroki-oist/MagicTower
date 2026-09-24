@@ -19,8 +19,9 @@ public class PositionEventsTests
                     "32:111", "33:114", "33:113", "38:119", "40:121", "42:123",
                     // 43階・47階の逃げる相手も印を持たない（原典 0x217b / 0x209a）
                     "43:-1", "47:-1",
-                    // 物語の終わり（原典 0x2277 と 0x22cc〜0x23e5）
-                    "49:130", "24:131" }, seq);
+                    // 物語の終わり（原典 0x2277 と 0x22cc〜0x23e5）。
+                    // 24階の時空の門は**一度きりの印を持たない**（くぐれば終幕なので要らない）。
+                    "49:130", "24:-1" }, seq);
     }
 
     /// <summary>
@@ -32,7 +33,7 @@ public class PositionEventsTests
     {
         PositionEvents.Event? gate = null;
         foreach (var x in PositionEvents.Instance.All)
-            if (x.Floor == 24 && x.FlagId == 131) gate = x;
+            if (x.Floor == 24 && x.Scene == "終幕") gate = x;
         Assert.IsNotNull(gate, "24階の引き金がある");
         Assert.AreEqual(new Vector2Int(0, 0), gate.Value.NeedsGate.Value);
         Assert.AreEqual("終幕", gate.Value.Scene);
@@ -55,6 +56,42 @@ public class PositionEventsTests
             if (x.FlagId < 0) continue;      // 一度きりの印を持たない行（13/43/47階）
             Assert.IsTrue(seen.Add(x.FlagId), $"{x.FlagId} が重複");
         }
+    }
+
+    /// <summary>
+    /// **24階の時空の門に一度きりの印を付けてはいけない**（原典 0x22cc〜0x23e5 には
+    /// `mov byte ptr es:[0xNN], 1` が1つも無い）。
+    ///
+    /// ここに 131 と書いていたが、131(0x83) は**49階のサイコロの五の目**の印（原典 0x5d67、
+    /// <see cref="MagicSeal.FlagId"/>）。五の目を作ると印が立ち、24階の門が二度と
+    /// 反応しなくなって**50階へ行けなくなる**＝詰む。
+    /// </summary>
+    [Test]
+    public void 時空の門は五の目の印が立っていてもくぐれる()
+    {
+        PositionEvents.Event? gate = null;
+        foreach (var x in PositionEvents.Instance.All)
+            if (x.Floor == 24 && x.Scene == "終幕") gate = x;
+        Assert.IsNotNull(gate);
+        Assert.AreEqual(-1, gate.Value.FlagId, "一度きりの印は持たない");
+
+        var flags = new System.Collections.Generic.HashSet<int> { MagicSeal.FlagId };
+        Assert.IsNotNull(
+            PositionEvents.Instance.At(24, new Vector2Int(0, -1), flags, p => true, p => true),
+            "49階の五の目を作ったあとでも門は反応する");
+    }
+
+    /// <summary>
+    /// 立ち入りのできごとの印と、**物語の一度きりの印**（解錠の前提として読まれるもの）が
+    /// ぶつかっていないか。原典はどちらも同じ1本の配列なので、番号がかぶると
+    /// 片方が片方を勝手に立ててしまう。
+    /// </summary>
+    [Test]
+    public void 立ち入りの印は五の目の印とぶつからない()
+    {
+        foreach (var x in PositionEvents.Instance.All)
+            Assert.AreNotEqual(MagicSeal.FlagId, x.FlagId,
+                               $"F{x.Floor} が 五の目の印 {MagicSeal.FlagId} を使っている");
     }
 
     [Test]
