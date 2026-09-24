@@ -119,8 +119,7 @@ public static class PhoneScreen
     /// </summary>
     public static readonly string[] ShopIntro =
     {
-        "ゴールドを購入します。どれも買い切り。",
-        "一度購入すれば次回から無料で受け取れます",
+        "買い切り。一度購入すれば次回から無料です",
     };
 
     /// <summary>

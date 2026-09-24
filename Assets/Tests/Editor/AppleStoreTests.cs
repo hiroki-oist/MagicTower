@@ -132,10 +132,15 @@ public class AppleStoreTests
         StringAssert.Contains("CaptureShop", shot);
         StringAssert.Contains("MT_SHOP_PRICES", shot, "実機と同じ値段の字で組ませる");
 
-        // 本文の行数（品目のあいだに空行が1つずつ入る）
+        // 本文の行数
+        //   見出し ＋ 空行1 ＋ 品目（1行＋空行 ShopRowLines-1）×3 ＋ 復元 ＋ 空行1 ＋ やめる
         var lines = GoldShop.Text().Split('\n');
         Assert.AreEqual(PhoneScreen.ShopIntro.Length + 1
-                        + GoldShop.Count * PhoneScreen.ShopRowLines + 2, lines.Length);
+                        + GoldShop.Count * PhoneScreen.ShopRowLines + 3, lines.Length);
+        // 窓が原典の画面（400ドット）に収まる
+        var r = AuthorStyle.DialogueFor(GoldShop.Text());
+        Assert.LessOrEqual(r.height, DialogueWindow.ScreenHeight, "窓が画面に収まる");
+        Assert.GreaterOrEqual(r.y, 0, "上にはみ出さない");
     }
 
     /// <summary>

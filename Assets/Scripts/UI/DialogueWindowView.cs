@@ -262,8 +262,10 @@ public class DialogueWindowView : MonoBehaviour
                 int rows = item ? PhoneScreen.ShopRowLines : 1;
                 float half = item ? advance * 0.5f : 0f;
                 // 1行ぶんの選択肢は、字がはみ出さないぎりぎりまで詰める
-                float gap = item ? ShopRowGap : 4;
-                float y = -(top + advance * i - (item ? 3 : 1) - half)
+                // 品目でない行（復元・やめる）の枠は、字が縁に掛からないよう少し広げる
+                // （作者の指定でおよそ1.2倍。あいだに1行空けてあるので重ならない）
+                float gap = item ? ShopRowGap : -3;
+                float y = -(top + advance * i - (item ? 3 : 2) - half)
                         * DialogueWindow.CanvasScale;
                 float h = (advance * rows + 2 - gap) * DialogueWindow.CanvasScale;
                 Box(optionEdges[shown], left * DialogueWindow.CanvasScale - 6f, y,

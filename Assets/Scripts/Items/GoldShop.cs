@@ -120,6 +120,8 @@ public static class GoldShop
         // この2行だけ少し小さく（大きいままだと1行ぶんの枠に収まらない）
         sb.Append("　　").Append(PhoneScreen.ShopSmall)
           .Append(PhoneScreen.ShopRestore).Append(PhoneScreen.ShopSmallEnd).Append('\n');
+        // この2つのあいだも1行空ける（枠を広げても重ならないように）
+        sb.Append('\n');
         sb.Append("　　").Append(PhoneScreen.ShopSmall)
           .Append("やめる").Append(PhoneScreen.ShopSmallEnd);
         return sb.ToString();
