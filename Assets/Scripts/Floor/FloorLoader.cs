@@ -109,6 +109,21 @@ public class FloorLoader : MonoBehaviour
     }
 
     /// <summary>
+    /// そのマスに**もう1つ重ねて**出す。入れ替えの演出で、元のものと新しいものを
+    /// どちらも持っておくために使う（<see cref="BlinkView"/>）。
+    ///
+    /// 名前の終わりを変えてあるので <see cref="Refresh"/> も <see cref="ObjectAt"/> も
+    /// これを見つけない＝本線の描き直しの邪魔をしない。出した側が片付けること。
+    /// </summary>
+    public GameObject SpawnExtra(string key, Vector2Int pos)
+    {
+        if (string.IsNullOrEmpty(key)) return null;
+        var go = Spawn(key, pos.x, pos.y);
+        if (go != null) go.name = $"{key}_{pos.x}_{pos.y}~重ね";
+        return go;
+    }
+
+    /// <summary>
     /// 1マスだけ作り直す。解錠で門が消えたときなど、
     /// <see cref="FloorState"/> 側の変化を見た目に反映するために使う。
     /// </summary>

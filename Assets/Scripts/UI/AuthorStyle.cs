@@ -137,6 +137,19 @@ public static class AuthorStyle
     /// </summary>
     public static readonly float SettleSeconds = 0.5f;
 
+    /// <summary>
+    /// **ものが別のものに変わる**ときにかける時間（秒。作者の指定）。
+    ///
+    /// ⚠ 原典は入れ替えの回数を決め打ちで交互に描くだけ（終幕 0xcb52〜0xcbee は
+    /// 盗賊(21)とゼノ(91)を**50回**）。作者の指定で、
+    /// 「点滅させながら少しずつゼノ成分を増やして、最後には完全にゼノで点滅しなくなる」
+    /// ——つまり**この秒数のあいだ、新しい方を出す割合を 0 から 1 へ上げていく**形にする。
+    /// 0 にすれば一瞬で入れ替わる。
+    ///
+    /// 出たり消えたりするだけの点滅（3階のゼノ登場 0x6ae0＝元が床）は原典のまま。
+    /// </summary>
+    public static readonly float SwapSeconds = 2f;
+
     /// <summary>盤面を描き出したあとの間（秒）。暗転が明けてすぐだと誰の声か分からない。</summary>
     public static readonly float SettleAfterDrawSeconds = 1f;
 

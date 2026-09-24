@@ -1528,8 +1528,18 @@ chk("地図 (+0,+1)=ID91 点滅50,50" in _cs_end,
 chk(_cs_end.index("161") < _cs_end.index("点滅50,50") < _cs_end.index("163"),
     "入れ替えはセリフ161・162のあと、163の前（原典の 0xa1+i → 0xa3+i）")
 _blink=open("Assets/Scripts/UI/BlinkView.cs",encoding="utf-8").read()
-chk("step.From" in _blink and "loader.Refresh(step.Pos, fromKey)" in _blink,
+chk("step.From" in _blink and "IEnumerator Swap(" in _blink,
     "点滅は**元の中身**と入れ替える（床とは限らない）")
+# ものが別のものに変わるところは、作者の指定で「新しい方の割合を 0→1 へ上げる」形。
+# 原典は決め打ちの回数で交互に描くだけ（終幕 0xcb52〜0xcbee は50回）。
+chk("SwapSeconds" in open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
+    and "AuthorStyle.SwapSeconds" in _blink,
+    "入れ替えにかける時間は AuthorStyle に置く（作者の指定）")
+chk("loader.SpawnExtra(fromKey, step.Pos)" in _blink,
+    "元の方を重ねて出してから入れ替える（地図はもう新しい方になっている）")
+chk("public GameObject SpawnExtra" in
+    open("Assets/Scripts/Floor/FloorLoader.cs",encoding="utf-8").read(),
+    "重ねて出したものは名前の終わりが違うので描き直しの邪魔をしない")
 # 倒して相手のマスへ踏み込んだあとの魔法攻撃（作者の指定＝Java版に合わせる）。
 # 原典 PC98版は 0x61ef〜0x6232 で踏み込んでから 0x1588 を呼ばないので無傷だったが、
 # Java版は attackMonster が座標を書かない＝あとから歩いて入るので必ず食らう。
@@ -2612,7 +2622,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=762
+MIN_CHECKS=765
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

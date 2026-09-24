@@ -102,17 +102,7 @@ public class BlinkView : MonoBehaviour
         var fromKey = FloorState.ViewKeyOf(step.From);
         if (!string.IsNullOrEmpty(fromKey) && fromKey != FloorState.ViewKeyOf(
                 FloorState.SymbolOfKind(step.Kind)))
-        {
-            var toKey = FloorState.ViewKeyOf(FloorState.SymbolOfKind(step.Kind));
-            for (int i = 0; i < step.Blinks; i++)
-            {
-                loader.Refresh(step.Pos, fromKey);
-                yield return null;
-                loader.Refresh(step.Pos, toKey);
-                yield return null;
-            }
-            loader.Refresh(step.Pos, toKey);
-        }
+            yield return Swap(step, fromKey, target);
         else if (target != null)
         {
             // 原典は「床を描く → ものを描く」の順。見えない状態から始まる。
@@ -129,6 +119,38 @@ public class BlinkView : MonoBehaviour
         if (step.Wait > 0)
             yield return new WaitForSeconds(step.Wait * MonsterAnimation.FrameSeconds);
         running--;
+    }
+
+    /// <summary>
+    /// **ものが別のものに変わる**（元が床でないときの入れ替え）。
+    ///
+    /// 原典（終幕 0xcb52〜0xcbee）は盗賊(21)とゼノ(91)を**50回**そのまま交互に描くだけ。
+    /// 作者の指定で、<see cref="AuthorStyle.SwapSeconds"/> のあいだ
+    /// **新しい方を出す割合を 0 から 1 へ上げていく** — はじめは元のもの、
+    /// だんだん新しい方が混ざり、最後は完全に新しい方になって点滅が止まる。
+    ///
+    /// 割合はコマごとに足し込んで1を超えたら新しい方を出す（誤差を持ち越すので、
+    /// どのコマ数でも見た目の割合がその時点の値どおりになる）。
+    /// 地図はもう新しい方に書き換わっているので、**元の方を重ねて出して**入れ替える。
+    /// </summary>
+    IEnumerator Swap(Cutscenes.MapStep step, string fromKey, GameObject to)
+    {
+        var from = loader.SpawnExtra(fromKey, step.Pos);
+        float total = AuthorStyle.SwapSeconds;
+        float t = 0f, acc = 0f;
+        while (t < total)
+        {
+            float p = total <= 0f ? 1f : t / total;      // 新しい方を出す割合
+            acc += p;
+            bool showTo = acc >= 1f;
+            if (showTo) acc -= 1f;
+            if (to != null) to.SetActive(showTo);
+            if (from != null) from.SetActive(!showTo);
+            yield return null;
+            t += Time.deltaTime;
+        }
+        if (from != null) Destroy(from);
+        if (to != null) to.SetActive(true);
     }
 
     /// <summary>
