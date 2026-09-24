@@ -3,10 +3,9 @@ using UnityEngine;
 /// <summary>
 /// **調べもの用の細工**。原典の再現ではないので、見終わったら必ず false に戻すこと。
 ///
-/// ⚠ **2026-09-25 現在、通しで見てもらうために攻守300・鍵30本を入れてある**
-/// （作者の頼み「3Fでのイベント後にデバッグ状態（各鍵を30個，攻守を300）で始まる
-/// ようにして…最後に通しで回して致命的なバグがないか確認します」）。
-/// **Apple へ出す前に両方 false へ戻すこと。**
+/// ⚠ **いまは全部 false（原典どおり）**。2026-09-25 に通し見のため
+/// 攻守300・鍵30本を一時的に入れたが、作者の
+/// 「本来の強さと鍵の数で通して攻略します」で原典どおりへ戻した。
 ///
 /// 作者からの頼み（2026-09-21）:
 /// 「本来はゲーム開始時（3Fのイベント後）は攻守ともに10なんだろうけど、
@@ -21,7 +20,7 @@ public static class DebugPlay
     /// ゼノに奪われたあとの攻撃力・防御力を <see cref="StrongStat"/> にする。
     /// **false が原典どおり**（攻10 / 防10、原典 0x06f1b〜0x06f49）。
     /// </summary>
-    public static readonly bool StrongAfterZeno = true;    // ★出すとき false（原典どおり攻10/防10）
+    public static readonly bool StrongAfterZeno = false;   // ★出すとき false（原典どおり攻10/防10）
 
     /// <summary>
     /// そのときの攻撃力・防御力。
@@ -50,7 +49,7 @@ public static class DebugPlay
     /// 作者からの頼み（2026-09-22）:
     /// 「デバッグ用として鍵の数は武器取り上げられた後の初期値を30ずつでお願い」
     /// </summary>
-    public static readonly bool KeysAfterZeno = true;      // ★出すとき false（原典どおり鍵0本）
+    public static readonly bool KeysAfterZeno = false;     // ★出すとき false（原典どおり鍵0本）
 
     /// <summary>そのときの鍵の本数（黄・紫・赤とも同じ）。</summary>
     public const int StartKeys = 30;

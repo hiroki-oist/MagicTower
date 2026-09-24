@@ -1812,11 +1812,11 @@ chk("セーブデータはそのまま" in _phs2 and "セーブデータも消�
     "断りは「そのまま」と「消して」を言い分けている（作者の指定）")
 # App Store に出すための設え（作者の指定）
 _dbg2=open("Assets/Scripts/DebugPlay.cs",encoding="utf-8").read()
-# ⚠ いまは**作者に通しで見てもらうため**に攻守300・鍵30本を入れてある
-#   （2026-09-25 の頼み）。セーブを上書きする細工だけは必ず切っておく
-#   （通しの途中経過が消えてしまうため）。
-chk("MakeEndgameSave = false" in _dbg2,
-    "セーブを上書きする細工は切ってある（通しの途中経過が消えるため）")
+# ★**出すときは細工をすべて切る**。作者が「本来の強さと鍵の数で通して攻略する」
+#   段に入ったので、ここは原典どおりに戻してある。
+chk("StrongAfterZeno = false" in _dbg2 and "KeysAfterZeno = false" in _dbg2
+    and "MakeEndgameSave = false" in _dbg2,
+    "調べもの用の細工はどれも切ってある（出すときは必ず false）")
 _dbg_on=[n for n in ("StrongAfterZeno","KeysAfterZeno")
          if f"{n} = true" in _dbg2]
 chk(not _dbg_on or "Apple へ出す前に両方 false へ戻すこと" in _dbg2,
