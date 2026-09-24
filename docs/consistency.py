@@ -1673,9 +1673,38 @@ chk(os.path.exists("Assets/Resources/UiSounds.txt")
 chk('Tap = "触る"' in open("Assets/Scripts/Items/SoundCues.cs",encoding="utf-8").read()
     and "public void PlayTap()" in _tc,
     "触ったときの音は合図の名前で呼ぶ")
-chk("controller.PlayTap()" in open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read()
-    and "controller.PlayTap()" in open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read(),
-    "十字キー・決定・下のボタンのどれでも鳴る")
+# 鳴らすのは「押した所」ではなく「その押しが受け取られた所」。十字キーは歩くのにも
+# 使うので、押した所で鳴らすと一歩ごとに鳴ってしまう（作者の指定で全部に付けた回）。
+chk("PlayTap" not in open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read(),
+    "十字キーは押した所では鳴らさない（歩く一歩ごとに鳴ってしまう）")
+chk("controller.PlayTap()" in open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read(),
+    "帯のボタンと持ち物は触った所で鳴る")
+# 選び・決定・会話送り・メニュー・階選び・題名――全部で鳴る（作者の指定）
+for _need, _why in [
+    ("{ Game.MoveChoice(move.y > 0 ? -1 : 1); PlayTap(); acted = true; }",
+     "選ばせている窓の印を動かすと鳴る"),
+    ("{ PlayTap(); Game.ConfirmChoice(); Game.NextPage(); acted = true; }",
+     "選ばせている窓で決めると鳴る"),
+    ("{ PlayTap(); dialogue.RevealAll(); acted = false; }",
+     "出している途中のセリフを全部出すときも鳴る"),
+    ("if (Input.GetKeyDown(KeyCode.Escape)) { PlayTap(); Game.MenuBack(); return true; }",
+     "メニューを戻ると鳴る"),
+    ("if (move.y != 0) { Game.MenuMove(-move.y); PlayTap(); return true; }",
+     "メニューの印を動かすと鳴る"),
+    ("if (move.x != 0) { Game.FlightMove(move.x > 0 ? 1 : -1); PlayTap(); return true; }",
+     "飛翔のオーブの階選びで動かすと鳴る"),
+    ("if (MenuKeyDown() || TakeConfirm()) { PlayTap(); Game.ConfirmFlight(); return true; }",
+     "飛翔のオーブの階選びで決めると鳴る"),
+]:
+    chk(_need in _tc, _why)
+chk("""                    else
+                    {
+                        PlayTap();""" in _tc,
+    "会話を送ると鳴る")
+chk("""    public void BeginGame()
+    {
+        PlayTap();""" in _tc,
+    "題名を触って始めるときも鳴る")
 chk("ShopRowLines = 3" in _phs and "ShopRowGap" in _dw
     and "ShopFontScale" in _phs and "RoundBoxPath" in _phs,
     "品目の行は3行ぶんの高さ・字は大きめ・枠は角丸")

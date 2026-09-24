@@ -51,8 +51,17 @@ public class TowerController : MonoBehaviour
 
     /// <summary>
     /// ボタンを触った・決めたときの「ピッ」（作者の指定。原典には無い）。
-    /// 触りを受ける役（<see cref="DPadView"/> / <see cref="ItemBarView"/>）と、
-    /// 選ばせている窓・メニューの送りから呼ぶ。
+    ///
+    /// ★**鳴らすのは「その押しが受け取られたとき」だけ**、と決めてある。
+    /// 押した所（十字キー）で鳴らすと、歩く一歩ごとに鳴ってしまうし、
+    /// 何も起きない場面（まだ窓が出ていないとき）でも鳴ってしまう。
+    /// 呼ぶのは──
+    ///   ・帯のボタンと持ち物（<see cref="ItemBarView"/>。触った所＝すぐ効く所）
+    ///   ・題名を触って始めるとき（<see cref="BeginGame"/>）
+    ///   ・選ばせている窓の印を動かす／決める
+    ///   ・会話を送る（出している途中なら「全部出す」ほうでも鳴らす）
+    ///   ・メニューの上下・決定・戻る
+    ///   ・飛翔のオーブの階選びの上下左右・決定・取りやめ
     /// </summary>
     public void PlayTap()
     {
@@ -92,6 +101,7 @@ public class TowerController : MonoBehaviour
     /// </summary>
     public void BeginGame()
     {
+        PlayTap();
         TowerGame.DropResume();          // 題名から始めるので中断データは捨てる
         StartNewGame();
     }
@@ -349,12 +359,14 @@ public class TowerController : MonoBehaviour
                 {
                     // **まだ窓が出ていないなら何も起きない**。動きの最中に押した決定で
                     // これから出るセリフが飛ばされていた（作者の指摘）。
+                    // ここは何も起きないので音も鳴らさない。
                     if (dialogue != null && dialogue.IsWaiting) acted = false;
                     // **出している途中なら、まず全部出す**。もう一度押すと送る。
                     else if (dialogue != null && dialogue.IsTyping)
-                    { dialogue.RevealAll(); acted = false; }
+                    { PlayTap(); dialogue.RevealAll(); acted = false; }
                     else
                     {
+                        PlayTap();
                         // ＧＡＭＥ　ＯＶＥＲ のあとは原典と同じく最初から
                         if (Game.IsGameOver) { TowerGame.DropResume(); StartNewGame(); return; }
                         // 終幕の「Ｆｉｎ」のあとは題名へ戻す（作者の指定）。
@@ -498,13 +510,14 @@ public class TowerController : MonoBehaviour
     /// <summary>メニューの中の一手。何かしたら true。</summary>
     bool StepMenu()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) { Game.MenuBack(); return true; }
+        if (Input.GetKeyDown(KeyCode.Escape)) { PlayTap(); Game.MenuBack(); return true; }
 
         var move = ReadInputOnce();
         if (move.y == 0) move = TakeStep();
-        if (move.y != 0) { Game.MenuMove(-move.y); return true; }
+        if (move.y != 0) { Game.MenuMove(-move.y); PlayTap(); return true; }
         if (MenuKeyDown() || TakeConfirm())
         {
+            PlayTap();
             Game.MenuConfirm();
             // ★作者の指定で「タイトルへ戻る」。原典は DOS へ戻る項目だった。
             if (Game.Quitting) BackToTitle();
@@ -524,7 +537,7 @@ public class TowerController : MonoBehaviour
     /// </summary>
     bool StepFloorPicker()
     {
-        if (Input.GetKeyDown(KeyCode.Escape)) { Game.CancelFlight(); return true; }
+        if (Input.GetKeyDown(KeyCode.Escape)) { PlayTap(); Game.CancelFlight(); return true; }
 
         var move = ReadInputOnce();
         if (move == Vector2Int.zero) move = TakeStep();
@@ -532,10 +545,11 @@ public class TowerController : MonoBehaviour
         if (move.y != 0)
         {
             Game.FlightMove(move.y > 0 ? -FloorPicker.Columns : FloorPicker.Columns);
+            PlayTap();
             return true;
         }
-        if (move.x != 0) { Game.FlightMove(move.x > 0 ? 1 : -1); return true; }
-        if (MenuKeyDown() || TakeConfirm()) { Game.ConfirmFlight(); return true; }
+        if (move.x != 0) { Game.FlightMove(move.x > 0 ? 1 : -1); PlayTap(); return true; }
+        if (MenuKeyDown() || TakeConfirm()) { PlayTap(); Game.ConfirmFlight(); return true; }
         return false;
     }
 

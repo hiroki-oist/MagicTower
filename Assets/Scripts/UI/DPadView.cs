@@ -6,6 +6,11 @@ using UnityEngine;
 /// 押している間ずっと向きを入れるので、**押しっぱなしで歩き続ける**
 /// （鍵を押しっぱなしにしたときと同じ扱い。<see cref="TowerController.TouchDir"/>）。
 /// どこを押したかを向きに直す決まりは <see cref="PhoneScreen.DirFromTap"/>。
+///
+/// ★**触った合図の音（原典に無い。作者の指定）はここでは鳴らさない。**
+/// 十字キーは歩くのにも使うので、押した所で鳴らすと一歩ごとに鳴ってしまう。
+/// 鳴らすのは「その押しが選びや決定として受け取られたとき」＝
+/// <see cref="TowerController"/> の側にまとめてある。
 /// </summary>
 public class DPadView : MonoBehaviour
 {
@@ -52,19 +57,18 @@ public class DPadView : MonoBehaviour
         {
             bool fire = pressedConfirm && InConfirm();
             pressedConfirm = false;
-            if (fire) { controller.TouchConfirm = true; controller.PlayTap(); return; }
+            if (fire) { controller.TouchConfirm = true; return; }
         }
 
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
-        if (dir != Vector2Int.zero) { controller.TouchStep = dir; controller.PlayTap(); return; }
+        if (dir != Vector2Int.zero) { controller.TouchStep = dir; return; }
         // 十字の中（決定の丸と、その外の何も起きない輪）は上で見ているので何もしない。
         if (Inside(pad, at)) return;
         // 帯の上（ボタンや持ち物）は、それぞれの受け口に任せる。
         // 盤面のあたりを触ったときも「決定・送り」。
         if (Inside(topBand, at) || Inside(bottomBand, at)) return;
         controller.TouchConfirm = true;
-        controller.PlayTap();
     }
 
     /// <summary>その1枚だけ濃くする。-1 なら全部もとの色に戻す。</summary>
