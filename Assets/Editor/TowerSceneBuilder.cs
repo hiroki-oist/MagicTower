@@ -668,13 +668,30 @@ public static class TowerSceneBuilder
                                 "Assets/Sprites/Screens/Prologue_1.png",
                                 "Assets/Sprites/Screens/Prologue_2.png",
                                 "Assets/Sprites/Screens/Prologue_3.png" });
-        // 終幕の塔の絵（MTOWER2）と、終わりの言葉（MTENDMJ、段落が1つずつ）
-        // 終幕の塔の絵は上へ流れていく（原典 0x0ce83 の26回の輪）
+        // 終幕の絵と、終わりの言葉（MTENDMJ、段落が1つずつ）。
+        //
+        // 絵は**3枚重ね**（原典 0xcd6e〜 が MTOWER1 と MTOWER2 を別々に読んでいる）:
+        //   ①空       … 終幕のパレットの索引0（Ending.SkyColor）を敷くだけ
+        //   ②塔       … MTOWER1（320x400）。**下へ 15ドットずつ 26回**沈んでいく
+        //   ③荒野     … MTOWER2（640x400）。空を透かしてあるので塔の**前**に重なる
+        // ＝ 塔が地面の向こうへ沈んで消える（原典 0x0ce83 の26回の輪、動画 Part2 t≈1789）。
+        // 「ながい戦いは終わりを告げ、虚栄の塔は崩れさる。」がこれを指している。
         var towerScreen = BuildFullScreen(full, font, controller, TowerGame.PageKind.EndingTower,
-                        "EndingTowerScreen", "Assets/Sprites/Screens/Ending_Tower2.png",
+                        "EndingTowerScreen", "",
                         "", Ending.TitleDot, "", Ending.AnyKeyDot);
         if (towerScreen != null)
         {
+            var sky = towerScreen.transform.Find("Art").GetComponent<UnityEngine.UI.Image>();
+            sky.color = Ending.SkyColor;                       // 絵は貼らず色だけ
+
+            var towerImg = Layer(towerScreen.transform, "Tower",
+                                 "Assets/Sprites/Screens/Ending_Tower1.png",
+                                 Ending.TowerLeft, 0, Ending.TowerWidth,
+                                 (int)DialogueWindow.CanvasHeight);
+            var groundImg = Layer(towerScreen.transform, "Ground",
+                  "Assets/Sprites/Screens/Ending_Tower2.png",
+                  0, 0, (int)DialogueWindow.CanvasWidth, (int)DialogueWindow.CanvasHeight);
+
             // 白へ寄せるぶんの板。原典はパレットで色を白へ寄せる（0x0c4d8 の表）。
             var veilGo = new GameObject("WhiteVeil", typeof(RectTransform),
                                         typeof(UnityEngine.UI.Image));
@@ -689,6 +706,8 @@ public static class TowerSceneBuilder
 
             var tso = new SerializedObject(towerScreen);
             tso.FindProperty("scrollTower").boolValue = true;
+            tso.FindProperty("towerArt").objectReferenceValue = towerImg;
+            tso.FindProperty("groundArt").objectReferenceValue = groundImg;
             tso.FindProperty("whiteVeil").objectReferenceValue = veil;
             tso.ApplyModifiedPropertiesWithoutUndo();
         }
@@ -1217,6 +1236,26 @@ public static class TowerSceneBuilder
         img.sprite = LoadSprite(path);
         img.raycastTarget = false;
         img.preserveAspect = true;
+        return img;
+    }
+
+    /// <summary>
+    /// 1枚絵の上に絵をもう1枚重ねる（終幕の塔と荒野）。位置と大きさは原典の 640x400 で書く。
+    /// </summary>
+    static UnityEngine.UI.Image Layer(Transform parent, string name, string artPath,
+                                      int left, int top, int width, int height)
+    {
+        var go = new GameObject(name, typeof(RectTransform), typeof(UnityEngine.UI.Image));
+        go.transform.SetParent(parent, false);
+        var img = go.GetComponent<UnityEngine.UI.Image>();
+        img.sprite = AssetDatabase.LoadAssetAtPath<Sprite>(artPath);
+        img.raycastTarget = false;
+        var rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0f, 1f);
+        rt.anchoredPosition = new Vector2(left, -top);
+        rt.sizeDelta = new Vector2(width, height);
+        // 出番が来るまで消しておく（入れ物は生かしたまま絵だけ消す＝ほかの1枚絵と同じ）
+        img.enabled = false;
         return img;
     }
 

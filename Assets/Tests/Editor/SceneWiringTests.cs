@@ -23,6 +23,8 @@ public class SceneWiringTests
         // 白へ寄せる板は**終幕の塔の絵だけ**が持つ（ほかの1枚絵は流れも寄せもしない）。
         // 塔の絵の側は TowerSceneTests / EndingTowerTests で別に見ている。
         "FullScreenView.whiteVeil",
+        // 塔と荒野の2枚も**終幕の絵だけ**が持つ（3枚重ねで塔が沈んでいく）。
+        "FullScreenView.towerArt", "FullScreenView.groundArt",
         // 鍵を**本数ぶん絵で並べる**のは原典（横長）の見せ方。縦画面の並べ方
         // （作者の指定）では鍵の絵ひとつに数字を添えるので、こちらは使わない。
         "TowerHudView.keyIcons",

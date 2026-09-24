@@ -43,7 +43,17 @@ public static class Ending
     /// <summary>1回ぶんの待ち（原典 0x1e）。単位は垂直帰線の回数＝1/60秒。</summary>
     public const int TowerStepWait = 0x1e;
 
-    /// <summary>1回で上へ送るドット数（原典は 15*i で高さを縮めている）。</summary>
+    /// <summary>
+    /// 1回で**下へ**送るドット数（原典 0xcee0〜: 写す高さが `0x190 - 15*i`、
+    /// 貼る先が `15*i` 行下）。
+    ///
+    /// ⚠ 動く（下へ滑る）のは**塔（MTOWER1）だけ**で、荒野（MTOWER2）は動かない。
+    /// 荒野は空を透かして塔の**前**に重なっているので、
+    /// **塔が地面の向こうへ沈んでいく**ように見える。
+    /// 終わりの言葉「ながい戦いは終わりを告げ、虚栄の塔は崩れさる。」がこれを指している
+    /// （動画 Part2 t≈1789〜1801）。
+    /// 26回 x 15 ＝ 390ドットで、塔は画面（400）から消える。
+    /// </summary>
     public const int TowerScrollPerStep = 15;
 
     /// <summary>はじめの何回でパレットが明るくなるか（原典 `i &lt; 7`）。</summary>
@@ -54,6 +64,19 @@ public static class Ending
 
     /// <summary>1回ごとに鳴らす音（原典 0xcf9f の 7）。</summary>
     public const int TowerSound = 7;
+
+    /// <summary>
+    /// 終幕の絵の**空の色**。原典 0xc4d8 の表の最後の1本（＝ふだんの色）の索引0
+    /// `0002`（NGRB）＝ 緑0・赤0・青2 → (0,0,34)。荒野の絵は空（索引13）を透かしてあるので、
+    /// その後ろに敷くのがこの色。
+    /// </summary>
+    public static readonly Color SkyColor = new Color(0f, 0f, 34f / 255f);
+
+    /// <summary>
+    /// 塔（MTOWER1、320x400）を貼る左端。画面（640）の真ん中に置く。
+    /// </summary>
+    public const int TowerLeft = 160;
+    public const int TowerWidth = 320;
 
     /// <summary>塔の絵の長さ（秒）。</summary>
     public static float TowerDuration

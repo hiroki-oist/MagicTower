@@ -116,12 +116,13 @@ def transparent_border(px, bg=None):
     return seen
 
 
-def write_rgba(path, px, mask):
+def write_rgba(path, px, mask, palette=None):
+    pal = palette or GAME_PALETTE
     rows = []
     for y, row in enumerate(px):
         line = bytearray()
         for x, v in enumerate(row):
-            r, g, b = GAME_PALETTE[v]
+            r, g, b = pal[v]
             a = 0 if (mask and mask[y][x]) else 255
             line += bytes((r, g, b, a))
         rows.append(bytes(line))

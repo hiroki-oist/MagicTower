@@ -1535,6 +1535,25 @@ chk("step.From" in _blink and "IEnumerator Swap(" in _blink,
 chk("SwapSeconds" in open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
     and "AuthorStyle.SwapSeconds" in _blink,
     "入れ替えにかける時間は AuthorStyle に置く（作者の指定）")
+# 終幕の絵は3枚重ね（空／塔／荒野）で、塔だけが下へ沈んでいく。
+# 原典 0xcd6e〜 は MTOWER1（塔・320x400）と MTOWER2（荒野・640x400）を別々に読み、
+# 0xcee0〜 は写す高さ 0x190-15i・貼る先 15i 行下＝**下へ**送っている。
+# 荒野は空（索引13）を透かして塔の前に重なる（動画 Part2 t≈1789〜1801）。
+_fsv=open("Assets/Scripts/UI/FullScreenView.cs",encoding="utf-8").read()
+_tsb=open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read()
+chk("towerArt" in _fsv and "groundArt" in _fsv,
+    "終幕の絵は塔と荒野を別々に持つ")
+chk("from - new Vector2(" in _fsv,
+    "塔は**下へ**沈む（前は上へ流していた）")
+chk('"Assets/Sprites/Screens/Ending_Tower1.png"' in _tsb
+    and '"Assets/Sprites/Screens/Ending_Tower2.png"' in _tsb,
+    "塔(MTOWER1)と荒野(MTOWER2)の2枚ともシーンに入っている")
+chk("sky.color = Ending.SkyColor" in _tsb and "SkyColor" in
+    open("Assets/Scripts/Ending.cs",encoding="utf-8").read(),
+    "空は終幕のパレットの索引0（0002＝(0,0,34)）を敷く")
+_mk=open("docs/make_screens.py",encoding="utf-8").read()
+chk("ENDING_PALETTE" in _mk and "hide(ground, 13)" in _mk and "hide(tower, 0)" in _mk,
+    "終幕の2枚は終幕のパレットで塗り、空(13)と塔の周り(0)を透かす")
 chk("loader.SpawnExtra(fromKey, step.Pos)" in _blink,
     "元の方を重ねて出してから入れ替える（地図はもう新しい方になっている）")
 chk("public GameObject SpawnExtra" in
@@ -1680,7 +1699,7 @@ chk(os.path.exists("docs/rebuild_assets.sh"),"原典から一式を作り直す�
 # シーンが要る1枚絵は、どれも作り直す手順の中に生成器がある
 _need=sorted(set(re.findall(r'Assets/Sprites/Screens/[A-Za-z0-9_]+\.png',
                             open("Assets/Editor/TowerSceneBuilder.cs",encoding="utf-8").read())))
-chk(len(_need)==12,"シーンが使う1枚絵は12枚",str(len(_need)))
+chk(len(_need)==13,"シーンが使う1枚絵は13枚（終幕の塔 Ending_Tower1 を足した）",str(len(_need)))
 chk(all(os.path.exists(_q) for _q in _need),"その12枚が揃っている",
     str([_q for _q in _need if not os.path.exists(_q)]))
 _rb=open("docs/rebuild_assets.sh",encoding="utf-8").read()
@@ -2622,7 +2641,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=765
+MIN_CHECKS=770
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

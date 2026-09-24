@@ -47,6 +47,10 @@ public class FullScreenView : MonoBehaviour
     {
         shown = on;
         if (art != null) art.enabled = on;
+        // 重ねた絵（終幕の塔と荒野）も一緒に出し入れする。
+        // ここを忘れると、**出番でない間も塔が画面に貼りついたまま**になる。
+        if (towerArt != null) towerArt.enabled = on;
+        if (groundArt != null) groundArt.enabled = on;
         if (line1 != null) line1.enabled = on;
         if (line2 != null) line2.enabled = on;
         if (whiteVeil != null) whiteVeil.enabled = on && scrollTower;
@@ -65,10 +69,22 @@ public class FullScreenView : MonoBehaviour
     [SerializeField] Sprite[] steps = new Sprite[0];
 
     /// <summary>
-    /// 終幕の塔の絵だけは**上へ流れていく**（原典 0x0ce83 の輪）。
+    /// 終幕の絵だけは動く（原典 0x0ce83 の輪）。**塔が下へ沈んでいく**。
     /// 26回、1回ごとに15ドット送って音7を鳴らし、30コマ待つ。規則は <see cref="Ending"/>。
     /// </summary>
     [SerializeField] bool scrollTower;
+
+    /// <summary>
+    /// 沈んでいく**塔**（MTOWER1）。荒野（MTOWER2）は <see cref="art"/> の上に
+    /// 空を透かして重ねてあるので動かさない。
+    /// </summary>
+    [SerializeField] UnityEngine.UI.Image towerArt;
+
+    /// <summary>塔の前に重なる**荒野**（MTOWER2、空を透かしてある）。動かさない。</summary>
+    [SerializeField] UnityEngine.UI.Image groundArt;
+
+    /// <summary>塔のはじめの位置（戻すときに使う）。</summary>
+    Vector2 towerHome;
 
     /// <summary>
     /// 塔の絵に重ねる白。原典はパレットで色を白へ寄せる（`Ending.TowerWhiteMix`）ので、
@@ -78,7 +94,11 @@ public class FullScreenView : MonoBehaviour
 
     Coroutine towerRun;
 
-    void Awake() { SetVisible(false); }
+    void Awake()
+    {
+        if (towerArt != null) towerHome = towerArt.rectTransform.anchoredPosition;
+        SetVisible(false);
+    }
 
     void LateUpdate()
     {
@@ -105,15 +125,19 @@ public class FullScreenView : MonoBehaviour
         if (!mine && towerRun != null) { StopCoroutine(towerRun); towerRun = null; ResetTower(); }
     }
 
-    /// <summary>塔の絵が上へ流れていく（原典 0x0ce83）。</summary>
+    /// <summary>
+    /// 荒野に立つ塔が**下へ沈んでいく**（原典 0x0ce83）。
+    /// 動くのは塔（MTOWER1）だけで、荒野（MTOWER2）は空を透かして塔の前に重なっている。
+    /// </summary>
     System.Collections.IEnumerator ScrollTower()
     {
-        var rt = art != null ? art.rectTransform : null;
+        var rt = towerArt != null ? towerArt.rectTransform
+                                  : (art != null ? art.rectTransform : null);
         var from = rt != null ? rt.anchoredPosition : Vector2.zero;
         for (int i = 0; i < Ending.TowerSteps; i++)
         {
             if (rt != null)
-                rt.anchoredPosition = from + new Vector2(
+                rt.anchoredPosition = from - new Vector2(
                     0f, i * Ending.TowerScrollPerStep * DialogueWindow.CanvasScale);
             if (whiteVeil != null)
                 whiteVeil.color = new Color(1f, 1f, 1f, Ending.TowerWhiteMix(i));
@@ -126,8 +150,9 @@ public class FullScreenView : MonoBehaviour
     void ResetTower()
     {
         if (whiteVeil != null) whiteVeil.color = new Color(1f, 1f, 1f, 0f);
+        if (towerArt != null) towerArt.rectTransform.anchoredPosition = towerHome;
         if (art == null) return;
         art.color = Color.white;
-        art.rectTransform.anchoredPosition = Vector2.zero;
+        if (towerArt == null) art.rectTransform.anchoredPosition = Vector2.zero;
     }
 }
