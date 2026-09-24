@@ -60,4 +60,12 @@ public static class DebugPlay
     /// 次に立ち上げると調べもの用の状態に戻る。見終わったら false に。
     /// </summary>
     public static readonly bool MakeEndgameSave = true;
+
+    /// <summary>
+    /// その調べもの用のセーブを**どこから**始めるか。
+    ///   <see cref="DebugEndgameSave.BeforeZeno"/> … 49階の下り階段（ボス戦から）
+    ///   <see cref="DebugEndgameSave.BeforeGate"/> … 24階の時空の門の1歩手前（終幕だけ）
+    /// 作者の頼み（2026-09-24）「セーブデータを時空の扉を通る寸前で用意して」。
+    /// </summary>
+    public static readonly string EndgameSaveAt = DebugEndgameSave.BeforeGate;
 }

@@ -7,7 +7,12 @@ public class DebugEndgameSaveTests
 {
     static void Build(out PlayerState p, out Dictionary<int, FloorState> f)
     {
-        DebugEndgameSave.Build(out p, out f);
+        DebugEndgameSave.Build(DebugEndgameSave.BeforeZeno, out p, out f);
+    }
+
+    static void Gate(out PlayerState p, out Dictionary<int, FloorState> f)
+    {
+        DebugEndgameSave.Build(DebugEndgameSave.BeforeGate, out p, out f);
     }
 
     [Test]
@@ -112,6 +117,30 @@ public class DebugEndgameSaveTests
         }
     }
 
+    /// <summary>
+    /// 時空の門の1歩手前から始める版（作者の頼み「時空の扉を通る寸前で用意して」）。
+    /// 24階の (0,-2) に立ち、上へ1歩で終幕が始まる。
+    /// </summary>
+    [Test]
+    public void 門の手前版は一歩で終幕が始まる()
+    {
+        PlayerState p; Dictionary<int, FloorState> f;
+        Gate(out p, out f);
+        Assert.AreEqual(24, p.Floor);
+        Assert.AreEqual(new Vector2Int(0, -2), p.Position);
+        Assert.AreEqual("s", f[24].At(SpacetimeGate.GatePos), "時空の門が出ている");
+        Assert.AreEqual(".", f[24].At(new Vector2Int(0, -1)), "門の真下は空いている");
+        Assert.IsTrue(p.Has(SpecialItems.Kind.DragonSlayer), "ゼノを倒したあとなので持っている");
+        Assert.IsTrue(p.EventFlags.Contains(MagicSeal.FlagId), "五の目も済んでいる");
+
+        // 実際に1歩で場面が始まるか
+        var g = new TowerGame(p);
+        g.EnterFloor(24, p.Position);
+        foreach (var kv in f[24].Diff(FloorData.Load(24))) g.Floor.Put(kv.Key, kv.Value);
+        g.Step(Vector2Int.up);
+        Assert.AreEqual("終幕", g.PendingScene);
+    }
+
     /// <summary>書き出して読み直しても同じ形になるか。</summary>
     [Test]
     public void 書き出して読み直せる()
@@ -122,7 +151,7 @@ public class DebugEndgameSaveTests
         try
         {
             TowerSave.Delete(1);
-            DebugEndgameSave.WriteTo(1);
+            DebugEndgameSave.WriteTo(1, DebugEndgameSave.BeforeZeno);
             var snap = TowerSave.Read(1);
             Assert.IsNotNull(snap);
             Assert.AreEqual(PlayerState.MaxHp, snap.Player.Hp);

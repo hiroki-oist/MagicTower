@@ -254,6 +254,16 @@ public class Cutscenes
         public int Blinks;
         /// <summary>点滅のあとの待ち（垂直帰線の回数＝1/60秒）。</summary>
         public int Wait;
+        /// <summary>
+        /// **書き換える前にそのマスに載っていたもの**（盤面の記号）。台本には書かず、
+        /// <see cref="TowerGame"/> が当てるときに入れる。
+        ///
+        /// 原典の点滅は「元の値」と「新しい値」を交互に描く。3階（0x6ae0）は
+        /// 元が床(6)なので 床↔ゼノ に見えるが、**終幕（0xcb52〜0xcbee）は
+        /// 元が盗賊(21)** なので 盗賊↔ゼノ＝盗賊がゼノに変わって見える。
+        /// ここが空（床）なら今までどおり床と入れ替える。
+        /// </summary>
+        public string From;
     }
 
     /// <summary>点滅の書き方の頭。</summary>

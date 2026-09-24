@@ -1515,6 +1515,21 @@ chk("Untouched = { 24, 26 }" in _dbe and "DragonFloor = 35" in _dbe
     "24階・26階・35階のドラゴンは手付かず、48階までを片付ける")
 chk("k != SpecialItems.Kind.DragonSlayer" in _dbe,
     "持ち物はドラゴンスレイヤー以外の14種")
+chk("BeforeGate" in _dbe and "EndgameSaveAt" in _dbg,
+    "調べもの用のセーブは入り口を選べる（49階のボスの手前／時空の門の1歩手前）")
+# 終幕の50階には人が出る。原典 0x2334 が駆け上がる前に 50階(0,+1) へ盗賊(21)を書き、
+# 0xcb52〜0xcbee が盗賊(21)とゼノ(91)を50回入れ替える＝盗賊がゼノに変わる。
+_cs_end=[l for l in open("Assets/Resources/Cutscenes.txt",encoding="utf-8")
+         if l.startswith("終幕")][0]
+chk("地図 (+0,+1)=Mikata" in _cs_end,
+    "終幕は50階の (0,+1) に盗賊を出す（原典 0x2334 の 0x4bc0←0x15）")
+chk("地図 (+0,+1)=ID91 点滅50,50" in _cs_end,
+    "そのあと盗賊とゼノを50回入れ替える（原典 0xcb52〜0xcbee）")
+chk(_cs_end.index("161") < _cs_end.index("点滅50,50") < _cs_end.index("163"),
+    "入れ替えはセリフ161・162のあと、163の前（原典の 0xa1+i → 0xa3+i）")
+_blink=open("Assets/Scripts/UI/BlinkView.cs",encoding="utf-8").read()
+chk("step.From" in _blink and "loader.Refresh(step.Pos, fromKey)" in _blink,
+    "点滅は**元の中身**と入れ替える（床とは限らない）")
 # 倒して相手のマスへ踏み込んだあとの魔法攻撃（作者の指定＝Java版に合わせる）。
 # 原典 PC98版は 0x61ef〜0x6232 で踏み込んでから 0x1588 を呼ばないので無傷だったが、
 # Java版は attackMonster が座標を書かない＝あとから歩いて入るので必ず食らう。
@@ -1542,9 +1557,9 @@ chk("結果が出ていない" in open("docs/run_tests.sh",encoding="utf-8").rea
     "結果が出ていなければ落ちたと分かるようにする")
 # 場面の中の地図の書き換え（原典 0x3044 の三つ組の表から取った）
 _cs_map=[n for n in _cs_steps if n.startswith("地図 ")]
-chk(len(_cs_map)==42,
-    "場面の表の地図の書き換えは42件（3階のゼノ5＋片付け5・20階のボス登場10・"
-    "32階の金騎士1・42階の処刑11・49階の口上10）。10階と40階は別の台本",
+chk(len(_cs_map)==44,
+    "場面の表の地図の書き換えは44件（3階のゼノ5＋片付け5・20階のボス登場10・"
+    "32階の金騎士1・42階の処刑11・49階の口上10・終幕2）。10階と40階は別の台本",
     len(_cs_map))
 chk(all(re.match(r"^地図 \([-+]?\d+,[-+]?\d+\)=.+$",n) for n in _cs_map),
     "場面の地図の段は「地図 (x,y)=種別」の形")
@@ -2597,7 +2612,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=757
+MIN_CHECKS=762
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

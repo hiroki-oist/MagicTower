@@ -147,9 +147,13 @@ public class TowerGame
         if (writes == null || Floor == null) return;
         foreach (var w in writes)
         {
+            // 点滅は「元の値」と「新しい値」を交互に描く（原典 0x6ae0 / 0xcb52）。
+            // 元が何だったかはここでしか分からないので、渡す前に控えておく。
+            var step = w;
+            step.From = Floor.At(w.Pos);
             if (w.Kind == "床") Floor.Clear(w.Pos);
             else Floor.Put(w.Pos, FloorState.SymbolOfKind(w.Kind));
-            if (w.Blinks > 0) blinks.Add(w);
+            if (w.Blinks > 0) blinks.Add(step);
         }
     }
 

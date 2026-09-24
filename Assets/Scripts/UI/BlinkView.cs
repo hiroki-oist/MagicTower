@@ -94,7 +94,26 @@ public class BlinkView : MonoBehaviour
             yield return null;
             target = loader.ObjectAt(step.Pos);
         }
-        if (target != null)
+        // **元が床でないなら、そのものと入れ替えながら点滅させる**。
+        // 原典は「元の値」と「新しい値」を交互に地図へ書く。3階（0x6ae0）は元が床(6)
+        // なので出たり消えたりに見えるが、終幕（0xcb52〜0xcbee）は**元が盗賊(21)**で、
+        // 盗賊とゼノ(91)を50回入れ替える＝**盗賊がゼノに変わって見える**。
+        // ここを床としてしか扱っていなかったので、50階で誰も出てこなかった（作者の報告）。
+        var fromKey = FloorState.ViewKeyOf(step.From);
+        if (!string.IsNullOrEmpty(fromKey) && fromKey != FloorState.ViewKeyOf(
+                FloorState.SymbolOfKind(step.Kind)))
+        {
+            var toKey = FloorState.ViewKeyOf(FloorState.SymbolOfKind(step.Kind));
+            for (int i = 0; i < step.Blinks; i++)
+            {
+                loader.Refresh(step.Pos, fromKey);
+                yield return null;
+                loader.Refresh(step.Pos, toKey);
+                yield return null;
+            }
+            loader.Refresh(step.Pos, toKey);
+        }
+        else if (target != null)
         {
             // 原典は「床を描く → ものを描く」の順。見えない状態から始まる。
             for (int i = 0; i < step.Blinks; i++)

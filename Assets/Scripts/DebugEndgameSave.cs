@@ -22,7 +22,23 @@ using UnityEngine;
 /// </summary>
 public static class DebugEndgameSave
 {
-    /// <summary>ここまでの階を片付ける。49階から先は手付かず。</summary>
+    /// <summary>どこから始めるセーブを作るか。</summary>
+    public const string BeforeZeno = "49階のボスの手前";
+    public const string BeforeGate = "24階の時空の門の1歩手前";
+
+    /// <summary>ここまでの階を片付ける。49階の手前から始めるなら48階まで。</summary>
+    public static int LastClearedFor(string at)
+    {
+        return at == BeforeGate ? 49 : 48;
+    }
+
+    /// <summary>まるごと手付かずにする階。門の手前から始めるならもう通ってきている。</summary>
+    public static int[] UntouchedFor(string at)
+    {
+        return at == BeforeGate ? new int[0] : new[] { 24, 26 };
+    }
+
+    /// <summary>ここまでの階を片付ける（既定の入り口）。</summary>
     public const int LastCleared = 48;
 
     /// <summary>まるごと手付かずにする階（作者の指定）。</summary>
@@ -35,6 +51,13 @@ public static class DebugEndgameSave
     /// <summary>始める場所。49階の下り階段＝48階から上がってきたところ。</summary>
     public const int StartFloor = 49;
     public static readonly Vector2Int StartPos = new Vector2Int(-5, -5);
+
+    /// <summary>
+    /// 時空の門の1歩手前。24階の (0,-2)＝赤い扉のあったマスで、
+    /// **上へ1歩踏み込むと (0,-1) に立って終幕が始まる**（原典 0x22cc）。
+    /// </summary>
+    public const int GateStartFloor = 24;
+    public static readonly Vector2Int GateStartPos = new Vector2Int(0, -2);
 
     /// <summary>鍵の本数（作者の指定）。</summary>
     public const int Keys = 30;
@@ -61,16 +84,25 @@ public static class DebugEndgameSave
         return true;      // 敵・拾い物・妖精
     }
 
-    static bool Cleared(int floor)
+    /// <summary>その状態を組み立てる（既定の入り口＝<see cref="DebugPlay.EndgameSaveAt"/>）。</summary>
+    public static void Build(out PlayerState player, out Dictionary<int, FloorState> floors)
     {
-        if (floor < 1 || floor > LastCleared) return false;
-        foreach (var f in Untouched) if (f == floor) return false;
-        return true;
+        Build(DebugPlay.EndgameSaveAt, out player, out floors);
     }
 
     /// <summary>その状態を組み立てる。</summary>
-    public static void Build(out PlayerState player, out Dictionary<int, FloorState> floors)
+    public static void Build(string at,
+                             out PlayerState player, out Dictionary<int, FloorState> floors)
     {
+        int lastCleared = LastClearedFor(at);
+        var untouched = UntouchedFor(at);
+        System.Func<int, bool> cleared = f =>
+        {
+            if (f < 1 || f > lastCleared) return false;
+            foreach (var u in untouched) if (u == f) return false;
+            return true;
+        };
+
         player = new PlayerState
         {
             Hp = PlayerState.MaxHp,
@@ -79,19 +111,24 @@ public static class DebugEndgameSave
             Gold = PlayerState.MaxGold,
             YellowKeys = Keys, PurpleKeys = Keys, RedKeys = Keys,
             SwordRank = 5, ShieldRank = 5,          // 神剣・神盾
-            Floor = StartFloor, HighestFloor = StartFloor, Position = StartPos,
+            Floor = at == BeforeGate ? GateStartFloor : StartFloor,
+            HighestFloor = StartFloor,
+            Position = at == BeforeGate ? GateStartPos : StartPos,
         };
-        // ドラゴンスレイヤー以外の14種を持たせる（作者の指定）
+        // ドラゴンスレイヤー以外の14種（門の手前まで来ているならゼノを倒しているので15種）
         foreach (SpecialItems.Kind k in System.Enum.GetValues(typeof(SpecialItems.Kind)))
-            if (k != SpecialItems.Kind.None && k != SpecialItems.Kind.DragonSlayer)
+            if (k != SpecialItems.Kind.None
+                && (at == BeforeGate || k != SpecialItems.Kind.DragonSlayer))
                 player.Items |= k;
         for (int f = 1; f <= StartFloor; f++) player.Visited.Add(f);
 
-        // 一度きりの印。片付けた階のものだけ立てる（24・26・49階は立てない）
+        // 一度きりの印。片付けた階のものだけ立てる
         foreach (var e in PositionEvents.Instance.All)
-            if (e.FlagId >= 0 && Cleared(e.Floor)) player.EventFlags.Add(e.FlagId);
+            if (e.FlagId >= 0 && cleared(e.Floor)) player.EventFlags.Add(e.FlagId);
         foreach (var f in ThiefFlags) player.EventFlags.Add(f);
         foreach (var f in ArrivalFlags) player.EventFlags.Add(f);
+        // 門の手前まで来ているなら、49階のサイコロの五の目も済んでいる
+        if (at == BeforeGate) player.EventFlags.Add(MagicSeal.FlagId);
 
         floors = new Dictionary<int, FloorState>();
         for (int f = 1; f <= StartFloor; f++)
@@ -103,11 +140,11 @@ public static class DebugEndgameSave
         // 立ち入りのできごとが書き換える地図も当てる（15階の門、30階の門など）
         foreach (var e in PositionEvents.Instance.All)
         {
-            if (!Cleared(e.Floor) || e.Changes == null) continue;
+            if (!cleared(e.Floor) || e.Changes == null) continue;
             foreach (var c in e.Changes)
             {
                 FloorState st;
-                if (Cleared(c.Floor) && floors.TryGetValue(c.Floor, out st))
+                if (cleared(c.Floor) && floors.TryGetValue(c.Floor, out st))
                     st.Put(c.Pos, FloorState.SymbolOfKind(c.Kind));
             }
         }
@@ -116,31 +153,41 @@ public static class DebugEndgameSave
         for (int pass = 0; pass < 8; pass++)
         {
             bool changed = false;
-            for (int f = 1; f <= LastCleared; f++)
+            for (int f = 1; f <= lastCleared; f++)
             {
-                if (!Cleared(f) || !floors.ContainsKey(f)) continue;
+                if (!cleared(f) || !floors.ContainsKey(f)) continue;
                 var st = floors[f];
                 for (int y = FloorData.MinY; y <= FloorData.MaxY; y++)
                     for (int x = FloorData.MinX; x <= FloorData.MaxX; x++)
                     {
-                        var at = new Vector2Int(x, y);
-                        if (!ShouldClear(f, at, st.At(at))) continue;
-                        st.Clear(at);
+                        var cell = new Vector2Int(x, y);
+                        if (!ShouldClear(f, cell, st.At(cell))) continue;
+                        st.Clear(cell);
                         changed = true;
                     }
                 if (st.ApplyUnlocks(player.EventFlags.Contains).Count > 0) changed = true;
             }
             if (!changed) break;
         }
+        // 26階の人形に触れたあとなら、24階の中央に時空の門が出ている（原典 0x2a44）
+        if (at == BeforeGate)
+        {
+            FloorState gate;
+            if (floors.TryGetValue(SpacetimeGate.GateFloor, out gate))
+                gate.Put(SpacetimeGate.GatePos, "s");
+        }
         player.ClampStats();
     }
 
     /// <summary>そのスロットに書き込む。</summary>
-    public static void WriteTo(int slot)
+    public static void WriteTo(int slot) { WriteTo(slot, DebugPlay.EndgameSaveAt); }
+
+    /// <summary>そのスロットに書き込む。</summary>
+    public static void WriteTo(int slot, string at)
     {
         PlayerState p;
         Dictionary<int, FloorState> floors;
-        Build(out p, out floors);
+        Build(at, out p, out floors);
         TowerSave.Save(slot, p, floors);
     }
 }
