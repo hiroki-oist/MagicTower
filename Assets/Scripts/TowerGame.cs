@@ -1775,9 +1775,24 @@ public class TowerGame
             case SpecialItems.Kind.WingDown: return UseWing(false);
 
             case SpecialItems.Kind.TeleportRelic:
+            {
+                // 原典 0x86f7〜0x8758。**その階の中心について点対称のマス**へ飛ぶ
+                //   X' = 10 - X ／ Y' = 10 - Y  → 盤面では (x,y) → (-x,-y)
+                // 飛び先が床(6)でなければ「障害物があって空間転移できない！」と断り、
+                // **生命力800は成功したときだけ**払う（原典も断る枝では引かない）。
+                var to = SpecialItemEffects.TeleportTarget(Player.Position);
+                if (!Floor.IsCleared(to))
+                {
+                    Say(GameText.Instance.Message("teleport_fail"));
+                    return false;
+                }
+                Player.Position = to;
                 Player.Hp -= SpecialItemEffects.TeleportHpCost;
+                Player.ClampStats();
                 Say(GameText.Instance.Message("teleport_use"));
+                if (Player.Hp <= 0) { GameOver(); return true; }
                 break;
+            }
 
             default:
                 return false;   // オーブ・十字架・幸運の金貨などは「使う」ものではない

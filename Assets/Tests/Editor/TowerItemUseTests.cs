@@ -93,6 +93,8 @@ public class TowerItemUseTests
         var g = NewGame(1);
         g.Player.Give(SpecialItems.Kind.TeleportRelic);
         g.Player.Hp = 2000;
+        // 飛び先（中心について点対称のマス）が床でないと断られるので、空けておく
+        g.Floor.Clear(SpecialItemEffects.TeleportTarget(g.Player.Position));
         Assert.IsTrue(g.UseItem(SpecialItems.Kind.TeleportRelic));
         Assert.AreEqual(1200, g.Player.Hp, "生命力−800");
     }

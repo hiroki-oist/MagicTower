@@ -178,7 +178,7 @@ chk("Key_Magic" in _f(46),"F46 は魔法の鍵")
 
 print("\n【7f】門の解錠表（原典 MTE.EXE 0x4762 から抽出）")
 _sd=[l.strip() for l in open("Assets/Resources/SealedDoors.txt",encoding="utf-8") if l[:1].isdigit()]
-chk(len(_sd)==29,"解錠のきまりが29件（28件＋40階の金騎士の褒美）",f"{len(_sd)}件")
+chk(len(_sd)==30,"解錠のきまりが30件（28件＋40階の金騎士の褒美＋39階の時計盤）",f"{len(_sd)}件")
 def _row(fl,flag):
     for l in _sd:
         p2=[x.strip() for x in l.split("|")]
@@ -367,7 +367,10 @@ for _l in open("Assets/Resources/SealedDoors.txt",encoding="utf-8"):
         _n=_o.get((_x,_y))
         if _n and (_n.startswith("Enemy_") or _n.startswith("Boss_")): _ok+=1
         else: _other.append((int(_p[0]),_x,_y,_n or _g.get((_x,_y))))
-chk(_ok==53 and _tot==75,"守護マス75件のうち53件が敵のマス（座標系が一致している証拠）",f"{_ok}/{_tot}")
+# 39階の時計盤の9マスは敵ではなく黄色の扉なので、数から外して見る
+chk(_ok==53 and _tot==84,
+    "守護マス84件のうち53件が敵のマス（座標系が一致している証拠。39階の扉9枚を含む）",
+    f"{_ok}/{_tot}")
 _dd=dict(((f,x,y),v) for f,x,y,v in _other)
 chk(_dd.get((48,-5,5))=="Marker_ID7","F48 の守護マスは ID7（床と同じ見た目の隠れマス）＝原典ヒント236")
 chk(_dd.get((41,4,4))=="Marker_ID10","F41 の守護マスは ID10（隠し壁と見た目が同じ「隠れている者」のマス）＝原典ヒント216")
@@ -1022,11 +1025,18 @@ _pe=_rowflags("Assets/Resources/PositionEvents.txt",3)
 _ar=_rowflags("Assets/Resources/ArrivalEvents.txt",2)
 _th=set(int(m) for m in re.findall(r"フラグ(\d+)",
         open("Assets/Resources/ThiefEvents.txt",encoding="utf-8").read()))
-_union=_sd|_pe|_ar|_th
+# 0x85(133) は 39階の「時計盤」に当てた**こちらで付けた番号**。原典 0x2433 は
+# 一度きりの印を使わない（中央に秘宝を書いた時点で条件が成り立たなくなるため）が、
+# 表の形に合わせるのに要る。原典のどの印とも重ならない番号を選んである。
+CLOCK39_FLAG=0x85
+_union=(_sd|_pe|_ar|_th)-{CLOCK39_FLAG}
+chk(CLOCK39_FLAG in _sd and CLOCK39_FLAG not in set(_once),
+    "39階の時計盤の印は原典のどの印とも重ならない")
 chk(_union==set(_once),"4つの表の旗の合併が一度きりの旗46個とぴったり合う",
     f"足りない={sorted(set(_once)-_union)} 余計={sorted(_union-set(_once))}")
-chk(len(_sd)==29 and len(_pe)==15 and len(_ar)==1,
-    "表の件数（門29 / 座標の旗15 / 階段1）",f"{len(_sd)}/{len(_pe)}/{len(_ar)}")
+chk(len(_sd)==30 and len(_pe)==15 and len(_ar)==1,
+    "表の件数（門29＋39階の時計盤 / 座標の旗15 / 階段1）",
+    f"{len(_sd)}/{len(_pe)}/{len(_ar)}")
 chk({_n for _n in _once if _flg[_n]["持ち主"]=="盗賊"}<=_th,
     "盗賊が立てる旗3つは盗賊の表に出てくる")
 # 50 = 2階で一度だけ 1000 GOLD もらう贈り物（0x14e4〜0x1524、セリフ29）

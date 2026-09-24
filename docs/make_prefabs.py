@@ -55,6 +55,8 @@ SPEC=[
  #   ID41 マトック(15階の大ダコの褒美) / ID46 ドラゴンスレイヤー / ID47 雪のクリスタル(35階)
  #   ID23 妖精(10階。現れてすぐ採点して消える)
  ("Item","Matock","Item_Matock","Item",41,1,1,True),
+ # ID43 空間転移の秘宝。39階の「時計盤」（12時と3時の扉だけ開ける）で中央に現れる。
+ ("Item","Relic_Teleport",43,"Item",43,1,1,True),
  ("Item","Sword_Dragon","Sword","Item",46,1,1,True),
  ("Item","Crystal_Snow","Item_Orb","Item",47,1,1,True),
  ("People","Fairy","Fairy","People",23,1,1,True),

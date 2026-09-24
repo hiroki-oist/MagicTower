@@ -147,6 +147,8 @@ MonoBehaviour:
     prefab: {fileID: 5329814359916014185, guid: d3d48ce2a0e894eb49c85cdc6cfcdce1, type: 3}
   - key: Princess
     prefab: {fileID: 3308071535113552172, guid: 405db0c0292284df18e3380406f79af4, type: 3}
+  - key: Relic_Teleport
+    prefab: {fileID: 678108028351162094, guid: 6bfba99579535f966162764550771f37, type: 3}
   - key: Shield_1
     prefab: {fileID: 869650273035404343, guid: 219bcd20224846de621025276bfdcc16, type: 3}
   - key: Shield_2
@@ -174,7 +176,7 @@ MonoBehaviour:
   - key: Sword_Dragon
     prefab: {fileID: 1007182839427644473, guid: be4a69b79869763b486e456f58997f45, type: 3}
   - key: Vendor
-    prefab: {fileID: 1102408421673989523, guid: 593e3bbb1ffc44bfaa9275482742d3a3, type: 3}
+    prefab: {fileID: 1102408421673989523, guid: 30f056a40bb279d82f8a5970a31c9dbc, type: 3}
   - key: Wing_Down
     prefab: {fileID: 395894884577520964, guid: a1c129473f74331f162c980a027b7701, type: 3}
   - key: Wing_Up

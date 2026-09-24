@@ -290,7 +290,8 @@ public class OriginalDataTests
     public void 門は守護マスが全部床になったら開く()
     {
         var sd = SealedDoors.Instance;
-        Assert.AreEqual(29, sd.Count, "原典の判定関数から抽出した28件＋40階の金騎士の褒美");
+        Assert.AreEqual(30, sd.Count,
+                        "原典の判定関数の28件＋40階の金騎士の褒美＋39階の時計盤");
 
         // F17 の左の門は斜め下2マスの敵を倒すと開く
         SealedDoors.Unlock left = default(SealedDoors.Unlock);

@@ -26,6 +26,16 @@ public static class SpecialItemEffects
     /// <summary>空間転移の秘宝を使うと支払う生命力（原典 0x320）。</summary>
     public const int TeleportHpCost = 800;
 
+    /// <summary>
+    /// 空間転移の秘宝の飛び先。原典 0x8722〜0x873b は
+    /// <c>X' = 10 - X ／ Y' = 10 - Y</c> を書き込む＝**その階の中心について点対称**。
+    /// 盤面の座標では (x,y) → (-x,-y)。
+    /// </summary>
+    public static Vector2Int TeleportTarget(Vector2Int at)
+    {
+        return new Vector2Int(-at.x, -at.y);
+    }
+
     /// <summary>使うと無くなるアイテムか。</summary>
     public static bool IsConsumedOnUse(SpecialItems.Kind k)
     {
