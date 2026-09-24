@@ -45,6 +45,13 @@ public class ItemBarView : MonoBehaviour
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
 
+        // どのボタンでも触った手ごたえの「ピッ」を鳴らす（作者の指定）
+        if (controller != null
+            && (Inside(leftArrow, at) || Inside(rightArrow, at) || Inside(heroButton, at)
+                || Inside(flightButton, at) || Inside(saveButton, at) || Inside(loadButton, at)
+                || Inside(menuButton, at) || Inside(shopButton, at) || Inside(viewport, at)))
+            controller.PlayTap();
+
         if (Inside(leftArrow, at))  { Scroll(-1); return; }
         if (Inside(rightArrow, at)) { Scroll(+1); return; }
         if (Inside(heroButton, at))   { Orb(SpecialItems.Kind.HeroOrb); return; }

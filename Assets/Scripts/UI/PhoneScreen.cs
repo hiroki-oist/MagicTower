@@ -119,7 +119,8 @@ public static class PhoneScreen
     /// </summary>
     public static readonly string[] ShopIntro =
     {
-        "買い切り。一度購入すれば次回から無料です",
+        "ゴールドを購入します。どれも買い切り。",
+        "一度購入すれば次回から無料で受け取れます",
     };
 
     /// <summary>
@@ -163,7 +164,10 @@ public static class PhoneScreen
     /// （字の高さが行送りと同じになって、枠からはみ出す）。
     /// ⚠ 字下げの**うしろ**に置くこと（行の頭が全角2つでないと選択肢と見なされない）。
     /// </summary>
-    public const string ShopSmall = "<size=85%>", ShopSmallEnd = "</size>";
+    public const string ShopSmall = "<size=90%>", ShopSmallEnd = "</size>";
+
+    /// <summary>「購入を復元する」「やめる」の枠の高さ（行いくつぶんか）。</summary>
+    public const int ShopSmallRowLines = 2;
 
     /// <summary>角丸の枠の絵（9スライス。`docs/make_roundbox.py` が作る）。</summary>
     public const string RoundBoxPath = "Assets/Sprites/Hud/RoundBox.png";

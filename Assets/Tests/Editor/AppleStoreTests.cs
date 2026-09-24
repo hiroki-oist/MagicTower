@@ -136,11 +136,18 @@ public class AppleStoreTests
         //   見出し ＋ 空行1 ＋ 品目（1行＋空行 ShopRowLines-1）×3 ＋ 復元 ＋ 空行1 ＋ やめる
         var lines = GoldShop.Text().Split('\n');
         Assert.AreEqual(PhoneScreen.ShopIntro.Length + 1
-                        + GoldShop.Count * PhoneScreen.ShopRowLines + 3, lines.Length);
-        // 窓が原典の画面（400ドット）に収まる
+                        + GoldShop.Count * PhoneScreen.ShopRowLines
+                        + PhoneScreen.ShopSmallRowLines + 1, lines.Length);
+        // ★課金の窓は**原典の画面（400ドット）より高くてよい**（作者の指定）。
+        //   スマホは縦に余裕があるので、上下に少しはみ出しても構わない。
+        //   はみ出すときは上下に均等に（真ん中に置く）。
         var r = AuthorStyle.DialogueFor(GoldShop.Text());
-        Assert.LessOrEqual(r.height, DialogueWindow.ScreenHeight, "窓が画面に収まる");
-        Assert.GreaterOrEqual(r.y, 0, "上にはみ出さない");
+        Assert.Greater(r.height, DialogueWindow.ScreenHeight, "品目を大きく見せるので高い");
+        Assert.AreEqual((DialogueWindow.ScreenHeight - r.height) / 2, r.y, "真ん中に置く");
+        // 出過ぎないこと（上下それぞれ1品目ぶんまで、という作者の目安）
+        int over = (r.height - DialogueWindow.ScreenHeight) / 2;
+        Assert.LessOrEqual(over,
+            AuthorStyle.DialogueLineAdvance * PhoneScreen.ShopRowLines, "はみ出しは1品目ぶんまで");
     }
 
     /// <summary>

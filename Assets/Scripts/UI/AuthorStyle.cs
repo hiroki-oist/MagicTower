@@ -257,7 +257,12 @@ public static class AuthorStyle
     static RectInt DialogueFor(int lines, int width)
     {
         int h = DialogueHeight(lines);
-        int top = Mathf.Clamp(DialogueCenterY - h / 2, 0, DialogueWindow.ScreenHeight - h);
+        // ★**原典の画面（400ドット）より高い窓も置けるようにする**（作者の指定）。
+        //   課金の窓は品目を大きく見せるぶん高くなる。スマホの画面は縦に余裕があるので、
+        //   上下に少しはみ出しても構わない、とのこと。そのときは真ん中に置く。
+        int top = h >= DialogueWindow.ScreenHeight
+                ? (DialogueWindow.ScreenHeight - h) / 2
+                : Mathf.Clamp(DialogueCenterY - h / 2, 0, DialogueWindow.ScreenHeight - h);
         int left = (DialogueWindow.ScreenWidth - width) / 2;      // 画面の真ん中に置く
         return new RectInt(left, top, width, h);
     }

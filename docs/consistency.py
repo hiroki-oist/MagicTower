@@ -907,9 +907,17 @@ for _l in open("Assets/Resources/SoundCues.txt",encoding="utf-8"):
     if _l.startswith("#") or "|" not in _l: continue
     _p=[x.strip() for x in _l.split("|")]
     _cue[_p[0]]=(int(_p[1]),_p[2])
-chk(len(_cue)==22,"合図は22件（原典の呼び出し61か所を仕分けたもの）",str(len(_cue)))
-chk(all(v[0] in _snd for v in _cue.values()),"どの合図も実在する音を指す")
-chk(all(v[1].startswith("0x") for v in _cue.values()),"どの合図にも原典の場所が控えてある")
+# 90番台は**原典に無い合図**（触ったときの「ピッ」。作者の指定。譜面は UiSounds.txt）
+_uisnd=set(int(l.split("|")[0]) for l in
+           open("Assets/Resources/UiSounds.txt",encoding="utf-8")
+           if l.strip() and not l.strip().startswith("#"))
+_cueO={k: v for k, v in _cue.items() if v[0] < 90}
+_cueU={k: v for k, v in _cue.items() if v[0] >= 90}
+chk(len(_cueO)==22,"合図は22件（原典の呼び出し61か所を仕分けたもの）",str(len(_cueO)))
+chk(all(v[0] in _snd for v in _cueO.values()),"どの合図も実在する音を指す")
+chk(all(v[1].startswith("0x") for v in _cueO.values()),"どの合図にも原典の場所が控えてある")
+chk(len(_cueU)==1 and all(v[0] in _uisnd for v in _cueU.values()),
+    "原典に無い合図は「触る」1件だけで、譜面は UiSounds.txt にある")
 chk(_cue["階段"][0]==8,"階段は音8（原典 0x28e6、地形11/12の判定の直後）")
 chk(_cue["魔法攻撃"][0]==7,"魔法攻撃は音7（原典 0x1588 の3か所）")
 chk(_cue["斬りかかる"][0]==9 and _cue["命中"][0]==10,"戦闘は音9と音10（原典 0x6082）")
@@ -1409,6 +1417,7 @@ _cue=set(int(l.split("|")[1]) for l in
          open("Assets/Resources/SoundCues.txt",encoding="utf-8")
          if l.strip() and not l.strip().startswith("#"))
 chk(_snd=={1,2,6,7,8,9,10,11,12,13},"原典の音は10個（3〜5 は番号ごと空き）",str(sorted(_snd)))
+_cue={n for n in _cue if n < 90}          # 90番台は原典に無い音（触る）
 chk(_snd==_cue,"どの音にも合図が割り当ててある（余っている音は無い）",
     f"譜面だけ={sorted(_snd-_cue)} 合図だけ={sorted(_cue-_snd)}")
 chk(os.path.exists("docs/tools/MidiRender.swift"),
@@ -1657,6 +1666,16 @@ chk("DialogueBox.Paginate(GoldShop.Text())" in _shot,
 # 広い窓の行が切られて値段の「.99」が次の行に落ちていた。
 chk("if (charsPerLine <= 0) charsPerLine = LimitFor(body);" in _db,
     "Paginate の折り返しの幅も本文から決める")
+# 触ったときの「ピッ」（作者の指定。原典に無い音）
+chk(os.path.exists("Assets/Resources/UiSounds.txt")
+    and "UiSounds" in open("Assets/Scripts/Items/SoundBank.cs",encoding="utf-8").read(),
+    "原典に無い音は別の表に分けてある（Sounds.txt を汚さない）")
+chk('Tap = "触る"' in open("Assets/Scripts/Items/SoundCues.cs",encoding="utf-8").read()
+    and "public void PlayTap()" in _tc,
+    "触ったときの音は合図の名前で呼ぶ")
+chk("controller.PlayTap()" in open("Assets/Scripts/UI/DPadView.cs",encoding="utf-8").read()
+    and "controller.PlayTap()" in open("Assets/Scripts/UI/ItemBarView.cs",encoding="utf-8").read(),
+    "十字キー・決定・下のボタンのどれでも鳴る")
 chk("ShopRowLines = 3" in _phs and "ShopRowGap" in _dw
     and "ShopFontScale" in _phs and "RoundBoxPath" in _phs,
     "品目の行は3行ぶんの高さ・字は大きめ・枠は角丸")
@@ -2850,7 +2869,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=836
+MIN_CHECKS=840
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

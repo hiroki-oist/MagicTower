@@ -11,7 +11,13 @@ public class SoundTests
     public void 音は13種類で曲は2つ()
     {
         var b = SoundBank.Instance;
-        Assert.AreEqual(10, b.Count, "原典がゲームから鳴らすのは1,2,6〜13の10種類");
+        // 原典がゲームから鳴らすのは 1,2,6〜13 の10種類。
+        // 90番台は**原典に無い音**（触ったときの「ピッ」。Resources/UiSounds.txt）。
+        int original = 0;
+        foreach (var n in b.Numbers) if (n < 90) original++;
+        Assert.AreEqual(10, original, "原典がゲームから鳴らすのは1,2,6〜13の10種類");
+        foreach (var n in b.Numbers)
+            Assert.IsTrue(n <= 13 || n >= 90, $"音{n} は原典の番号ともぶつからない");
         Assert.IsTrue(b.IsMusic(1), "音1は曲");
         Assert.IsTrue(b.IsMusic(2), "音2は曲");
         for (int n = 6; n <= 13; n++)

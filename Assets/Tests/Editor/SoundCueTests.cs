@@ -24,11 +24,18 @@ public class SoundCueTests
     public void 合図の表は原典の音番号だけを指す()
     {
         var c = SoundCues.Instance;
-        Assert.AreEqual(22, c.Count, "61か所を仕分けた合図の数");
+        // 22 は原典の61か所を仕分けた数。＋1 は**原典に無い**「触る」（作者の指定）。
+        Assert.AreEqual(23, c.Count, "61か所を仕分けた合図の数＋触る");
         foreach (var name in c.Names)
         {
             int n = c.Number(name);
             Assert.IsNotNull(SoundBank.Instance.Get(n), $"{name} の音{n}が譜面にある");
+            if (name == SoundCues.Tap)
+            {
+                Assert.GreaterOrEqual(n, 90, "触るは原典に無い音（90番台）");
+                continue;
+            }
+            Assert.Less(n, 90, $"{name} は原典の音");
             Assert.IsNotNull(c.Source(name), $"{name} に原典の場所が控えてある");
         }
     }

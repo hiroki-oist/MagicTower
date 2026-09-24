@@ -52,18 +52,19 @@ public class DPadView : MonoBehaviour
         {
             bool fire = pressedConfirm && InConfirm();
             pressedConfirm = false;
-            if (fire) { controller.TouchConfirm = true; return; }
+            if (fire) { controller.TouchConfirm = true; controller.PlayTap(); return; }
         }
 
         if (!Input.GetMouseButtonDown(0)) return;
         var at = (Vector2)Input.mousePosition;
-        if (dir != Vector2Int.zero) { controller.TouchStep = dir; return; }
+        if (dir != Vector2Int.zero) { controller.TouchStep = dir; controller.PlayTap(); return; }
         // 十字の中（決定の丸と、その外の何も起きない輪）は上で見ているので何もしない。
         if (Inside(pad, at)) return;
         // 帯の上（ボタンや持ち物）は、それぞれの受け口に任せる。
         // 盤面のあたりを触ったときも「決定・送り」。
         if (Inside(topBand, at) || Inside(bottomBand, at)) return;
         controller.TouchConfirm = true;
+        controller.PlayTap();
     }
 
     /// <summary>その1枚だけ濃くする。-1 なら全部もとの色に戻す。</summary>

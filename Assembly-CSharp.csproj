@@ -231,6 +231,7 @@
     <None Include="Assets/TextMesh Pro/Shaders/TMP_SDF-Surface-Mobile.shader" />
     <None Include="Assets/Resources/Floors/Floor_29.txt" />
     <None Include="Assets/Resources/Floors/Floor_15.txt" />
+    <None Include="Assets/Resources/UiSounds.txt" />
     <None Include="Assets/Resources/Floors/Floor_11.txt" />
     <None Include="Assets/Resources/Messages.txt" />
     <None Include="Assets/Resources/Floors/Floor_37.txt" />

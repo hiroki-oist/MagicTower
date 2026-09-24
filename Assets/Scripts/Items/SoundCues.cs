@@ -84,4 +84,10 @@ public class SoundCues
     public const string WallAppear = "壁が現れる";
     public const string SceneBeat2 = "場面のできごと";
     public const string Receding   = "遠ざかる";
+
+    /// <summary>
+    /// ★**原典に無い合図**（作者の指定）。ボタンを触ったとき・決めたときの「ピッ」。
+    /// 譜面は Resources/UiSounds.txt（原典の Sounds.txt とは別の表）。
+    /// </summary>
+    public const string Tap = "触る";
 }

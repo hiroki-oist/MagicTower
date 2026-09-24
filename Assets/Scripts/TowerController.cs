@@ -49,6 +49,16 @@ public class TowerController : MonoBehaviour
     /// </summary>
     public SoundPlayer Sound { get { return sound; } }
 
+    /// <summary>
+    /// ボタンを触った・決めたときの「ピッ」（作者の指定。原典には無い）。
+    /// 触りを受ける役（<see cref="DPadView"/> / <see cref="ItemBarView"/>）と、
+    /// 選ばせている窓・メニューの送りから呼ぶ。
+    /// </summary>
+    public void PlayTap()
+    {
+        if (sound != null) sound.PlayCue(SoundCues.Tap);
+    }
+
     public TowerGame Game { get; private set; }
 
     Transform playerView;
@@ -323,9 +333,10 @@ public class TowerController : MonoBehaviour
                 // 触りでも動かせるようにしてある（十字キーと、盤面を触ったら決定）。
                 var move = ReadInputOnce();
                 if (move.y == 0) move = TakeStep();
-                if (move.y != 0) { Game.MoveChoice(move.y > 0 ? -1 : 1); acted = true; }
+                if (move.y != 0)
+                { Game.MoveChoice(move.y > 0 ? -1 : 1); PlayTap(); acted = true; }
                 else if (MenuKeyDown() || TakeConfirm())
-                { Game.ConfirmChoice(); Game.NextPage(); acted = true; }
+                { PlayTap(); Game.ConfirmChoice(); Game.NextPage(); acted = true; }
                 else acted = false;
             }
             else

@@ -54,6 +54,10 @@ public class SoundBank
         var asset = Resources.Load<TextAsset>("Sounds");
         if (asset == null) Debug.LogError("SoundBank: Resources/Sounds.txt が見つかりません");
         else s.Parse(asset.text);
+        // **原典に無い音**（触ったときの「ピッ」など。作者の指定）は別の表に分けてある。
+        // Sounds.txt は MTE.EXE から取り出したものなので、そこへ足さない。
+        var extra = Resources.Load<TextAsset>("UiSounds");
+        if (extra != null) s.Parse(extra.text);
         return s;
     }
 
