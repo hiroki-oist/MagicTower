@@ -289,6 +289,10 @@ public class TowerGame
                     Note(GameText.Instance.Message("battle_gold", pendingGoldNote));
                     pendingGoldNote = 0;
                 }
+                // 踏み込んだ先でも魔法攻撃を見る（作者の指定＝Java版に合わせる）。
+                // 詳しい出どころは AuthorStyle.MagicAfterBattleStep に書いてある。
+                // 原典は見ないので、49階で魔導師に挟まれたマスへ倒して入っても無傷だった。
+                if (AuthorStyle.MagicAfterBattleStep) ApplyMagicAttack();
             }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.BattlePrefix))
             {

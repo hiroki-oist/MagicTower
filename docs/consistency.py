@@ -1390,6 +1390,16 @@ chk("AtTitle" in _tc2 and "BeginGame" in _tc2,
     "題名を出している間は遊びを進めず、触ると最初から始まる")
 chk(all(os.path.exists("Assets/Resources/Music/"+m+".meta") for m in _mus),
     "曲の取り込み設定（.meta）も置いてある")
+# 原典の音は 1,2,6〜13 の10個で、**どれも使われている**（余っている音は無い）
+_snd=set(int(l.split("|")[0]) for l in
+         open("Assets/Resources/Sounds.txt",encoding="utf-8")
+         if l.strip() and not l.strip().startswith("#"))
+_cue=set(int(l.split("|")[1]) for l in
+         open("Assets/Resources/SoundCues.txt",encoding="utf-8")
+         if l.strip() and not l.strip().startswith("#"))
+chk(_snd=={1,2,6,7,8,9,10,11,12,13},"原典の音は10個（3〜5 は番号ごと空き）",str(sorted(_snd)))
+chk(_snd==_cue,"どの音にも合図が割り当ててある（余っている音は無い）",
+    f"譜面だけ={sorted(_snd-_cue)} 合図だけ={sorted(_cue-_snd)}")
 chk(os.path.exists("docs/tools/MidiRender.swift"),
     "MIDI を音にする道具がある（macOS 内蔵の音源を使う）")
 _jm=open("Assets/Scripts/Items/JavaMusic.cs",encoding="utf-8").read()
@@ -1469,6 +1479,17 @@ chk("AfterBattleStep" in _tg4,
     "倒した後始末は斬り合いの絵が終わってから当てる（褒美が戦闘開始と同時に出ていた）")
 chk("Player.Rank = r.Rank" in _tg4,
     "妖精にもらった称号を覚えておく（出し方は作者と相談中）")
+# 倒して相手のマスへ踏み込んだあとの魔法攻撃（作者の指定＝Java版に合わせる）。
+# 原典 PC98版は 0x61ef〜0x6232 で踏み込んでから 0x1588 を呼ばないので無傷だったが、
+# Java版は attackMonster が座標を書かない＝あとから歩いて入るので必ず食らう。
+# 49階のゼノ戦で神盾が実質必須になるのはこちらの挙動（作者の記憶どおり）。
+_as=open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
+chk("MagicAfterBattleStep" in _as and "MagicAfterBattleStep" in _tg4,
+    "踏み込んだ先でも魔法攻撃を見る（作者の指定。旗は AuthorStyle に置く）")
+chk("if (AuthorStyle.MagicAfterBattleStep) ApplyMagicAttack();" in _tg4,
+    "その判定は戦いの後始末（相手のマスへ移す）の**あと**に置く")
+chk(os.path.exists("Assets/Tests/Editor/PincerAfterBattleTests.cs"),
+    "挟み撃ちの踏み込みに試験がある")
 # 序章の1枚絵（MTOPSTR）。行が1つずつ現れるので4枚ぶん書き出してある
 chk(all(os.path.exists(f"Assets/Sprites/Screens/Prologue_{_i}.png") for _i in range(4)),
     "序章の1枚絵が4枚ある（行が0〜3つ出た状態）")
@@ -2540,7 +2561,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=746
+MIN_CHECKS=749
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。
