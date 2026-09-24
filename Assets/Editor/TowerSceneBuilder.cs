@@ -412,7 +412,7 @@ public static class TowerSceneBuilder
         int nb = PhoneScreen.LeftButtons.Length;
         float stack = bh * nb + bgap * (nb - 1);
         float btop = PhoneScreen.ItemBarHeight + (PhoneScreen.ButtonsHeight - stack) / 2f;
-        RectTransform heroButton = null, flightButton = null,
+        RectTransform heroButton = null, flightButton = null, shopButton = null,
                       saveButton = null, loadButton = null, menuButton = null;
         var pressable = new List<Object>
         {
@@ -435,6 +435,7 @@ public static class TowerSceneBuilder
             if (i == PhoneScreen.SaveButtonIndex) saveButton = left;
             if (i == PhoneScreen.LoadButtonIndex) loadButton = left;
             if (i == PhoneScreen.MenuButtonIndex) menuButton = left;
+            if (i == PhoneScreen.ShopButtonIndex) shopButton = right;
         }
         // 中央の十字。**押すと歩く**（作者が選んだ絵。DPadView が触りを受ける）
         float dpad = PhoneScreen.DPadSize;
@@ -762,6 +763,7 @@ public static class TowerSceneBuilder
         barso.FindProperty("content").objectReferenceValue = contentRt;
         barso.FindProperty("leftArrow").objectReferenceValue = leftArrow;
         barso.FindProperty("rightArrow").objectReferenceValue = rightArrow;
+        barso.FindProperty("shopButton").objectReferenceValue = shopButton;
         barso.FindProperty("heroButton").objectReferenceValue = heroButton;
         barso.FindProperty("flightButton").objectReferenceValue = flightButton;
         barso.FindProperty("heroImage").objectReferenceValue =

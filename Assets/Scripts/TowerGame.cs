@@ -1161,6 +1161,32 @@ public class TowerGame
         return true;
     }
 
+    /// <summary>
+    /// 右下の「商店」のボタン。**課金でゴールドを買う窓**を開く（作者の指定）。
+    /// 中身は <see cref="GoldShop"/>。
+    /// </summary>
+    public bool AskGoldShop()
+    {
+        if (pages.Count > 0 || IsMenuOpen || IsChoosing) return false;
+        Say(GoldShop.Text());
+        BeginChoice(ChoiceKind.GoldShop, GoldShop.Count + 1, default(Shop.Offer));
+        return true;
+    }
+
+    /// <summary>
+    /// **中断データを書く**（作者の指定。原典には無い）。
+    /// 階が変わったときと、アプリが後ろへ回るとき・終わるときに呼ぶ。
+    /// 端末がアプリをメモリから外して再起動になっても、ここから続けられる。
+    /// </summary>
+    public void WriteResume()
+    {
+        if (Player == null) return;
+        TowerSave.Save(TowerSave.AutoSlot, Player, floors);
+    }
+
+    /// <summary>その中断データを捨てる（題名へ戻る・最初から・終幕を見終えたとき）。</summary>
+    public static void DropResume() { TowerSave.Delete(TowerSave.AutoSlot); }
+
     /// <summary>スロットを選ぶのをやめて1つ前の段へ戻る。</summary>
     public void MenuBack()
     {
@@ -1341,7 +1367,7 @@ public class TowerGame
     //   代用している（文言の「◎」は原典の文字列にもともと入っている）。
 
     /// <summary>何を選ばせているか。</summary>
-    public enum ChoiceKind { None, Merchant, Altar, AltarOffer, UseItem, Save, Load }
+    public enum ChoiceKind { None, Merchant, Altar, AltarOffer, UseItem, Save, Load, GoldShop }
 
     public ChoiceKind Choice { get; private set; }
     public int ChoiceIndex { get; private set; }
@@ -1390,6 +1416,13 @@ public class TowerGame
             TowerSave.Save(PhoneScreen.QuickSlot, Player, floors);
             PlaySound(SoundCues.TakeItem);
             Note(PhoneScreen.Saved);
+            return;
+        }
+        if (kind == ChoiceKind.GoldShop)
+        {
+            if (at >= GoldShop.Count) return;          // 「やめる」
+            var got = GoldShop.Buy(Player, at);
+            if (!string.IsNullOrEmpty(got)) { PlaySound(SoundCues.TakeItem); Note(got); }
             return;
         }
         if (kind == ChoiceKind.Load)

@@ -43,8 +43,31 @@ public static class JavaMusic
         { 32, "Music/Boss40" },
         { 40, "Music/Boss40" },
         { 49, "Music/Boss49" },
-        { 50, "Music/Boss50" },
     };
+
+    /// <summary>
+    /// 終幕（塔の絵〜終わりの言葉〜「Ｆｉｎ」）で流す曲。**作者の指定で A_050**。
+    ///
+    /// 原典 PC98版はここで音2（題名と同じ曲）に切り替える（0xbf5b / 0xd25c）が、
+    /// Java版の曲を使っている間はそちらは鳴らない（<see cref="SoundPlayer"/>）。
+    /// A_050 はもともと「50階のボス戦」に当ててあったが、**50階に戦いは無い**ので
+    /// 鳴る機会が無かった。終幕へ移してある。
+    /// </summary>
+    public const string EndingTrack = "Music/Ending";
+
+    /// <summary>その画面が終幕の一部なら終幕の曲。違えば null。</summary>
+    public static string EndingFor(TowerGame.PageKind? kind)
+    {
+        if (!kind.HasValue) return null;
+        switch (kind.Value)
+        {
+            case TowerGame.PageKind.EndingTower:
+            case TowerGame.PageKind.EndingText:
+            case TowerGame.PageKind.FinalScreen:
+                return EndingTrack;
+        }
+        return null;
+    }
 
     /// <summary>
     /// 戦いの曲にする相手。Java版は**どの戦いでも**曲を変えるが、

@@ -79,7 +79,11 @@ public class MenuWindowView : MonoBehaviour
     {
         var lines = Compose(g).Split('\n');
         if (lines.Length > 0) lines[0] = TowerMenu.Heading(lines[0]);
-        for (int i = 1; i < lines.Length; i++) lines[i] = TowerMenu.Big(lines[i]);
+        // 末尾の添え書き（「ゲームをリセットして…」）だけ小さく出す。
+        int notes = TowerMenu.Note.Length;
+        for (int i = 1; i < lines.Length; i++)
+            lines[i] = i < lines.Length - notes ? TowerMenu.Big(lines[i])
+                                                : TowerMenu.Small(lines[i]);
         return string.Join("\n", lines);
     }
 

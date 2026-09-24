@@ -29,6 +29,16 @@ public static class TowerSave
     /// <summary>原典と同じくスロットは8つ。</summary>
     public const int SlotCount = 8;
 
+    /// <summary>
+    /// **中断データ**の置き場（作者の指定）。原典には無い。
+    ///
+    /// 「アプリを開いたまま他のことをして、戻ってきたら端末がアプリをメモリから
+    ///   外していて再起動になっても、直前の位置から再開できるように」という頼み。
+    /// 階が変わるたびと、アプリが後ろへ回るとき・終わるときに書く。
+    /// 題名へ戻ったときと、最初から始めたとき・終幕を見終えたときに消す。
+    /// </summary>
+    public const int AutoSlot = 0;
+
     /// <summary>空きスロットの印。原典は全項目 0xffff。</summary>
     public const int Empty = 0xffff;
 
@@ -40,11 +50,14 @@ public static class TowerSave
         get { return string.IsNullOrEmpty(Directory) ? Application.persistentDataPath : Directory; }
     }
 
-    static string PathOf(int slot) { return Path.Combine(Dir, $"save{slot}.txt"); }
+    static string PathOf(int slot)
+    {
+        return Path.Combine(Dir, slot == AutoSlot ? "resume.txt" : $"save{slot}.txt");
+    }
 
     public static bool Exists(int slot)
     {
-        return slot >= 1 && slot <= SlotCount && File.Exists(PathOf(slot));
+        return slot >= AutoSlot && slot <= SlotCount && File.Exists(PathOf(slot));
     }
 
     /// <summary>セーブから読み出したもの。地図の差も持つ。</summary>
@@ -61,7 +74,7 @@ public static class TowerSave
     public static void Save(int slot, PlayerState p,
         System.Collections.Generic.IDictionary<int, FloorState> floors = null)
     {
-        if (p == null || slot < 1 || slot > SlotCount) return;
+        if (p == null || slot < AutoSlot || slot > SlotCount) return;
         System.IO.Directory.CreateDirectory(Dir);
         // 原典の並びを先に、リメイクで足した項目をうしろに
         var fields = new[]

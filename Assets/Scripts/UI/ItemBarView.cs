@@ -24,6 +24,9 @@ public class ItemBarView : MonoBehaviour
     [SerializeField] TMPro.TMP_Text heroLabel, flightLabel;
     /// <summary>下の左の並びの「セーブ」「ロード」（作者の指定）。</summary>
     [SerializeField] RectTransform saveButton, loadButton, menuButton;
+
+    /// <summary>右の「商店」＝課金の窓（作者の指定）。</summary>
+    [SerializeField] RectTransform shopButton;
     [SerializeField] RectTransform[] slots = new RectTransform[0];
 
     /// <summary>いま何マスぶん送っているか（テストから見る）。</summary>
@@ -49,6 +52,7 @@ public class ItemBarView : MonoBehaviour
         if (Inside(saveButton, at)) { if (controller != null) controller.AskSave(); return; }
         if (Inside(loadButton, at)) { if (controller != null) controller.AskLoad(); return; }
         if (Inside(menuButton, at)) { if (controller != null) controller.ToggleMenu(); return; }
+        if (Inside(shopButton, at)) { if (controller != null) controller.AskGoldShop(); return; }
         if (!Inside(viewport, at)) return;
         for (int i = 0; i < slots.Length; i++)
             if (Inside(slots[i], at))

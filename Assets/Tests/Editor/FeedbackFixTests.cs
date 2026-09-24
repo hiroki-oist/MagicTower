@@ -278,7 +278,15 @@ public class FeedbackFixTests
         for (int i = 1; i <= 5; i++)
             Assert.IsNotNull(Resources.Load<AudioClip>(JavaMusic.ForFloor((i - 1) * 10 + 1)),
                              $"かたまり{i}の曲");
-        foreach (int f in new[] { 10, 20, 32, 40, 49, 50 })
+        // 50階に戦いは無いので、そこのボス戦の欄は持たない（曲は終幕へ移した）
+        foreach (int f in new[] { 10, 20, 32, 40, 49 })
             Assert.IsNotNull(Resources.Load<AudioClip>(JavaMusic.BossFor(f)), $"{f}階の戦いの曲");
+        Assert.IsNull(JavaMusic.BossFor(50), "50階のボス戦の欄は無い");
+        Assert.IsNotNull(Resources.Load<AudioClip>(JavaMusic.EndingTrack), "終幕の曲（A_050）");
+        foreach (var k in new[] { TowerGame.PageKind.EndingTower,
+                                  TowerGame.PageKind.EndingText,
+                                  TowerGame.PageKind.FinalScreen })
+            Assert.AreEqual(JavaMusic.EndingTrack, JavaMusic.EndingFor(k), k.ToString());
+        Assert.IsNull(JavaMusic.EndingFor(TowerGame.PageKind.Dialogue), "会話は階の曲のまま");
     }
 }

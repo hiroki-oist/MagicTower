@@ -196,10 +196,15 @@ public class PhoneScreenTests
     }
 
     [Test]
-    public void 下のボタンは八つと十字で全部飾り()
+    public void 下のボタンは六つと十字()
     {
-        Assert.AreEqual(4, PhoneScreen.LeftButtons.Length);
-        Assert.AreEqual(4, PhoneScreen.RightButtons.Length);
+        // ★作者の指定で「ショップ」（左）と「妖精」（右）を無くした。
+        Assert.AreEqual(3, PhoneScreen.LeftButtons.Length);
+        Assert.AreEqual(3, PhoneScreen.RightButtons.Length);
+        CollectionAssert.DoesNotContain(PhoneScreen.LeftButtons, "ショップ");
+        CollectionAssert.DoesNotContain(PhoneScreen.RightButtons, "妖精");
+        Assert.AreEqual("メニュー", PhoneScreen.LeftButtons[PhoneScreen.MenuButtonIndex]);
+        Assert.AreEqual("商店", PhoneScreen.RightButtons[PhoneScreen.ShopButtonIndex]);
         foreach (var s in PhoneScreen.LeftButtons) Assert.IsNotEmpty(s);
         foreach (var s in PhoneScreen.RightButtons) Assert.IsNotEmpty(s);
     }

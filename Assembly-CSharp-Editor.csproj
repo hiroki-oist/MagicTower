@@ -124,6 +124,7 @@
     <Compile Include="Assets/Tests/Editor/FlightOrbTests.cs" />
     <Compile Include="Assets/Tests/Editor/FloorChangeInSceneTests.cs" />
     <Compile Include="Assets/Tests/Editor/BattleBandTests.cs" />
+    <Compile Include="Assets/Tests/Editor/GoldShopResumeTests.cs" />
     <Compile Include="Assets/Tests/Editor/SoundSynthTests.cs" />
     <Compile Include="Assets/Tests/Editor/ScreenTextTests.cs" />
     <Compile Include="Assets/Tests/Editor/KeyIconTests.cs" />

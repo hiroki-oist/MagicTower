@@ -141,7 +141,7 @@ public static class TowerMenu
     /// ちょうど収まる大きさなので、これ以上大きくすると溢れる。
     /// 項目は「　　ゲームに戻る」の8文字なので 1.9 倍でも収まる。
     /// </summary>
-    public const int PhoneWindowLines = 5;
+    public const int PhoneWindowLines = 6;
     public const float TextScale = 1.9f;
 
     /// <summary>
@@ -161,6 +161,20 @@ public static class TowerMenu
 
     /// <summary>見出しを少し大きく出すための書き方。</summary>
     public static string Heading(string line) { return Sized(line, TitleScale); }
+
+    /// <summary>添え書きの字（項目より小さく）。</summary>
+    public const float NoteScale = 1.05f;
+    public static string Small(string line) { return Sized(line, NoteScale); }
+
+    /// <summary>
+    /// 「タイトルへ戻る」の下に添える断り（作者の指定）。
+    /// 選べる行ではない — 印は項目の数までしか動かない。
+    /// </summary>
+    public static readonly string[] Note =
+    {
+        "　（ゲームをリセットして",
+        "　　最初から遊べます）",
+    };
 
     static string Sized(string line, float scale)
     {
@@ -191,6 +205,7 @@ public static class TowerMenu
             sb.Append('\n');
             sb.Append(Label(e));
         }
+        foreach (var line in Note) { sb.Append('\n'); sb.Append(line); }
         return sb.ToString();
     }
 

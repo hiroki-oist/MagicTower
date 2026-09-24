@@ -74,9 +74,9 @@ public static class PhoneScreen
     /// </summary>
     /// 文字は**短く**してある（作者の指定。左右を細くして真ん中の十字を大きくするため）。
     public static readonly string[] LeftButtons =
-        { "セーブ", "ロード", "ショップ", "メニュー" };
+        { "セーブ", "ロード", "メニュー" };
     public static readonly string[] RightButtons =
-        { "商店", "飛翔", "勇者", "妖精" };
+        { "商店", "飛翔", "勇者" };
 
     /// <summary>左右のボタンの幅と、真ん中の十字の大きさ（作者の指定で十字を大きく）。</summary>
     /// <summary>
@@ -102,6 +102,32 @@ public static class PhoneScreen
 
     /// <summary>まだ持っていないオーブのボタンを触ったときの知らせ（作者の指定）。</summary>
     public const string OrbLocked = "{0}を手に入れると使用可能になります。";
+
+    // ------------------------------------------------------------------ 課金の窓
+    //
+    // 作者の指定（2026-09-24）:
+    //   「商店は課金用のボタンとして残します。ゴールドの購入課金で
+    //     『一度購入すれば、次回プレイからは無料で同じゴールドを購入できる』と書いて。
+    //     400ゴールドを160円、1000ゴールドを320円、4000ゴールドを640円に」
+
+    /// <summary>課金の窓の見出し（1行18文字まで）。</summary>
+    public static readonly string[] ShopIntro =
+    {
+        "ゴールドを購入します。",
+        "一度購入すれば、次回プレイ",
+        "からは無料で同じゴールドを",
+        "購入できます。",
+    };
+
+    /// <summary>売り物。金額は円。</summary>
+    public static readonly int[] ShopGold = { 400, 1000, 4000 };
+    public static readonly int[] ShopYen  = { 160,  320,  640 };
+
+    /// <summary>買ったあとの一言。</summary>
+    public const string ShopBought = "{0}ＧＯＬＤを手に入れた！";
+
+    /// <summary>もう買ってあるものの値段のかわりに出す字。</summary>
+    public const string ShopFree = "　無料";
 
     /// <summary>
     /// メニューの最後の項目（作者の指定）。原典は「　　ゲーム終了」で DOS へ戻るが、
@@ -137,7 +163,12 @@ public static class PhoneScreen
     public const int QuickSlot = 1;
 
     /// <summary>下の左の並びの中の「セーブ」「ロード」の位置。</summary>
-    public const int SaveButtonIndex = 0, LoadButtonIndex = 1, MenuButtonIndex = 3;
+    /// ★作者の指定で「ショップ」（左）と「妖精」（右）は無くした。
+    /// 左は セーブ / ロード / メニュー の3つ。
+    public const int SaveButtonIndex = 0, LoadButtonIndex = 1, MenuButtonIndex = 2;
+
+    /// <summary>右の「商店」は**課金の窓**を開く（作者の指定）。</summary>
+    public const int ShopButtonIndex = 0;
 
     /// <summary>
     /// 持ち物の帯に一度に見せる数（残りは左右の矢印で送る）。

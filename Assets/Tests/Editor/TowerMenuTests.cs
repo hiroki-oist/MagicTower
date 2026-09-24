@@ -140,7 +140,12 @@ public class TowerMenuTests
         Assert.AreEqual("メニューの選択をしてください。", lines[0], "見出しは原典のまま");
         Assert.AreEqual("　　ゲームに戻る", lines[1]);
         Assert.AreEqual("　　タイトルへ戻る", lines[2]);
-        Assert.AreEqual(3, lines.Length);
+        // 「タイトルへ戻る」の下に添え書き（作者の指定。選べる行ではない）
+        Assert.AreEqual(3 + TowerMenu.Note.Length, lines.Length);
+        for (int i = 0; i < TowerMenu.Note.Length; i++)
+            Assert.AreEqual(TowerMenu.Note[i], lines[3 + i]);
+        StringAssert.Contains("リセット", string.Join("", TowerMenu.Note));
+        Assert.AreEqual(2, TowerMenu.Entries(p).Count, "選べるのは2つだけ");
         Assert.LessOrEqual(lines.Length, TowerMenu.PhoneWindowLines, "窓に収まる");
     }
 

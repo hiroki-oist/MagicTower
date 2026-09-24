@@ -1362,7 +1362,7 @@ chk("TitleScreen.Title" in _tcw,
 import glob as _g
 _mus=sorted(os.path.basename(x) for x in _g.glob("Assets/Resources/Music/*.wav"))
 chk(_mus==["Block1.wav","Block2.wav","Block3.wav","Block4.wav","Block5.wav",
-           "Boss10.wav","Boss20.wav","Boss40.wav","Boss49.wav","Boss50.wav"],
+           "Boss10.wav","Boss20.wav","Boss40.wav","Boss49.wav","Ending.wav"],
     "Java版の曲10本を書き出してある（かたまり5つ＋ボス戦5つ）", str(_mus))
 chk(os.path.exists("docs/make_music.py"),"曲を作り直せる道具がある（docs/make_music.py）")
 # 下の「セーブ」「ロード」のボタンと、起動時の題名画面（どちらも作者の指定）
@@ -1489,7 +1489,7 @@ chk("if (!drawing) SyncChangedCells();" in _tc,
 chk("int shownFloor" in _tc and "shownFloor = Game.Player.Floor;" in _tc,
     "見た目が映している階を覚えておく（RebuildView が入れる）")
 chk(_tc.count("Game.Player.Floor != shownFloor") == 2
-    and "Game.Player.Floor != floorBefore" not in _tc,
+    and "if (reload || Game.Player.Floor != floorBefore) RebuildView();" not in _tc,
     "作り直しの判定は shownFloor と比べる（Tick と AfterAction の2か所）")
 chk(_tc.index("Game.Pump(ViewBusy, ViewMoving);")
     < _tc.index("Game.ConsumeViewRebuild() || Game.Player.Floor != shownFloor"),
@@ -1591,6 +1591,48 @@ chk("JavaEnding = false" in _as2,
 # 原典 0xd45c はキーを待ってパレットを真っ暗にして終わるだけ。
 chk("IsFinalScreen" in _tg4 and "if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(); return; }" in _tc,
     "「Ｆｉｎ」を送ると題名へ戻る")
+# 終幕の曲は A_050（作者の指定）。もともと「50階のボス戦」に当ててあったが
+# 50階に戦いは無いので鳴る機会が無く、終幕へ移した。
+_jm=open("Assets/Scripts/Items/JavaMusic.cs",encoding="utf-8").read()
+chk('EndingTrack = "Music/Ending"' in _jm and "EndingFor" in _jm,
+    "終幕の曲を別に持つ（Music/Ending ＝ A_050）")
+chk('{ 50, "Music/Boss50" }' not in _jm and '{ 50,' not in _jm,
+    "50階のボス戦の欄は消した（50階に戦いは無い）")
+chk("JavaMusic.EndingFor(kind)" in _tc,
+    "終幕だけは1枚絵の画面でも曲を決める")
+chk('("Ending",  "A_050", 21)' in open("docs/make_music.py",encoding="utf-8").read(),
+    "作り直しの表も A_050 → Ending になっている")
+# 下のボタン（作者の指定で「ショップ」と「妖精」を無くし、「商店」は課金の窓に）
+_ps=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+chk('{ "セーブ", "ロード", "メニュー" }' in _ps and '{ "商店", "飛翔", "勇者" }' in _ps,
+    "下のボタンは左右3つずつ（ショップと妖精は無し）")
+chk("ShopButtonIndex = 0" in _ps and "MenuButtonIndex = 2" in _ps,
+    "「商店」は右の1つ目、「メニュー」は左の3つ目")
+# 課金（ゴールドの購入）。原典にも Java版にも無い、作者の指定。
+chk("ShopGold = { 400, 1000, 4000 }" in _ps and "ShopYen  = { 160,  320,  640 }" in _ps,
+    "400/1000/4000 ゴールドが 160/320/640 円")
+chk("一度購入すれば" in _ps and "無料" in _ps,
+    "「一度購入すれば、次回プレイからは無料で同じゴールドを購入できる」と書いてある")
+chk(os.path.exists("Assets/Scripts/Items/GoldShop.cs")
+    and "ChoiceKind.GoldShop" in _tg4,
+    "課金の窓は選ばせる窓の仕組みに乗せる")
+# 中断データ（アプリが落ちても直前の位置から再開する）
+_sv=open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read()
+chk("AutoSlot = 0" in _sv and "resume.txt" in _sv,
+    "中断データは手のセーブと別のファイル")
+chk("WriteResume" in _tg4 and "DropResume" in _tg4
+    and "if (Game.Player.Floor != floorBefore) Game.WriteResume();" in _tc,
+    "階が変わった瞬間に中断データを書く")
+chk("void OnApplicationPause" in _tc and "OnApplicationQuit" in _tc,
+    "アプリが後ろへ回るとき・終わるときにも書く")
+chk("TowerSave.Exists(TowerSave.AutoSlot) && Game.LoadSlot(TowerSave.AutoSlot)" in _tc,
+    "起ち上げたときに中断データがあればそこから続ける")
+chk("TowerGame.DropResume();          // 題名へ戻ったら中断データは捨てる" in _tc,
+    "題名へ戻ったら中断データは捨てる")
+# メニューの添え書き（作者の指定）
+_tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
+chk("リセット" in _tm and "Note" in _tm,
+    "「タイトルへ戻る」の下に断りを添える")
 chk('"Assets/Sprites/Screens/Ending_Tower1.png"' in _tsb
     and '"Assets/Sprites/Screens/Ending_Tower2.png"' in _tsb,
     "塔(MTOWER1)と荒野(MTOWER2)の2枚ともシーンに入っている")
@@ -2693,7 +2735,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=784
+MIN_CHECKS=798
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

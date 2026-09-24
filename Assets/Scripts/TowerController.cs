@@ -65,6 +65,15 @@ public class TowerController : MonoBehaviour
         if (sound == null) sound = GetComponent<SoundPlayer>();
         if (sound == null) sound = gameObject.AddComponent<SoundPlayer>();
         StartNewGame();
+        // ★**中断データがあれば、そこから続ける**（作者の指定）。
+        // アプリを後ろへ回している間に端末がメモリから外して再起動になっても、
+        // 直前の位置で再開できるようにするため。題名は飛ばす。
+        if (TowerSave.Exists(TowerSave.AutoSlot) && Game.LoadSlot(TowerSave.AutoSlot))
+        {
+            Game.ConsumeViewRebuild();
+            RebuildView();
+            if (title != null) title.Hide();
+        }
     }
 
     /// <summary>
@@ -80,6 +89,7 @@ public class TowerController : MonoBehaviour
     void StartNewGame()
     {
         StopShows();
+        TowerGame.DropResume();          // 最初から始めるので中断データは捨てる
         Game = new TowerGame(PlayerState.NewGame());
         RebuildView();
         // 原典は序章のあと（ゼノに奪われた直後）に本編の曲を鳴らす。
@@ -447,6 +457,9 @@ public class TowerController : MonoBehaviour
     /// <summary>下の「ロード」のボタン。「ロードしますか？」と聞く。</summary>
     public void AskLoad() { if (Game != null && !AtTitle) Game.AskLoad(); }
 
+    /// <summary>右下の「商店」のボタン。課金でゴールドを買う窓（作者の指定）。</summary>
+    public void AskGoldShop() { if (Game != null && !AtTitle) Game.AskGoldShop(); }
+
     /// <summary>
     /// 下の「メニュー」のボタン（作者の指定）。**メニューはここからだけ開く**。
     /// 開いていれば閉じる。
@@ -538,6 +551,8 @@ public class TowerController : MonoBehaviour
         bool reload = Game.ConsumeViewRebuild();
         if (reload || Game.Player.Floor != shownFloor) RebuildView();
         else SyncChangedCells();
+        // ★階が変わった瞬間に中断データを書く（作者の指定）。
+        if (Game.Player.Floor != floorBefore) Game.WriteResume();
         // 隣のマスへ1歩動いたときだけ滑らせる（原典 0xa276。階が変わる・
         // 戦闘の踏み込み・階段や門で飛ぶときは、原典もこの演出を通らない）
         var now = Game.Player.Position;
@@ -571,8 +586,26 @@ public class TowerController : MonoBehaviour
     {
         Game.CloseMenu();
         Game.ClearQuitting();
+        TowerGame.DropResume();          // 題名へ戻ったら中断データは捨てる
         StopShows();
         if (title != null) title.Show();
+    }
+
+    /// <summary>
+    /// アプリが後ろへ回った／戻ってきた。**後ろへ回る瞬間に中断データを書く**
+    /// （端末がそのままメモリから外すことがあるため。作者の指定）。
+    /// </summary>
+    void OnApplicationPause(bool paused)
+    {
+        if (paused) WriteResumeIfPlaying();
+    }
+
+    void OnApplicationQuit() { WriteResumeIfPlaying(); }
+
+    void WriteResumeIfPlaying()
+    {
+        if (Game == null || AtTitle) return;
+        Game.WriteResume();
     }
 
     /// <summary>遊びを閉じる。原典のメニューの「ゲーム終了」（DOS へ戻る）に当たる。</summary>
@@ -810,6 +843,9 @@ public class TowerController : MonoBehaviour
     {
         if (!JavaMusic.Enabled || sound == null || Game == null) return;
         var kind = Game.CurrentKind;
+        // 終幕だけは1枚絵の画面でも曲を決める（作者の指定で A_050）。
+        var ending = JavaMusic.EndingFor(kind);
+        if (ending != null) { sound.PlayTrack(ending); return; }
         if (kind.HasValue && PhoneLayoutView.IsFullScreen(kind.Value)) return;
         // ボスの曲は**退路の門が閉まった時点**から（作者の指定）。
         // 戦いに入ってからでは遅い、という指摘によるもの。

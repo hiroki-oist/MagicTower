@@ -104,6 +104,7 @@
     <Compile Include="Assets/Scripts/Items/SoundVoices.cs" />
     <Compile Include="Assets/Scripts/Battle/BattleRules.cs" />
     <Compile Include="Assets/Scripts/UI/FloorPickerView.cs" />
+    <Compile Include="Assets/Scripts/Items/GoldShop.cs" />
     <Compile Include="Assets/Scripts/Floor/SealedDoors.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/ChatController.cs" />
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/ObjectSpin.cs" />
