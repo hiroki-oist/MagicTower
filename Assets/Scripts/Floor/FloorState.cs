@@ -164,7 +164,17 @@ public class FloorState
     /// 原典の判定関数（MTE.EXE 0x4762）と同じく、移動や戦闘のあとに毎回呼ぶ。
     /// </summary>
     /// <returns>適用した解錠の一覧。</returns>
-    public List<SealedDoors.Unlock> ApplyUnlocks(System.Func<int, bool> hasFlag = null)
+    /// <param name="hasFlag">立っている一度きりフラグ（本線は遊び手の旗を渡す）。</param>
+    /// <param name="mark">
+    /// 発火した印を控える先。**本線は必ず渡すこと** — ここで控えないと、
+    /// 印が階の器（この役）の中だけに残り、**セーブから読み直すと消える**。
+    /// 守護マスはもう床のままなので解錠がもう一度走り、
+    /// **取ったはずの褒美と妖精が生き返る**（作者の報告。10階で起きた）。
+    /// 原典は旗を1本の配列に持っていて、セーブ（0x9b38）で
+    /// `0x1229:0x1e` から 60 ワードぶんを地図と一緒に書き出している。
+    /// </param>
+    public List<SealedDoors.Unlock> ApplyUnlocks(System.Func<int, bool> hasFlag = null,
+                                                 System.Action<int> mark = null)
     {
         var fired = new List<SealedDoors.Unlock>();
         // 前提フラグは「この階で既に開いた門」と「物語の一度きりフラグ」の両方から探す。
@@ -173,9 +183,10 @@ public class FloorState
                                        || (hasFlag != null && hasFlag(f));
         foreach (var u in SealedDoors.Instance.ForFloor(FloorNumber))
         {
-            if (firedFlags.Contains(u.FlagId)) continue;
+            if (has(u.FlagId)) continue;
             if (!SealedDoors.IsSatisfied(u, IsCleared, has)) continue;
             firedFlags.Add(u.FlagId);
+            if (mark != null) mark(u.FlagId);
             foreach (var r in u.Results)
             {
                 if (r.Kind == "表駆動" || r.Kind == "封印") { /* 地図は変えない */ }

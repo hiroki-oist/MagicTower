@@ -1569,7 +1569,11 @@ public class TowerGame
                 var at = new Vector2Int(x, y);
                 if (Floor.At(at) == "s") gates.Add(at);
             }
-        var fired = Floor.ApplyUnlocks(f => Player.EventFlags.Contains(f));
+        // ★発火した印は**遊び手の旗**へ控える（原典と同じ1本の配列）。
+        //   階の器の中だけに置くとセーブから読み直したときに消えてしまい、
+        //   解錠がもう一度走って褒美と妖精が生き返る（作者の報告）。
+        var fired = Floor.ApplyUnlocks(f => Player.EventFlags.Contains(f),
+                                       f => Player.EventFlags.Add(f));
         foreach (var u in fired)
         {
             PlaySound(u.Floor == 2 ? SoundCues.BigUnlock : SoundCues.Unlock);

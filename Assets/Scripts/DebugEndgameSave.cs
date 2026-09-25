@@ -153,6 +153,8 @@ public static class DebugEndgameSave
         for (int pass = 0; pass < 8; pass++)
         {
             bool changed = false;
+            // out 引数はラムダの中から触れないので、旗の入れ物だけ取り出しておく
+            var flags = player.EventFlags;
             for (int f = 1; f <= lastCleared; f++)
             {
                 if (!cleared(f) || !floors.ContainsKey(f)) continue;
@@ -165,7 +167,7 @@ public static class DebugEndgameSave
                         st.Clear(cell);
                         changed = true;
                     }
-                if (st.ApplyUnlocks(player.EventFlags.Contains).Count > 0) changed = true;
+                if (st.ApplyUnlocks(flags.Contains, v => flags.Add(v)).Count > 0) changed = true;
             }
             if (!changed) break;
         }

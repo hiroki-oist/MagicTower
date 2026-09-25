@@ -1041,9 +1041,18 @@ _th=set(int(m) for m in re.findall(r"フラグ(\d+)",
 # 一度きりの印を使わない（中央に秘宝を書いた時点で条件が成り立たなくなるため）が、
 # 表の形に合わせるのに要る。原典のどの印とも重ならない番号を選んである。
 CLOCK39_FLAG=0x85
-_union=(_sd|_pe|_ar|_th)-{CLOCK39_FLAG}
+# 0xc8(200) は 40階の褒美に当てた**こちらで付けた番号**。原典はあの褒美を解錠表では
+# なく「金騎士の突撃」(0x325e) の中の表で書いているので、一度きりの印を持たない。
+# 前提の 0x79（突撃そのものの印）と同じ番号にすると、旗を1本の配列にまとめたときに
+# 「前提が立った瞬間に自分も立っている」ことになって永久に発火しない。
+# 原典の旗の並び（0x1e〜0x95）の外から選んである。
+REWARD40_FLAG=0xc8
+_union=(_sd|_pe|_ar|_th)-{CLOCK39_FLAG, REWARD40_FLAG}
 chk(CLOCK39_FLAG in _sd and CLOCK39_FLAG not in set(_once),
     "39階の時計盤の印は原典のどの印とも重ならない")
+chk(REWARD40_FLAG in _sd and REWARD40_FLAG not in set(_once)
+    and REWARD40_FLAG > 0x95,
+    "40階の褒美の印は原典の旗の並びの外（こちらで付けた番号）")
 chk(_union==set(_once),"4つの表の旗の合併が一度きりの旗46個とぴったり合う",
     f"足りない={sorted(set(_once)-_union)} 余計={sorted(_union-set(_once))}")
 # 座標の旗は14。docs/original/flags.txt（EXE から機械的に取った表）も
@@ -1764,6 +1773,36 @@ chk("ApplyBodySize" in _dw and "1.084f" in _dw,
 chk(os.path.exists("Assets/Scripts/Items/GoldShop.cs")
     and "ChoiceKind.GoldShop" in _tg4,
     "課金の窓は選ばせる窓の仕組みに乗せる")
+# 解錠の一度きりの印は**セーブに残る**（作者の報告「取得したはずの10Fの報酬と妖精が
+# 復活してた」）。原典のセーブは 0x9b38 で旗の配列 60 ワードを地図と一緒に書き出す。
+_fs2=open("Assets/Scripts/Floor/FloorState.cs",encoding="utf-8").read()
+chk("System.Action<int> mark = null" in _fs2 and "if (mark != null) mark(u.FlagId);" in _fs2,
+    "解錠の印は外（遊び手の旗）へも控えられる")
+chk("if (has(u.FlagId)) continue;" in _fs2,
+    "もう立っている印の解錠は走らせない（階の器の中だけでなく遊び手の旗も見る）")
+chk("f => Player.EventFlags.Add(f));" in _tc4 if False else
+    "f => Player.EventFlags.Add(f));" in open(
+        "Assets/Scripts/TowerGame.cs",encoding="utf-8").read(),
+    "本線は解錠の印を遊び手の旗へ控える（セーブに残る）")
+# 40階だけは前提と自分の印が別番号（同じにすると永久に発火しない）
+_sdt=open("Assets/Resources/SealedDoors.txt",encoding="utf-8").read()
+chk("40 | 0xc8 | 0,0;フラグ:0x79 |" in _sdt,
+    "40階の褒美は前提0x79・自分の印0xc8（同じ番号にすると出なくなる）")
+_sdflags=[]
+for _l in _sdt.splitlines():
+    _l=_l.split("#")[0].strip()
+    if not _l or "|" not in _l: continue
+    _sdflags.append(int(_l.split("|")[1].strip(), 16))
+chk(len(_sdflags)==len(set(_sdflags)),"解錠の印に重複が無い")
+_peflags=[]
+for _l in open("Assets/Resources/PositionEvents.txt",encoding="utf-8"):
+    _l=_l.split("#")[0].strip()
+    if not _l or "|" not in _l: continue
+    _f=_l.split("|")[3].strip()
+    if _f not in ("-",""): _peflags.append(int(_f))
+_both=sorted(set(_sdflags)&set(_peflags))
+chk(not _both,"解錠の印と立ち入りの印がぶつからない（旗は原典どおり1本の配列）",str(_both))
+
 # 中断データ（アプリが落ちても直前の位置から再開する）
 _sv=open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read()
 chk("AutoSlot = 0" in _sv and "resume.txt" in _sv,

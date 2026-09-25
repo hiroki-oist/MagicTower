@@ -143,6 +143,7 @@
     <Compile Include="Assets/Tests/Editor/TowerSceneTests.cs" />
     <Compile Include="Assets/Tests/Editor/ClockDoorsTests.cs" />
     <Compile Include="Assets/Tests/Editor/HiddenOccupantsTests.cs" />
+    <Compile Include="Assets/Tests/Editor/UnlockFlagSaveTests.cs" />
     <Compile Include="Assets/Tests/Editor/GameRulesTests.cs" />
     <Compile Include="Assets/Tests/Editor/WindowViewTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerBattleTests.cs" />
