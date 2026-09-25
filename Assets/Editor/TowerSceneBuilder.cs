@@ -1240,6 +1240,30 @@ public static class TowerSceneBuilder
         priv.fontSize = 28f;
         priv.color = new Color(1f, 1f, 1f, 0.7f);
 
+        // その字を触ったときに出す文面（黒地＋左寄せの本文）。ふだんは消してある。
+        var backPolicyGo = new GameObject("TitlePolicyBack", typeof(RectTransform),
+                                          typeof(UnityEngine.UI.Image));
+        backPolicyGo.transform.SetParent(layer, false);
+        var bpRt = backPolicyGo.GetComponent<RectTransform>();
+        bpRt.anchorMin = Vector2.zero; bpRt.anchorMax = Vector2.one;
+        bpRt.offsetMin = Vector2.zero; bpRt.offsetMax = Vector2.zero;
+        var backPolicy = backPolicyGo.GetComponent<UnityEngine.UI.Image>();
+        backPolicy.color = Color.black;          // 字が読めるように塗りつぶす
+        backPolicy.raycastTarget = false;
+        backPolicy.enabled = false;
+
+        var policy = Box(layer, font, "TitlePolicyText", new RectInt(0, 0, 400, 300),
+                         24f, TextAlignmentOptions.TopLeft);
+        var poRt = policy.rectTransform;
+        poRt.anchorMin = new Vector2(0.5f, 0.5f); poRt.anchorMax = new Vector2(0.5f, 0.5f);
+        poRt.pivot = new Vector2(0.5f, 0.5f);
+        poRt.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth * 0.88f,
+                                     PhoneScreen.ReferenceWidth * 1.5f);
+        poRt.anchoredPosition = Vector2.zero;
+        policy.fontSize = 30f;
+        policy.lineSpacing = 12f;
+        policy.enabled = false;
+
 
         // 絵は原典の 640x400 のまま作って、枠の幅いっぱいへ真ん中に置く
         var panelGo = new GameObject("TitlePanel", typeof(RectTransform));
@@ -1301,6 +1325,8 @@ public static class TowerSceneBuilder
         so.FindProperty("line2").objectReferenceValue = t2;
         so.FindProperty("start").objectReferenceValue = start;
         so.FindProperty("privacy").objectReferenceValue = priv;
+        so.FindProperty("policyBack").objectReferenceValue = backPolicy;
+        so.FindProperty("policyText").objectReferenceValue = policy;
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 

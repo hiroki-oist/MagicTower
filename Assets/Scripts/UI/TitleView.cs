@@ -25,10 +25,13 @@ public class TitleView : MonoBehaviour
     [SerializeField] TextMeshProUGUI startTall;       // 〃（縦長の絵の中）
     /// <summary>
     /// 画面の下に小さく出す「プライバシーポリシー」（App Review 5.1.1(i)）。
-    /// ここを触ったときだけ**始めずに**外の頁を開く。
-    /// 行き先が決まっていない（<see cref="PhoneScreen.PrivacyUrl"/> が空）ときは出さない。
+    /// ここを触ったときだけ**始めずに**文面を出す。
     /// </summary>
     [SerializeField] TextMeshProUGUI privacy;
+
+    /// <summary>その文面と、下に敷く黒地。触ると閉じて題名へ戻る。</summary>
+    [SerializeField] UnityEngine.UI.Image policyBack;
+    [SerializeField] TextMeshProUGUI policyText;
 
     /// <summary>まだ題名を出しているか。出ている間は遊びの入力を受けない。</summary>
     public bool IsShowing { get; private set; }
@@ -110,13 +113,15 @@ public class TitleView : MonoBehaviour
                 if (img != null) img.enabled = false;
             foreach (var t in new[] { line1, line2, start, startTall, privacy })
                 if (t != null) t.enabled = false;
+            ShowPolicy(false);
             return;
         }
         if (privacy != null)
         {
-            privacy.enabled = HasPrivacyLink;
+            privacy.enabled = true;
             privacy.text = PhoneScreen.PrivacyLine;
         }
+        ShowPolicy(false);
         Apply(TitleArt.Choice);
         if (line1 != null) line1.text = TitleScreen.Title;
         if (line2 != null) line2.text = TitleScreen.Copyright;
@@ -144,11 +149,23 @@ public class TitleView : MonoBehaviour
             return;
         }
 
-        // **プライバシーポリシーの字を触ったときは始めない**（App Review 5.1.1(i)）。
-        // 外の頁を開くだけにする。
-        if (HasPrivacyLink && Input.GetMouseButtonUp(0) && OnPrivacy(Input.mousePosition))
+        // 文面を出している間は、どこを触っても閉じるだけ（始めない）。
+        if (policyOpen)
         {
-            Application.OpenURL(PhoneScreen.PrivacyUrl);
+            if (Input.GetMouseButtonUp(0) || Input.anyKeyDown)
+            {
+                ShowPolicy(false);
+                armed = false;          // 閉じた指では始めない
+            }
+            return;
+        }
+
+        // **プライバシーポリシーの字を触ったときは始めない**（App Review 5.1.1(i)）。
+        // 文面をその場で出す（外の頁に頼らないので、通信が無くても読める）。
+        if (Input.GetMouseButtonUp(0) && OnPrivacy(Input.mousePosition))
+        {
+            ShowPolicy(true);
+            armed = false;              // 開いた指では閉じない
             return;
         }
 
@@ -162,8 +179,57 @@ public class TitleView : MonoBehaviour
         if (controller != null) controller.BeginGame();
     }
 
-    /// <summary>行き先が決まっているか。空なら字も出さない。</summary>
-    static bool HasPrivacyLink { get { return !string.IsNullOrEmpty(PhoneScreen.PrivacyUrl); } }
+    /// <summary>
+    /// **写しを撮るための口**（エディタから使う）。本線と同じ道で題名と文面を出す。
+    /// </summary>
+    public void PreviewPolicy(bool withPolicy = true)
+    {
+        Apply(TitleArt.Choice);
+        Show();
+        armed = true;
+        ShowPolicy(withPolicy);
+    }
+
+    /// <summary>文面を出しているか。</summary>
+    bool policyOpen;
+
+    /// <summary>プライバシーポリシーの文面を出す・しまう。</summary>
+    void ShowPolicy(bool on)
+    {
+        policyOpen = on;
+        if (policyBack != null)
+        {
+            policyBack.enabled = on;
+            // **いちばん上に出す**。題名の絵は後から作られる兄弟なので、
+            // 順番を直さないと絵が黒地の上に描かれて字が読めない。
+            if (on) policyBack.transform.SetAsLastSibling();
+        }
+        if (policyText != null)
+        {
+            policyText.enabled = on;
+            if (on)
+            {
+                policyText.text = PolicyBody();
+                policyText.transform.SetAsLastSibling();
+            }
+        }
+        // 出している間は「触ると始まる」の点滅を引っ込める
+        var blinkText = Blinking;
+        if (blinkText != null && on) blinkText.alpha = 0f;
+        if (privacy != null) privacy.enabled = !on;
+    }
+
+    /// <summary>出す文面。公開先が決まっていれば最後に載せる。</summary>
+    static string PolicyBody()
+    {
+        var sb = new System.Text.StringBuilder();
+        foreach (var line in PhoneScreen.PrivacyText) sb.Append(line).Append('\n');
+        if (!string.IsNullOrEmpty(PhoneScreen.PrivacyUrl))
+            sb.Append('\n').Append(string.Format(PhoneScreen.PrivacyAt,
+                                                 PhoneScreen.PrivacyUrl)).Append('\n');
+        sb.Append('\n').Append(PhoneScreen.PrivacyClose);
+        return sb.ToString();
+    }
 
     /// <summary>その場所が「プライバシーポリシー」の字の上か。</summary>
     bool OnPrivacy(Vector2 at)

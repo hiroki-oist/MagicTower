@@ -84,6 +84,25 @@ public static class TowerScreenshot
     /// </summary>
     public static void CaptureMenu() { menu = true; Capture(false); }
 
+    /// <summary>プライバシーポリシーの頁の写し（題名から出るもの）。</summary>
+    public static void CapturePolicy() { policy = true; Capture(false); }
+
+    /// <summary>題名そのものの写し（下の「プライバシーポリシー」の字を見る）。</summary>
+    public static void CaptureTitleView() { policy = true; policyOnly = true; Capture(false); }
+
+    static bool policy, policyOnly;
+
+    static void ShowPolicy()
+    {
+        if (!policy) return;
+        var title = Object.FindObjectOfType<TitleView>(true);
+        if (title == null) { Debug.LogWarning("題名が見つからない"); return; }
+        title.gameObject.SetActive(true);
+        title.PreviewPolicy(!policyOnly);
+        Debug.Log(policyOnly ? "■題名を出した（プライバシーの字つき）"
+                             : "■プライバシーの頁を出した");
+    }
+
     static bool shop, menu;
 
     static void ShowMenu()
@@ -219,6 +238,7 @@ public static class TowerScreenshot
         ShowFullScreen();
         ShowShop();
         ShowMenu();
+        ShowPolicy();
         if (damagePanel) FillDamagePanel();
 
         var canvas = Object.FindObjectOfType<Canvas>();

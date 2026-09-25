@@ -1885,11 +1885,17 @@ _tv2=open("Assets/Scripts/UI/TitleView.cs",encoding="utf-8").read()
 _phsx=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
 chk("PrivacyUrl" in _phsx and "PrivacyLine" in _phsx,
     "プライバシーポリシーの行き先と字を1か所に置いてある")
-chk("Application.OpenURL(PhoneScreen.PrivacyUrl);" in _tv2
-    and "static bool HasPrivacyLink" in _tv2,
-    "題名からプライバシーポリシーを開ける（審査指針 5.1.1(i)）")
-chk("privacy.enabled = HasPrivacyLink;" in _tv2,
-    "行き先が空のあいだは字を出さない（切れたリンクを出さない）")
+chk("PrivacyText" in _phsx and "PrivacyClose" in _phsx,
+    "文面もアプリの中に持っている（外の頁に頼らない）")
+chk("void ShowPolicy(bool on)" in _tv2 and "policyText.text = PolicyBody();" in _tv2,
+    "題名からプライバシーポリシーの文面を出せる（審査指針 5.1.1(i)）")
+chk("if (Input.GetMouseButtonUp(0) && OnPrivacy(Input.mousePosition))" in _tv2
+    and "armed = false;              // 開いた指では閉じない" in _tv2,
+    "その字を触ったときは始めずに文面を出す")
+chk("policyBack.transform.SetAsLastSibling();" in _tv2,
+    "文面はいちばん上に出す（題名の絵に隠れない）")
+chk('so.FindProperty("policyText").objectReferenceValue = policy;' in _sb,
+    "シーンに文面の部屋を組み込んで繋いである")
 chk(os.path.exists("docs/privacy_policy.md"),
     "そこに置く文面のたたき台がある")
 # 端末で止まらないための決まり（StoreKit 2）

@@ -190,10 +190,51 @@ public static class PhoneScreen
     /// ⚠ **空のあいだは題名に出さない**（切れたリンクを出すほうが悪いため）。
     /// 置き場所が決まったらここに入れる。文面のたたき台は docs/privacy_policy.md。
     /// </summary>
+    /// <remarks>
+    /// 空でもかまわない。**中身はアプリの中で出す**ので、これが無くても
+    /// 5.1.1(i) の「アプリの中」の側は満たしている。入れておくと、
+    /// 出した頁の最後に公開先として載る。
+    /// </remarks>
     public const string PrivacyUrl = "";
 
-    /// <summary>題名の下に小さく出す字。</summary>
+    /// <summary>題名の下に小さく出す字。ここを触ると下の文面が出る。</summary>
     public const string PrivacyLine = "プライバシーポリシー";
+
+    /// <summary>
+    /// アプリの中で出すプライバシーポリシーの文面。
+    /// **何も集めていない**ので短い。長い版（英文つき）は docs/privacy_policy.md。
+    /// 審査指針 5.1.1(i) は「アプリの中の分かりやすい場所」に置くことを求めている。
+    /// </summary>
+    public static readonly string[] PrivacyText =
+    {
+        "プライバシーポリシー",
+        "",
+        "このアプリは、利用者の個人情報を",
+        "一切収集しません。",
+        "",
+        "・名前や連絡先を尋ねる画面はありません",
+        "・位置情報・連絡先・写真・カメラ・",
+        "　マイクにアクセスしません",
+        "・利用状況の記録も、広告の識別子も",
+        "　取得しません",
+        "",
+        "遊びの続きと購入の状況は、その端末の",
+        "中だけに保存し、外へは送りません。",
+        "アプリを削除すると一緒に消えます。",
+        "",
+        "アプリ内課金の決済は Apple（App Store）",
+        "が行います。開発者が受け取るのは",
+        "「購入済みかどうか」だけで、支払い情報",
+        "は受け取りません。購入は買い切りで、",
+        "同じ Apple アカウントなら「購入を復元",
+        "する」からいつでも復元できます。",
+    };
+
+    /// <summary>その頁を閉じる案内。</summary>
+    public const string PrivacyClose = "触ると戻ります";
+
+    /// <summary>公開先を載せるときの書き方。</summary>
+    public const string PrivacyAt = "公開先: {0}";
 
     /// <summary>売り物。金額は円。</summary>
     public static readonly int[] ShopGold = { 400, 1000, 4000 };
