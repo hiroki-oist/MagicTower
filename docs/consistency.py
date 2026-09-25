@@ -1623,9 +1623,15 @@ chk("HeroOrbCountsCharms = true" in open(
         "Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
     and "TowerBattle.CharmsOf(player) : BattleRules.Charms.None;" in _ho,
     "十字架・ドラゴンスレイヤーは予想にも入れる（作者の指定。原典 0x8c2a は入れない）")
-# 相手そのものの数値（命・攻・防・ゴールド）は触らない。触るのは五の目だけ。
-chk("Hp = ehp, Attack = eatk, Defense = edef," in _ho and "Gold = e.Coin," in _ho,
-    "相手の数値は表のまま出す（補正が掛かるのは手数と受けるダメージだけ）")
+# 相手そのものの数値（命・攻・防）は触らない。触るのは五の目だけ。
+chk("Hp = ehp, Attack = eatk, Defense = edef," in _ho,
+    "相手の命・攻撃力・防御力は表のまま出す（書き換えるのは五の目だけ）")
+# ゴールドの欄は「倒したら手に入る額」なので幸運の金貨の2倍を入れる（作者の指定）。
+# 掛け算は BattleRules.GoldFrom 1か所（予想と一覧で食い違わないように）。
+chk("Gold = BattleRules.GoldFrom(e.Coin, charms)," in _ho
+    and "public static int GoldFrom(int enemyGold, Charms charms)" in _br
+    and "r.GoldGained = GoldFrom(enemyGold, charms);" in _br,
+    "幸運の金貨の2倍は1か所で掛けて、予想にも一覧にも同じ額が出る")
 # Java版の終幕（作者の指定）。MTower.class の OpenningZeno(4) が
 # data2/edata01〜15（塔が沈む15枚）を 40x40 のモザイクで送り、
 # edata17（終わりの言葉）→ edata18（The End）で終わる。

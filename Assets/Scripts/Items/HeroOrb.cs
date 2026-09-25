@@ -86,7 +86,9 @@ public static class HeroOrb
                 Prefab = name,
                 Id = ObjectIds.Instance.Of(name),
                 Name = e.Name,
-                Gold = e.Coin,
+                // ★**幸運の金貨の2倍もここに出す**（作者の指定。原典 0x8c2a は
+                //   表の値をそのまま出す）。掛け算は BattleRules.GoldFrom 1か所。
+                Gold = BattleRules.GoldFrom(e.Coin, charms),
                 Turns = p.PlayerHits,
                 Hp = ehp, Attack = eatk, Defense = edef,
                 CanAttack = p.CanWin,

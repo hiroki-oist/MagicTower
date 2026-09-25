@@ -119,6 +119,30 @@ public class HeroOrbTests
         }
     }
 
+    /// <summary>
+    /// 幸運の金貨の**ゴールド2倍**も一覧に出す（作者の指定。原典 0x8c2a は
+    /// 表の額をそのまま出す。倍にするのは戦いのほう＝原典 0x6330）。
+    /// </summary>
+    [Test]
+    public void 幸運の金貨の二倍がゴールドの欄に出る()
+    {
+        var p = Player(1, 300, 100);
+        var g = new TowerGame(p);
+        for (int y = FloorData.MinY; y <= FloorData.MaxY; y++)
+            for (int x = FloorData.MinX; x <= FloorData.MaxX; x++)
+                g.Floor.Clear(new Vector2Int(x, y));
+        g.Floor.Put(new Vector2Int(0, 1), "Enemy_SlimeG");
+        var e = TowerBattle.LoadEnemy("Enemy_SlimeG");
+
+        Assert.AreEqual(e.Coin, HeroOrb.Rows(g.Floor, g.Player)[0].Gold, "持たないうちは表の額");
+        p.Give(SpecialItems.Kind.LuckyCoin);
+        Assert.AreEqual(e.Coin * 2, HeroOrb.Rows(g.Floor, g.Player)[0].Gold, "持てば2倍");
+
+        // 実際に倒したときの額と同じであること（窓と中身が食い違わない）
+        var got = TowerBattle.Resolve(g.Player, "Enemy_SlimeG");
+        Assert.AreEqual(e.Coin * 2, got.GoldGained);
+    }
+
     /// <summary>ドラゴンスレイヤーも同じく入る（効くのは ID122 ドラゴンだけ）。</summary>
     [Test]
     public void ドラゴンスレイヤーの二倍も予想に入る()

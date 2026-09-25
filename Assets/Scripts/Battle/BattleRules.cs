@@ -66,6 +66,17 @@ public static class BattleRules
         return (crossWorks || slayerWorks) ? attack * 2 : attack;
     }
 
+    /// <summary>
+    /// 倒したときに手に入るゴールド。**幸運の金貨を持っていれば2倍**
+    /// （原典 0x6330 は所持フラグ [0x31] を見て、表から引いた額を `shl ax, 1`）。
+    /// 予想（<see cref="Predict"/>）と勇者のオーブの一覧が同じ規則を通るように、
+    /// 掛け算はここ1か所にまとめてある。
+    /// </summary>
+    public static int GoldFrom(int enemyGold, Charms charms)
+    {
+        return (charms & Charms.LuckyCoin) != 0 ? enemyGold * 2 : enemyGold;
+    }
+
     /// <summary>1回の攻撃で与えるダメージ。防御力が上回るなら0。</summary>
     public static int DamagePerHit(int attack, int defense)
     {
@@ -123,7 +134,7 @@ public static class BattleRules
         r.CanWin = true;
         r.PlayerHits = hits;
         r.DamageTaken = theirDmg * (hits - 1);   // 最後の一撃で倒すので反撃は hits-1 回
-        r.GoldGained = (charms & Charms.LuckyCoin) != 0 ? enemyGold * 2 : enemyGold;
+        r.GoldGained = GoldFrom(enemyGold, charms);
         return r;
     }
 }
