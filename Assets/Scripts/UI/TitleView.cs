@@ -66,10 +66,24 @@ public class TitleView : MonoBehaviour
         get { return TitleArt.UsesPicture(TitleArt.Choice) ? startTall : start; }
     }
 
+    /// <summary>
+    /// **出した直後の一手では始めない**ための構え。
+    ///
+    /// ⚠ 作者の報告「クリア後はタイトルに戻ってほしいんだけど、ゲームの始めからに
+    /// 戻ってる」の正体がこれだった。終幕の「Ｆｉｎ」は**指を置いた瞬間**に送られる
+    /// ので、題名はまだ指が画面に触れているうちに出る。そのまま指を離すと、
+    /// この画面が「触って始めた」と受け取って、いきなり1階から始まっていた
+    /// （題名は1コマだけ見えて消える）。メニューの「タイトルへ戻る」も同じ道。
+    ///
+    /// **何も押していない状態を一度見てから**受け付けるようにして塞ぐ。
+    /// </summary>
+    bool armed;
+
     public void Show()
     {
         IsShowing = true;
         blink = 0f;
+        armed = false;          // 今触っている指では始めない
         SetVisible(true);
     }
 
@@ -112,7 +126,14 @@ public class TitleView : MonoBehaviour
             text.alpha = (blink % (TitleArt.BlinkSeconds * 2f)) < TitleArt.BlinkSeconds
                          ? 1f : 0f;
 
-        // 触るかキーで始める。**必ず最初から**（作者の指定）。
+        // 出した直後は、指もキーも離れるまで待つ（上の armed の説明）。
+        if (!armed)
+        {
+            if (!Input.anyKey && !Input.GetMouseButton(0)) armed = true;
+            return;
+        }
+
+        // 触るかキーで始める。
         // 触りは**指を離したとき**に見る。押した瞬間に消してしまうと、その同じ一手が
         // 下のボタンや十字キーにも届いて、いきなり歩き出したりセーブを聞かれたりする。
         bool tapped = Input.GetMouseButtonUp(0);

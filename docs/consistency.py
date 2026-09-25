@@ -1657,6 +1657,13 @@ chk("JavaEnding = false" in _as2,
 chk("IsFinalScreen" in _tg4
     and "if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(false); return; }" in _tc,
     "「Ｆｉｎ」を送ると題名へ戻る（セーブデータは消さない。作者の指定）")
+# ⚠ 題名は**出した直後の一手では始めない**。終幕を送った指がまだ画面に触れている
+#   うちに題名が出るので、そのまま離すと「触って始めた」ことになって1階から
+#   始まっていた（作者の報告「クリア後はゲームの始めからに戻ってる」）。
+_tv=open("Assets/Scripts/UI/TitleView.cs",encoding="utf-8").read()
+chk("bool armed;" in _tv and "armed = false;          // 今触っている指では始めない" in _tv
+    and "if (!Input.anyKey && !Input.GetMouseButton(0)) armed = true;" in _tv,
+    "題名は指もキーも離れるまで受け付けない（出した拍子に始まってしまう穴）")
 # 終幕の曲は A_050（作者の指定）。もともと「50階のボス戦」に当ててあったが
 # 50階に戦いは無いので鳴る機会が無く、終幕へ移した。
 _jm=open("Assets/Scripts/Items/JavaMusic.cs",encoding="utf-8").read()
