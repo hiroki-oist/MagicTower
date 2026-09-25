@@ -1880,6 +1880,26 @@ chk("ShopRestore" in _gs and "RestoreIndex" in _gs and "public static string Res
     "「購入を復元する」の口がある（審査指針 3.1.1）")
 chk("Product.displayPrice" in _gs and "Non-Consumable" in _gs,
     "値段は App Store の現地表記に差し替えること／非消耗型で登録することを書いてある")
+# プライバシーポリシーへの口（App Review 5.1.1(i)。メタデータとアプリの中の両方）
+_tv2=open("Assets/Scripts/UI/TitleView.cs",encoding="utf-8").read()
+_phsx=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
+chk("PrivacyUrl" in _phsx and "PrivacyLine" in _phsx,
+    "プライバシーポリシーの行き先と字を1か所に置いてある")
+chk("Application.OpenURL(PhoneScreen.PrivacyUrl);" in _tv2
+    and "static bool HasPrivacyLink" in _tv2,
+    "題名からプライバシーポリシーを開ける（審査指針 5.1.1(i)）")
+chk("privacy.enabled = HasPrivacyLink;" in _tv2,
+    "行き先が空のあいだは字を出さない（切れたリンクを出さない）")
+chk(os.path.exists("docs/privacy_policy.md"),
+    "そこに置く文面のたたき台がある")
+# 端末で止まらないための決まり（StoreKit 2）
+_sw=open("Assets/Plugins/iOS/MagicTowerStore.swift",encoding="utf-8").read()
+chk("Transaction.updates" in _sw,
+    "あとから承認された購入（ねだる設定・他の端末での購入）も受け取る")
+chk("Transaction.currentEntitlements" in _sw and "AppStore.sync()" in _sw,
+    "持っているものを読み直す口と、復元の口の両方がある")
+chk("AppStore.canMakePayments" in _sw,
+    "支払いができない端末かどうかを見ている（HIG）")
 # メニューの添え書き（作者の指定）
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("NoteOf" in _tm and "RestartNote" in _tm and "BackToTitleNote" in _tm,

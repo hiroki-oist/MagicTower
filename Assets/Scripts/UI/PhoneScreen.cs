@@ -180,6 +180,21 @@ public static class PhoneScreen
     public const string ShopNothingToRestore = "復元できる購入はありませんでした。";
     public const string ShopRestoring = "購入を復元しています……";
 
+    /// <summary>
+    /// ★**プライバシーポリシーの行き先**（App Review ガイドライン 5.1.1(i)）。
+    ///
+    /// 「すべてのアプリは、プライバシーポリシーへのリンクを
+    ///   **App Store Connect のメタデータ欄**と、**アプリの中の分かりやすい場所**の
+    ///   両方に置かなければならない」と決められている。課金の有無に関わらず要る。
+    ///
+    /// ⚠ **空のあいだは題名に出さない**（切れたリンクを出すほうが悪いため）。
+    /// 置き場所が決まったらここに入れる。文面のたたき台は docs/privacy_policy.md。
+    /// </summary>
+    public const string PrivacyUrl = "";
+
+    /// <summary>題名の下に小さく出す字。</summary>
+    public const string PrivacyLine = "プライバシーポリシー";
+
     /// <summary>売り物。金額は円。</summary>
     public static readonly int[] ShopGold = { 400, 1000, 4000 };
     public static readonly int[] ShopYen  = { 160,  320,  640 };

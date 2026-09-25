@@ -1227,6 +1227,20 @@ public static class TowerSceneBuilder
         startTall.text = TitleArt.StartLine;
         startTall.fontSize = 56f;
 
+        // 画面のいちばん下に小さく「プライバシーポリシー」（App Review 5.1.1(i)）。
+        // 行き先が空のあいだは TitleView が出さない。
+        var priv = Box(layer, font, "TitlePrivacy", new RectInt(0, 0, 400, 24),
+                       24f, TextAlignmentOptions.Center);
+        var pvRt = priv.rectTransform;
+        pvRt.anchorMin = new Vector2(0.5f, 0f); pvRt.anchorMax = new Vector2(0.5f, 0f);
+        pvRt.pivot = new Vector2(0.5f, 0f);
+        pvRt.sizeDelta = new Vector2(PhoneScreen.ReferenceWidth * 0.8f, 56f);
+        pvRt.anchoredPosition = new Vector2(0f, 24f);
+        priv.text = PhoneScreen.PrivacyLine;
+        priv.fontSize = 28f;
+        priv.color = new Color(1f, 1f, 1f, 0.7f);
+
+
         // 絵は原典の 640x400 のまま作って、枠の幅いっぱいへ真ん中に置く
         var panelGo = new GameObject("TitlePanel", typeof(RectTransform));
         panelGo.transform.SetParent(layer, false);
@@ -1286,6 +1300,7 @@ public static class TowerSceneBuilder
         so.FindProperty("line1").objectReferenceValue = t1;
         so.FindProperty("line2").objectReferenceValue = t2;
         so.FindProperty("start").objectReferenceValue = start;
+        so.FindProperty("privacy").objectReferenceValue = priv;
         so.ApplyModifiedPropertiesWithoutUndo();
     }
 

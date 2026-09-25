@@ -23,6 +23,12 @@ public class TitleView : MonoBehaviour
     [SerializeField] TextMeshProUGUI line1, line2;    // 原典の2行
     [SerializeField] TextMeshProUGUI start;           // 点滅する言葉（横長の絵の中）
     [SerializeField] TextMeshProUGUI startTall;       // 〃（縦長の絵の中）
+    /// <summary>
+    /// 画面の下に小さく出す「プライバシーポリシー」（App Review 5.1.1(i)）。
+    /// ここを触ったときだけ**始めずに**外の頁を開く。
+    /// 行き先が決まっていない（<see cref="PhoneScreen.PrivacyUrl"/> が空）ときは出さない。
+    /// </summary>
+    [SerializeField] TextMeshProUGUI privacy;
 
     /// <summary>まだ題名を出しているか。出ている間は遊びの入力を受けない。</summary>
     public bool IsShowing { get; private set; }
@@ -102,9 +108,14 @@ public class TitleView : MonoBehaviour
             if (backdrop != null) backdrop.enabled = false;
             foreach (var img in new[] { picture, tall, ground, tower, logo })
                 if (img != null) img.enabled = false;
-            foreach (var t in new[] { line1, line2, start, startTall })
+            foreach (var t in new[] { line1, line2, start, startTall, privacy })
                 if (t != null) t.enabled = false;
             return;
+        }
+        if (privacy != null)
+        {
+            privacy.enabled = HasPrivacyLink;
+            privacy.text = PhoneScreen.PrivacyLine;
         }
         Apply(TitleArt.Choice);
         if (line1 != null) line1.text = TitleScreen.Title;
@@ -133,6 +144,14 @@ public class TitleView : MonoBehaviour
             return;
         }
 
+        // **プライバシーポリシーの字を触ったときは始めない**（App Review 5.1.1(i)）。
+        // 外の頁を開くだけにする。
+        if (HasPrivacyLink && Input.GetMouseButtonUp(0) && OnPrivacy(Input.mousePosition))
+        {
+            Application.OpenURL(PhoneScreen.PrivacyUrl);
+            return;
+        }
+
         // 触るかキーで始める。
         // 触りは**指を離したとき**に見る。押した瞬間に消してしまうと、その同じ一手が
         // 下のボタンや十字キーにも届いて、いきなり歩き出したりセーブを聞かれたりする。
@@ -141,5 +160,16 @@ public class TitleView : MonoBehaviour
         if (!tapped && !keyed) return;
         Hide();
         if (controller != null) controller.BeginGame();
+    }
+
+    /// <summary>行き先が決まっているか。空なら字も出さない。</summary>
+    static bool HasPrivacyLink { get { return !string.IsNullOrEmpty(PhoneScreen.PrivacyUrl); } }
+
+    /// <summary>その場所が「プライバシーポリシー」の字の上か。</summary>
+    bool OnPrivacy(Vector2 at)
+    {
+        return privacy != null && privacy.enabled
+            && RectTransformUtility.RectangleContainsScreenPoint(
+                   privacy.rectTransform, at, null);
     }
 }
