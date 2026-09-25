@@ -98,6 +98,7 @@
     <Compile Include="Assets/Tests/Editor/SoundCoverageTests.cs" />
     <Compile Include="Assets/Tests/Editor/MagicSealFormTests.cs" />
     <Compile Include="Assets/Tests/Editor/DoorAnimationTests.cs" />
+    <Compile Include="Assets/Tests/Editor/ResurrectionSweepTests.cs" />
     <Compile Include="Assets/Tests/Editor/PositionEventsTests.cs" />
     <Compile Include="Assets/Tests/Editor/MasterHintsTests.cs" />
     <Compile Include="Assets/Tests/Editor/SaveMapTests.cs" />

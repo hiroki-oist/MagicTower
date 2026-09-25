@@ -1787,10 +1787,16 @@ chk("System.Action<int> mark = null" in _fs2 and "if (mark != null) mark(u.FlagI
     "解錠の印は外（遊び手の旗）へも控えられる")
 chk("if (has(u.FlagId)) continue;" in _fs2,
     "もう立っている印の解錠は走らせない（階の器の中だけでなく遊び手の旗も見る）")
-chk("f => Player.EventFlags.Add(f));" in _tc4 if False else
-    "f => Player.EventFlags.Add(f));" in open(
+chk("f => Player.EventFlags.Add(f));" in open(
         "Assets/Scripts/TowerGame.cs",encoding="utf-8").read(),
     "本線は解錠の印を遊び手の旗へ控える（セーブに残る）")
+# 「取ったものが生き返らないか」を**表の全行**で総当たりする試験がある
+_rs=open("Assets/Tests/Editor/ResurrectionSweepTests.cs",encoding="utf-8").read()
+chk("Assert.AreEqual(SealedDoors.Instance.Count, tried," in _rs,
+    "解錠の全行を実際に発火させて読み直しを確かめている")
+chk("HiddenOccupants.Instance.All" in _rs and "PositionEvents.Instance.All" in _rs
+    and "ThiefEvents.Instance.All" in _rs and "ArrivalEvents.Instance.All" in _rs,
+    "隠れている者・立ち入り・盗賊・階段の到着も同じ試験で見ている")
 # 40階だけは前提と自分の印が別番号（同じにすると永久に発火しない）
 _sdt=open("Assets/Resources/SealedDoors.txt",encoding="utf-8").read()
 chk("40 | 0xc8 | 0,0;フラグ:0x79 |" in _sdt,
