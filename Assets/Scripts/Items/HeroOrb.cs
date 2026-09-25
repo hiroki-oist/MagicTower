@@ -71,14 +71,16 @@ public static class HeroOrb
             // ここを通していなかったので、五の目を作ってもゼノは 8000/5000/1000 のままに
             // 見えていた（作者の報告）。
             MagicSeal.Adjust(player, name, ref ehp, ref eatk, ref edef);
-            // 一方、**十字架・ドラゴンスレイヤー・幸運の金貨は入らない**のが原典。
-            // 0x8c2a は攻撃力と防御力をそのまま使い、補正を掛ける枝が無い。
-            // 原典の説明（レコード60）も「特殊なアイテムを持っている場合には
-            // 実際に受けるダメージと異なる場合がある」と**わざわざ断っている**。
+            // ★**十字架・ドラゴンスレイヤーの2倍を入れる**（作者の指定。
+            //   <see cref="AuthorStyle.HeroOrbCountsCharms"/> に理由を書いてある）。
+            //   原典 0x8c2a は補正を掛けないが、実際の戦いのほうは2倍で計算するので
+            //   窓の数字だけが食い違って見えていた。
             var kind = BattleRules.KindFromTag(name);
+            var charms = AuthorStyle.HeroOrbCountsCharms
+                       ? TowerBattle.CharmsOf(player) : BattleRules.Charms.None;
             var p = BattleRules.Predict(player.Attack, player.Defense,
                                         ehp, eatk, edef, e.Coin,
-                                        kind, BattleRules.Charms.None);
+                                        kind, charms);
             rows.Add(new Row
             {
                 Prefab = name,

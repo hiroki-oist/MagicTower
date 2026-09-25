@@ -779,7 +779,9 @@ chk("FlightFloors" in _tg2 and "ConfirmFlight" in _tg2,"飛翔の階選びが本
 chk("NextToStairs" in _tg2,"階段の隣でなければ使えない判定を通している")
 _ho=open("Assets/Scripts/Items/HeroOrb.cs",encoding="utf-8").read()
 chk("MaxRows = 9" in _ho,"勇者のオーブは9体まで（原典の枠の数）")
-chk("Charms.None" in _ho,"予想ダメージは補正抜き（原典レコード60の断り書きどおり）")
+# ★作者の指定で**十字架・ドラゴンスレイヤーの2倍を入れる**（原典 0x8c2a は入れない）。
+chk("AuthorStyle.HeroOrbCountsCharms" in _ho,
+    "予想ダメージに十字架・ドラゴンスレイヤーを入れる（外れる所は AuthorStyle に）")
 
 print("\n【9x】音程表（Resources/SoundPitch.txt）が原典の EXE と一致する")
 _pitch={}
@@ -1617,8 +1619,13 @@ chk("autoReady" in _tc and "TickAutoAdvance" in _tc,
 _ho=open("Assets/Scripts/Items/HeroOrb.cs",encoding="utf-8").read()
 chk("MagicSeal.Adjust(player, name, ref ehp, ref eatk, ref edef);" in _ho,
     "勇者のオーブにも五の目の書き換えが効く")
-chk("BattleRules.Charms.None" in _ho,
-    "十字架・ドラゴンスレイヤー・幸運の金貨は入れない（原典 0x8c2a／説明レコード60）")
+chk("HeroOrbCountsCharms = true" in open(
+        "Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read()
+    and "TowerBattle.CharmsOf(player) : BattleRules.Charms.None;" in _ho,
+    "十字架・ドラゴンスレイヤーは予想にも入れる（作者の指定。原典 0x8c2a は入れない）")
+# 相手そのものの数値（命・攻・防・ゴールド）は触らない。触るのは五の目だけ。
+chk("Hp = ehp, Attack = eatk, Defense = edef," in _ho and "Gold = e.Coin," in _ho,
+    "相手の数値は表のまま出す（補正が掛かるのは手数と受けるダメージだけ）")
 # Java版の終幕（作者の指定）。MTower.class の OpenningZeno(4) が
 # data2/edata01〜15（塔が沈む15枚）を 40x40 のモザイクで送り、
 # edata17（終わりの言葉）→ edata18（The End）で終わる。
