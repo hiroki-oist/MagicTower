@@ -72,6 +72,28 @@ public static class TowerHud
 
     /// <summary>左側に並ぶ4つの数値。全角。</summary>
     public static string Hp(PlayerState p)      { return GameText.Num(p.Hp); }
+
+    /// <summary>
+    /// 左の欄に出す生命力。**斬り合いを見せている間はターンに合わせて減らす**
+    /// （作者の指定「戦闘直後に戦闘後のHPまで生命力が下がってる。ターンと同期させて」）。
+    ///
+    /// 本線は踏み込んだ拍子に戦いを最後まで片付けてしまう（原典 0x6082 も
+    /// その場で回り切る）ので、<see cref="PlayerState.Hp"/> をそのまま出すと
+    /// 斬り合いが始まる前に最後の値まで落ちて見える。
+    /// 数え方は旧版の帯（<see cref="BattleBand.At"/>）と**同じものを通す** —
+    /// 別々に数えると帯と左の欄で違う数字が出る。
+    /// </summary>
+    /// <param name="playing">斬り合いを見せている最中か。</param>
+    /// <param name="hitsDone">ここまでに入れた斬りの数。</param>
+    /// <param name="countersDone">ここまでに受けた反撃の数。</param>
+    public static string Hp(PlayerState p, BattleBand.Numbers n, bool playing,
+                            int hitsDone, int countersDone)
+    {
+        if (!playing || string.IsNullOrEmpty(n.Enemy) || n.Hits <= 0) return Hp(p);
+        var tick = BattleBand.At(n.PlayerHp, n.EnemyHp, n.PlayerDamage, n.EnemyDamage,
+                                 hitsDone, countersDone);
+        return GameText.Num(tick.PlayerHp);
+    }
     public static string Attack(PlayerState p)  { return GameText.Num(p.Attack); }
     public static string Defense(PlayerState p) { return GameText.Num(p.Defense); }
     public static string Gold(PlayerState p)    { return GameText.Num(p.Gold); }

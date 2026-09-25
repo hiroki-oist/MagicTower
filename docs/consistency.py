@@ -1810,6 +1810,18 @@ for _l in open("Assets/Resources/PositionEvents.txt",encoding="utf-8"):
 _both=sorted(set(_sdflags)&set(_peflags))
 chk(not _both,"解錠の印と立ち入りの印がぶつからない（旗は原典どおり1本の配列）",str(_both))
 
+# 生命力は斬り合いのターンに合わせて減らす（作者の指定）。本線は踏み込んだ拍子に
+# 戦いを片付けてしまう（原典 0x6082 もその場で回り切る）ので、そのまま出すと
+# 斬り合いを見せる前に最後の値まで落ちる。数え方は帯と同じ BattleBand.At を通す。
+_th2=open("Assets/Scripts/UI/TowerHud.cs",encoding="utf-8").read()
+_thv=open("Assets/Scripts/UI/TowerHudView.cs",encoding="utf-8").read()
+chk("public static string Hp(PlayerState p, BattleBand.Numbers n, bool playing," in _th2
+    and "BattleBand.At(n.PlayerHp, n.EnemyHp, n.PlayerDamage, n.EnemyDamage," in _th2,
+    "左の欄の生命力は帯と同じ数え方でターンに合わせて減らす")
+chk("battleView != null && battleView.IsPlaying," in _thv
+    and "battleView != null ? battleView.CountersDone : 0));" in _thv,
+    "左の欄が斬り合いの進み具合を見ている")
+
 # 中断データ（アプリが落ちても直前の位置から再開する）
 _sv=open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read()
 chk("AutoSlot = 0" in _sv and "resume.txt" in _sv,

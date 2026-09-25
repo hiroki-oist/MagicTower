@@ -18,6 +18,51 @@ public class TowerHudTests
         };
     }
 
+    /// <summary>
+    /// ★**生命力は斬り合いのターンに合わせて減る**（作者の指定
+    /// 「戦闘直後に戦闘後のHPまで生命力が下がってる。ターンと同期させて」）。
+    /// 本線は踏み込んだ拍子に戦いを片付けてしまうので、そのまま出すと
+    /// 斬り合いを見せる前に最後の値まで落ちる。
+    /// </summary>
+    [Test]
+    public void 生命力は斬り合いのターンに合わせて減る()
+    {
+        // 5撃で倒す相手。反撃は4回で、1回あたり 50 減る。
+        var n = new BattleBand.Numbers
+        {
+            Enemy = "Enemy_SlimeG", PlayerHp = 652, EnemyHp = 100,
+            PlayerDamage = 20, EnemyDamage = 50, Hits = 5,
+        };
+        // 見せている間は反撃の数ぶんだけ
+        Assert.AreEqual("６５２", TowerHud.Hp(player, n, true, 1, 0), "1撃目はまだ減らない");
+        Assert.AreEqual("６０２", TowerHud.Hp(player, n, true, 2, 1));
+        Assert.AreEqual("５５２", TowerHud.Hp(player, n, true, 3, 2));
+        Assert.AreEqual("４５２", TowerHud.Hp(player, n, true, 5, 4), "最後の反撃まで");
+        // 見せ終わったら本線の値（ここでは 652 のまま＝戦っていない人）
+        Assert.AreEqual("６５２", TowerHud.Hp(player, n, false, 5, 4));
+        // 戦いの数字が無いときは素通し
+        Assert.AreEqual("６５２", TowerHud.Hp(player, new BattleBand.Numbers(), true, 3, 2));
+    }
+
+    /// <summary>帯と左の欄は**同じ数え方**を通す（別々に数えると食い違う）。</summary>
+    [Test]
+    public void 帯の生命力と左の欄の生命力は同じ()
+    {
+        var n = new BattleBand.Numbers
+        {
+            Enemy = "Enemy_SlimeG", PlayerHp = 652, EnemyHp = 100,
+            PlayerDamage = 20, EnemyDamage = 50, Hits = 5,
+        };
+        for (int i = 0; i <= n.Hits; i++)
+        {
+            var tick = BattleBand.At(n.PlayerHp, n.EnemyHp, n.PlayerDamage, n.EnemyDamage,
+                                     i, System.Math.Max(0, i - 1));
+            Assert.AreEqual(GameText.Num(tick.PlayerHp),
+                            TowerHud.Hp(player, n, true, i, System.Math.Max(0, i - 1)),
+                            $"{i}撃目");
+        }
+    }
+
     [Test]
     public void 数値は全角で出る()
     {

@@ -99,7 +99,12 @@ public class TowerHudView : MonoBehaviour
         var p = controller.Game.Player;
 
         Set(floorLabel, TowerHud.FloorLabel(climbing > 0 ? climbing : p.Floor));
-        Set(hp,      TowerHud.Hp(p));
+        // 生命力は**斬り合いのターンに合わせて**減らす（作者の指定）。
+        // 帯と同じ数え方を通すので、左の欄と帯の数字は必ず一致する。
+        Set(hp,      TowerHud.Hp(p, controller.Game.LastBattleNumbers,
+                                 battleView != null && battleView.IsPlaying,
+                                 battleView != null ? battleView.HitsDone : 0,
+                                 battleView != null ? battleView.CountersDone : 0));
         Set(attack,  TowerHud.Attack(p));
         Set(defense, TowerHud.Defense(p));
         Set(gold,    TowerHud.Gold(p));
