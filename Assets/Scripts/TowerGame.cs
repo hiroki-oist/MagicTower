@@ -109,13 +109,6 @@ public class TowerGame
     /// <summary>今出すべきものの中身。無ければ null。</summary>
     public Page? Current { get { return pages.Count > 0 ? pages.Peek() : (Page?)null; } }
 
-    /// <summary>
-    /// 主人公が見ている向き（既定は上）。入力の側が一歩ごとに入れる。
-    /// 使うのは「目の前」を見る道具だけ（雪の結晶。作者の指定）。
-    /// 原典は向きを持っていない（絵は2コマで、後ろ姿も横向きも無い）。
-    /// </summary>
-    public Vector2Int Facing = Vector2Int.up;
-
     /// <summary>今出すべきものの番号（序章の絵なら何行目まで出すか）。無ければ 0。</summary>
     public int CurrentRecord { get { return pages.Count > 0 ? pages.Peek().Record : 0; } }
 
@@ -1620,11 +1613,6 @@ public class TowerGame
         foreach (var u in fired)
         {
             PlaySound(u.Floor == 2 ? SoundCues.BigUnlock : SoundCues.Unlock);
-            // ★**20階・25階・49階の妖精は、出たその場で採点して消える**。
-            //   表が妖精を書いた直後に同じマスを床へ戻しているので、盤面には
-            //   残らず、歩いて話しかけることができない（10階と40階は残る）。
-            //   ここで採点しないと、その階の採点の式が一生使われないことになる。
-            if (SealedDoors.ScoresFairy(u)) Speak(FairyText());
             // 49階で壁が書き込まれるとき（原典 0x226b）は別の音が鳴る
             foreach (var r in u.Results)
                 if (r.Kind == "封印") { PlaySound(SoundCues.WallAppear); break; }
@@ -2017,18 +2005,29 @@ public class TowerGame
 
             case SpecialItems.Kind.SnowCrystal:
             {
-                // ★作者の指定。**目の前のマグマを、続いているぶんだけ溶かす**
-                //   （原典は持っているだけで、手前に立った瞬間に溶ける。AuthorStyle 参照）。
-                //   13階はほとんどのマスがマグマなので、階ごと溶かしてはいけない。
-                //   原典が溶かすのも (0,-4) の上に続く4マスだけで、そこで壁に当たる。
-                var melted = Floor.MagmaRun(Player.Position, Facing);
-                if (melted.Count == 0)
+                // ★作者の指定。**神剣のある階（13階）なら、どこで使っても
+                //   決まった4マスが床に変わる**。原典 0x1fd5 は持っているだけで、
+                //   マグマの手前に立った瞬間に同じ4マスを溶かす（使う操作が無い）。
+                //   溶かす場所は原典の書き込みそのまま（AuthorStyle 参照）。
+                if (Player.Floor != SpecialItemEffects.SnowFloor)
                 {
                     Say(GameText.Instance.Message("snow_nowhere"));
                     return false;                       // 何も起きないので減らさない
                 }
+                int melted = 0;
                 // 原典 0x2079 は**1マスずつ**音を鳴らして溶かす。そこは合わせる。
-                foreach (var m in melted) { Floor.Clear(m); PlaySound(SoundCues.SnowMelt); }
+                foreach (var m in SpecialItemEffects.SnowMelts)
+                {
+                    if (Floor.At(m) != "~") continue;   // もう溶けている
+                    Floor.Clear(m);
+                    PlaySound(SoundCues.SnowMelt);
+                    melted++;
+                }
+                if (melted == 0)
+                {
+                    Say(GameText.Instance.Message("snow_nowhere"));
+                    return false;
+                }
                 Say(GameText.Instance.Message("snow_use"));
                 break;
             }

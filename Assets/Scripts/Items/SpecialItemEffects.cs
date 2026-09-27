@@ -23,6 +23,23 @@ public static class SpecialItemEffects
     public static readonly int[] DestructionImmuneIds = { 91, 104, 122, 145 };
     // 91 魔導師ゼノ / 104 大ダコ / 122 ドラゴン / 145 大魔導師
 
+    /// <summary>
+    /// 雪の結晶が効く階。**神剣のある階**（13階）で、道はマグマで塞がっている。
+    /// 原典 0x1fd5 の分岐がこの階を名指ししている。
+    /// </summary>
+    public const int SnowFloor = 13;
+
+    /// <summary>
+    /// 雪の結晶で床に変わる4マス。**原典 0x1fd5 が書き込むマスそのまま**
+    /// （X=5 の Y=5〜8 ＝ 盤面の (0,0)(0,-1)(0,-2)(0,-3)）。
+    /// 13階は盤面の81マスがマグマなので、溶けるのはこの道だけ。
+    /// </summary>
+    public static readonly Vector2Int[] SnowMelts =
+    {
+        new Vector2Int(0, 0), new Vector2Int(0, -1),
+        new Vector2Int(0, -2), new Vector2Int(0, -3),
+    };
+
     /// <summary>空間転移の秘宝を使うと支払う生命力（原典 0x320）。</summary>
     public const int TeleportHpCost = 800;
 

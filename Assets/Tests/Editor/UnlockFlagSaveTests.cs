@@ -77,26 +77,33 @@ public class UnlockFlagSaveTests
     }
 
     /// <summary>
-    /// ★**20階・25階・49階の妖精は、出たその場で採点する**。
-    /// 表が妖精を書いた直後に同じマスを床へ戻すので盤面には残らず、
-    /// 歩いて話しかけることができない（10階・40階は残るので話しかける）。
-    /// ここで採点しないと、その階の採点の式が一生使われない。
+    /// ★**妖精はどの階でも盤面に残り、話しかけられるまで答えない**（作者の指定）。
+    /// 原典の表は20階・25階・49階で妖精を出した直後に同じマスを床へ戻していて、
+    /// 話しかける間もなく消えてしまう。その「床へ戻す」を外してある。
     /// </summary>
     [Test]
-    public void 二十階と二十五階と四十九階の妖精はその場で採点する()
+    public void どの階でも妖精は盤面に残る()
     {
-        foreach (int floor in new[] { 20, 25, 49 })
+        foreach (int floor in new[] { 10, 20, 25, 40, 49 })
         {
-            bool found = false;
+            bool placed = false;
             foreach (var u in SealedDoors.Instance.ForFloor(floor))
-                if (SealedDoors.ScoresFairy(u)) found = true;
-            Assert.IsTrue(found, $"F{floor} は出してすぐ消す形");
+                foreach (var r in u.Results)
+                {
+                    if (r.Kind != SealedDoors.FairyKind) continue;
+                    placed = true;
+                    foreach (var later in u.Results)
+                        Assert.IsFalse(later.Pos == r.Pos && later.Kind == "床",
+                                       $"F{floor} は妖精を床へ戻さない");
+                }
+            Assert.IsTrue(placed, $"F{floor} に妖精が出る");
         }
-        foreach (int floor in new[] { 10, 40 })
-            foreach (var u in SealedDoors.Instance.ForFloor(floor))
-                Assert.IsFalse(SealedDoors.ScoresFairy(u), $"F{floor} は妖精が残る");
+    }
 
-        // 20階で実際に採点の文面が出る
+    /// <summary>20階で解錠したあと、妖精に話しかけると採点してくれる。</summary>
+    [Test]
+    public void 二十階の妖精は話しかけると採点する()
+    {
         var g = At(20, new Vector2Int(5, -5));
         var f = g.FloorAt(20);
         foreach (var u in SealedDoors.Instance.ForFloor(20))
@@ -105,6 +112,14 @@ public class UnlockFlagSaveTests
             if (u.RequiresFlag >= 0) g.Player.EventFlags.Add(u.RequiresFlag);
         }
         g.EnterFloor(20, new Vector2Int(5, -5));
+
+        var spot = new Vector2Int(0, 1);
+        Assert.AreEqual("Fairy", g.Floor.At(spot), "妖精が立っている");
+
+        // 隣に立って踏み込む＝話しかける
+        g.Floor.Clear(new Vector2Int(0, 0));
+        g.EnterFloor(20, new Vector2Int(0, 0));
+        g.Step(Vector2Int.up);
         var all = new System.Text.StringBuilder();
         int guardCount = 0;
         while (g.Current.HasValue && guardCount++ < 60)
@@ -113,6 +128,7 @@ public class UnlockFlagSaveTests
             g.NextPage();
         }
         StringAssert.Contains("点です", all.ToString(), "採点の文面が出る");
+        Assert.AreEqual(".", g.Floor.At(spot), "話し終えると消える");
     }
 
     /// <summary>印が遊び手の旗に載る（原典と同じ1本の配列）。</summary>

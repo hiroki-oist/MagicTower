@@ -1284,8 +1284,26 @@ _sie2=open("Assets/Scripts/Items/SpecialItemEffects.cs",encoding="utf-8").read()
 _fs3=open("Assets/Scripts/Floor/FloorState.cs",encoding="utf-8").read()
 chk("case SpecialItems.Kind.SnowCrystal:" in _sie2 and "SnowCrystalIsUsed" in _sie2,
     "雪の結晶は「使う道具」になっている")
-chk("public List<Vector2Int> MagmaRun(Vector2Int from, Vector2Int dir)" in _fs3,
-    "溶かすのは目の前に続いているマグマだけ")
+chk("public const int SnowFloor = 13;" in _sie2 and "SnowMelts" in _sie2,
+    "溶けるのは神剣の階の決まった4マス（原典 0x1fd5 が書くマス）")
+chk("Player.Floor != SpecialItemEffects.SnowFloor" in open(
+        "Assets/Scripts/TowerGame.cs",encoding="utf-8").read(),
+    "神剣の階でなければ何も起きない（持ち物も減らない）")
+# ★妖精はどの階でも盤面に残す（作者の指定。原典の表は出した直後に床へ戻す）
+_sd2=open("Assets/Resources/SealedDoors.txt",encoding="utf-8").read()
+_fairy_rows=[l for l in _sd2.splitlines()
+             if l.strip() and not l.startswith("#") and "ID23" in l]
+chk(len(_fairy_rows)==5,"妖精を出す解錠は5件（10/20/25/40/49階）",str(len(_fairy_rows)))
+def _keeps_fairy(row):
+    res=row.split("|")[3]
+    import re
+    cell=re.search(r"\((\S+?)\)=ID23", res)
+    if not cell: return False
+    return (cell.group(0).replace("=ID23","")+"=床") not in res
+chk(all(_keeps_fairy(r) for r in _fairy_rows),
+    "どの階でも妖精は盤面に残る（話しかけるまで答えない。作者の指定）")
+chk("FairyWaitsToBeAsked" in open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read(),
+    "原典から外れる理由は AuthorStyle に書いてある（妖精）")
 chk("SnowCrystalIsUsed = true" in _as2 if False else
     "SnowCrystalIsUsed" in open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read(),
     "原典から外れる理由は AuthorStyle に書いてある")

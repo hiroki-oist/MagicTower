@@ -45,13 +45,13 @@ public class SnowCrystalTests
     /// <summary>
     /// ★**使ったときに溶ける**（作者の指定。<see cref="AuthorStyle.SnowCrystalIsUsed"/>）。
     /// 原典 0x1fd5 は持っているだけで、マグマの手前に立った瞬間に溶けた。
+    /// 神剣のある階なら**どこで使っても**同じ4マスが床に変わる。
     /// </summary>
     [Test]
     public void 使うと四マス溶ける()
     {
         var g = Game(true);
         g.Player.Position = new Vector2Int(0, -4);
-        g.Facing = Vector2Int.up;                            // マグマの手前で上を向く
         g.ConsumeSounds();
 
         Assert.IsTrue(g.TapItem(SpecialItems.Kind.SnowCrystal), "帯から使える");
@@ -81,7 +81,7 @@ public class SnowCrystalTests
 
     /// <summary>マグマの無い階では何も起きず、持ち物も減らない。</summary>
     [Test]
-    public void マグマの無い階では使えない()
+    public void 神剣のある階でなければ使えない()
     {
         var p = new PlayerState
         {
@@ -90,8 +90,8 @@ public class SnowCrystalTests
         };
         p.Give(SpecialItems.Kind.SnowCrystal);
         var g = new TowerGame(p);
-        Assert.AreEqual(0, g.Floor.MagmaRun(g.Player.Position, Vector2Int.up).Count,
-                        "1階の目の前にマグマは無い");
+        Assert.AreNotEqual(SpecialItemEffects.SnowFloor, g.Player.Floor,
+                           "神剣の階ではない");
         Assert.IsTrue(g.TapItem(SpecialItems.Kind.SnowCrystal));
         g.ConfirmChoice();
         Assert.IsTrue(g.Player.Has(SpecialItems.Kind.SnowCrystal), "減らない");

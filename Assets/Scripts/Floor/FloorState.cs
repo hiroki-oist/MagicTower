@@ -211,22 +211,4 @@ public class FloorState
 
     public bool HasFired(int flagId) { return firedFlags.Contains(flagId); }
 
-    /// <summary>
-    /// **目の前に続いているマグマ**（原典の地形 "~"）。雪の結晶で溶かす相手。
-    ///
-    /// 13階は盤面の大半がマグマ（81マス）なので、階ごと溶かしてはいけない。
-    /// 原典（0x1fd5）が溶かすのも (0,-4) の上に続く4マスだけで、その先は壁。
-    /// </summary>
-    public List<Vector2Int> MagmaRun(Vector2Int from, Vector2Int dir)
-    {
-        var list = new List<Vector2Int>();
-        if (dir == Vector2Int.zero) return list;
-        var at = from + dir;
-        while (At(at) == "~")
-        {
-            list.Add(at);
-            at += dir;
-        }
-        return list;
-    }
 }
