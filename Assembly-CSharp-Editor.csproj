@@ -108,6 +108,7 @@
     <Compile Include="Assets/Tests/Editor/BattlePresentationTests.cs" />
     <Compile Include="Assets/Tests/Editor/FloorLoaderTests.cs" />
     <Compile Include="Assets/Tests/Editor/MagicSealTests.cs" />
+    <Compile Include="Assets/Tests/Editor/AppReviewTests.cs" />
     <Compile Include="Assets/Tests/Editor/WisdomOrbTests.cs" />
     <Compile Include="Assets/Editor/TowerPlaythrough.cs" />
     <Compile Include="Assets/Editor/TowerSceneBuilder.cs" />

@@ -166,6 +166,8 @@ public static class AuthorStyle
     /// TestFlight のビルドでは何も出ない。
     ///
     /// HIG の言うとおり「区切りのよい所で静かに1回」。押したら出るボタンにはしない。
+    /// 頼むのは**題名へ戻ったところ**で、何回目のクリアで頼むかは
+    /// <see cref="AppReview.AskOnClears"/>（1・3・6・10回目）。
     /// </summary>
     public static readonly bool AskReviewAfterEnding = true;
 

@@ -1700,8 +1700,7 @@ chk("JavaEnding = false" in _as2,
     "いまの終幕は**原典 PC98版**（作者の指定で Java版から戻した）")
 # 終幕の「Ｆｉｎ」を送ると題名へ戻る（作者の指定）。
 # 原典 0xd45c はキーを待ってパレットを真っ暗にして終わるだけ。
-chk("IsFinalScreen" in _tg4
-    and "StartNewGame(); BackToTitle(false); return;" in _tc,
+chk("IsFinalScreen" in _tg4 and "BackToTitle(false);" in _tc,
     "「Ｆｉｎ」を送ると題名へ戻る（セーブデータは消さない。作者の指定）")
 # ⚠ 題名は**出した直後の一手では始めない**。終幕を送った指がまだ画面に触れている
 #   うちに題名が出るので、そのまま離すと「触って始めた」ことになって1階から
@@ -1915,10 +1914,17 @@ _rev=open("Assets/Scripts/Items/AppReview.cs",encoding="utf-8").read()
 chk("SKStoreReviewController.requestReview(in: scene)" in open(
         "Assets/Plugins/iOS/MagicTowerStore.swift",encoding="utf-8").read(),
     "評価の窓は iOS の決まったもの（自前の窓は作らない。App Review の決まり）")
-chk("AuthorStyle.AskReviewAfterEnding" in _ctrl and "AppReview.Request();" in _ctrl,
-    "終幕を見終わったところで1回だけ頼む")
+chk("AuthorStyle.AskReviewAfterEnding" in _ctrl and "AppReview.AfterClear();" in _ctrl,
+    "題名へ戻ったところで頼む（作者の指定）")
+_i_back=_ctrl.index("BackToTitle(false);")
+chk(_ctrl.index("AppReview.AfterClear();") > _i_back,
+    "頼むのは題名を出したあと（先に頼むと終幕の画面の上に出る）")
+chk("AskOnClears = { 1, 3, 6, 10 }" in _rev,
+    "1・3・6・10回目のクリアで頼む（断られたかは分からないので回数で決める）")
 chk("public static bool Asked" in _rev and "if (Asked) return;" in _rev,
-    "同じ回で何度も頼まない")
+    "同じ起ち上げでは一度しか頼まない")
+chk("PlayerPrefs.GetInt(ClearsKey" in _rev,
+    "クリアの回数は端末に残す")
 chk("action=write-review" in _rev,
     "文面を自分で書きたいときの行き先（App Store のレビュー画面）も控えてある")
 

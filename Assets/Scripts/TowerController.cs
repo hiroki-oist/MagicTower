@@ -411,10 +411,13 @@ public class TowerController : MonoBehaviour
                         //   パレットを真っ暗にして終わるだけ。
                         if (Game.IsFinalScreen)
                         {
-                            // ★遊び終えた所で評価をお願いする（作者の指定。原典に無い）。
-                            //   出るのは iOS の決まった窓で、出すかどうかは OS が決める。
-                            if (AuthorStyle.AskReviewAfterEnding) AppReview.Request();
-                            StartNewGame(); BackToTitle(false); return;
+                            StartNewGame();
+                            BackToTitle(false);
+                            // ★**題名へ戻ったところで**評価をお願いする（作者の指定）。
+                            //   何回目のクリアで頼むかは AppReview.AskOnClears。
+                            //   出すかどうかは OS が決める（評価済み・断った人には出ない）。
+                            if (AuthorStyle.AskReviewAfterEnding) AppReview.AfterClear();
+                            return;
                         }
                         Game.NextPage();
                     }
