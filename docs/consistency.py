@@ -334,6 +334,16 @@ chk("SorcererId = 93" in _mg and "WizardAId  = 151" in _mg and "WizardBId  = 153
 chk("DivineShieldRank = 5" in _mg and "Immune(shieldRank)" in _mg,"神盾(番号5)で魔法攻撃を無効化")
 chk("WizardADamage = 200" in _mg and "WizardBDamage = 100" in _mg,"魔術士のダメージ 200 / 100")
 chk("hp / 2" in _mg,"魔導師に挟まれると生命力half")
+# ★**隣にいるぶんは全部重なる**（作者の報告）。原典 0x1b75→0x1c48→0x1e29 は
+#   続けて書いてあり途中で抜けない。同じ種類が何体いても1回ぶん（枝が1つ）。
+chk("if (IsNextTo(n, WizardAId))" in _mg and "if (IsNextTo(n, WizardBId))" in _mg
+    and "if (IsPincered(n))" in _mg,
+    "魔導師の半減・魔術士Ａ・魔術士Ｂを順に全部当てる")
+chk("if (hp != 1) hp = hp / 2;" in _mg,
+    "生命力が1のときは半分にしない（原典 0x1bfe の cmp 1 → je）")
+chk("foreach (var k in keys) Say(GameText.Instance.Message(k));" in
+    open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read(),
+    "受けたぶんだけ順に知らせる")
 _se=open("Assets/Scripts/Items/SpecialItemEffects.cs",encoding="utf-8").read()
 chk("5 * (attack * 2 + defense)" in _se,"エリクサー 5×(攻撃×2+防御)")
 chk("{ 91, 104, 122, 145 }" in _se,"破壊の玉が効かないのは ゼノ/大ダコ/ドラゴン/大魔導師")

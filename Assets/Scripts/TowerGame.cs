@@ -1579,16 +1579,19 @@ public class TowerGame
     {
         var ids = ObjectIds.Instance;
         var n = Floor.NeighborsOf(Player.Position, ids.Of);
-        string key;
-        int after = MagicAttack.Apply(Player.Hp, Player.ShieldRank, n, out key);
-        if (key == null) return;
+        // ★**受けるものは全部受ける**（作者の報告）。原典は魔導師→魔術士Ａ→
+        //   魔術士Ｂと続けて判定していて、途中で抜けない。
+        var keys = new List<string>();
+        int after = MagicAttack.Apply(Player.Hp, Player.ShieldRank, n, keys);
+        if (keys.Count == 0) return;
         Player.Hp = after;
         // 原典 0x001df2 / 0x001fd0 も、ここで尽きたらゲームオーバーへ行く。
         if (Player.Hp <= 0) { GameOver(); return; }
         // 原典（0x1b75〜0x1ba7）は**自分の立っているマス**に閃光を出す。
         PlayEffect(Player.Position);
         PlaySound(SoundCues.Magic);
-        Say(GameText.Instance.Message(key));
+        // 受けたぶんだけ順に知らせる（原典もそれぞれの枝で文面を出す）
+        foreach (var k in keys) Say(GameText.Instance.Message(k));
     }
 
     /// <summary>解錠条件を判定して、満たしたものを盤面に反映する。</summary>

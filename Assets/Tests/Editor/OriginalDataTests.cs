@@ -272,6 +272,49 @@ public class OriginalDataTests
         Assert.AreEqual("wizard_200", key);
     }
 
+    /// <summary>
+    /// ★**隣にいるものからは全部受ける**（作者の報告で直した）。
+    /// 原典は 0x1b75（魔導師）→ 0x1c48〜(Ａの4マス)→ 0x1e29〜(Ｂの4マス) と
+    /// 続けて書いてあり、途中で抜けない。ただし同じ種類が何体いても1回ぶん
+    /// （Ａの4つの比較はどれも同じ「200引く所」へ飛ぶ）。
+    /// </summary>
+    [Test]
+    public void 魔法攻撃は隣にいるぶんだけ重なる()
+    {
+        var keys = new System.Collections.Generic.List<string>();
+
+        // 魔導師に挟まれ、さらに魔術士ＡとＢにも隣接
+        var all = new MagicAttack.Neighbors
+        {
+            Left = MagicAttack.SorcererId, Right = MagicAttack.SorcererId,
+            Up = MagicAttack.WizardAId, Down = MagicAttack.WizardBId,
+        };
+        Assert.AreEqual(1000 / 2 - 200 - 100, MagicAttack.Apply(1000, 0, all, keys),
+                        "半減してから200と100");
+        CollectionAssert.AreEqual(new[] { "mage_halve", "wizard_200", "wizard_100" }, keys);
+
+        // ＡとＢが同時に隣接していれば両方
+        var both = new MagicAttack.Neighbors
+        { Up = MagicAttack.WizardAId, Left = MagicAttack.WizardBId };
+        Assert.AreEqual(700, MagicAttack.Apply(1000, 0, both, keys), "200と100の両方");
+        Assert.AreEqual(2, keys.Count);
+
+        // 同じ種類が2体でも1回ぶん（原典はどの比較も同じ枝へ飛ぶ）
+        var twoA = new MagicAttack.Neighbors
+        { Up = MagicAttack.WizardAId, Down = MagicAttack.WizardAId };
+        Assert.AreEqual(800, MagicAttack.Apply(1000, 0, twoA, keys), "Ａ2体でも200");
+        Assert.AreEqual(1, keys.Count);
+
+        // 神盾があればどれも受けない
+        Assert.AreEqual(1000, MagicAttack.Apply(1000, 5, all, keys));
+        Assert.AreEqual(0, keys.Count);
+
+        // 生命力1のときは半分にしない（原典 0x1bfe の cmp 1 → je）
+        var pinch = new MagicAttack.Neighbors
+        { Left = MagicAttack.SorcererId, Right = MagicAttack.SorcererId };
+        Assert.AreEqual(1, MagicAttack.Apply(1, 0, pinch, keys), "1のときは減らない");
+    }
+
     [Test]
     public void 特殊アイテムの効果が原典どおり()
     {

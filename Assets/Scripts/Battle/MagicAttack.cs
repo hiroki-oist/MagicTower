@@ -12,6 +12,14 @@ using UnityEngine;
 ///   魔術士Ｂ(ID153): 上下左右のどれかに隣接 → 100ポイントダメージ
 /// </code>
 ///
+/// ★**3つの判定は順に全部通る**（作者の報告で直した）。原典は
+/// 0x1b75（魔導師）→ 0x1c48〜0x1d0e（魔術士Ａの4マス）→ 0x1e29〜0x1eef（Ｂの4マス）
+/// と続けて書いてあり、**途中で抜けない**。だから魔導師に挟まれながら
+/// 魔術士Ａと魔術士Ｂの両方に隣接していれば、半減＋200＋100 を一度に受ける。
+///
+/// ただし**同じ種類が何体いても1回**。Ａの4マスの比較はどれも同じ
+/// 0x1d21（盾を見て 200 引く所）へ飛ぶので、Ａが2体いても 400 にはならない。
+///
 /// どの判定にも直前に「装備中の盾の番号が5（＝神盾）か」の確認があり、
 /// **神盾を装備していれば魔法攻撃を受けない**。
 /// 原典ヒント「神盾は、魔法使いたちの魔法攻撃を防ぐ力があるらしい」に対応する。
@@ -44,36 +52,63 @@ public static class MagicAttack
             || (n.Up == SorcererId && n.Down == SorcererId);
     }
 
-    /// <summary>隣接している魔術士から受けるダメージ。隣接していなければ0。</summary>
-    public static int WizardDamage(Neighbors n)
+    /// <summary>その種類が上下左右のどれかに居るか。</summary>
+    public static bool IsNextTo(Neighbors n, int id)
     {
-        if (n.Up == WizardAId || n.Down == WizardAId || n.Left == WizardAId || n.Right == WizardAId)
-            return WizardADamage;
-        if (n.Up == WizardBId || n.Down == WizardBId || n.Left == WizardBId || n.Right == WizardBId)
-            return WizardBDamage;
-        return 0;
+        return n.Up == id || n.Down == id || n.Left == id || n.Right == id;
     }
 
     /// <summary>
-    /// 移動後の生命力を返す。<paramref name="messageKey"/> には出すべき
-    /// Messages.txt のキー（無ければ null）が入る。
+    /// 隣接している魔術士から受けるダメージの合計。
+    /// ⚠ **ＡとＢは重なる**（原典は別々の枝で、Ａを引いたあとＢの判定に進む）。
+    /// 同じ種類が2体いても1回ぶんなのは原典どおり。
     /// </summary>
-    public static int Apply(int hp, int shieldRank, Neighbors n, out string messageKey)
+    public static int WizardDamage(Neighbors n)
     {
-        messageKey = null;
+        int dmg = 0;
+        if (IsNextTo(n, WizardAId)) dmg += WizardADamage;
+        if (IsNextTo(n, WizardBId)) dmg += WizardBDamage;
+        return dmg;
+    }
+
+    /// <summary>
+    /// 移動後の生命力を返す。<paramref name="messageKeys"/> には出すべき
+    /// Messages.txt のキーが**受けた順に**入る（受けていなければ空）。
+    ///
+    /// 原典の並びのまま、魔導師の半減 → 魔術士Ａの200 → 魔術士Ｂの100 と
+    /// **続けて**当てる。途中で抜けない。
+    /// </summary>
+    public static int Apply(int hp, int shieldRank, Neighbors n,
+                            System.Collections.Generic.List<string> messageKeys)
+    {
+        if (messageKeys != null) messageKeys.Clear();
         if (Immune(shieldRank)) return hp;
 
         if (IsPincered(n))
         {
-            messageKey = "mage_halve";
-            return hp / 2;                      // 原典は shr [生命力],1
+            // 原典 0x1bfe は**生命力が1のときだけ半分にしない**（cmp 1 → je）
+            if (hp != 1) hp = hp / 2;
+            if (messageKeys != null) messageKeys.Add("mage_halve");
         }
-        int dmg = WizardDamage(n);
-        if (dmg > 0)
+        if (IsNextTo(n, WizardAId))
         {
-            messageKey = dmg == WizardADamage ? "wizard_200" : "wizard_100";
-            return Mathf.Max(0, hp - dmg);
+            hp -= WizardADamage;
+            if (messageKeys != null) messageKeys.Add("wizard_200");
         }
-        return hp;
+        if (IsNextTo(n, WizardBId))
+        {
+            hp -= WizardBDamage;
+            if (messageKeys != null) messageKeys.Add("wizard_100");
+        }
+        return Mathf.Max(0, hp);
+    }
+
+    /// <summary>1つだけ受け取る古い口（試験と、1件しか出さない所のため）。</summary>
+    public static int Apply(int hp, int shieldRank, Neighbors n, out string messageKey)
+    {
+        var keys = new System.Collections.Generic.List<string>();
+        int after = Apply(hp, shieldRank, n, keys);
+        messageKey = keys.Count > 0 ? keys[0] : null;
+        return after;
     }
 }
