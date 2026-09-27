@@ -1894,6 +1894,10 @@ chk("if (Input.GetMouseButtonUp(0) && OnPrivacy(Input.mousePosition))" in _tv2
     "その字を触ったときは始めずに文面を出す")
 chk("policyBack.transform.SetAsLastSibling();" in _tv2,
     "文面はいちばん上に出す（題名の絵に隠れない）")
+# ⚠ 題名を消すときは字も消す。ShowPolicy が最後に呼ばれるので、そこで
+#   出し直してしまうと遊び始めても画面の下に残る（作者の報告）。
+chk("privacy.enabled = IsShowing && !on;" in _tv2,
+    "「プライバシーポリシー」の字は題名を出しているときだけ出す")
 chk('so.FindProperty("policyText").objectReferenceValue = policy;' in _sb,
     "シーンに文面の部屋を組み込んで繋いである")
 chk(os.path.exists("docs/privacy_policy.md"),

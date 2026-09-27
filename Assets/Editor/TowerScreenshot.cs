@@ -16,7 +16,20 @@ using UnityEngine;
 public static class TowerScreenshot
 {
     public const string OutPath = "/tmp/mt_screen.png";
-    const int Width = 1080, Height = 1920;
+    /// <summary>
+    /// 写しの大きさ。ふだんは 1080x1920 だが、**App Store Connect が受け取る寸法は
+    /// 決まっている**（課金の審査用スクリーンショットは 1242x2688 / 1284x2778 など）ので、
+    /// 環境変数 MT_SHOT_W / MT_SHOT_H で差し替えられるようにしてある。
+    /// </summary>
+    static int Width { get { return EnvSize("MT_SHOT_W", 1080); } }
+    static int Height { get { return EnvSize("MT_SHOT_H", 1920); } }
+
+    static int EnvSize(string name, int fallback)
+    {
+        int v;
+        return int.TryParse(System.Environment.GetEnvironmentVariable(name), out v) && v > 0
+             ? v : fallback;
+    }
 
     /// <summary>十字キーの候補を1つずつ差し替えて撮る（作者に選んでもらうため）。</summary>
     [MenuItem("MagicTower/十字キーの候補を撮る")]
@@ -142,9 +155,15 @@ public static class TowerScreenshot
     static void ShowShop()
     {
         if (!shop) return;
-        // 題名が前に出ているので退ける
+        // 題名が前に出ているので退ける。**題名の部品は名前でも消しておく** —
+        // 遊んでいないときは Awake が走っておらず、部品の enabled が
+        // シーンに保存されたまま（＝出たまま）のことがある。
         var title = Object.FindObjectOfType<TitleView>(true);
         if (title != null) title.Hide();
+        foreach (var t in Object.FindObjectsOfType<TMPro.TextMeshProUGUI>(true))
+            if (t.name.StartsWith("Title")) t.enabled = false;
+        foreach (var im in Object.FindObjectsOfType<UnityEngine.UI.Image>(true))
+            if (im.name.StartsWith("Title")) im.enabled = false;
         var win = Object.FindObjectOfType<DialogueWindowView>(true);
         if (win == null) { Debug.LogWarning("会話の窓が見つからない"); return; }
         // ★**実機と同じ値段の字**で組ませる（米国ストアの表記がいちばん長い）。
@@ -169,8 +188,11 @@ public static class TowerScreenshot
         //   DialogueBox.Paginate に通してから窓へ渡すので、ここも同じにする。
         //   （ここを素通りさせていたせいで「写しでは1行、実機では2行」を見逃した）
         var paged = DialogueBox.Paginate(GoldShop.Text());
-        Debug.Log($"■課金の窓: ページ数 = {paged.Count}");
-        win.PreviewBoxed(paged[0], 0);
+        // どの品目に印を置くか（審査用スクリーンショットを品目ごとに撮るため）
+        int pick = 0;
+        int.TryParse(System.Environment.GetEnvironmentVariable("MT_SHOP_PICK"), out pick);
+        Debug.Log($"■課金の窓: ページ数 = {paged.Count} / 印 = {pick}");
+        win.PreviewBoxed(paged[0], pick);
         win.transform.SetAsLastSibling();
         // 何行で組まれたかを書き出す（1品目が1行に収まっているかの手がかり）
         var body = win.Body;

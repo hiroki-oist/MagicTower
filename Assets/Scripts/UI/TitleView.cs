@@ -216,7 +216,11 @@ public class TitleView : MonoBehaviour
         // 出している間は「触ると始まる」の点滅を引っ込める
         var blinkText = Blinking;
         if (blinkText != null && on) blinkText.alpha = 0f;
-        if (privacy != null) privacy.enabled = !on;
+        // ⚠ **題名を出しているときだけ**「プライバシーポリシー」の字を出す。
+        //   ここを `!on` だけで書いていたせいで、題名を消すとき
+        //   （SetVisible(false) が最後にこれを呼ぶ）に**字が出し直されて**いて、
+        //   遊び始めても画面の下に残っていた（作者の報告）。
+        if (privacy != null) privacy.enabled = IsShowing && !on;
     }
 
     /// <summary>出す文面。公開先が決まっていれば最後に載せる。</summary>
