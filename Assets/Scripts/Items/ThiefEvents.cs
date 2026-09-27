@@ -31,6 +31,16 @@ public class ThiefEvents
         /// 35階(-1,-4) に盗賊(ID21)を書き込み、続けて (-2,-3) の抜け穴を開ける。
         /// </summary>
         public string What;
+        /// <summary>
+        /// ★**その階を出てから**効かせる書き換えか（作者の指定）。
+        /// 35階で会った盗賊は、話したあとも**その階にいる間は見えていて**、
+        /// 階を出ると居なくなる。原典は話した時点で地図を床にするが、
+        /// そのマスを描き直さないので、階を出て戻るまで姿が残る。
+        /// こちらは変わったマスを毎コマ描き直すので、同じ見え方にするには
+        /// 「階を出るときに書き換える」と決めておく必要がある。
+        /// 書き方は "35:(-1,-4)=床@階を出たら"。
+        /// </summary>
+        public bool OnLeave;
     }
 
     /// <summary>できごと1件。</summary>
@@ -56,6 +66,9 @@ public class ThiefEvents
     }
 
     readonly List<Event> events = new List<Event>();
+    /// <summary>「その階を出てから」を表す印（書き方は "…=床@階を出たら"）。</summary>
+    public const string LeaveMark = "階を出たら";
+
     public IEnumerable<Event> All { get { return events; } }
     public int Count { get { return events.Count; } }
 
@@ -178,8 +191,18 @@ public class ThiefEvents
             if (!int.TryParse(c[1].Substring(comma + 1, close - comma - 1).Trim(), out y)) continue;
             int eq = c[1].IndexOf('=', close);
             var what = eq >= 0 ? c[1].Substring(eq + 1).Trim() : "床";
+            bool onLeave = false;
+            int at = what.IndexOf('@');
+            if (at >= 0)
+            {
+                onLeave = what.Substring(at + 1).Trim() == LeaveMark;
+                what = what.Substring(0, at).Trim();
+            }
             if (what.Length == 0) what = "床";
-            list.Add(new Change { Floor = floor, Pos = new Vector2Int(x, y), What = what });
+            list.Add(new Change
+            {
+                Floor = floor, Pos = new Vector2Int(x, y), What = what, OnLeave = onLeave
+            });
         }
         return list;
     }

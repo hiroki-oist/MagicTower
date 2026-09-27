@@ -51,8 +51,25 @@ public class TowerGame
         return st;
     }
 
+    /// <summary>「その階を出たら」効かせる書き換えの預かり（盗賊の表）。</summary>
+    readonly List<ThiefEvents.Change> afterLeaving = new List<ThiefEvents.Change>();
+
+    /// <summary>預かっている書き換えのうち、もうその階にいないものを当てる。</summary>
+    void ApplyAfterLeaving(int nowFloor)
+    {
+        for (int i = afterLeaving.Count - 1; i >= 0; i--)
+        {
+            var c = afterLeaving[i];
+            if (c.Floor == nowFloor) continue;          // まだその階にいる
+            var st = FloorAt(c.Floor);
+            if (st != null) st.Put(c.Pos, FloorState.SymbolOfKind(c.What));
+            afterLeaving.RemoveAt(i);
+        }
+    }
+
     public void EnterFloor(int floor, Vector2Int at)
     {
+        ApplyAfterLeaving(floor);
         var st = FloorAt(floor);
         if (st == null) { Say($"F{floor} のデータが読めない"); return; }
         Floor = st;
@@ -343,6 +360,9 @@ public class TowerGame
             {
                 foreach (var c in leaving.Changes)
                 {
+                    // 「階を出たら」の印が付いていれば、今は触らずに預かっておく
+                    // （35階の盗賊は、話したあともその階にいる間は見えている）。
+                    if (c.OnLeave) { afterLeaving.Add(c); continue; }
                     var st = FloorAt(c.Floor);
                     if (st == null) continue;
                     // 「床」なら居なくなる。物体の名前なら**そこに現れる**

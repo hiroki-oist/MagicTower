@@ -1898,8 +1898,14 @@ chk("battleView != null && battleView.IsPlaying," in _thv
 _th2=open("Assets/Resources/ThiefEvents.txt",encoding="utf-8").read()
 chk("35:(-2,-3)=床 ; 35:(-1,-4)=Mikata" in _th2,
     "2階の2度目の話で、抜け穴と本人の移動の両方が起きる")
-chk("35 | フラグ118=0            | 143 | 118 | 2:(+5,-5)=床" in _th2,
-    "35階で会うと2階の奥の牢からは消える")
+chk("35 | フラグ118=0            | 143 | 118 | 2:(+5,-5)=床 ; 35:(-1,-4)=床@階を出たら" in _th2,
+    "35階で会うと2階からは消え、35階の本人は階を出たら消える")
+chk("public bool OnLeave;" in _thc0 if False else
+    "public bool OnLeave;" in open("Assets/Scripts/Items/ThiefEvents.cs",encoding="utf-8").read(),
+    "「階を出たら」の印を表に書ける")
+chk("void ApplyAfterLeaving(int nowFloor)" in open(
+        "Assets/Scripts/TowerGame.cs",encoding="utf-8").read(),
+    "預かった書き換えは階を出たときに当てる")
 _thc=open("Assets/Scripts/Items/ThiefEvents.cs",encoding="utf-8").read()
 chk("public string What;" in _thc and 'var what = eq >= 0 ? c[1].Substring(eq + 1).Trim() : "床";' in _thc,
     "盗賊の表の書き換えは物体の名前も書ける（床だけではない）")
@@ -2493,6 +2499,7 @@ for _f in ("Cutscenes.txt","SealedDoors.txt","PositionEvents.txt",
     for _l in open(_p,encoding="utf-8"):
         if _l.lstrip().startswith("#"): continue
         for _k in re.findall(r"\(\s*[+-]?\d+\s*,\s*[+-]?\d+\s*\)\s*=\s*([^\s;|]+)",_l):
+            _k=_k.split("@")[0]          # "床@階を出たら" の印を落とす（盗賊の表）
             _n=_objids.get(_k,_k)
             if _n in _terrainwords or _n in _regkeys: continue
             _miss.append(f"{_f}:{_k}→{_n}")

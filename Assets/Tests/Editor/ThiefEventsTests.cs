@@ -175,6 +175,13 @@ public class ThiefEventsTests
         }
         Assert.IsTrue(g.Player.EventFlags.Contains(118), "35階で会った印");
         Assert.IsTrue(g.FloorAt(2).IsCleared(back), "2階からは消える");
+
+        // ★35階の本人は**その階にいる間は見えたまま**（作者の指定）
+        var here = new Vector2Int(-1, -4);
+        Assert.AreEqual("Mikata", g.FloorAt(35).At(here), "話したあとも35階には居る");
+
+        g.EnterFloor(34, new Vector2Int(0, 0));      // 階を出る
+        Assert.IsTrue(g.FloorAt(35).IsCleared(here), "階を出ると居なくなる");
     }
 
     /// <summary>
