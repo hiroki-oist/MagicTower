@@ -1893,6 +1893,17 @@ chk("battleView != null && battleView.IsPlaying," in _thv
     and "battleView != null ? battleView.CountersDone : 0));" in _thv,
     "左の欄が斬り合いの進み具合を見ている")
 
+# 2階で2度目に話すと、35階に抜け穴が空き**本人もそこへ移る**（原典 0x7aa/0x7bb）。
+# これが抜けていて、35階で会えず＝2階の盗賊が消えないままだった（作者の報告）。
+_th2=open("Assets/Resources/ThiefEvents.txt",encoding="utf-8").read()
+chk("35:(-2,-3)=床 ; 35:(-1,-4)=Mikata" in _th2,
+    "2階の2度目の話で、抜け穴と本人の移動の両方が起きる")
+chk("35 | フラグ118=0            | 143 | 118 | 2:(+5,-5)=床" in _th2,
+    "35階で会うと2階の奥の牢からは消える")
+_thc=open("Assets/Scripts/Items/ThiefEvents.cs",encoding="utf-8").read()
+chk("public string What;" in _thc and 'var what = eq >= 0 ? c[1].Substring(eq + 1).Trim() : "床";' in _thc,
+    "盗賊の表の書き換えは物体の名前も書ける（床だけではない）")
+
 # 中断データ（アプリが落ちても直前の位置から再開する）
 _sv=open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read()
 chk("AutoSlot = 0" in _sv and "resume.txt" in _sv,

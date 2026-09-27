@@ -344,7 +344,10 @@ public class TowerGame
                 foreach (var c in leaving.Changes)
                 {
                     var st = FloorAt(c.Floor);
-                    if (st != null) st.Clear(c.Pos);
+                    if (st == null) continue;
+                    // 「床」なら居なくなる。物体の名前なら**そこに現れる**
+                    // （2階で2度目に話すと35階に移る。原典 0x7aa）。
+                    st.Put(c.Pos, FloorState.SymbolOfKind(c.What));
                 }
                 // 去り方は表のとおり（原典 0x3e0/0x529 で歩くのは
                 // 2階＝下へ2歩、15階＝抜け穴を開けて左へ2歩、の2件だけ）。

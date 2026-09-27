@@ -25,6 +25,12 @@ public class ThiefEvents
     {
         public int Floor;
         public Vector2Int Pos;
+        /// <summary>
+        /// 書き込む中身。"床" なら床に戻す（＝居なくなる）。
+        /// **物体の名前も書ける** — 2階で2度目に話すと、原典 0x7aa が
+        /// 35階(-1,-4) に盗賊(ID21)を書き込み、続けて (-2,-3) の抜け穴を開ける。
+        /// </summary>
+        public string What;
     }
 
     /// <summary>できごと1件。</summary>
@@ -170,7 +176,10 @@ public class ThiefEvents
             int x, y;
             if (!int.TryParse(c[1].Substring(open + 1, comma - open - 1).Trim(), out x)) continue;
             if (!int.TryParse(c[1].Substring(comma + 1, close - comma - 1).Trim(), out y)) continue;
-            list.Add(new Change { Floor = floor, Pos = new Vector2Int(x, y) });
+            int eq = c[1].IndexOf('=', close);
+            var what = eq >= 0 ? c[1].Substring(eq + 1).Trim() : "床";
+            if (what.Length == 0) what = "床";
+            list.Add(new Change { Floor = floor, Pos = new Vector2Int(x, y), What = what });
         }
         return list;
     }

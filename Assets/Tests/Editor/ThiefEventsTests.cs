@@ -146,6 +146,35 @@ public class ThiefEventsTests
             else g.NextPage();
         }
         Assert.IsTrue(g.FloorAt(35).IsCleared(hole), "35階に抜け穴が空く");
+        // ★**本人も35階へ移る**（原典 0x7aa が ID21 を書き、0x7bb が穴を開ける）。
+        //   これが抜けていたので、35階で会えず＝2階の盗賊が消えないままだった
+        //   （作者の報告「35階で穴あけてくれたのにまだ2階にもいます」）。
+        Assert.AreEqual("Mikata", g.FloorAt(35).At(new Vector2Int(-1, -4)),
+                        "35階に本人が現れる");
+    }
+
+    /// <summary>
+    /// 35階で会うと、2階の奥の牢からは居なくなる（原典の表の 2:(+5,-5)=床）。
+    /// </summary>
+    [Test]
+    public void 三十五階で会うと二階からは消える()
+    {
+        var g = Game(35, new Vector2Int(-1, -5));
+        g.Player.EventFlags.Add(94);
+        g.Player.EventFlags.Add(88);                 // 2階で2度目の話を済ませた
+        var back = new Vector2Int(5, -5);
+        g.FloorAt(2).Put(back, "Mikata");
+        g.FloorAt(35).Put(new Vector2Int(-1, -4), "Mikata");
+
+        Assert.AreEqual("Mikata", g.FloorAt(2).At(back), "まだ2階にいる");
+        g.TalkToThief();
+        for (int i = 0; i < 20 && g.PendingPages > 0; i++)
+        {
+            if (g.CurrentKind == TowerGame.PageKind.Effect) g.Pump(false);
+            else g.NextPage();
+        }
+        Assert.IsTrue(g.Player.EventFlags.Contains(118), "35階で会った印");
+        Assert.IsTrue(g.FloorAt(2).IsCleared(back), "2階からは消える");
     }
 
     /// <summary>
