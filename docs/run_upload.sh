@@ -96,7 +96,10 @@ if [ "$HAVE_KEY" = 0 ] && [ "$HAVE_PW" = 0 ]; then
 
   【かんたん】Apple ID と「App用パスワード」
     1. appleid.apple.com → サインインとセキュリティ → App用パスワード → ＋
-       （名前は何でもよい。xxxx-xxxx-xxxx-xxxx が出る）
+       （そこで付ける名前は**自分用の覚え書き**で、用途を書くとよい。
+         例「App Store アップロード」。アプリ名にする必要は無い —
+         このパスワードは Apple ID のもので、どのアプリにも使えるため。
+         作ると xxxx-xxxx-xxxx-xxxx が出る）
     2. **自分の端末で1回だけ**これを打ってキーチェーンに入れる:
          xcrun altool --store-password-in-keychain-item AC_PASSWORD \
                       -u あなたのAppleID -p xxxx-xxxx-xxxx-xxxx
