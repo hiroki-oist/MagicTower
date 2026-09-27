@@ -111,7 +111,9 @@ public class SoundCueTests
     /// </summary>
     public void 戦闘の音は攻撃と反撃で鳴り分ける()
     {
-        // 何度も殴らないと倒せない相手
+        // ★音は**斬るたび**に鳴らす（作者の指定）。本線は積まず、見せている側が
+        //   「音」の段に来たときに鳴らすので、確かめるのは段の並びのほう。
+        //   原典 0x6082 も斬る直前（0x6263）と反撃の直前（0x6456）で鳴らす。
         var weak = new PlayerState
         {
             Hp = 5000, Attack = 30, Defense = 1, Floor = 1, Position = new Vector2Int(0, 0),
@@ -120,21 +122,32 @@ public class SoundCueTests
         g.Floor.Put(new Vector2Int(0, 1), "Enemy_SlimeG");
         g.ConsumeSounds();
         g.Step(Up);
-        var s = g.ConsumeSounds();
-        Assert.Contains(9, s, "自分の攻撃＝音9（原典 0x6263）");
-        Assert.Contains(10, s, "相手の反撃＝音10（原典 0x6456）");
-        int nine = 0, ten = 0;
-        foreach (var n in s) { if (n == 9) nine++; if (n == 10) ten++; }
-        Assert.AreEqual(nine - 1, ten, "反撃は攻撃より1回少ない");
 
-        // 一撃で倒せる相手なら反撃は鳴らない
+        var steps = g.LastBattle;
+        Assert.IsNotNull(steps, "斬り合いの段がある");
+        int nine = 0, ten = 0;
+        foreach (var s in steps)
+        {
+            if (s.Kind != "音") continue;
+            if (s.Value == BattlePresentation.SlashSound) nine++;
+            if (s.Value == BattlePresentation.CounterSound) ten++;
+        }
+        Assert.Greater(nine, 1, "自分の攻撃＝音9（原典 0x6263）");
+        Assert.AreEqual(nine - 1, ten, "反撃は攻撃より1回少ない（原典 0x6456）");
+
+        // **本線は斬り合いの音を積まない**（積むと戦い始めに全部流れてしまう）
+        var during = g.ConsumeSounds();
+        foreach (var n in during)
+            Assert.AreNotEqual(9, n, "斬る音は本線が積まない");
+
+        // 一撃で倒せる相手なら反撃の段は無い
         var strong = Game(1, new Vector2Int(0, 0));
         strong.Floor.Put(new Vector2Int(0, 1), "Enemy_SlimeG");
-        strong.ConsumeSounds();
         strong.Step(Up);
-        var s2 = strong.ConsumeSounds();
-        Assert.Contains(9, s2);
-        CollectionAssert.DoesNotContain(s2, 10, "一撃なら反撃は無い");
+        int ten2 = 0;
+        foreach (var s in strong.LastBattle)
+            if (s.Kind == "音" && s.Value == BattlePresentation.CounterSound) ten2++;
+        Assert.AreEqual(0, ten2, "一撃なら反撃は無い");
     }
 
     [Test]

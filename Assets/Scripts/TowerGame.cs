@@ -1834,11 +1834,11 @@ public class TowerGame
             Gold = b.GoldGained,
         };
         // 原典は一撃ごとに音9（自分の攻撃）、相手が生きていれば音10（反撃）。
-        for (int i = 0; i < b.Hits; i++)
-        {
-            PlaySound(SoundCues.Slash);
-            if (i < b.Hits - 1) PlaySound(SoundCues.Hit);
-        }
+        // ⚠ 斬り合いの音は**ここでは鳴らさない**（作者の指定）。
+        //   ここで積むと一手ぶんがまとめて流れて、戦い始めに全部聞こえてしまう。
+        //   原典 0x6082 は斬るたびにその場で鳴らすので、こちらも
+        //   見せている側（BattleView）が「音」の段に来たときに鳴らす。
+        //   段には音番号が入っている（BattlePresentation.Steps の "音"）。
         if (b.Died)
         {
             // 原典 0x64cd → 0x68b:0x2efc。生命力が尽きたらゲームオーバー。

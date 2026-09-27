@@ -109,6 +109,16 @@ public class BattleView : MonoBehaviour
                 case "待つ":
                     yield return new WaitForSeconds(BattlePresentation.WaitSeconds(s.Value));
                     break;
+                case "音":
+                    // ★**斬るたびに鳴らす**（作者の指定）。本線でまとめて積むと
+                    //   一手ぶんの音が戦い始めに全部流れてしまう。
+                    //   原典 0x6082 も斬る直前（0x6263）と反撃の直前（0x6456）で鳴らす。
+                    //   段に入っているのは原典の音番号（9=斬りかかる／10=命中）。
+                    //   音の表と結び付けておくため、合図の名前で鳴らす。
+                    if (controller != null && controller.Sound != null)
+                        controller.Sound.PlayCue(s.Value == BattlePresentation.CounterSound
+                                                 ? SoundCues.Hit : SoundCues.Slash);
+                    break;
                 case "斬る":
                 case "反撃":
                     if (s.Kind == "斬る") HitsDone++; else CountersDone++;

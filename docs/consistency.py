@@ -937,6 +937,14 @@ chk(_cue["会話を送る"][0]==95 and _cue["会話を送る"][0]!=_cue["触る"
 chk(_cue["階段"][0]==8,"階段は音8（原典 0x28e6、地形11/12の判定の直後）")
 chk(_cue["魔法攻撃"][0]==7,"魔法攻撃は音7（原典 0x1588 の3か所）")
 chk(_cue["斬りかかる"][0]==9 and _cue["命中"][0]==10,"戦闘は音9と音10（原典 0x6082）")
+# ★斬り合いの音は**斬るたび**に鳴らす（作者の指定）。本線でまとめて積むと
+#   一手ぶんが戦い始めに全部流れてしまう。原典 0x6082 も斬る直前に鳴らす。
+_bv=open("Assets/Scripts/UI/BattleView.cs",encoding="utf-8").read()
+chk('case "音":' in _bv and "SoundCues.Hit : SoundCues.Slash" in _bv,
+    "斬り合いの音は見せている側が段ごとに鳴らす")
+chk("PlaySound(SoundCues.Slash);" not in open(
+        "Assets/Scripts/TowerGame.cs",encoding="utf-8").read(),
+    "本線は斬り合いの音を積まない（まとめて鳴ってしまうため）")
 chk(_cue["拾う"][0]==6,"物を拾うのは音6（いちばん多く鳴る音）")
 chk(_cue["本編の曲"][0]==1 and _cue["題名の曲"][0]==2,"曲は本編=音1・題名とエンディング=音2")
 _tg=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
