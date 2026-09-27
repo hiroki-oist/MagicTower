@@ -2135,6 +2135,15 @@ chk('targetOSVersionString = "15.0"' in _ib,
 _pb=open("Assets/Editor/IosPostBuild.cs",encoding="utf-8").read()
 chk("SWIFT_VERSION" in _pb,
     "Swift を組み上げる設定を書き出しのあとに入れる")
+# ★ホーム画面のアイコンの下に出る名前（作者の指定）。Unity は Product Name
+#   （MagicTower）をそのまま書くので、書き出しのあとで日本語に直している。
+chk('DisplayName = "魔法の塔"' in _pb
+    and 'Set(text, "CFBundleDisplayName"' in _pb,
+    "ホーム画面の名前は「魔法の塔」")
+chk('Set(text, "CFBundleDevelopmentRegion", "<string>ja</string>")' in _pb,
+    "既定の言語は日本語（日本だけに出す）")
+chk("static string Set(string plist" in _pb,
+    "もう入っている鍵は差し替える（Add は足すだけなので効かない）")
 # Swift を入れると Xcode が Debug の本体を dylib にしようとして、Unity の main.mm が
 # 見ている __mh_execute_header が無くなり繋がらない。実行ファイルのまま作らせる。
 chk("ENABLE_DEBUG_DYLIB" in _pb and "__mh_execute_header" in _pb,

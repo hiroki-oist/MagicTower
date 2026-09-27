@@ -17,6 +17,17 @@ public static class IosPostBuild
         if (!File.Exists(plist)) { Debug.LogWarning("Info.plist が無い: " + plist); return; }
         var text = File.ReadAllText(plist);
 
+        // ⓪ **ホーム画面に出る名前**。Unity は Player Settings の Product Name
+        //    （MagicTower）をそのまま CFBundleDisplayName に書くので、日本語に直す。
+        //    Product Name そのものを日本語にすると Xcode の生成物の名前（.ipa や
+        //    スキーム）まで変わって書き出しの段取りが崩れるので、**ここで上書きする**。
+        //    App Store の一覧に出る名前（「魔法の塔 復刻版」）は
+        //    App Store Connect 側の「名前」で、こちらとは別もの。
+        text = Set(text, "CFBundleDisplayName", "<string>" + DisplayName + "</string>");
+        //    日本だけに出すアプリなので、既定の言語も日本語にしておく
+        //    （Unity は en を書く）。
+        text = Set(text, "CFBundleDevelopmentRegion", "<string>ja</string>");
+
         // ① 輸出コンプライアンス。暗号を使っていないので false。
         //    これが無いと、アップロードのたびに App Store Connect で聞かれる。
         text = Add(text, "ITSAppUsesNonExemptEncryption", "<false/>");
@@ -58,6 +69,34 @@ public static class IosPostBuild
         }
         proj.WriteToFile(pbxPath);
         Debug.Log("Swift の設定を入れた（SWIFT_VERSION / 標準ライブラリの同梱）");
+    }
+
+    /// <summary>ホーム画面のアイコンの下に出る名前（作者の指定）。</summary>
+    public const string DisplayName = "魔法の塔";
+
+    /// <summary>その鍵の値を差し替える（無ければ足す）。</summary>
+    static string Set(string plist, string key, string value)
+    {
+        var mark = "<key>" + key + "</key>";
+        int at = plist.IndexOf(mark);
+        if (at < 0) return Add(plist, key, value);
+        int from = at + mark.Length;
+        // 次の要素（<string>…</string> など）ひとつぶんを置き換える
+        int open = plist.IndexOf('<', from);
+        if (open < 0) return plist;
+        int close = plist.IndexOf('>', open);
+        if (close < 0) return plist;
+        var tag = plist.Substring(open + 1, close - open - 1);
+        int end;
+        if (tag.EndsWith("/")) end = close + 1;                  // <false/> のような空の要素
+        else
+        {
+            var closing = "</" + tag + ">";
+            int c = plist.IndexOf(closing, close);
+            if (c < 0) return plist;
+            end = c + closing.Length;
+        }
+        return plist.Substring(0, open) + value + plist.Substring(end);
     }
 
     /// <summary>その鍵がまだ無ければ足す（あるものは触らない）。</summary>
