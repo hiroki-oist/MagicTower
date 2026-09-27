@@ -26,11 +26,27 @@ private final class MTStore {
     var busy = false
     var message = ""
     private var updates: Task<Void, Never>?
+    private var storefronts: Task<Void, Never>?
+    /// 最後に読んだ品目の並び（読み直しに使う）。
+    private var wanted: [String] = []
 
     /// 品目を読み、いま持っている権利を数え、以後の更新も見張る。
     func start(ids: [String]) {
         guard !ids.isEmpty else { return }
+        wanted = ids
         busy = true
+        // ★**店の国が変わったら値段を読み直す**。
+        //   値段の字は Apple から受け取ったものをそのまま出しているので、
+        //   読んだあとに国が変わると、並んでいる値段（$0.99）と
+        //   実際に請求される額（¥150）が食い違って見える。
+        //   サンドボックスでは、あとからテスト用アカウントに入ると国が変わる。
+        if storefronts == nil {
+            storefronts = Task.detached { [weak self] in
+                for await _ in Storefront.updates {
+                    await self?.reload()
+                }
+            }
+        }
         // 途中で買い直された／家族から共有されたぶんも拾えるように見張る
         if updates == nil {
             updates = Task.detached { [weak self] in
@@ -54,6 +70,21 @@ private final class MTStore {
             }
             self.busy = false
         }
+    }
+
+    /// 品目を読み直す（店の国が変わったとき・窓を開けるとき）。
+    func reload() async {
+        guard !wanted.isEmpty else { return }
+        busy = true
+        do {
+            let got = try await Product.products(for: wanted)
+            self.products = wanted.compactMap { id in got.first { $0.id == id } }
+            await self.refreshOwned()
+            self.ready = true
+        } catch {
+            self.message = "品目を読めませんでした。"
+        }
+        busy = false
     }
 
     /// いま持っている権利（非消耗型なので、買ってあれば必ずここに出る）。
@@ -167,6 +198,14 @@ public func MTStorePoll() -> UnsafeMutablePointer<CChar>? {
 public func MTStoreBuy(_ id: UnsafePointer<CChar>?) {
     guard #available(iOS 15.0, *), let id = id else { return }
     MTStore.shared.buy(String(cString: id))
+}
+
+/// 品目を読み直す（窓を開けるとき・アプリが前に戻ったときに呼ぶ）。
+/// 店の国が変わっていれば値段の字も入れ替わる。
+@_cdecl("MTStoreReload")
+public func MTStoreReload() {
+    guard #available(iOS 15.0, *) else { return }
+    Task { await MTStore.shared.reload() }
 }
 
 @_cdecl("MTStoreRestore")

@@ -142,4 +142,45 @@ public class TeleportRelicTests
         StringAssert.Contains("障害物があって空間転移できない",
                               string.Join("\n", g.Log));
     }
+
+    /// <summary>
+    /// ★**持ち物の帯から使える**こと（作者の報告「タップしても効果音が鳴るだけ」）。
+    /// 使う道具かどうかを「使うと無くなるか」で判っていたため、使っても無くならない
+    /// 空間転移の秘宝だけが窓を開けられなかった。
+    /// </summary>
+    [Test]
+    public void 帯を触ると使うか聞いてくる()
+    {
+        Assert.IsTrue(SpecialItemEffects.IsUsable(SpecialItems.Kind.TeleportRelic),
+                      "使う道具に入っている");
+        Assert.IsFalse(SpecialItemEffects.IsConsumedOnUse(SpecialItems.Kind.TeleportRelic),
+                       "ただし使っても無くならない（原典 0x86f7）");
+
+        var p = new PlayerState
+        {
+            Hp = 9990, Attack = 100, Defense = 100,
+            Floor = 1, Position = new Vector2Int(1, 1),
+        };
+        p.Give(SpecialItems.Kind.TeleportRelic);
+        var g = new TowerGame(p);
+        g.Floor.Clear(new Vector2Int(-1, -1));          // 飛び先を空けておく
+        Assert.IsTrue(g.TapItem(SpecialItems.Kind.TeleportRelic), "窓が開く");
+        Assert.IsTrue(g.IsChoosing, "使うか聞いてくる");
+        StringAssert.Contains("空間転移の秘宝", g.CurrentPage);
+
+        g.ConfirmChoice();                              // ◎はい
+        Assert.AreEqual(new Vector2Int(-1, -1), g.Player.Position, "点対称のマスへ飛ぶ");
+        Assert.IsTrue(g.Player.Has(SpecialItems.Kind.TeleportRelic), "使っても残る");
+    }
+
+    /// <summary>原典のメニューの並び（special_1〜8）と「使う道具」が一致する。</summary>
+    [Test]
+    public void 使う道具は原典の一覧と同じ()
+    {
+        foreach (var k in TowerMenu.Usable)
+            Assert.IsTrue(SpecialItemEffects.IsUsable(k), k.ToString());
+        foreach (SpecialItems.Kind k in System.Enum.GetValues(typeof(SpecialItems.Kind)))
+            if (SpecialItemEffects.IsUsable(k))
+                CollectionAssert.Contains(TowerMenu.Usable, k, k.ToString());
+    }
 }

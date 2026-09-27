@@ -1014,7 +1014,9 @@ public class TowerGame
         if (kind == SpecialItems.Kind.HeroOrb) return ShowHeroOrb();
         if (kind == SpecialItems.Kind.WisdomOrb) return ShowWisdom();
         if (kind == SpecialItems.Kind.FlightOrb) return BeginFlight();
-        if (!SpecialItemEffects.IsConsumedOnUse(kind)) return false;   // 持つだけで効くもの
+        // ⚠ ここは「使う道具か」で判る。「使うと無くなるか」で判ると、
+        //   **空間転移の秘宝**（使っても無くならない）が一生使えない。
+        if (!SpecialItemEffects.IsUsable(kind)) return false;          // 持つだけで効くもの
 
         Say(string.Format(PhoneScreen.UseAsk, TowerMenu.ItemName(kind)));
         BeginChoice(ChoiceKind.UseItem, 2, default(Shop.Offer));

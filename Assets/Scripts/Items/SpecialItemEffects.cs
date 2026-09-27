@@ -36,6 +36,35 @@ public static class SpecialItemEffects
         return new Vector2Int(-at.x, -at.y);
     }
 
+    /// <summary>
+    /// **「使う」道具か**（原典のメニューの special_1〜8 に並ぶもの）。
+    ///
+    /// ⚠ ここを <see cref="IsConsumedOnUse"/> で代用してはいけない。
+    /// **空間転移の秘宝は使っても無くならない**（原典 0x86f7 は生命力800を払うだけで
+    /// 所持フラグを落とさない）ので、「無くなるか」で判ると持ち物の帯から
+    /// 一生使えないことになる（作者の報告「タップしても効果音が鳴るだけ」）。
+    ///
+    /// 雪の結晶はここに入らない。原典はマグマに踏み込んだときに使うもので、
+    /// メニューの一覧（special_1〜8）にも無い。
+    /// </summary>
+    public static bool IsUsable(SpecialItems.Kind k)
+    {
+        switch (k)
+        {
+            case SpecialItems.Kind.Elixir:         // special_1
+            case SpecialItems.Kind.Matock:         // special_2
+            case SpecialItems.Kind.DestructionOrb: // special_3
+            case SpecialItems.Kind.TeleportRelic:  // special_4
+            case SpecialItems.Kind.WingUp:         // special_5
+            case SpecialItems.Kind.WingDown:       // special_6
+            case SpecialItems.Kind.MagicKey:       // special_7
+            case SpecialItems.Kind.SuperMatock:    // special_8
+                return true;
+            default:
+                return false;
+        }
+    }
+
     /// <summary>使うと無くなるアイテムか。</summary>
     public static bool IsConsumedOnUse(SpecialItems.Kind k)
     {

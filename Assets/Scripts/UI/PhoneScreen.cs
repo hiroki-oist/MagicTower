@@ -236,9 +236,18 @@ public static class PhoneScreen
     /// <summary>公開先を載せるときの書き方。</summary>
     public const string PrivacyAt = "公開先: {0}";
 
-    /// <summary>売り物。金額は円。</summary>
+    /// <summary>
+    /// 売り物。ゴールドの額と、**エディタで見るときの見本の値段（円）**。
+    ///
+    /// ⚠ 実機に出る値段はここではなく、**App Store から受け取った字**
+    /// （<c>Product.displayPrice</c>）をそのまま使う。国によって通貨も額も
+    /// 変わるので、こちらで組み立ててはいけない。ここの数字は
+    /// エディタで窓の形を見るときの見本でしかない。
+    /// 2026-09-27 に App Store Connect の実際の日本価格（150/300/1000円。
+    /// 基準はアメリカの $0.99/$1.99/$5.99）へ揃えた。
+    /// </summary>
     public static readonly int[] ShopGold = { 400, 1000, 4000 };
-    public static readonly int[] ShopYen  = { 160,  320,  640 };
+    public static readonly int[] ShopYen  = { 150,  300, 1000 };
 
     /// <summary>買ったあとの一言。</summary>
     public const string ShopBought = "{0}ＧＯＬＤを手に入れた！";

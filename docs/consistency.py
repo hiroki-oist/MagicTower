@@ -1683,8 +1683,14 @@ chk("ShopButtonIndex = 0" in _ps and "MenuButtonIndex = 2" in _ps,
     "「商店」は右の1つ目、「メニュー」は左の3つ目")
 # 課金（ゴールドの購入）。原典にも Java版にも無い、作者の指定。
 _phs=open("Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read()
-chk("ShopGold = { 400, 1000, 4000 }" in _ps and "ShopYen  = { 160,  320,  640 }" in _ps,
-    "400/1000/4000 ゴールドが 160/320/640 円")
+# 実機の値段は App Store から受け取った字をそのまま出す。ここの円はエディタで
+# 窓の形を見るときの見本で、実際の日本価格（150/300/1000円）に揃えてある。
+chk("ShopGold = { 400, 1000, 4000 }" in _ps and "ShopYen  = { 150,  300, 1000 }" in _ps,
+    "400/1000/4000 ゴールドの見本の値段が実際の日本価格と揃っている")
+# ⚠ この行より下で _gs は GameStart.cs を指している（名前の使い回しで一度やられた）。
+_gshop3=open("Assets/Scripts/Items/GoldShop.cs",encoding="utf-8").read()
+chk("AppleStore.PriceOf(i)" in _gshop3 and "string.IsNullOrEmpty(price)" in _gshop3,
+    "実機では App Store の字をそのまま出す（嘘の値段を組み立てない）")
 chk("一度購入すれば" in _ps and "無料" in _ps,
     "「一度購入すれば、次回プレイからは無料で同じゴールドを購入できる」と書いてある")
 # 課金の窓（作者の指定）: 金貨の絵を左に、名前は「◯◯ゴールドの引換券」、
@@ -1906,6 +1912,19 @@ chk(os.path.exists("docs/privacy_policy.md"),
 _sw=open("Assets/Plugins/iOS/MagicTowerStore.swift",encoding="utf-8").read()
 chk("Transaction.updates" in _sw,
     "あとから承認された購入（ねだる設定・他の端末での購入）も受け取る")
+# ★店の国が変わったら値段を読み直す（窓の値段と請求額が食い違わないように）
+chk("Storefront.updates" in _sw and "func reload() async" in _sw
+    and "MTStoreReload" in _sw,
+    "店の国が変わったら品目を読み直す（サンドボックスで必ず起きる）")
+chk("AppleStore.Reload();" in _ctrl,
+    "窓を開けるとき・アプリが前に戻ったときにも読み直す")
+# 使う道具かどうかを「使うと無くなるか」で判らない（空間転移の秘宝が使えなくなる）
+_sie=open("Assets/Scripts/Items/SpecialItemEffects.cs",encoding="utf-8").read()
+chk("public static bool IsUsable(SpecialItems.Kind k)" in _sie
+    and "case SpecialItems.Kind.TeleportRelic:  // special_4" in _sie,
+    "「使う道具か」は原典の special_1〜8 で判る")
+chk("if (!SpecialItemEffects.IsUsable(kind)) return false;" in _tg4,
+    "持ち物の帯はその一覧で窓を開ける（使っても無くならない道具も使える）")
 chk("Transaction.currentEntitlements" in _sw and "AppStore.sync()" in _sw,
     "持っているものを読み直す口と、復元の口の両方がある")
 chk("AppStore.canMakePayments" in _sw,

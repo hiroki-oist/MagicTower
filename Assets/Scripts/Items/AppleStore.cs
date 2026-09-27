@@ -71,6 +71,7 @@ public static class AppleStore
     [DllImport("__Internal")] static extern System.IntPtr MTStorePoll();
     [DllImport("__Internal")] static extern void MTStoreBuy(string id);
     [DllImport("__Internal")] static extern void MTStoreRestore();
+    [DllImport("__Internal")] static extern void MTStoreReload();
 #endif
 
     static bool started;
@@ -101,6 +102,23 @@ public static class AppleStore
         if (!Live || index < 0 || index >= ProductIds.Length) return;
 #if UNITY_IOS && !UNITY_EDITOR
         MTStoreBuy(ProductIds[index]);
+#endif
+    }
+
+    /// <summary>
+    /// 品目を読み直す。**窓を開けるときと、アプリが前に戻ったとき**に呼ぶ。
+    ///
+    /// 値段の字は Apple から受け取ったものをそのまま出しているので、
+    /// 読んだあとに**店の国が変わる**と、並んでいる値段と実際に請求される額が
+    /// 食い違って見える（サンドボックスで試すときは、あとからテスト用の
+    /// アカウントに入るので必ずこうなる。作者の報告「窓は $0.99 なのに
+    /// 購入画面では150円」）。Swift の側も Storefront.updates を見張っている。
+    /// </summary>
+    public static void Reload()
+    {
+        if (!Live) return;
+#if UNITY_IOS && !UNITY_EDITOR
+        MTStoreReload();
 #endif
     }
 

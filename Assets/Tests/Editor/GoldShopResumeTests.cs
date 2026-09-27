@@ -11,7 +11,10 @@ public class GoldShopResumeTests
     {
         Assert.AreEqual(3, GoldShop.Count);
         CollectionAssert.AreEqual(new[] { 400, 1000, 4000 }, PhoneScreen.ShopGold);
-        CollectionAssert.AreEqual(new[] { 160, 320, 640 }, PhoneScreen.ShopYen);
+        // ★実機の値段は App Store から受け取った字をそのまま出す。ここの円は
+        //   エディタで窓の形を見るときの見本で、実際の日本価格に揃えてある
+        //   （基準はアメリカの $0.99 / $1.99 / $5.99）。
+        CollectionAssert.AreEqual(new[] { 150, 300, 1000 }, PhoneScreen.ShopYen);
     }
 
     [Test]

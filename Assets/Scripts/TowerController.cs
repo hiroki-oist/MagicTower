@@ -528,7 +528,13 @@ public class TowerController : MonoBehaviour
     public void AskLoad() { if (Game != null && !AtTitle) Game.AskLoad(); }
 
     /// <summary>右下の「商店」のボタン。課金でゴールドを買う窓（作者の指定）。</summary>
-    public void AskGoldShop() { if (Game != null && !AtTitle) Game.AskGoldShop(); }
+    public void AskGoldShop()
+    {
+        if (Game == null || AtTitle) return;
+        // 窓を開けるたびに値段を読み直す（店の国が変わっていることがある）
+        AppleStore.Reload();
+        Game.AskGoldShop();
+    }
 
     /// <summary>
     /// 下の「メニュー」のボタン（作者の指定）。**メニューはここからだけ開く**。
@@ -696,6 +702,8 @@ public class TowerController : MonoBehaviour
     void OnApplicationPause(bool paused)
     {
         if (paused) WriteResumeIfPlaying();
+        // 後ろへ回っている間に店の国やアカウントが変わっていることがある
+        else AppleStore.Reload();
     }
 
     void OnApplicationQuit() { WriteResumeIfPlaying(); }
