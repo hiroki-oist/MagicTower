@@ -8,18 +8,20 @@
 # 要るもの（どちらも無いと途中で止まる。作り方は下の案内に出る）:
 #   ① Apple Distribution の証明書（キーチェーンの中）
 #   ② 送るための資格情報。どちらか一方でよい。
-#      【かんたん】Apple ID と「App用パスワード」を**キーチェーンに入れておく**:
-#          xcrun altool --store-password-in-keychain-item AC_PASSWORD \
-#                       -u あなたのAppleID -p xxxx-xxxx-xxxx-xxxx
-#        （この1回だけ自分の端末で打つ。以後 APPLE_ID だけ渡せばよく、
-#          パスワードが履歴にもコマンド行にも残らない）
-#        ※ App用パスワードは **Apple ID のもの**で、アプリには紐づかない。
-#          名前も入れ物の札にすぎないので、ほかのアプリを出すときも使い回せる。
-#        例: APPLE_ID=you@example.com sh docs/run_upload.sh send
-#      【本式】App Store Connect の API キー:
+#      【おすすめ】App Store Connect の API キー:
 #          ASC_KEY_ID    … キーID（10文字）
 #          ASC_ISSUER_ID … Issuer ID（UUID）
 #          ~/.appstoreconnect/private_keys/AuthKey_<ASC_KEY_ID>.p8
+#        鍵は**ファイルとして置くだけ**なので、秘密がコマンド行にも環境変数にも出ない。
+#      【次善】Apple ID と App用パスワード: APPLE_ID / APP_PASSWORD
+#
+#   ⚠ この Mac で実際に確かめた癖（Xcode 26.2 / altool 26.10.1）:
+#      ・`xcrun altool` は DEVELOPER_DIR を付けないと見つからない
+#        （xcode-select が CommandLineTools を指しているため）
+#      ・`--store-password-in-keychain-item NAME` はヘルプの例のままでは動かず、
+#        **`--item NAME` を足さないといけない**
+#      ・そうして入れても `-p @keychain:NAME` は「見つからない」と言われる
+#        （--keychain で場所を教えても同じ）。キーチェーン経由は使わない。
 #
 # 使い方:
 #   sh docs/run_upload.sh              … 検査だけして送らない（--validate まで）
@@ -71,41 +73,34 @@ if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -f "$KEY" ]; then HAVE_K
 # それも無ければ環境変数から拾う。ALTOOL_KEYCHAIN_ITEM で名指しもできる。
 HAVE_PW=0
 PW_REF=""
-if [ -n "$APPLE_ID" ]; then
-  for item in "$ALTOOL_KEYCHAIN_ITEM" AC_PASSWORD MT_APP_PASSWORD; do
-    [ -n "$item" ] || continue
-    if security find-generic-password -s "$item" >/dev/null 2>&1; then
-      HAVE_PW=1; PW_REF="@keychain:$item"; break
-    fi
-  done
-  if [ "$HAVE_PW" = 0 ] && [ -n "$APP_PASSWORD" ]; then
-    HAVE_PW=1; PW_REF="@env:APP_PASSWORD"
-  fi
+# パスワードは**コマンド行に直に書かない**。環境変数の名前だけを渡す
+# （@env: は altool が自分で読むので、ps や履歴に中身が出ない）。
+if [ -n "$APPLE_ID" ] && [ -n "$APP_PASSWORD" ]; then
+  HAVE_PW=1; PW_REF="@env:APP_PASSWORD"
 fi
 if [ "$HAVE_KEY" = 0 ] && [ "$HAVE_PW" = 0 ]; then
   cat <<'EOS'
 ★ 送るための資格情報が無い。どちらかを用意する。
 
-  【おすすめ】App Store Connect の API キー
-    App Store Connect → Users and Access → Integrations → App Store Connect API
-    → 「＋」でキーを作り（Role は App Manager で足りる）、.p8 をダウンロード
-    → ~/.appstoreconnect/private_keys/AuthKey_<キーID>.p8 に置く
-    → 環境変数 ASC_KEY_ID と ASC_ISSUER_ID を渡す
-       例: ASC_KEY_ID=XXXXXXXXXX ASC_ISSUER_ID=xxxxxxxx-.... sh docs/run_upload.sh send
-    ※ .p8 は**一度しかダウンロードできない**ので無くさないこと。
+  【おすすめ】App Store Connect の API キー（秘密がファイルの中だけで済む）
+    1. App Store Connect → Users and Access → Integrations
+       → App Store Connect API → 「＋」でキーを作る（Role は App Manager で足りる）
+    2. .p8 をダウンロード（**一度きり**）して、この Mac の
+       ~/.appstoreconnect/private_keys/AuthKey_<キーID>.p8 に置く
+    3. キーID（10文字）と Issuer ID（UUID。鍵の一覧の上に出ている）を渡す
+         ASC_KEY_ID=XXXXXXXXXX ASC_ISSUER_ID=xxxxxxxx-xxxx-.... \
+           sh docs/run_upload.sh send
 
-  【かんたん】Apple ID と「App用パスワード」
+  【次善】Apple ID と App用パスワード
     1. appleid.apple.com → サインインとセキュリティ → App用パスワード → ＋
-       （そこで付ける名前は**自分用の覚え書き**で、用途を書くとよい。
-         例「App Store アップロード」。アプリ名にする必要は無い —
-         このパスワードは Apple ID のもので、どのアプリにも使えるため。
-         作ると xxxx-xxxx-xxxx-xxxx が出る）
-    2. **自分の端末で1回だけ**これを打ってキーチェーンに入れる:
-         xcrun altool --store-password-in-keychain-item AC_PASSWORD \
-                      -u あなたのAppleID -p xxxx-xxxx-xxxx-xxxx
-       （AC_PASSWORD は入れ物の名前。ほかのアプリを出すときも同じものが使える）
-    3. あとは APPLE_ID だけ渡せばよい:
+       （そこで付ける名前は自分用の覚え書き。用途を書くとよい。
+         このパスワードは Apple ID のもので、どのアプリにも使える）
+    2. 値がコマンド行に出ない形で環境変数に入れて渡す:
+         read -s APP_PASSWORD; export APP_PASSWORD
          APPLE_ID=you@example.com sh docs/run_upload.sh send
+
+  ⚠ キーチェーンに入れて -p @keychain: で渡すやり方は**この版では動かない**
+     （altool 26.10.1。--item を足して保存はできるが、読み出しで見つけられない）。
 EOS
   exit 1
 fi
@@ -150,7 +145,7 @@ echo "   → $IPA"
 
 ALTOOL="$DEVELOPER_DIR/usr/bin/altool"
 if [ "$HAVE_KEY" = 1 ]; then
-  AUTH="--apiKey $ASC_KEY_ID --apiIssuer $ASC_ISSUER_ID"
+  AUTH="--api-key $ASC_KEY_ID --api-issuer $ASC_ISSUER_ID"
 else
   AUTH="--username $APPLE_ID --password $PW_REF"
 fi
