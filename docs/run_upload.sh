@@ -9,10 +9,12 @@
 #   ① Apple Distribution の証明書（キーチェーンの中）
 #   ② 送るための資格情報。どちらか一方でよい。
 #      【かんたん】Apple ID と「App用パスワード」を**キーチェーンに入れておく**:
-#          xcrun altool --store-password-in-keychain-item MT_APP_PASSWORD \
+#          xcrun altool --store-password-in-keychain-item AC_PASSWORD \
 #                       -u あなたのAppleID -p xxxx-xxxx-xxxx-xxxx
 #        （この1回だけ自分の端末で打つ。以後 APPLE_ID だけ渡せばよく、
 #          パスワードが履歴にもコマンド行にも残らない）
+#        ※ App用パスワードは **Apple ID のもの**で、アプリには紐づかない。
+#          名前も入れ物の札にすぎないので、ほかのアプリを出すときも使い回せる。
 #        例: APPLE_ID=you@example.com sh docs/run_upload.sh send
 #      【本式】App Store Connect の API キー:
 #          ASC_KEY_ID    … キーID（10文字）
@@ -63,12 +65,20 @@ HAVE_KEY=0
 if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -f "$KEY" ]; then HAVE_KEY=1; fi
 # パスワードは**直に渡さない**。キーチェーンに入れたものを名前で指す
 # （コマンド行に書くと ps や履歴から見えてしまう）。
+# 入れ物の名前は何でもよく、**アプリごとに分ける必要は無い**
+# （App用パスワードは Apple ID に紐づくもので、アプリには紐づかない）。
+# 慣例の AC_PASSWORD を先に見て、無ければこの仕事用の名前、
+# それも無ければ環境変数から拾う。ALTOOL_KEYCHAIN_ITEM で名指しもできる。
 HAVE_PW=0
 PW_REF=""
 if [ -n "$APPLE_ID" ]; then
-  if security find-generic-password -s MT_APP_PASSWORD >/dev/null 2>&1; then
-    HAVE_PW=1; PW_REF="@keychain:MT_APP_PASSWORD"
-  elif [ -n "$APP_PASSWORD" ]; then
+  for item in "$ALTOOL_KEYCHAIN_ITEM" AC_PASSWORD MT_APP_PASSWORD; do
+    [ -n "$item" ] || continue
+    if security find-generic-password -s "$item" >/dev/null 2>&1; then
+      HAVE_PW=1; PW_REF="@keychain:$item"; break
+    fi
+  done
+  if [ "$HAVE_PW" = 0 ] && [ -n "$APP_PASSWORD" ]; then
     HAVE_PW=1; PW_REF="@env:APP_PASSWORD"
   fi
 fi
@@ -88,8 +98,9 @@ if [ "$HAVE_KEY" = 0 ] && [ "$HAVE_PW" = 0 ]; then
     1. appleid.apple.com → サインインとセキュリティ → App用パスワード → ＋
        （名前は何でもよい。xxxx-xxxx-xxxx-xxxx が出る）
     2. **自分の端末で1回だけ**これを打ってキーチェーンに入れる:
-         xcrun altool --store-password-in-keychain-item MT_APP_PASSWORD \
+         xcrun altool --store-password-in-keychain-item AC_PASSWORD \
                       -u あなたのAppleID -p xxxx-xxxx-xxxx-xxxx
+       （AC_PASSWORD は入れ物の名前。ほかのアプリを出すときも同じものが使える）
     3. あとは APPLE_ID だけ渡せばよい:
          APPLE_ID=you@example.com sh docs/run_upload.sh send
 EOS
