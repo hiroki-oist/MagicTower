@@ -109,6 +109,13 @@ public class TowerGame
     /// <summary>今出すべきものの中身。無ければ null。</summary>
     public Page? Current { get { return pages.Count > 0 ? pages.Peek() : (Page?)null; } }
 
+    /// <summary>
+    /// 主人公が見ている向き（既定は上）。入力の側が一歩ごとに入れる。
+    /// 使うのは「目の前」を見る道具だけ（雪の結晶。作者の指定）。
+    /// 原典は向きを持っていない（絵は2コマで、後ろ姿も横向きも無い）。
+    /// </summary>
+    public Vector2Int Facing = Vector2Int.up;
+
     /// <summary>今出すべきものの番号（序章の絵なら何行目まで出すか）。無ければ 0。</summary>
     public int CurrentRecord { get { return pages.Count > 0 ? pages.Peek().Record : 0; } }
 
@@ -194,7 +201,7 @@ public class TowerGame
         {
             return blinks.Count > 0 || walks.Count > 0 || doorOpens.Count > 0
                    || bossAppears.Count > 0 || vanishes.Count > 0 || deathQueued
-                   || pauseFrames > 0 || PlayerSlide != null;
+                   || pauseFrames > 0 || PlayerSlide != null || fades.Count > 0;
         }
     }
 
@@ -359,6 +366,18 @@ public class TowerGame
                     });
                 }
             }
+            else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.FadeWalkPrefix))
+            {
+                Vector2Int to; int frames;
+                if (Cutscenes.TryParseFadeWalk(e.Effect, out to, out frames))
+                {
+                    fades.Add(new FadeWalk
+                    {
+                        From = Player.Position, To = to, Frames = frames
+                    });
+                    Player.Position = to;
+                }
+            }
             else if (e.Effect == Cutscenes.PushUpStep)
             {
                 // 原典 0x3ebc。主人公を上へ1マス滑らせて Y を1つ減らす。
@@ -499,7 +518,7 @@ public class TowerGame
             return walks.Count + doorOpens.Count + blinks.Count
                    + bossAppears.Count + vanishes.Count + viewTicket
                    + (deathQueued ? 1 : 0) + (pauseFrames > 0 ? 1 : 0)
-                   + (PlayerSlide != null ? 1 : 0);
+                   + (PlayerSlide != null ? 1 : 0) + fades.Count;
         }
     }
 
@@ -533,6 +552,7 @@ public class TowerGame
                 || step == Cutscenes.BossAppearStep
                 || step.StartsWith(Cutscenes.BattlePrefix)
                 || step == Cutscenes.PushUpStep
+                || step.StartsWith(Cutscenes.FadeWalkPrefix)
                 || step.StartsWith(Cutscenes.WalkPrefix)
                 || step.StartsWith(Cutscenes.DoorOpenPrefix)
                 || step.StartsWith(Cutscenes.DoorClosePrefix)
@@ -790,6 +810,27 @@ public class TowerGame
     {
         var copy = PlayerSlide;
         PlayerSlide = null;
+        return copy;
+    }
+
+    /// <summary>
+    /// ★**歩きながらの暗転**（作者の指定。原典に無い）。終幕でゼノに向かって
+    /// 歩き出し、暗くなりきってから1枚絵に入るための段。
+    /// </summary>
+    public class FadeWalk
+    {
+        public Vector2Int From, To;
+        /// <summary>暗くなりきるまでのコマ数（1/60秒）。</summary>
+        public int Frames;
+    }
+
+    readonly List<FadeWalk> fades = new List<FadeWalk>();
+
+    /// <summary>積んだ暗転を取り出して空にする。</summary>
+    public List<FadeWalk> ConsumeFades()
+    {
+        var copy = new List<FadeWalk>(fades);
+        fades.Clear();
         return copy;
     }
 
@@ -1579,6 +1620,11 @@ public class TowerGame
         foreach (var u in fired)
         {
             PlaySound(u.Floor == 2 ? SoundCues.BigUnlock : SoundCues.Unlock);
+            // ★**20階・25階・49階の妖精は、出たその場で採点して消える**。
+            //   表が妖精を書いた直後に同じマスを床へ戻しているので、盤面には
+            //   残らず、歩いて話しかけることができない（10階と40階は残る）。
+            //   ここで採点しないと、その階の採点の式が一生使われないことになる。
+            if (SealedDoors.ScoresFairy(u)) Speak(FairyText());
             // 49階で壁が書き込まれるとき（原典 0x226b）は別の音が鳴る
             foreach (var r in u.Results)
                 if (r.Kind == "封印") { PlaySound(SoundCues.WallAppear); break; }
@@ -1968,6 +2014,24 @@ public class TowerGame
             }
             case SpecialItems.Kind.WingUp:   return UseWing(true);
             case SpecialItems.Kind.WingDown: return UseWing(false);
+
+            case SpecialItems.Kind.SnowCrystal:
+            {
+                // ★作者の指定。**目の前のマグマを、続いているぶんだけ溶かす**
+                //   （原典は持っているだけで、手前に立った瞬間に溶ける。AuthorStyle 参照）。
+                //   13階はほとんどのマスがマグマなので、階ごと溶かしてはいけない。
+                //   原典が溶かすのも (0,-4) の上に続く4マスだけで、そこで壁に当たる。
+                var melted = Floor.MagmaRun(Player.Position, Facing);
+                if (melted.Count == 0)
+                {
+                    Say(GameText.Instance.Message("snow_nowhere"));
+                    return false;                       // 何も起きないので減らさない
+                }
+                // 原典 0x2079 は**1マスずつ**音を鳴らして溶かす。そこは合わせる。
+                foreach (var m in melted) { Floor.Clear(m); PlaySound(SoundCues.SnowMelt); }
+                Say(GameText.Instance.Message("snow_use"));
+                break;
+            }
 
             case SpecialItems.Kind.TeleportRelic:
             {

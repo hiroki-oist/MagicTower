@@ -76,6 +76,45 @@ public class UnlockFlagSaveTests
         Assert.AreNotEqual(".", h.Floor.At(stair), "階段は出たまま");
     }
 
+    /// <summary>
+    /// ★**20階・25階・49階の妖精は、出たその場で採点する**。
+    /// 表が妖精を書いた直後に同じマスを床へ戻すので盤面には残らず、
+    /// 歩いて話しかけることができない（10階・40階は残るので話しかける）。
+    /// ここで採点しないと、その階の採点の式が一生使われない。
+    /// </summary>
+    [Test]
+    public void 二十階と二十五階と四十九階の妖精はその場で採点する()
+    {
+        foreach (int floor in new[] { 20, 25, 49 })
+        {
+            bool found = false;
+            foreach (var u in SealedDoors.Instance.ForFloor(floor))
+                if (SealedDoors.ScoresFairy(u)) found = true;
+            Assert.IsTrue(found, $"F{floor} は出してすぐ消す形");
+        }
+        foreach (int floor in new[] { 10, 40 })
+            foreach (var u in SealedDoors.Instance.ForFloor(floor))
+                Assert.IsFalse(SealedDoors.ScoresFairy(u), $"F{floor} は妖精が残る");
+
+        // 20階で実際に採点の文面が出る
+        var g = At(20, new Vector2Int(5, -5));
+        var f = g.FloorAt(20);
+        foreach (var u in SealedDoors.Instance.ForFloor(20))
+        {
+            foreach (var guard in u.Guards) f.Clear(guard);
+            if (u.RequiresFlag >= 0) g.Player.EventFlags.Add(u.RequiresFlag);
+        }
+        g.EnterFloor(20, new Vector2Int(5, -5));
+        var all = new System.Text.StringBuilder();
+        int guardCount = 0;
+        while (g.Current.HasValue && guardCount++ < 60)
+        {
+            all.Append(g.CurrentPage);
+            g.NextPage();
+        }
+        StringAssert.Contains("点です", all.ToString(), "採点の文面が出る");
+    }
+
     /// <summary>印が遊び手の旗に載る（原典と同じ1本の配列）。</summary>
     [Test]
     public void 解錠の印は遊び手の旗に控える()

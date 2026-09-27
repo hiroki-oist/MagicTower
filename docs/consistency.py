@@ -1258,8 +1258,10 @@ print("\n【9h】立ち入ると起きることの表")
 _pe=[[c.strip() for c in l.split("|")] for l in
      open("Assets/Resources/PositionEvents.txt",encoding="utf-8").read().split("\n")
      if l.strip() and not l.strip().startswith("#")]
+# ★13階（雪の結晶）はこの表から外した。作者の指定で「持ち物の帯から使う道具」へ
+#   移したため（AuthorStyle.SnowCrystalIsUsed）。原典 0x1fd5 は立つだけで溶けた。
 chk([(int(r[0]),int(r[3]) if r[3]!="-" else -1) for r in _pe]==
-    [(3,89),(10,91),(10,94),(13,-1),(15,95),(20,103),(25,105),(30,109),
+    [(3,89),(10,91),(10,94),(15,95),(20,103),(25,105),(30,109),
      (32,111),(33,114),(33,113),(38,119),(40,121),(42,123),(43,-1),(47,-1),
      (49,130),(24,-1)],
     "階とフラグの並びが原典どおり（最後の2つが物語の終わり）")
@@ -1272,14 +1274,21 @@ chk(len(_gate)==1 and _gate[0][3]=="-" and _gate[0][2]=="マスが門:0,0",
 chk(all(r[3]=="-" or int(r[3])!=131 for r in _pe),
     "立ち入りの印に 131（49階の五の目の印）を使っていない")
 _pf=[int(r[3]) for r in _pe if r[3]!="-"]
-chk(len(_pe)==18,"位置イベントは18件（原典 0x1588 の分岐16＋物語の終わり2）",str(len(_pe)))
+chk(len(_pe)==17,"位置イベントは17件（原典の18件から13階の雪の結晶を道具へ移した）",
+    str(len(_pe)))
 chk(len(_pf)==len(set(_pf)),"フラグ番号が重複しない")
-# 13階の雪の結晶。原典 0x1fd5 は一度きりの印を持たず、持ち物を使い切ることで二度目を防ぐ。
-_snow=[r for r in _pe if r[0]=="13"]
-chk(len(_snow)==1 and _snow[0][2]=="持ち物:Crystal_Snow" and _snow[0][3]=="-",
-    "13階は雪の結晶を持っていると発火し、一度きりの印は持たない")
-chk(_snow and _snow[0][4].count("=床")==4,
-    "溶けるのは4マス（X=5 の Y=5〜8 ＝ (0,0)(0,-1)(0,-2)(0,-3)）")
+# 13階の雪の結晶は**使う道具**へ移した（作者の指定）。立ち入りの表には無く、
+# 目の前に続くマグマだけを溶かす（13階は81マスがマグマなので階ごと溶かせない）。
+chk([r for r in _pe if r[0]=="13"]==[],"13階は立ち入りの表から外してある")
+_sie2=open("Assets/Scripts/Items/SpecialItemEffects.cs",encoding="utf-8").read()
+_fs3=open("Assets/Scripts/Floor/FloorState.cs",encoding="utf-8").read()
+chk("case SpecialItems.Kind.SnowCrystal:" in _sie2 and "SnowCrystalIsUsed" in _sie2,
+    "雪の結晶は「使う道具」になっている")
+chk("public List<Vector2Int> MagmaRun(Vector2Int from, Vector2Int dir)" in _fs3,
+    "溶かすのは目の前に続いているマグマだけ")
+chk("SnowCrystalIsUsed = true" in _as2 if False else
+    "SnowCrystalIsUsed" in open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read(),
+    "原典から外れる理由は AuthorStyle に書いてある")
 chk(any(r[0]=="49" and "大魔導師" in r[4] for r in _pe),
     "49階の中央で大魔導師の口上（原典 0x2277）")
 chk(any(r[0]=="24" and "マスが門" in r[2] and "終幕" in r[4] for r in _pe),
@@ -1299,7 +1308,8 @@ _cs_say=[n for n in _cs_steps
          and not n.startswith("開く ") and not n.startswith("閉まる ")
          and not n.startswith("消す ") and not n.startswith("戦闘 ")
          and not n.startswith("音 ") and not n.startswith("閃光")
-         and not n.startswith("待つ ")]
+         and not n.startswith("待つ ")
+         and not n.startswith("歩いて暗転 ")]
 chk(all(int(n) in _dlg for n in _cs_say),
     "場面のセリフ番号が Dialogue.txt に実在する（「題名」「奪われる」は別仕立て）")
 # ★作者の指定: 20階はバンパイアを盤面に書いてから待ってセリフを出す

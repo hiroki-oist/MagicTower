@@ -60,6 +60,12 @@ public static class SpecialItemEffects
             case SpecialItems.Kind.MagicKey:       // special_7
             case SpecialItems.Kind.SuperMatock:    // special_8
                 return true;
+            // ★**雪の結晶も「使う道具」にする**（作者の指定。原典に無い）。
+            //   原典 0x1fd5 は**持っているだけ**で、マグマの手前に立った瞬間に溶ける。
+            //   作者の指定で「目の前で使ったときに溶ける」形へ変えた。
+            //   理由は <see cref="AuthorStyle.SnowCrystalIsUsed"/>。
+            case SpecialItems.Kind.SnowCrystal:
+                return AuthorStyle.SnowCrystalIsUsed;
             default:
                 return false;
         }

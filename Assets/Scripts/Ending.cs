@@ -154,6 +154,13 @@ public static class Ending
     /// <summary>そこでの立ち位置。原典 0x23be / 0x23cd が X=5, Y=6 を書く。</summary>
     public static readonly Vector2Int LastPosition = new Vector2Int(0, -1);
 
+    /// <summary>
+    /// ★**最後にゼノへ踏み出す1歩**（作者の指定。原典に無い）。
+    /// セリフ170のあと、ここへ1秒かけて歩きながら画面が暗くなり、
+    /// 暗くなりきってから塔の1枚絵に入る。ゼノは (0,+1) にいる。
+    /// </summary>
+    public static readonly Vector2Int LastStep = new Vector2Int(0, 0);
+
     /// <summary>大魔導師の口上。</summary>
     public const int ArchmageRecord = 155;
 

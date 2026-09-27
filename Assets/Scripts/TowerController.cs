@@ -37,6 +37,8 @@ public class TowerController : MonoBehaviour
     [SerializeField] DialogueWindowView dialogue;
     /// <summary>20階のボスが現れる10コマ。**出終わってひと呼吸おいてから**セリフ。</summary>
     [SerializeField] BossAppearView bossView;
+    /// <summary>歩きながらの暗転（終幕。作者の指定）。</summary>
+    FadeView fadeView;
     /// <summary>日本語の字。**先に作っておく**（初出の字で固まるため）。</summary>
     [SerializeField] TMPro.TMP_FontAsset font;
 
@@ -224,6 +226,7 @@ public class TowerController : MonoBehaviour
                    // 合体を見せている裏で場面が先へ進み、地図も「待つ」も合体中に
                    // 使い切っていた（セリフが合体の直後に出てしまう報告がこれ）。
                    || (bossView != null && bossView.IsPlaying)
+                   || (Fade != null && Fade.IsPlaying)
                    || (doorView != null && doorView.IsPlaying)
                    || (walkView != null && walkView.IsPlaying)
                    || (battle != null && battle.IsPlaying)
@@ -242,6 +245,7 @@ public class TowerController : MonoBehaviour
                    || drawing
                    || Game.HasPendingView          // 渡したばかりで、まだ動き出していない
                    || (bossView != null && bossView.IsPlaying)   // 合体の10コマ（20階）
+                   || (Fade != null && Fade.IsPlaying)           // 歩きながらの暗転（終幕）
                    || (doorView != null && doorView.IsPlaying)
                    || (walkView != null && walkView.IsPlaying)
                    || (battle != null && battle.IsPlaying)
@@ -449,6 +453,8 @@ public class TowerController : MonoBehaviour
                 // 戦った・壁だった・扉を開けたときは動かないので、ここで向ける
                 // （上を向いたまま右の敵と戦っていた、という報告）。
                 facing = FacingOf(dir);
+                // 本線にも向きを伝える（「目の前」を見る道具＝雪の結晶が使う）
+                Game.Facing = dir;
                 // **何も起きなかったとき（壁）だけ**同じ向きを止める。
                 // 扉を開けた・物を拾った・戦ったときは、押しっぱなしで進み続ける
                 // （「一度離さないと動かない」と報告されたのがここ）。
@@ -1032,7 +1038,11 @@ public class TowerController : MonoBehaviour
     /// 主人公の絵だけを1マス滑らせる（本線の立ち位置は変えない）。
     /// 戦いに入るときは**普通の移動と同じように歩いて**相手のマスへ入る（作者の指定）。
     /// </summary>
-    public System.Collections.IEnumerator SlidePlayerViewTo(Vector2Int to)
+    /// <param name="seconds">
+    /// かける時間。0 以下なら普通の1歩の速さ（原典の16コマ）。
+    /// 終幕の「歩きながら暗転」だけはゆっくり歩かせる（作者の指定）。
+    /// </param>
+    public System.Collections.IEnumerator SlidePlayerViewTo(Vector2Int to, float seconds = 0f)
     {
         if (playerView == null) { PlacePlayerViewAt(to); yield break; }
         var from = shownPos;
@@ -1041,7 +1051,7 @@ public class TowerController : MonoBehaviour
         var b = new Vector3(to.x, to.y + HeroOffsetY, -1f);
         facing = FacingOf(to - from);
         bool fast = Game != null && Game.Player.FastMode;
-        float dur = MonsterAnimation.StepSeconds(fast);
+        float dur = seconds > 0f ? seconds : MonsterAnimation.StepSeconds(fast);
         float t = 0f;
         while (t < dur)
         {
@@ -1060,6 +1070,16 @@ public class TowerController : MonoBehaviour
     {
         if (playerView != null && playerView.gameObject.activeSelf != on)
             playerView.gameObject.SetActive(on);
+    }
+
+    /// <summary>歩きながらの暗転の役（同じ入れ物に付いている）。</summary>
+    FadeView Fade
+    {
+        get
+        {
+            if (fadeView == null) fadeView = GetComponent<FadeView>();
+            return fadeView;
+        }
     }
 
     /// <summary>場面の中で人が歩いている最中か。</summary>

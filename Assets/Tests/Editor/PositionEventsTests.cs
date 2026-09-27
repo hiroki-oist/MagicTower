@@ -5,17 +5,18 @@ using UnityEngine;
 public class PositionEventsTests
 {
     [Test]
-    public void 表は十八件で原典の並びどおり()
+    public void 表は十七件で原典の並びどおり()
     {
         var e = PositionEvents.Instance;
-        Assert.AreEqual(18, e.Count, "物語の引き金16件＋終わりの2件");
+        Assert.AreEqual(17, e.Count, "物語の引き金15件＋終わりの2件（13階の雪の結晶は使う道具に移した）");
 
         var seq = new System.Collections.Generic.List<string>();
         foreach (var x in e.All) seq.Add($"{x.Floor}:{x.FlagId}");
         CollectionAssert.AreEqual(
             new[] { "3:89", "10:91", "10:94",
-                    // 13階の雪の結晶だけは一度きりの印を持たない（原典 0x1fd5）
-                    "13:-1", "15:95", "20:103", "25:105", "30:109",
+                    // ★13階の雪の結晶はここから外した（作者の指定で「使う道具」へ。
+                    //   AuthorStyle.SnowCrystalIsUsed）。原典 0x1fd5 は立つだけで溶けた。
+                    "15:95", "20:103", "25:105", "30:109",
                     "32:111", "33:114", "33:113", "38:119", "40:121", "42:123",
                     // 43階・47階の逃げる相手も印を持たない（原典 0x217b / 0x209a）
                     "43:-1", "47:-1",
@@ -232,7 +233,8 @@ public class PositionEventsTests
                  || t.StartsWith(Cutscenes.BattlePrefix)
                  || t == Cutscenes.RushStep
                  || t.StartsWith(Cutscenes.SoundPrefix)
-                 || t.StartsWith(Cutscenes.WaitPrefix)) continue;  // セリフ以外の段
+                 || t.StartsWith(Cutscenes.WaitPrefix)
+                 || t.StartsWith(Cutscenes.FadeWalkPrefix)) continue;  // セリフ以外の段
                 Vector2Int at; string kind;
                 if (Cutscenes.TryParseMap(t, out at, out kind))
                 {

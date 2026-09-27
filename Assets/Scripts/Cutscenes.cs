@@ -146,6 +146,27 @@ public class Cutscenes
     /// 人が歩いてくる行の頭。書き方は "歩き 名前 (x,y) 1,2,3"。
     /// 数字は**原典の向きの表そのまま**（1=右 / 2=左 / 3=画面の下 / 4=上）。
     /// </summary>
+    /// <summary>
+    /// ★**主人公が歩きながら画面が暗くなる**段（作者の指定。原典に無い）。
+    /// 書き方は "歩いて暗転 (x,y) N"（N は暗くなるまでのコマ数＝1/60秒）。
+    /// 終幕でゼノに向かって歩き出し、暗転しきってから1枚絵に入るために足した。
+    /// </summary>
+    public const string FadeWalkPrefix = "歩いて暗転 ";
+
+    /// <summary>"歩いて暗転 (x,y) N" を読む。</summary>
+    public static bool TryParseFadeWalk(string step, out Vector2Int to, out int frames)
+    {
+        to = Vector2Int.zero; frames = 60;
+        if (step == null || !step.StartsWith(FadeWalkPrefix)) return false;
+        var t = step.Substring(FadeWalkPrefix.Length).Trim();
+        int close = t.IndexOf(')');
+        if (close < 0 || !TryParseCell(t.Substring(0, close + 1), "", out to)) return false;
+        var rest = t.Substring(close + 1).Trim();
+        int n;
+        if (int.TryParse(rest, out n) && n > 0) frames = n;
+        return true;
+    }
+
     public const string WalkPrefix = "歩き ";
 
     /// <summary>扉が開く行の頭。書き方は "開く (x,y)"（原典 0x11b8）。</summary>

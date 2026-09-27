@@ -181,4 +181,28 @@ public class SealedDoors
     }
 
     public int Count { get { return unlocks.Count; } }
+
+    /// <summary>
+    /// **出したその場で妖精が採点する解錠か**（20階・25階・49階）。
+    ///
+    /// その3つの表は、妖精(ID23)を書いたあと**同じマスをすぐ床に戻している**。
+    /// つまり盤面には残らず、話しかけに行くことができない。それでも原典は
+    /// その階の採点の式を持っている（10/20/25/40/49 の5本）ので、
+    /// **出た瞬間に採点して消える**のが原典の姿ということになる。
+    /// 10階と40階は床に戻さない＝その場に立ち続けるので、歩いて話しかける。
+    /// </summary>
+    public static bool ScoresFairy(Unlock u)
+    {
+        if (u.Results == null) return false;
+        foreach (var r in u.Results)
+        {
+            if (r.Kind != FairyKind) continue;
+            foreach (var later in u.Results)
+                if (later.Pos == r.Pos && later.Kind == "床") return true;
+        }
+        return false;
+    }
+
+    /// <summary>妖精の物体ID（原典 ID23）。</summary>
+    public const string FairyKind = "ID23";
 }

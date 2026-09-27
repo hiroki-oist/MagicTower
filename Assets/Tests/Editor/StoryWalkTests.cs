@@ -112,7 +112,7 @@ public class StoryWalkTests
         var kinds = Drain(g);
         Assert.AreEqual(TowerGame.PageKind.FinalScreen, kinds[kinds.Count - 1], "最後は1枚絵");
         Assert.AreEqual(50, g.Player.Floor, "塔を駆け上がる");
-        Assert.AreEqual(Ending.LastPosition, g.Player.Position);
+        Assert.AreEqual(Ending.LastStep, g.Player.Position, "最後にゼノへ1歩踏み出す");
         Assert.IsNotNull(g.LastClimb);
         Assert.AreEqual(26, g.LastClimb.Count, "25階から50階まで");
     }

@@ -37,7 +37,7 @@ public class FloorChangeInSceneTests
 
         Drain(g);
         Assert.AreEqual(Ending.LastFloor, g.Player.Floor, "場面の中で50階へ移る");
-        Assert.AreEqual(Ending.LastPosition, g.Player.Position);
+        Assert.AreEqual(Ending.LastStep, g.Player.Position, "最後にゼノへ1歩踏み出す");
         Assert.AreEqual(50, g.Floor.FloorNumber, "盤面も50階に入れ替わっている");
         Assert.IsNotNull(g.LastClimb, "駆け上がる段が渡されている");
     }

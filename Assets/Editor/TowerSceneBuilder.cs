@@ -615,6 +615,24 @@ public static class TowerSceneBuilder
         // メニューを開いたまま開く会話の窓（飛翔のオーブの断り）が隠れないようにする。
         BuildMenuWindow(screen, font, controller);
         BuildFloorPicker(screen, font, controller);
+        // ★**歩きながらの暗転**の黒地（作者の指定。終幕で使う）。
+        //   1枚絵の層と同じ親に置いて、出すときに最前面へ持ち上げる。
+        var walkFadeGo = new GameObject("FadeBlack", typeof(RectTransform),
+                                        typeof(UnityEngine.UI.Image));
+        walkFadeGo.transform.SetParent(frame, false);
+        var walkFadeRt = walkFadeGo.GetComponent<RectTransform>();
+        walkFadeRt.anchorMin = Vector2.zero; walkFadeRt.anchorMax = Vector2.one;
+        walkFadeRt.offsetMin = Vector2.zero; walkFadeRt.offsetMax = Vector2.zero;
+        var walkFadeImg = walkFadeGo.GetComponent<UnityEngine.UI.Image>();
+        walkFadeImg.color = new Color(0f, 0f, 0f, 0f);
+        walkFadeImg.raycastTarget = false;
+        walkFadeImg.enabled = false;
+        var walkFadeView = controller.gameObject.AddComponent<FadeView>();
+        var wfso = new SerializedObject(walkFadeView);
+        wfso.FindProperty("controller").objectReferenceValue = controller;
+        wfso.FindProperty("black").objectReferenceValue = walkFadeImg;
+        wfso.ApplyModifiedPropertiesWithoutUndo();
+
         BuildDialogueWindow(screen, font, controller, blinkView, bossView);
         // 一覧は画面いっぱいに出すので、原典の座標の入れ物ではなく画布に直に置く
         BuildHeroOrbPanel(frame, font, controller,

@@ -173,14 +173,24 @@ public class TeleportRelicTests
         Assert.IsTrue(g.Player.Has(SpecialItems.Kind.TeleportRelic), "使っても残る");
     }
 
-    /// <summary>原典のメニューの並び（special_1〜8）と「使う道具」が一致する。</summary>
+    /// <summary>
+    /// 原典のメニューの並び（special_1〜8）は全部「使う道具」。
+    /// **雪の結晶だけ**はそこに無いが使える（作者の指定。原典は持つだけで効いた）。
+    /// </summary>
     [Test]
-    public void 使う道具は原典の一覧と同じ()
+    public void 使う道具は原典の一覧に雪の結晶を足したもの()
     {
         foreach (var k in TowerMenu.Usable)
             Assert.IsTrue(SpecialItemEffects.IsUsable(k), k.ToString());
         foreach (SpecialItems.Kind k in System.Enum.GetValues(typeof(SpecialItems.Kind)))
-            if (SpecialItemEffects.IsUsable(k))
-                CollectionAssert.Contains(TowerMenu.Usable, k, k.ToString());
+        {
+            if (!SpecialItemEffects.IsUsable(k)) continue;
+            if (k == SpecialItems.Kind.SnowCrystal)
+            {
+                Assert.IsTrue(AuthorStyle.SnowCrystalIsUsed, "作者の指定のときだけ");
+                continue;
+            }
+            CollectionAssert.Contains(TowerMenu.Usable, k, k.ToString());
+        }
     }
 }

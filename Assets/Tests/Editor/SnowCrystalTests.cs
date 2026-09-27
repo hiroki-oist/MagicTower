@@ -42,38 +42,68 @@ public class SnowCrystalTests
         foreach (var p in Melted) Assert.AreEqual("~", g.Floor.At(p), $"{p}");
     }
 
+    /// <summary>
+    /// ★**使ったときに溶ける**（作者の指定。<see cref="AuthorStyle.SnowCrystalIsUsed"/>）。
+    /// 原典 0x1fd5 は持っているだけで、マグマの手前に立った瞬間に溶けた。
+    /// </summary>
     [Test]
-    public void 結晶を持って立つと四マス溶ける()
+    public void 使うと四マス溶ける()
     {
         var g = Game(true);
         g.Player.Position = new Vector2Int(0, -4);
+        g.Facing = Vector2Int.up;                            // マグマの手前で上を向く
         g.ConsumeSounds();
-        Assert.IsTrue(g.CheckPositionEvent(), "発火する");
+
+        Assert.IsTrue(g.TapItem(SpecialItems.Kind.SnowCrystal), "帯から使える");
+        Assert.IsTrue(g.IsChoosing, "使うか聞いてくる");
+        g.ConfirmChoice();                                   // ◎はい
+
         foreach (var p in Melted) Assert.AreEqual(FloorState.Floor, g.Floor.At(p), $"{p}");
+        // **続いている4マスだけ**（13階は81マスがマグマ。階ごと溶かしてはいけない）
+        Assert.AreEqual("~", g.Floor.At(new Vector2Int(-1, -3)), "横のマグマは残る");
         Assert.IsFalse(g.Player.Has(SpecialItems.Kind.SnowCrystal), "使い切る");
+        // 音6は「拾う」「特殊アイテム」なども同じ番号なので、
+        // 溶かすぶん（4回）＋道具を使った合図（1回）で5回になる。
         int six = 0;
         foreach (var n in g.Sounds) if (n == 6) six++;
-        Assert.AreEqual(4, six, "1マスずつ音6（原典 0x2079）");
+        Assert.AreEqual(5, six, "1マスずつ音6（原典 0x2079）＋使った合図");
     }
 
     [Test]
-    public void 結晶が無ければ何も起きない()
+    public void 立っただけでは溶けない()
     {
-        var g = Game(false);
+        var g = Game(true);
         g.Player.Position = new Vector2Int(0, -4);
-        Assert.IsFalse(g.CheckPositionEvent(), "発火しない");
+        Assert.IsFalse(g.CheckPositionEvent(), "立つだけでは起きない");
         foreach (var p in Melted) Assert.AreEqual("~", g.Floor.At(p), $"{p}");
+        Assert.IsTrue(g.Player.Has(SpecialItems.Kind.SnowCrystal), "減らない");
+    }
+
+    /// <summary>マグマの無い階では何も起きず、持ち物も減らない。</summary>
+    [Test]
+    public void マグマの無い階では使えない()
+    {
+        var p = new PlayerState
+        {
+            Hp = 5000, Attack = 500, Defense = 500,
+            Floor = 1, HighestFloor = 50, Position = new Vector2Int(0, -5),
+        };
+        p.Give(SpecialItems.Kind.SnowCrystal);
+        var g = new TowerGame(p);
+        Assert.AreEqual(0, g.Floor.MagmaRun(g.Player.Position, Vector2Int.up).Count,
+                        "1階の目の前にマグマは無い");
+        Assert.IsTrue(g.TapItem(SpecialItems.Kind.SnowCrystal));
+        g.ConfirmChoice();
+        Assert.IsTrue(g.Player.Has(SpecialItems.Kind.SnowCrystal), "減らない");
     }
 
     [Test]
-    public void 一度きりの印は使わない()
+    public void 立ち入りの表からは外してある()
     {
         var ev = PositionEvents.Instance.At(13, new Vector2Int(0, -4), null,
                                             p => false, null,
                                             k => k == SpecialItems.Kind.SnowCrystal);
-        Assert.IsTrue(ev.HasValue, "持ち物があれば当たる");
-        Assert.AreEqual(-1, ev.Value.FlagId, "フラグ番号は持たない");
-        Assert.AreEqual(SpecialItems.Kind.SnowCrystal, ev.Value.NeedsItem);
+        Assert.IsFalse(ev.HasValue, "表には無い（使う道具に移した）");
     }
 }
 

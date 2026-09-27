@@ -87,6 +87,7 @@
     <Compile Include="Assets/TextMesh Pro/Examples &amp; Extras/Scripts/EnvMapAnimator.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorData.cs" />
     <Compile Include="Assets/Scripts/Items/Shop.cs" />
+    <Compile Include="Assets/Scripts/UI/FadeView.cs" />
     <Compile Include="Assets/Scripts/UI/PhoneScreen.cs" />
     <Compile Include="Assets/Scripts/Floor/FloorConnections.cs" />
     <Compile Include="Assets/Scripts/UI/GameOverScreen.cs" />
