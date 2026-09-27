@@ -7,12 +7,17 @@
 #
 # 要るもの（どちらも無いと途中で止まる。作り方は下の案内に出る）:
 #   ① Apple Distribution の証明書（キーチェーンの中）
-#   ② App Store Connect の API キー
-#        ASC_KEY_ID    … キーID（10文字）
-#        ASC_ISSUER_ID … Issuer ID（UUID）
-#        ~/.appstoreconnect/private_keys/AuthKey_<ASC_KEY_ID>.p8
-#      ※ かわりに Apple ID とアプリ用パスワードでも送れる:
-#        APPLE_ID / APP_PASSWORD
+#   ② 送るための資格情報。どちらか一方でよい。
+#      【かんたん】Apple ID と「App用パスワード」を**キーチェーンに入れておく**:
+#          xcrun altool --store-password-in-keychain-item MT_APP_PASSWORD \
+#                       -u あなたのAppleID -p xxxx-xxxx-xxxx-xxxx
+#        （この1回だけ自分の端末で打つ。以後 APPLE_ID だけ渡せばよく、
+#          パスワードが履歴にもコマンド行にも残らない）
+#        例: APPLE_ID=you@example.com sh docs/run_upload.sh send
+#      【本式】App Store Connect の API キー:
+#          ASC_KEY_ID    … キーID（10文字）
+#          ASC_ISSUER_ID … Issuer ID（UUID）
+#          ~/.appstoreconnect/private_keys/AuthKey_<ASC_KEY_ID>.p8
 #
 # 使い方:
 #   sh docs/run_upload.sh              … 検査だけして送らない（--validate まで）
@@ -56,8 +61,17 @@ fi
 KEY="$HOME/.appstoreconnect/private_keys/AuthKey_${ASC_KEY_ID}.p8"
 HAVE_KEY=0
 if [ -n "$ASC_KEY_ID" ] && [ -n "$ASC_ISSUER_ID" ] && [ -f "$KEY" ]; then HAVE_KEY=1; fi
+# パスワードは**直に渡さない**。キーチェーンに入れたものを名前で指す
+# （コマンド行に書くと ps や履歴から見えてしまう）。
 HAVE_PW=0
-if [ -n "$APPLE_ID" ] && [ -n "$APP_PASSWORD" ]; then HAVE_PW=1; fi
+PW_REF=""
+if [ -n "$APPLE_ID" ]; then
+  if security find-generic-password -s MT_APP_PASSWORD >/dev/null 2>&1; then
+    HAVE_PW=1; PW_REF="@keychain:MT_APP_PASSWORD"
+  elif [ -n "$APP_PASSWORD" ]; then
+    HAVE_PW=1; PW_REF="@env:APP_PASSWORD"
+  fi
+fi
 if [ "$HAVE_KEY" = 0 ] && [ "$HAVE_PW" = 0 ]; then
   cat <<'EOS'
 ★ 送るための資格情報が無い。どちらかを用意する。
@@ -70,9 +84,14 @@ if [ "$HAVE_KEY" = 0 ] && [ "$HAVE_PW" = 0 ]; then
        例: ASC_KEY_ID=XXXXXXXXXX ASC_ISSUER_ID=xxxxxxxx-.... sh docs/run_upload.sh send
     ※ .p8 は**一度しかダウンロードできない**ので無くさないこと。
 
-  【かんたん】Apple ID とアプリ用パスワード
-    appleid.apple.com → サインインとセキュリティ → App用パスワード で作る
-    例: APPLE_ID=you@example.com APP_PASSWORD=xxxx-xxxx-xxxx-xxxx sh docs/run_upload.sh send
+  【かんたん】Apple ID と「App用パスワード」
+    1. appleid.apple.com → サインインとセキュリティ → App用パスワード → ＋
+       （名前は何でもよい。xxxx-xxxx-xxxx-xxxx が出る）
+    2. **自分の端末で1回だけ**これを打ってキーチェーンに入れる:
+         xcrun altool --store-password-in-keychain-item MT_APP_PASSWORD \
+                      -u あなたのAppleID -p xxxx-xxxx-xxxx-xxxx
+    3. あとは APPLE_ID だけ渡せばよい:
+         APPLE_ID=you@example.com sh docs/run_upload.sh send
 EOS
   exit 1
 fi
@@ -119,7 +138,7 @@ ALTOOL="$DEVELOPER_DIR/usr/bin/altool"
 if [ "$HAVE_KEY" = 1 ]; then
   AUTH="--apiKey $ASC_KEY_ID --apiIssuer $ASC_ISSUER_ID"
 else
-  AUTH="--username $APPLE_ID --password $APP_PASSWORD"
+  AUTH="--username $APPLE_ID --password $PW_REF"
 fi
 
 echo "== 4/4 検査（--validate-app）"
