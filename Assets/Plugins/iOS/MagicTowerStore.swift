@@ -15,6 +15,7 @@
 
 import Foundation
 import StoreKit
+import UIKit
 
 @available(iOS 15.0, *)
 private final class MTStore {
@@ -206,6 +207,24 @@ public func MTStoreBuy(_ id: UnsafePointer<CChar>?) {
 public func MTStoreReload() {
     guard #available(iOS 15.0, *) else { return }
     Task { await MTStore.shared.reload() }
+}
+
+/// ★**評価をお願いする窓**（作者の指定。原典に無い）。
+///
+/// 出すのは **iOS 側の決まった窓**で、文面も星の数もボタンも Apple のもの。
+/// アプリからは中身を変えられない（真似た窓を自前で作ることも禁じられている）。
+/// 出るかどうかも OS が決める（同じ人には年に3回まで。出ないこともある）。
+/// **TestFlight で入れたビルドでは何も出ない**（Apple がそう決めている）。
+///
+/// HIG: 押したら出るボタンにはしない。区切りのよい所で静かに呼ぶだけにする。
+@_cdecl("MTRequestReview")
+public func MTRequestReview() {
+    DispatchQueue.main.async {
+        guard let scene = UIApplication.shared.connectedScenes
+                .first(where: { $0.activationState == .foregroundActive })
+                as? UIWindowScene else { return }
+        SKStoreReviewController.requestReview(in: scene)
+    }
 }
 
 @_cdecl("MTStoreRestore")

@@ -158,6 +158,18 @@ public static class AuthorStyle
     public static readonly bool FairyWaitsToBeAsked = true;
 
     /// <summary>
+    /// 終幕を見終わったところで**評価をお願いする**か（作者の指定。原典に無い）。
+    ///
+    /// 出るのは iOS の決まった窓（<see cref="AppReview"/>）で、
+    /// **文面もボタンも Apple のもの。こちらからは変えられない。**
+    /// 出すかどうかも OS が決める（同じ人には年3回まで）。
+    /// TestFlight のビルドでは何も出ない。
+    ///
+    /// HIG の言うとおり「区切りのよい所で静かに1回」。押したら出るボタンにはしない。
+    /// </summary>
+    public static readonly bool AskReviewAfterEnding = true;
+
+    /// <summary>
     /// 縦に歩くときも主人公の絵を2コマで入れ替えるか。
     ///
     /// ⚠ **原典は横に歩くときだけ入れ替える**（0xa276 は 向き1/2 で 0x100↔0x120 を

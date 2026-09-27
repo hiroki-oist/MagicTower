@@ -1701,7 +1701,7 @@ chk("JavaEnding = false" in _as2,
 # 終幕の「Ｆｉｎ」を送ると題名へ戻る（作者の指定）。
 # 原典 0xd45c はキーを待ってパレットを真っ暗にして終わるだけ。
 chk("IsFinalScreen" in _tg4
-    and "if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(false); return; }" in _tc,
+    and "StartNewGame(); BackToTitle(false); return;" in _tc,
     "「Ｆｉｎ」を送ると題名へ戻る（セーブデータは消さない。作者の指定）")
 # ⚠ 題名は**出した直後の一手では始めない**。終幕を送った指がまだ画面に触れている
 #   うちに題名が出るので、そのまま離すと「触って始めた」ことになって1階から
@@ -1909,6 +1909,18 @@ chk("void ApplyAfterLeaving(int nowFloor)" in open(
 _thc=open("Assets/Scripts/Items/ThiefEvents.cs",encoding="utf-8").read()
 chk("public string What;" in _thc and 'var what = eq >= 0 ? c[1].Substring(eq + 1).Trim() : "床";' in _thc,
     "盗賊の表の書き換えは物体の名前も書ける（床だけではない）")
+
+# ★遊び終えたところで評価をお願いする（作者の指定。原典に無い）
+_rev=open("Assets/Scripts/Items/AppReview.cs",encoding="utf-8").read()
+chk("SKStoreReviewController.requestReview(in: scene)" in open(
+        "Assets/Plugins/iOS/MagicTowerStore.swift",encoding="utf-8").read(),
+    "評価の窓は iOS の決まったもの（自前の窓は作らない。App Review の決まり）")
+chk("AuthorStyle.AskReviewAfterEnding" in _ctrl and "AppReview.Request();" in _ctrl,
+    "終幕を見終わったところで1回だけ頼む")
+chk("public static bool Asked" in _rev and "if (Asked) return;" in _rev,
+    "同じ回で何度も頼まない")
+chk("action=write-review" in _rev,
+    "文面を自分で書きたいときの行き先（App Store のレビュー画面）も控えてある")
 
 # 中断データ（アプリが落ちても直前の位置から再開する）
 _sv=open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read()

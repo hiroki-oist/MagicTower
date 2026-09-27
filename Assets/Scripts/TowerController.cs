@@ -409,7 +409,13 @@ public class TowerController : MonoBehaviour
                         // ★終幕を見終わったら題名へ戻す。**セーブデータは消さない**
                         //   （作者の指定）。原典（0xd45c）はキーを待って
                         //   パレットを真っ暗にして終わるだけ。
-                        if (Game.IsFinalScreen) { StartNewGame(); BackToTitle(false); return; }
+                        if (Game.IsFinalScreen)
+                        {
+                            // ★遊び終えた所で評価をお願いする（作者の指定。原典に無い）。
+                            //   出るのは iOS の決まった窓で、出すかどうかは OS が決める。
+                            if (AuthorStyle.AskReviewAfterEnding) AppReview.Request();
+                            StartNewGame(); BackToTitle(false); return;
+                        }
                         Game.NextPage();
                     }
                 }
