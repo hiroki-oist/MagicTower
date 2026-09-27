@@ -241,11 +241,31 @@ public static class Ending
     public static readonly float[] WordsSeconds = { 4f, 3f, 3f, 4f, 6f };
 
     /// <summary>
+    /// ★**ゼノの最後のセリフ**（作者の指定）。この番号のセリフから「Ｆｉｎ」までは
+    /// **触っても飛ばせず、時間で勝手に進む**。原典もここから先はキーを待たない
+    /// （上の 0xcfc5〜0xd27a）ので、その待ちをセリフ170まで前へ伸ばした形。
+    /// </summary>
+    public const int LastZenoRecord = 170;
+
+    /// <summary>そのセリフを1枚ぶん読ませておく秒数（作者の指定）。</summary>
+    public const float LastZenoSeconds = 5f;
+
+    /// <summary>
+    /// ★**最後の画面（Ｆｉｎ）は出てから2秒は触っても動かない**（作者の指定）。
+    /// 勝手に進みはせず、2秒たってから触ると題名へ戻る（そこで評価をお願いする）。
+    /// 終幕が流れ切ったところで指が当たって飛んでしまうのを防ぐための間。
+    /// </summary>
+    public const float FinalTapDelaySeconds = 2f;
+
+    /// <summary>
     /// その画面がひとりでに進むまでの秒数。0 なら触るまで待つ
     /// （最後の画面だけは原典も「Ｈｉｔ　ａｎｙ　ｋｅｙ！」でキーを待つ）。
     /// </summary>
     public static float AutoSeconds(TowerGame.PageKind kind, int record)
     {
+        // ★ゼノの最後のセリフ。ここから「Ｆｉｎ」まで一本で流れる（作者の指定）
+        if (kind == TowerGame.PageKind.Dialogue && record == LastZenoRecord)
+            return LastZenoSeconds;
         if (kind == TowerGame.PageKind.EndingTower)
             return AuthorStyle.JavaEnding ? JavaMovieSeconds
                                           : TowerDuration + TowerHoldSeconds;

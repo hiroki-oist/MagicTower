@@ -25,7 +25,7 @@
 
 | 手だて | いま |
 |---|---|
-| `docs/run_tests.sh` | Unity の EditMode テスト **747本**（コンパイル込み） |
+| `docs/run_tests.sh` | Unity の EditMode テスト **750本**（コンパイル込み） |
 | `docs/consistency.py` | 原典と実装の突き合わせ **1000項目**（下限つきで自己点検） |
 | `docs/audit.py` | プレハブ・タグ・数値の整合 **0件** |
 | `docs/run_playthrough.sh` | 通しで遊ぶ／**全50階の総当たり（50/50 到達）** |

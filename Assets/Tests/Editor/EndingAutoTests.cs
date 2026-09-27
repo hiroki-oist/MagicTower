@@ -53,4 +53,43 @@ public class EndingAutoTests
         Assert.AreEqual(0f, Ending.AutoSeconds(TowerGame.PageKind.Dialogue, 0), "会話は触って送る");
         Assert.AreEqual(0f, Ending.AutoSeconds(TowerGame.PageKind.GameOver, 0));
     }
+
+    /// <summary>
+    /// ★**ゼノの最後のセリフから「Ｆｉｎ」までは触っても飛ばせない**（作者の指定）。
+    /// </summary>
+    [Test]
+    public void ゼノの最後のセリフはひとりでに進む()
+    {
+        Assert.AreEqual(170, Ending.LastZenoRecord, "終幕の最後のセリフは170");
+        Assert.Greater(Ending.AutoSeconds(TowerGame.PageKind.Dialogue, Ending.LastZenoRecord), 0f,
+                       "ここから先は触っても飛ばせない");
+        Assert.AreEqual(0f, Ending.AutoSeconds(TowerGame.PageKind.Dialogue, 169),
+                        "その手前までは触って送る");
+    }
+
+    /// <summary>そこから「Ｆｉｎ」まで、間に触って送る画面が1つも無い。</summary>
+    [Test]
+    public void 最後のセリフからＦｉｎまで一本で流れる()
+    {
+        var steps = Cutscenes.Instance.Steps(Cutscenes.EndingScene);
+        Assert.IsNotNull(steps);
+        int from = steps.IndexOf(Ending.LastZenoRecord.ToString());
+        Assert.Greater(from, 0, "終幕の台本に170がある");
+        Assert.AreEqual(steps.Count - 1, steps.IndexOf(Cutscenes.FinalScreenStep),
+                        "最後の画面が台本の終わり");
+        for (int i = from + 1; i < steps.Count - 1; i++)
+        {
+            int id;
+            Assert.IsFalse(int.TryParse(steps[i], out id),
+                           $"170 と Ｆｉｎ の間にセリフ（{steps[i]}）があると、そこで止まる");
+        }
+    }
+
+    [Test]
+    public void Ｆｉｎは二秒たってから触れる()
+    {
+        // 終幕が流れ切ったところで指が当たって飛んでしまうのを防ぐ間（作者の指定）
+        Assert.AreEqual(2f, Ending.FinalTapDelaySeconds);
+        Assert.IsTrue(AuthorStyle.EndingRunsByItself);
+    }
 }

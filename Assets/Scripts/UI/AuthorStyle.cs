@@ -165,6 +165,21 @@ public static class AuthorStyle
     public static readonly bool FairyWaitsToBeAsked = true;
 
     /// <summary>
+    /// ★**ゼノの最後のセリフから「Ｆｉｎ」までは触っても飛ばせない**（作者の指定）。
+    ///
+    /// 原典も 0xcfc5〜0xd27a の間はキーを待たず、待ちの回数だけで流していて、
+    /// キー待ちは最後の画面の1回だけ。こちらはそれを**セリフ170まで前へ伸ばし**、
+    /// 途中で触っても何も起きないようにしてある（<see cref="Ending.AutoSeconds"/>）。
+    /// 長さは <see cref="Ending.LastZenoSeconds"/> と塔の絵・終わりの言葉の秒数。
+    ///
+    /// 最後の画面（Ｆｉｎ）は**勝手には進まない**。出てから
+    /// <see cref="Ending.FinalTapDelaySeconds"/>（2秒）たってから触ると題名へ戻る。
+    /// 流れ切ったところで指が当たって飛んでしまうのを防ぐための間。
+    /// そこで触ったときに評価をお願いする（下の <see cref="AskReviewAfterEnding"/>）。
+    /// </summary>
+    public static readonly bool EndingRunsByItself = true;
+
+    /// <summary>
     /// 終幕を見終わったところで**評価をお願いする**か（作者の指定。原典に無い）。
     ///
     /// 出るのは iOS の決まった窓（<see cref="AppReview"/>）で、

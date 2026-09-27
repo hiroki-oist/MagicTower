@@ -366,6 +366,15 @@ public class TowerController : MonoBehaviour
         {
             // ひとりでに進む画面（終幕の塔の絵と終わりの言葉）。原典はここでキーを待たない。
             if (autoReady) { Game.NextPage(); AfterAction(floorBefore, posBefore); return; }
+            // ★**ひとりでに進む画面は触っても飛ばせない**（作者の指定）。
+            //   ゼノの最後のセリフ（170）から「Ｆｉｎ」まで、同じ速さで流れる。
+            if (Game.CurrentKind.HasValue
+                && Ending.AutoSeconds(Game.CurrentKind.Value, Game.CurrentRecord) > 0f)
+            { TakeStep(); TakeConfirm(); return; }
+            // ★**最後の画面は出てから2秒は触っても動かない**（作者の指定）。
+            //   終幕が流れ切ったところで指が当たって飛んでしまうのを防ぐ。
+            if (Game.IsFinalScreen && autoElapsed < Ending.FinalTapDelaySeconds)
+            { TakeStep(); TakeConfirm(); return; }
             // 会話や演出が出ている間は、どのキーでも1つ送るだけ（原典もキー待ち）。
             // **送った拍子に階が変わることがある**（序章でゼノに奪われて2階の牢に移る、
             // 終幕で50階まで駆け上がる）ので、送ったあとも必ず見た目を合わせ直す。
@@ -620,6 +629,8 @@ public class TowerController : MonoBehaviour
     TowerGame.PageKind? autoKind;
     int autoRecord;
     float autoSince;
+    /// <summary>いま出ている画面が**出し終わってから**の時間（秒）。</summary>
+    float autoElapsed;
 
     /// <summary>
     /// いま出ている画面が「ひとりでに進む」ものなら、出てからの時間を数えて頃合いを返す。
@@ -628,14 +639,19 @@ public class TowerController : MonoBehaviour
     bool TickAutoAdvance()
     {
         var kind = Game.CurrentKind;
-        if (!kind.HasValue) { autoKind = null; return false; }
+        if (!kind.HasValue) { autoKind = null; autoElapsed = 0f; return false; }
         int record = Game.CurrentRecord;
         if (autoKind != kind || autoRecord != record)
         {
             autoKind = kind; autoRecord = record; autoSince = Time.time;
         }
+        // **出し終わるまでは数えない**。文字を出している途中から数えると、
+        // 長いセリフほど読む間が短くなる（窓がまだ開いていない間も同じ）。
+        if (kind == TowerGame.PageKind.Dialogue && dialogue != null
+            && (dialogue.IsTyping || dialogue.IsWaiting)) autoSince = Time.time;
+        autoElapsed = Time.time - autoSince;
         float need = Ending.AutoSeconds(kind.Value, record);
-        return need > 0f && Time.time - autoSince >= need;
+        return need > 0f && autoElapsed >= need;
     }
 
     void AfterAction(int floorBefore, Vector2Int posBefore)

@@ -1711,6 +1711,27 @@ chk("AutoSeconds" in _end and "WordsSeconds" in _end and "TowerHoldSeconds" in _
     "終幕はひとりでに進む（1枚ごとの秒数を持つ）")
 chk("autoReady" in _tc and "TickAutoAdvance" in _tc,
     "その頃合いは本線を進めた直後に数える（演出の途中で止まらないように）")
+# ★ゼノの最後のセリフ（170）から「Ｆｉｎ」までは触っても飛ばせない（作者の指定）
+chk("LastZenoRecord = 170" in _end and "LastZenoSeconds" in _end,
+    "ゼノの最後のセリフもひとりでに進む")
+chk("Ending.AutoSeconds(Game.CurrentKind.Value, Game.CurrentRecord) > 0f" in _tc,
+    "ひとりでに進む画面は触っても飛ばせない")
+chk("FinalTapDelaySeconds = 2f" in _end
+    and "autoElapsed < Ending.FinalTapDelaySeconds" in _tc,
+    "Ｆｉｎ は出てから2秒たってから触れる")
+chk("dialogue.IsTyping || dialogue.IsWaiting)) autoSince = Time.time;" in _tc,
+    "出し終わってから数える（出している途中から数えると読む間が短くなる）")
+chk("EndingRunsByItself" in open("Assets/Scripts/UI/AuthorStyle.cs",encoding="utf-8").read(),
+    "原典から外れる理由は AuthorStyle に書いてある（終幕は一本で流れる）")
+# 台本の 170 と「最後の画面」の間にセリフが挟まっていたら、そこで止まってしまう
+_endrow=[l for l in open("Assets/Resources/Cutscenes.txt",encoding="utf-8")
+         if l.startswith("終幕")]
+chk(len(_endrow)==1,"終幕の台本は1行")
+_endsteps=[t.strip() for t in _endrow[0].split("|")[2].split(";")]
+_i170=_endsteps.index("170")
+chk(_endsteps[-1]=="最後の画面","台本の終わりが最後の画面")
+chk(not [t for t in _endsteps[_i170+1:-1] if t.isdigit()],
+    "170 と Ｆｉｎ の間にセリフは無い（あるとそこで止まる）")
 # 勇者のオーブは**モンスター表そのもの**を読む。原典 0x5cdb が五の目でその表の
 # ID91 を 800/500/100 に書き換えるので、この窓にも書き換え後の値が出る。
 _ho=open("Assets/Scripts/Items/HeroOrb.cs",encoding="utf-8").read()
