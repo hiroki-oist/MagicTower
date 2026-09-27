@@ -39,6 +39,16 @@ public class UnlockFlagSaveTests
         });
     }
 
+    /// <summary>
+    /// 出ているページを最後まで読む。ブロックのボスの解錠（10階・20階）は
+    /// **最期のセリフを読み終えてから**褒美を並べる（原典 0x4e5b / 0x531d）。
+    /// </summary>
+    static void ReadAll(TowerGame g)
+    {
+        int guard = 0;
+        while (g.Current.HasValue && guard++ < 200) g.NextPage();
+    }
+
     /// <summary>10階のボスを倒した形にする（守護マスを全部床にする）。</summary>
     static void BeatBoss(FloorState f)
     {
@@ -59,6 +69,7 @@ public class UnlockFlagSaveTests
         var g = At(10, new Vector2Int(-5, -5));
         BeatBoss(g.FloorAt(10));
         g.EnterFloor(10, new Vector2Int(-5, -5));       // ここで解錠が走る
+        ReadAll(g);                                     // セリフ106を読むと褒美が並ぶ
 
         Assert.AreNotEqual(".", g.Floor.At(fairy), "妖精が出る");
         Assert.AreNotEqual(".", g.Floor.At(gem), "褒美が出る");
@@ -112,6 +123,7 @@ public class UnlockFlagSaveTests
             if (u.RequiresFlag >= 0) g.Player.EventFlags.Add(u.RequiresFlag);
         }
         g.EnterFloor(20, new Vector2Int(5, -5));
+        ReadAll(g);                                     // セリフ122を読むと褒美が並ぶ
 
         var spot = new Vector2Int(0, 1);
         Assert.AreEqual("Fairy", g.Floor.At(spot), "妖精が立っている");
@@ -139,6 +151,7 @@ public class UnlockFlagSaveTests
         Assert.IsFalse(g.Player.EventFlags.Contains(0x5c));
         BeatBoss(g.FloorAt(10));
         g.EnterFloor(10, new Vector2Int(-5, -5));
+        ReadAll(g);
         Assert.IsTrue(g.Player.EventFlags.Contains(0x5c), "3x3 が床になった印");
         Assert.IsTrue(g.Player.EventFlags.Contains(0x5d), "褒美を出した印");
     }

@@ -173,8 +173,15 @@ public class FloorState
     /// 原典は旗を1本の配列に持っていて、セーブ（0x9b38）で
     /// `0x1229:0x1e` から 60 ワードぶんを地図と一緒に書き出している。
     /// </param>
+    /// <param name="hold">
+    /// これが true を返す解錠は**地図を書き換えず**、<paramref name="mark"/> も呼ばない。
+    /// ボスの最期のセリフが付いた解錠（10階・20階）で使う。原典もセリフを出してから
+    /// 褒美を並べるので、書き換えはセリフの後ろまで預ける。
+    /// 二重に発火しないよう、階の中の印（firedFlags）だけはここで立てる。
+    /// </param>
     public List<SealedDoors.Unlock> ApplyUnlocks(System.Func<int, bool> hasFlag = null,
-                                                 System.Action<int> mark = null)
+                                                 System.Action<int> mark = null,
+                                                 System.Func<SealedDoors.Unlock, bool> hold = null)
     {
         var fired = new List<SealedDoors.Unlock>();
         // 前提フラグは「この階で既に開いた門」と「物語の一度きりフラグ」の両方から探す。
@@ -186,15 +193,22 @@ public class FloorState
             if (has(u.FlagId)) continue;
             if (!SealedDoors.IsSatisfied(u, IsCleared, has)) continue;
             firedFlags.Add(u.FlagId);
+            if (hold != null && hold(u)) { fired.Add(u); continue; }
             if (mark != null) mark(u.FlagId);
-            foreach (var r in u.Results)
-            {
-                if (r.Kind == "表駆動" || r.Kind == "封印") { /* 地図は変えない */ }
-                else Put(r.Pos, SymbolOfKind(r.Kind));
-            }
+            ApplyResults(u);
             fired.Add(u);
         }
         return fired;
+    }
+
+    /// <summary>解錠の結果を地図へ当てる（預けておいたぶんを後から当てるのにも使う）。</summary>
+    public void ApplyResults(SealedDoors.Unlock u)
+    {
+        foreach (var r in u.Results)
+        {
+            if (r.Kind == "表駆動" || r.Kind == "封印") continue;   // 地図は変えない
+            Put(r.Pos, SymbolOfKind(r.Kind));
+        }
     }
 
     /// <summary>上下左右のマスの中身。魔法攻撃の判定に渡す。</summary>

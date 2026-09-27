@@ -47,6 +47,16 @@ public class ResurrectionSweepTests
     }
 
     /// <summary>地図を書き換える結果だけ（「表駆動」＝モンスター表の書き換えは除く）。</summary>
+    /// <summary>
+    /// 出ているページを最後まで読む。ブロックのボスの解錠（10階・20階）は
+    /// **最期のセリフを読み終えてから**褒美を並べるので、読まないと何も出ない。
+    /// </summary>
+    static void ReadAll(TowerGame g)
+    {
+        int guard = 0;
+        while (g.Current.HasValue && guard++ < 200) g.NextPage();
+    }
+
     static bool ChangesMap(SealedDoors.Result r)
     {
         return r.Kind != "表駆動" && r.Kind != "封印";
@@ -72,6 +82,7 @@ public class ResurrectionSweepTests
                 foreach (var anti in u.AntiGuards) f.Put(anti, "Enemy_SlimeG");
                 if (u.RequiresFlag >= 0) g.Player.EventFlags.Add(u.RequiresFlag);
                 g.EnterFloor(floor, Corner);                             // ここで解錠が走る
+                ReadAll(g);                                              // ボスの最期のセリフ
 
                 // 発火したかは**階の器の側**で見る（旗に載っているかは、読み直した
                 // あとで確かめたいことそのものなので、ここで使ってはいけない）。

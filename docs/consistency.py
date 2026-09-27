@@ -1006,6 +1006,27 @@ chk("FairyScored" in open("Assets/Scripts/PlayerState.cs",encoding="utf-8").read
     "妖精回数は持ち主が覚える")
 chk("FairyScored" in open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read(),
     "妖精回数もセーブに残る（消えると称号が巻き戻る）")
+# ブロックのボスの最期のセリフ（原典 0x4e5b→106 / 0x531d→122）。褒美より**先に**出る
+_sd=open("Assets/Resources/SealedDoors.txt",encoding="utf-8").read()
+chk("待つ50 ; セリフ106" in _sd and "待つ50 ; セリフ122" in _sd,
+    "10階と20階の解錠にボスの最期のセリフが付いている")
+chk(_sd.count("セリフ1")==3,"セリフ付きの解錠は2件だけ（もう1件は書き方の説明）",
+    str(_sd.count("セリフ1")))
+chk("mov     ax, 0x6a" in _dis and "mov     ax, 0x7a" in _dis,
+    "原典も 106(0x6a) と 122(0x7a) を積んでいる")
+chk("QueueBossLastWords" in _tgm and "ApplyHeldUnlock" in _tgm,
+    "セリフのうしろで褒美を当てる（先に生えると宝と階段がセリフより前に見える）")
+chk("UnlockStep" in _tgm and "u.Record >= 0" in _tgm,"預けた解錠は段にして積む")
+chk("hold" in open("Assets/Scripts/Floor/FloorState.cs",encoding="utf-8").read(),
+    "解錠の書き換えを預けられる")
+chk("BossLastWordsTests" in _alltests,"ボスの最期のセリフのテストがある")
+_dlg={}
+for _l in open("Assets/Resources/Dialogue.txt",encoding="utf-8"):
+    if "|" not in _l or _l.startswith("#"): continue
+    _k,_v=_l.split("|",1)
+    if _k.strip().isdigit(): _dlg[int(_k.strip())]=_v.strip()
+chk("よくぞこの俺" in _dlg.get(106,"") and "よもや、この私" in _dlg.get(122,""),
+    "セリフ106・122 の原文がある")
 # 25階の妖精だけ締めが違う（原典 0x77bb）
 chk("FarewellFloor = 25" in _fa,"締めが違うのは25階だけ")
 chk("cmp     word ptr es:[0x9e], 0x19" in _dis,"原典も25階だけを分けている")
@@ -1881,7 +1902,7 @@ chk("System.Action<int> mark = null" in _fs2 and "if (mark != null) mark(u.FlagI
     "解錠の印は外（遊び手の旗）へも控えられる")
 chk("if (has(u.FlagId)) continue;" in _fs2,
     "もう立っている印の解錠は走らせない（階の器の中だけでなく遊び手の旗も見る）")
-chk("f => Player.EventFlags.Add(f));" in open(
+chk("f => Player.EventFlags.Add(f)," in open(
         "Assets/Scripts/TowerGame.cs",encoding="utf-8").read(),
     "本線は解錠の印を遊び手の旗へ控える（セーブに残る）")
 # 「取ったものが生き返らないか」を**表の全行**で総当たりする試験がある

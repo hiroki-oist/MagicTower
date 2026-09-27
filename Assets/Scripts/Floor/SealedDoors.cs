@@ -51,6 +51,17 @@ public class SealedDoors
         /// </summary>
         public int RequiresFlag;
         public List<Result> Results;
+        /// <summary>
+        /// 解錠と一緒に出すセリフの番号。無ければ -1。
+        /// 原典はブロックのボスを倒したとき、**褒美を並べる前に**ボスの最期の
+        /// セリフを出す（10階 0x4e5b→106 / 20階 0x531d→122）。
+        /// </summary>
+        public int Record;
+        /// <summary>
+        /// そのセリフの前に置く間（垂直帰線の回数＝1/60秒）。原典は 0x32＝50。
+        /// 倒した直後に窓が開くと、斬り合いの絵と重なって見える。
+        /// </summary>
+        public int WaitFrames;
     }
 
     readonly List<Unlock> unlocks = new List<Unlock>();
@@ -80,6 +91,9 @@ public class SealedDoors
         {
             var line = raw.TrimEnd('\r').Trim();
             if (line.Length == 0 || line[0] == '#') continue;
+            // 行のうしろに付けた覚え書き（「# 動画 Part1 t=700 と一致」など）は読み飛ばす
+            int note = line.IndexOf('#');
+            if (note > 0) line = line.Substring(0, note).Trim();
             var p = line.Split('|');
             if (p.Length < 4) continue;
             int floor;
@@ -92,7 +106,9 @@ public class SealedDoors
                 Guards = ParseGuards(p[2], false),
                 AntiGuards = ParseGuards(p[2], true),
                 RequiresFlag = ParseRequires(p[2]),
-                Results = ParseResults(p[3])
+                Results = ParseResults(p[3]),
+                Record = p.Length > 4 ? ParseRecord(p[4]) : -1,
+                WaitFrames = p.Length > 4 ? ParseWait(p[4]) : 0
             };
             unlocks.Add(u);
         }
@@ -140,6 +156,35 @@ public class SealedDoors
         }
         return -1;
     }
+
+    /// <summary>5つ目の欄の「セリフNNN」を読む。無ければ -1。</summary>
+    static int ParseRecord(string s)
+    {
+        foreach (var part in s.Split(';'))
+        {
+            var t = part.Trim();
+            if (!t.StartsWith(RecordWord)) continue;
+            int n;
+            if (int.TryParse(t.Substring(RecordWord.Length).Trim(), out n)) return n;
+        }
+        return -1;
+    }
+
+    /// <summary>5つ目の欄の「待つN」を読む。無ければ 0。</summary>
+    static int ParseWait(string s)
+    {
+        foreach (var part in s.Split(';'))
+        {
+            var t = part.Trim();
+            if (!t.StartsWith(WaitWord)) continue;
+            int n;
+            if (int.TryParse(t.Substring(WaitWord.Length).Trim(), out n)) return n;
+        }
+        return 0;
+    }
+
+    const string RecordWord = "セリフ";
+    const string WaitWord = "待つ";
 
     static List<Result> ParseResults(string s)
     {

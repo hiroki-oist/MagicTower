@@ -443,6 +443,12 @@ public class TowerGame
                 if (int.TryParse(e.Effect.Substring(Cutscenes.WaitPrefix.Length).Trim(), out n))
                     pauseFrames += n;
             }
+            else if (e.Effect != null && e.Effect.StartsWith(UnlockStep))
+            {
+                int flag;
+                if (int.TryParse(e.Effect.Substring(UnlockStep.Length).Trim(), out flag))
+                    ApplyHeldUnlock(flag);
+            }
             else if (e.Effect != null && e.Effect.StartsWith(Cutscenes.VanishPrefix))
             {
                 Vector2Int at;
@@ -1617,11 +1623,39 @@ public class TowerGame
         foreach (var k in keys) Say(GameText.Instance.Message(k));
     }
 
+    /// <summary>
+    /// 預けておいた解錠を当てる段。中身は「その階のこの番号の解錠」。
+    /// ボスの最期のセリフを読み終えたところで走る（<see cref="Evaluate"/>）。
+    /// </summary>
+    public const string UnlockStep = "解錠";
+
     /// <summary>解錠条件を判定して、満たしたものを盤面に反映する。</summary>
     void Evaluate()
     {
         Player.ClampStats();       // 原典は描き直すたびに上限で頭を押さえる
         if (Floor == null) return;
+        var gates = GatesNow();
+        // ★発火した印は**遊び手の旗**へ控える（原典と同じ1本の配列）。
+        //   階の器の中だけに置くとセーブから読み直したときに消えてしまい、
+        //   解錠がもう一度走って褒美と妖精が生き返る（作者の報告）。
+        // セリフ付きの解錠（ブロックのボス）は地図も旗も預けたままにして、
+        // セリフのうしろに置いた段で当てる。
+        var fired = Floor.ApplyUnlocks(f => Player.EventFlags.Contains(f),
+                                       f => Player.EventFlags.Add(f),
+                                       u => u.Record >= 0);
+        bool any = false;
+        foreach (var u in fired)
+        {
+            if (u.Record >= 0) { QueueBossLastWords(u); continue; }
+            UnlockSounds(u);
+            any = true;
+        }
+        if (any) OpenGates(gates);
+    }
+
+    /// <summary>今その階にある門（封印扉）のマス。</summary>
+    List<Vector2Int> GatesNow()
+    {
         // 門が開いたマスを拾うために、開く前の門の場所を控えておく。
         // 原典（0x4762）は門1マスごとに 0x7a68（9コマの動き）を呼ぶ。
         var gates = new List<Vector2Int>();
@@ -1631,29 +1665,73 @@ public class TowerGame
                 var at = new Vector2Int(x, y);
                 if (Floor.At(at) == "s") gates.Add(at);
             }
-        // ★発火した印は**遊び手の旗**へ控える（原典と同じ1本の配列）。
-        //   階の器の中だけに置くとセーブから読み直したときに消えてしまい、
-        //   解錠がもう一度走って褒美と妖精が生き返る（作者の報告）。
-        var fired = Floor.ApplyUnlocks(f => Player.EventFlags.Contains(f),
-                                       f => Player.EventFlags.Add(f));
-        foreach (var u in fired)
+        return gates;
+    }
+
+    /// <summary>控えておいた門のうち、開いたものを見た目へ渡す。</summary>
+    void OpenGates(List<Vector2Int> gates)
+    {
+        foreach (var at in gates)
+            if (Floor.At(at) != "s")
+            {
+                // 原典 0x7a68 は門1マスごとに9コマの動きを出し、**その頭で**音11を鳴らす。
+                // 鳴らすのは見た目の側（動きが始まるとき）。ここで鳴らすと
+                // 「音が鳴り終わってから扉が開く」「何枚ぶんも重なって聞こえる」
+                // ことになる（作者の報告）。
+                // 戦いのあとに開くものなので、**ひと呼吸おいてから**出す（作者の指定）。
+                doorOpens.Add(new DoorOpen { At = at, Cell = "s", Delayed = true });
+            }
+    }
+
+    void UnlockSounds(SealedDoors.Unlock u)
+    {
+        PlaySound(u.Floor == 2 ? SoundCues.BigUnlock : SoundCues.Unlock);
+        // 49階で壁が書き込まれるとき（原典 0x226b）は別の音が鳴る
+        foreach (var r in u.Results)
+            if (r.Kind == "封印") { PlaySound(SoundCues.WallAppear); break; }
+    }
+
+    /// <summary>
+    /// ブロックのボスを倒したときの最期のセリフ。原典 0x4e5b（10階・セリフ106）と
+    /// 0x531d（20階・セリフ122）は
+    ///   印を立てる → ひと呼吸（0x32＝50コマ）おく → セリフ → **そのあとで**褒美を並べる
+    /// の順に書いている。褒美をここで当ててしまうと、セリフより先に宝と階段が
+    /// 生えてしまうので、書き換えはセリフのうしろの段（<see cref="UnlockStep"/>）に預ける。
+    /// </summary>
+    void QueueBossLastWords(SealedDoors.Unlock u)
+    {
+        if (u.WaitFrames > 0)
+            pages.Enqueue(new Page
+            {
+                Kind = PageKind.Effect, Record = -1,
+                Effect = Cutscenes.WaitPrefix + u.WaitFrames
+            });
+        var line = GameText.Instance.Dialogue(u.Record);
+        if (line.HasValue) Say(line.Value.Body);
+        pages.Enqueue(new Page
         {
-            PlaySound(u.Floor == 2 ? SoundCues.BigUnlock : SoundCues.Unlock);
-            // 49階で壁が書き込まれるとき（原典 0x226b）は別の音が鳴る
-            foreach (var r in u.Results)
-                if (r.Kind == "封印") { PlaySound(SoundCues.WallAppear); break; }
+            Kind = PageKind.Effect, Record = -1,
+            Effect = UnlockStep + u.FlagId
+        });
+    }
+
+    /// <summary>預けておいた解錠を当てる。セリフを読み終えたところで呼ばれる。</summary>
+    void ApplyHeldUnlock(int flagId)
+    {
+        if (Floor == null) return;
+        var gates = GatesNow();
+        bool any = false;
+        foreach (var u in SealedDoors.Instance.ForFloor(Floor.FloorNumber))
+        {
+            if (u.FlagId != flagId) continue;
+            // 旗はここで立てる。預けている間にセーブされても、褒美だけが消えて
+            // 二度と出なくなる（旗だけ残る）ことが無いように。
+            Player.EventFlags.Add(flagId);
+            Floor.ApplyResults(u);
+            UnlockSounds(u);
+            any = true;
         }
-        if (fired.Count > 0)
-            foreach (var at in gates)
-                if (Floor.At(at) != "s")
-                {
-                    // 原典 0x7a68 は門1マスごとに9コマの動きを出し、**その頭で**音11を鳴らす。
-                    // 鳴らすのは見た目の側（動きが始まるとき）。ここで鳴らすと
-                    // 「音が鳴り終わってから扉が開く」「何枚ぶんも重なって聞こえる」
-                    // ことになる（作者の報告）。
-                    // 戦いのあとに開くものなので、**ひと呼吸おいてから**出す（作者の指定）。
-                    doorOpens.Add(new DoorOpen { At = at, Cell = "s", Delayed = true });
-                }
+        if (any) OpenGates(gates);
     }
 
     /// <summary>
