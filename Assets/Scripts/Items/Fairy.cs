@@ -32,6 +32,26 @@ public static class Fairy
     /// <summary>「おめでとう！　満点です。」になる点数。</summary>
     public const int PerfectScore = 100;
 
+    /// <summary>
+    /// **称号は点数の高さでは決まらない。80点以上を取った回数で上がる。**
+    /// 原典 0x7713 が「80点以上なら妖精回数（フラグ32番 <c>es:[0x20]</c>）を1つ増やす」、
+    /// 0x780a / 0x788b / 0x7938 / 0x79b7 がその回数で上の表を引いている。
+    /// 妖精は5人いるので、毎回80点以上なら
+    /// 戦士 → 勇者 → 英雄 → 剣帝 → 闘神 と上がり切る。
+    /// 妖精回数はセーブに入る（0x1229:0x1e から60ワード写す中の2バイト目）。
+    /// </summary>
+    public static string RankOf(int fairyCount)
+    {
+        return Ranks[Mathf.Clamp(fairyCount, 0, Ranks.Length - 1)];
+    }
+
+    /// <summary>
+    /// ここの妖精だけ締めの文面が違う階（原典 0x77bb は 25階だけを分けている）。
+    /// 点数が足りなければ評価をせずに「ここまで、おつかれさまでした。」で終わり、
+    /// 称号をもらえるときの締めも「ここまでおつかれさまでした。」になる。
+    /// </summary>
+    public const int FarewellFloor = 25;
+
     /// <summary>符号つきで 0 方向に丸める割り算（原典の idiv / sar と同じ）。</summary>
     static int Div(int a, int b)
     {
@@ -58,8 +78,13 @@ public static class Fairy
                                     + Div(attack - 350, 2) + Div(defense - 460, 4); break;
             case 40: baseScore = 60 + Div(hp - 1600, 200)
                                     + (attack - 152) + Div(defense - 198, 2); break;
+            // ★マニュアルは「（防御力−３００）÷３」と書いているが、原典 MTE.EXE は
+            //   `sub ax,0x12c ; sar ax,2`（0x7649〜0x7660）で **÷4**。
+            //   マニュアルは古い版のままらしく、本文にも「今回のバージョンでは
+            //   ４０階の妖精の点数をすこし低めに出すようにしてあります」とある。
+            //   原典が正なので ÷4 にする。
             case 49: baseScore = 60 + Div(hp - 3000, 400)
-                                    + Div(attack - 240, 2) + Div(defense - 300, 3); break;
+                                    + Div(attack - 240, 2) + Div(defense - 300, 4); break;
             default: return int.MinValue;
         }
         return baseScore + yellowKeys + purpleKeys * 2;
@@ -70,9 +95,9 @@ public static class Fairy
     {
         if (score >= PerfectScore) return "fairy_perfect";
         if (score >= RankThreshold) return "fairy_title";
-        if (score >= 60) return "fairy_eval4";   // なかなかのものです
-        if (score >= 40) return "fairy_eval3";   // まあまあですね
-        if (score >= 20) return "fairy_eval2";   // いまひとつですね
+        if (score >= 70) return "fairy_eval4";   // なかなかのものです
+        if (score >= 60) return "fairy_eval3";   // まあまあですね
+        if (score >= 50) return "fairy_eval2";   // いまひとつですね
         return "fairy_eval1";                    // うーん、…かなり無理があるでしょう
     }
 }

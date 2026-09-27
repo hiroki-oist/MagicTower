@@ -63,6 +63,23 @@ public class TowerSaveTests
     }
 
     [Test]
+    public void 妖精の回数もセーブに残る()
+    {
+        // 原典も「妖精回数」をフラグ置き場（0x20）に持っていて、セーブに入る。
+        // これが消えると称号が戦士まで巻き戻ってしまう。
+        var p = new PlayerState { Hp = 1000, Floor = 26, Rank = "勇者" };
+        p.FairyScored.Add(10);
+        p.FairyScored.Add(25);
+        TowerSave.Save(4, p);
+
+        var q = TowerSave.Load(4);
+        Assert.AreEqual(2, q.FairyCount);
+        Assert.IsTrue(q.FairyScored.Contains(10));
+        Assert.IsTrue(q.FairyScored.Contains(25));
+        Assert.AreEqual("勇者", q.Rank);
+    }
+
+    [Test]
     public void 空きスロットは読めない()
     {
         Assert.IsFalse(TowerSave.Exists(1));

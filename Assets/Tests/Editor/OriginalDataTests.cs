@@ -254,6 +254,34 @@ public class OriginalDataTests
         // 鍵も点数に入る
         Assert.AreEqual(63, Fairy.Score(10, 400, 29, 35, 1, 1), "鍵1本＋紫1本で+3");
         Assert.IsFalse(Fairy.IsFairyFloor(30), "30階に妖精はいない");
+        // 49階の防御力は原典では÷4（0x7649 の sar ax,2）。マニュアルの÷3は古い版
+        Assert.AreEqual(62, Fairy.Score(49, 3000, 240, 308, 0, 0), "防御+8で+2（÷4）");
+        Assert.AreEqual(62, Fairy.Score(25, 3000, 350, 468, 0, 0), "25階も÷4");
+    }
+
+    [Test]
+    public void 妖精の評価は50_60_70_80_100で切り替わる()
+    {
+        // 原典 0x78d0〜0x7904 の cmp 0x32 / 0x3c / 0x46 / 0x50 / 0x64
+        Assert.AreEqual("fairy_eval1", Fairy.EvaluationKey(49));
+        Assert.AreEqual("fairy_eval2", Fairy.EvaluationKey(50));
+        Assert.AreEqual("fairy_eval3", Fairy.EvaluationKey(60));
+        Assert.AreEqual("fairy_eval4", Fairy.EvaluationKey(70));
+        Assert.AreEqual("fairy_title", Fairy.EvaluationKey(80));
+        Assert.AreEqual("fairy_perfect", Fairy.EvaluationKey(100));
+    }
+
+    [Test]
+    public void 称号は80点以上を取った人数で上がる()
+    {
+        // 原典 0x771d が数を増やし、0x780a がその数で表を引く
+        Assert.AreEqual("戦士", Fairy.RankOf(1));
+        Assert.AreEqual("勇者", Fairy.RankOf(2));
+        Assert.AreEqual("英雄", Fairy.RankOf(3));
+        Assert.AreEqual("剣帝", Fairy.RankOf(4));
+        Assert.AreEqual("闘神", Fairy.RankOf(5), "5人みな80点以上なら上がり切る");
+        Assert.AreEqual("無称号", Fairy.RankOf(0));
+        Assert.AreEqual(5, Fairy.Floors.Length, "妖精は5人");
     }
 
     [Test]

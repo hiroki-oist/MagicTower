@@ -154,6 +154,13 @@ public static class AuthorStyle
     /// 作者の指定「話しかけるまで妖精は答えない形で。全部の階で10階と同じに」
     /// に合わせ、**3つの表から最後の「床へ戻す」を外した**
     /// （Resources/SealedDoors.txt の20/25/49階の行）。
+    ///
+    /// これで妖精は何度でも話しかけられるようになった。称号は原典では
+    /// 「80点以上を取るたびに1つ上がる」ので、そのままだと同じ妖精に
+    /// 何度も話しかけて闘神まで上げられてしまう。そこで
+    /// <see cref="PlayerState.FairyScored"/> に**階**を覚え、
+    /// 同じ妖精は一度しか数えない。原典は妖精が消えてしまうので、
+    /// 数え方としては同じことになる。
     /// </summary>
     public static readonly bool FairyWaitsToBeAsked = true;
 

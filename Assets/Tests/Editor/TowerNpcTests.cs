@@ -117,6 +117,50 @@ public class TowerNpcTests
         Assert.GreaterOrEqual(r.Score, 80);
         Assert.IsNotNull(r.Rank, "80点以上で称号がもらえる");
         CollectionAssert.Contains(Fairy.Ranks, r.Rank);
+        Assert.AreEqual("戦士", r.Rank, "1人目で80点以上なら戦士");
+    }
+
+    [Test]
+    public void 称号は80点以上を取った妖精の人数で上がる()
+    {
+        // 原典は妖精が出た直後に消えるので1階に1回。こちらは盤面に残るので
+        // 同じ階を二度数えない（AuthorStyle.FairyWaitsToBeAsked）
+        player.Hp = 9990; player.Attack = 990; player.Defense = 990;
+        player.YellowKeys = 10; player.PurpleKeys = 10;
+
+        player.Floor = 10;
+        Assert.AreEqual("戦士", TowerNpc.AskFairy(player).Rank);
+        Assert.AreEqual("戦士", TowerNpc.AskFairy(player).Rank, "同じ妖精は二度数えない");
+        Assert.AreEqual(1, player.FairyCount);
+
+        player.Floor = 20;
+        Assert.AreEqual("勇者", TowerNpc.AskFairy(player).Rank);
+        player.Floor = 25;
+        Assert.AreEqual("英雄", TowerNpc.AskFairy(player).Rank);
+        player.Floor = 40;
+        Assert.AreEqual("剣帝", TowerNpc.AskFairy(player).Rank);
+        player.Floor = 49;
+        Assert.AreEqual("闘神", TowerNpc.AskFairy(player).Rank);
+        Assert.AreEqual(5, player.FairyCount);
+    }
+
+    [Test]
+    public void 点数が足りなければ称号は数えない()
+    {
+        player.Floor = 10; player.Hp = 400; player.Attack = 29; player.Defense = 35;
+        player.YellowKeys = 0; player.PurpleKeys = 0;
+        Assert.IsNull(TowerNpc.AskFairy(player).Rank);
+        Assert.AreEqual(0, player.FairyCount);
+    }
+
+    [Test]
+    public void 締めが違うのは25階だけ()
+    {
+        // 原典 0x77bb は 25階だけを分けて「ここまで、おつかれさまでした。」にする
+        player.Floor = 25;
+        Assert.IsTrue(TowerNpc.AskFairy(player).Farewell);
+        player.Floor = 49;
+        Assert.IsFalse(TowerNpc.AskFairy(player).Farewell);
     }
 
     // ---- 商人の3段構え（原典 MTE.EXE 0x0ea6） ----

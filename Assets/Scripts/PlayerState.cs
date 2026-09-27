@@ -64,6 +64,19 @@ public class PlayerState
     public string Rank = "";
 
     /// <summary>
+    /// **80点以上を取った妖精の階**。原典はこれを回数（1バイト）だけ持っていて
+    /// （フラグ32番 <c>es:[0x20]</c>、0x771d が増やす）、その回数で称号の表を引く。
+    /// ★リメイクは妖精が盤面に残って何度でも話しかけられる
+    /// （<see cref="AuthorStyle.FairyWaitsToBeAsked"/>）ので、回数ではなく
+    /// **階の集まり**で持ち、同じ妖精を二度数えないようにする。
+    /// 原典は妖精が出た直後に消えるため、数え方は結局同じになる。
+    /// </summary>
+    public readonly HashSet<int> FairyScored = new HashSet<int>();
+
+    /// <summary>原典の「妖精回数」。80点以上を取った妖精の人数。</summary>
+    public int FairyCount { get { return FairyScored.Count; } }
+
+    /// <summary>
     /// 高速モードの旗。原典もこれをフラグ置き場の **31番**（`es:[0x1f]`）に持っていて、
     /// セーブにもそのまま入る（0xa92d〜0xa956 が切り替える）。
     /// 立っているあいだ、原典は窓の開け閉めの待ち（0x9478 / 0x9546）と

@@ -268,6 +268,8 @@ public static class TowerNpc
         public string EvaluationKey;
         /// <summary>80点以上でもらえる称号。もらえなければ null。</summary>
         public string Rank;
+        /// <summary>締めが「ここまで、おつかれさまでした。」になる階（25階）か。</summary>
+        public bool Farewell;
     }
 
     /// <summary>妖精の採点。10/20/25/40/49階にしかいない。</summary>
@@ -279,11 +281,14 @@ public static class TowerNpc
         r.Valid = true;
         r.Score = Fairy.Score(p.Floor, p.Hp, p.Attack, p.Defense, p.YellowKeys, p.PurpleKeys);
         r.EvaluationKey = Fairy.EvaluationKey(r.Score);
+        r.Farewell = p.Floor == Fairy.FarewellFloor;
         if (r.Score >= Fairy.RankThreshold)
         {
-            // 点数が高いほど上の称号。原典の並びは 無称号/戦士/勇者/英雄/剣帝/闘神
-            int i = Mathf.Clamp((r.Score - Fairy.RankThreshold) / 10 + 1, 1, Fairy.Ranks.Length - 1);
-            r.Rank = Fairy.Ranks[i];
+            // 称号は**点数の高さではなく、80点以上を取った妖精の人数**で上がる
+            // （原典 0x771d が数を増やし、0x780a がその数で表を引く）。
+            // 並びは 無称号/戦士/勇者/英雄/剣帝/闘神。
+            p.FairyScored.Add(p.Floor);          // 同じ階は二度数えない
+            r.Rank = Fairy.RankOf(p.FairyCount);
         }
         return r;
     }

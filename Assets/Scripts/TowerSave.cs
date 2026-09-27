@@ -90,6 +90,9 @@ public static class TowerSave
         // 一度きりのできごと（仙人と話した等）も残す
         var flags = new System.Collections.Generic.List<int>(p.EventFlags);
         flags.Sort();
+        // 80点以上を取った妖精の階（原典の「妖精回数」。称号がこれで決まる）
+        var fairy = new System.Collections.Generic.List<int>(p.FairyScored);
+        fairy.Sort();
         // 地図の差（原典は地図をまるごと書き出している）
         var maps = new System.Collections.Generic.List<string>();
         if (floors != null)
@@ -111,7 +114,8 @@ public static class TowerSave
             string.Join(",", fields) + "|" + string.Join(",", visited)
                                      + "|" + string.Join(",", flags)
                                      + "|" + string.Join("/", maps)
-                                     + "|" + (p.Rank ?? ""));   // 妖精にもらった称号
+                                     + "|" + (p.Rank ?? "")     // 妖精にもらった称号
+                                     + "|" + string.Join(",", fairy));   // 80点以上だった妖精
     }
 
     /// <summary>読み込む。スロットが空なら null（地図の差は捨てる）。</summary>
@@ -158,6 +162,12 @@ public static class TowerSave
             }
 
         if (halves.Length > 4) state.Rank = halves[4].Trim();   // 妖精にもらった称号
+        if (halves.Length > 5 && halves[5].Trim().Length > 0)    // 80点以上だった妖精
+            foreach (var v in halves[5].Split(','))
+            {
+                int f;
+                if (int.TryParse(v.Trim(), out f)) state.FairyScored.Add(f);
+            }
 
         var snap = new Snapshot { Player = state };
         if (halves.Length > 3 && halves[3].Length > 0)

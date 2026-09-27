@@ -266,7 +266,7 @@ chk("public bool UseItem" in _tg2,"特殊アイテムを使える")
 chk("TowerNpcTests" in _alltests,"商人・祭壇・妖精のテストがある")
 _np=open("Assets/Scripts/Items/TowerNpc.cs",encoding="utf-8").read()
 chk('IsThief' in _np and "Mikata" in _np,"Mikata は盗賊（物語の味方）")
-chk("AskFairy" in _np and "Ranks" in _np,"妖精の採点と称号がある")
+chk("AskFairy" in _np and "RankOf" in _np,"妖精の採点と称号がある")
 chk("TowerMenuTests" in _alltests,"メニューとオーブのテストがある")
 _tm=open("Assets/Scripts/UI/TowerMenu.cs",encoding="utf-8").read()
 chk("NextToStairs" in _tm,"飛翔のオーブは階段の隣でしか使えない")
@@ -972,6 +972,8 @@ chk(any(l.startswith("47 ") and "matock_super" in l and "4000" in l for l in _sh
 _shc=open("Assets/Scripts/Items/Shop.cs",encoding="utf-8").read()
 chk("VariableKeyUnitPrice = 20" in _shc and "highestFloorReached" in _shc,"変動価格は20×到達最高階")
 _fa=open("Assets/Scripts/Items/Fairy.cs",encoding="utf-8").read()
+_np=open("Assets/Scripts/Items/TowerNpc.cs",encoding="utf-8").read()
+_tgm=open("Assets/Scripts/TowerGame.cs",encoding="utf-8").read()
 chk("{ 10, 20, 25, 40, 49 }" in _fa,"妖精は10/20/25/40/49階")
 chk('"無称号", "戦士", "勇者", "英雄", "剣帝", "闘神"' in _fa,"称号は6段階")
 chk("RankThreshold = 80" in _fa and "PerfectScore = 100" in _fa,"80点で称号・100点で満点")
@@ -982,11 +984,39 @@ def _sc(f,hp,a,d,k,pk):
     elif f==20: b=60+_div(hp-800,100)+(a-74)*2+(d-80)
     elif f==25: b=60+_div(hp-3000,400)+_div(a-350,2)+_div(d-460,4)
     elif f==40: b=60+_div(hp-1600,200)+(a-152)+_div(d-198,2)
-    elif f==49: b=60+_div(hp-3000,400)+_div(a-240,2)+_div(d-300,3)
+    elif f==49: b=60+_div(hp-3000,400)+_div(a-240,2)+_div(d-300,4)
     else: return None
     return b+k+pk*2
 _base={10:(400,29,35),20:(800,74,80),25:(3000,350,460),40:(1600,152,198),49:(3000,240,300)}
 chk(all(_sc(f,*_base[f],0,0)==60 for f in _base),"5本の式が基準値でちょうど60点")
+# 49階の防御力は原典では÷4（0x7649 の sar ax,2）。マニュアルの÷3は古い版の数字
+chk("Div(defense - 300, 4)" in _fa,"49階の防御力は÷4（原典。マニュアルの÷3ではない）")
+chk("sar     ax, cl" in _dis and "sub     ax, 0x12c" in _dis,"原典の49階も2ビット右へ寄せている")
+# 評価の区切りは 50/60/70/80/100（原典 0x78d0〜0x7904 の cmp 0x32/0x3c/0x46/0x50/0x64）
+chk('score >= 70) return "fairy_eval4"' in _fa and 'score >= 60) return "fairy_eval3"' in _fa
+    and 'score >= 50) return "fairy_eval2"' in _fa,"評価の区切りは50/60/70点")
+for _c in ("cmp     word ptr [bp - 0x2e], 0x32","cmp     word ptr [bp - 0x2e], 0x3c",
+           "cmp     word ptr [bp - 0x2e], 0x46"):
+    chk(_c in _dis,"原典にも同じ区切りがある（"+_c[-4:]+"）")
+# 称号は点数の高さではなく「80点以上を取った妖精の人数」で上がる（0x771d → 0x780a）
+chk("RankOf" in _fa and "Fairy.RankOf(p.FairyCount)" in _np,
+    "称号は80点以上を取った人数で引く")
+chk("inc     byte ptr es:[0x20]" in _dis,"原典も80点以上で妖精回数を1つ増やす")
+chk("FairyScored" in open("Assets/Scripts/PlayerState.cs",encoding="utf-8").read(),
+    "妖精回数は持ち主が覚える")
+chk("FairyScored" in open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read(),
+    "妖精回数もセーブに残る（消えると称号が巻き戻る）")
+# 25階の妖精だけ締めが違う（原典 0x77bb）
+chk("FarewellFloor = 25" in _fa,"締めが違うのは25階だけ")
+chk("cmp     word ptr es:[0x9e], 0x19" in _dis,"原典も25階だけを分けている")
+chk('r.Farewell ? "fairy_end_fin" : "fairy_end_go"' in _tgm
+    and 'r.Farewell && r.Rank == null' in _tgm,
+    "25階は点数が足りなければ評価をせず「ここまで、おつかれさまでした。」")
+_rk={}
+for _l in open("Assets/Resources/Messages.txt",encoding="utf-8"):
+    if _l.startswith("rank_"): _k,_v=_l.split("|",1); _rk[_k.strip()]=_v.strip()
+chk(_rk.get("rank_1")=="戦士" and _rk.get("rank_3")=="英雄" and _rk.get("rank_5")=="闘神"
+    and len(_rk)==6,"称号の表は6段階（無称号・戦士・勇者・英雄・剣帝・闘神）")
 
 print("\n【8】フロアデータ")
 chk(len(glob.glob("Assets/Resources/Floors/Floor_*.txt"))==51,
@@ -3182,7 +3212,7 @@ _shop=open("Assets/Resources/ShopOffers.txt",encoding="utf-8").read()
 chk(re.search(r"^12 \| 9 +\| buy_var",_shop,re.M) is not None,
     "12階の鍵屋だけが何本でも売ってくれる（原典 0x14 * 到達最高階）")
 
-MIN_CHECKS=840
+MIN_CHECKS = 1000
 
 # 計画書の先頭のサマリが古びていないか。**数え物は実物と突き合わせる**
 # （38:00 のサマリが 85:00 まで「検査102項目・テスト25本・P58は未解読」のまま残っていた）。

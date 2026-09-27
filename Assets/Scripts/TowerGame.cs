@@ -1941,12 +1941,14 @@ public class TowerGame
         if (!r.Valid) return t.Message("fairy_here");
         // もらった称号は右上の「実績」に出すので覚えておく（作者の指定）
         if (r.Rank != null) Player.Rank = r.Rank;
-        var body = t.Message("fairy_ask") + t.Message("fairy_score", r.Score)
-                 + t.Message(r.EvaluationKey);
+        var head = t.Message("fairy_ask") + t.Message("fairy_score", r.Score);
+        // 25階の妖精だけ文面が違う（原典 0x77bb）。点数が足りなければ評価をせず、
+        // 「ここまで、おつかれさまでした。」で終わる。
+        if (r.Farewell && r.Rank == null) return head + t.Message("fairy_bye");
+        var body = head + t.Message(r.EvaluationKey);
         if (r.Rank == null) return body;
         // 称号つきの文面は『 で切れているので、称号と締めをつなぐ
-        return body + r.Rank
-             + t.Message(Player.Floor >= 49 ? "fairy_end_fin" : "fairy_end_go");
+        return body + r.Rank + t.Message(r.Farewell ? "fairy_end_fin" : "fairy_end_go");
     }
 
     /// <summary>隠れていた者を盤面に出す。条件を満たしていなければ何も起きない。</summary>

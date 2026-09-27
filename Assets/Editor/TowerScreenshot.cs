@@ -21,8 +21,11 @@ public static class TowerScreenshot
     /// 決まっている**（課金の審査用スクリーンショットは 1242x2688 / 1284x2778 など）ので、
     /// 環境変数 MT_SHOT_W / MT_SHOT_H で差し替えられるようにしてある。
     /// </summary>
-    static int Width { get { return EnvSize("MT_SHOT_W", 1080); } }
-    static int Height { get { return EnvSize("MT_SHOT_H", 1920); } }
+    static int Width { get { return overrideW > 0 ? overrideW : EnvSize("MT_SHOT_W", 1080); } }
+    static int Height { get { return overrideH > 0 ? overrideH : EnvSize("MT_SHOT_H", 1920); } }
+
+    /// <summary>端末ごとの写しを撮るときに差し替える大きさ。</summary>
+    static int overrideW, overrideH;
 
     static int EnvSize(string name, int fallback)
     {
@@ -118,6 +121,47 @@ public static class TowerScreenshot
 
     static bool shop, menu;
 
+    /// <summary>
+    /// **端末ごとの写し**をまとめて撮る（作者の指定）。
+    /// 画面の縦横比が機種で違うので、崩れていないかを見るための口。
+    ///   MT_SHOT_SIZES … "1170x2532,1179x2556,…"（既定は iPhone 14〜17 の全種類）
+    ///   MT_SHOT_WHAT  … "title" / "game" / "ending" を「,」で並べる（既定は3つとも）
+    /// 書き出し先は /tmp/mt_dev_{what}_{w}x{h}.png。
+    ///
+    ///   Unity -batchmode -quit -projectPath . -executeMethod TowerScreenshot.CaptureDevices
+    /// </summary>
+    public static void CaptureDevices()
+    {
+        var sizes = System.Environment.GetEnvironmentVariable("MT_SHOT_SIZES");
+        if (string.IsNullOrEmpty(sizes))
+            // iPhone 14 以降の**異なる画面の大きさ**（同じ大きさの機種はまとめてある）
+            sizes = "1170x2532,1179x2556,1206x2622,1260x2736,1284x2778,1290x2796,1320x2868";
+        var what = System.Environment.GetEnvironmentVariable("MT_SHOT_WHAT");
+        if (string.IsNullOrEmpty(what)) what = "title,game,ending";
+
+        foreach (var one in sizes.Split(','))
+        {
+            var wh = one.Trim().Split('x');
+            int w, h;
+            if (wh.Length != 2 || !int.TryParse(wh[0], out w) || !int.TryParse(wh[1], out h))
+                continue;
+            overrideW = w; overrideH = h;
+            foreach (var kind in what.Split(','))
+            {
+                var k = kind.Trim();
+                shop = menu = policy = policyOnly = false;
+                fullScreen = null;
+                if (k == "title") { policy = true; policyOnly = true; }
+                else if (k == "ending") fullScreen = "EndingTowerScreen";
+                Capture(false);
+                var to = $"/tmp/mt_dev_{k}_{w}x{h}.png";
+                System.IO.File.Copy(OutPath, to, true);
+                Debug.Log($"■端末の写し: {to}");
+            }
+        }
+        overrideW = overrideH = 0;
+    }
+
     static void ShowMenu()
     {
         if (!menu) return;
@@ -155,15 +199,8 @@ public static class TowerScreenshot
     static void ShowShop()
     {
         if (!shop) return;
-        // 題名が前に出ているので退ける。**題名の部品は名前でも消しておく** —
-        // 遊んでいないときは Awake が走っておらず、部品の enabled が
-        // シーンに保存されたまま（＝出たまま）のことがある。
-        var title = Object.FindObjectOfType<TitleView>(true);
-        if (title != null) title.Hide();
-        foreach (var t in Object.FindObjectsOfType<TMPro.TextMeshProUGUI>(true))
-            if (t.name.StartsWith("Title")) t.enabled = false;
-        foreach (var im in Object.FindObjectsOfType<UnityEngine.UI.Image>(true))
-            if (im.name.StartsWith("Title")) im.enabled = false;
+        // 題名が前に出ているので退ける（部品は名前でも消す。上の HideTitleParts）
+        HideTitleParts();
         var win = Object.FindObjectOfType<DialogueWindowView>(true);
         if (win == null) { Debug.LogWarning("会話の窓が見つからない"); return; }
         // ★**実機と同じ値段の字**で組ませる（米国ストアの表記がいちばん長い）。
@@ -213,14 +250,95 @@ public static class TowerScreenshot
     }
 
     /// <summary>名前の1枚絵と、その後ろの黒地を出す。</summary>
+    /// <summary>
+    /// 端末ごとの写しを**1枚に並べる**（見比べるため）。
+    /// /tmp/mt_dev_{種類}_{w}x{h}.png を読んで /tmp/mt_sheet_{種類}.png に書き出す。
+    /// 高さを揃えて左から順に並べるだけ。順番は MT_SHOT_SIZES の並び。
+    /// </summary>
+    public static void MakeDeviceSheets()
+    {
+        var sizes = System.Environment.GetEnvironmentVariable("MT_SHOT_SIZES");
+        if (string.IsNullOrEmpty(sizes))
+            sizes = "1170x2532,1179x2556,1206x2622,1260x2736,1284x2778,1290x2796,1320x2868";
+        var what = System.Environment.GetEnvironmentVariable("MT_SHOT_WHAT");
+        if (string.IsNullOrEmpty(what)) what = "title,game,ending";
+
+        const int H = 900;                 // 並べるときの高さ
+        const int Gap = 16;                // すき間
+        foreach (var kind in what.Split(','))
+        {
+            var k = kind.Trim();
+            var shots = new System.Collections.Generic.List<Texture2D>();
+            foreach (var one in sizes.Split(','))
+            {
+                var path = $"/tmp/mt_dev_{k}_{one.Trim()}.png";
+                if (!System.IO.File.Exists(path)) continue;
+                var tex = new Texture2D(2, 2, TextureFormat.RGB24, false);
+                tex.LoadImage(System.IO.File.ReadAllBytes(path));
+                shots.Add(tex);
+            }
+            if (shots.Count == 0) continue;
+
+            int total = Gap;
+            var widths = new int[shots.Count];
+            for (int i = 0; i < shots.Count; i++)
+            {
+                widths[i] = Mathf.RoundToInt(shots[i].width * (float)H / shots[i].height);
+                total += widths[i] + Gap;
+            }
+            var sheet = new Texture2D(total, H + Gap * 2, TextureFormat.RGB24, false);
+            var bg = new Color(0.10f, 0.10f, 0.12f);
+            var fill = new Color[sheet.width * sheet.height];
+            for (int i = 0; i < fill.Length; i++) fill[i] = bg;
+            sheet.SetPixels(fill);
+
+            int x = Gap;
+            for (int i = 0; i < shots.Count; i++)
+            {
+                var src = shots[i];
+                for (int py = 0; py < H; py++)
+                    for (int px = 0; px < widths[i]; px++)
+                        sheet.SetPixel(x + px, Gap + py,
+                            src.GetPixelBilinear(px / (float)widths[i], py / (float)H));
+                x += widths[i] + Gap;
+            }
+            sheet.Apply();
+            var to = $"/tmp/mt_sheet_{k}.png";
+            System.IO.File.WriteAllBytes(to, sheet.EncodeToPNG());
+            Debug.Log($"■並べた: {to}（{shots.Count}台ぶん）");
+        }
+    }
+
     static void ShowFullScreen()
     {
         if (string.IsNullOrEmpty(fullScreen)) return;
+        // ⚠ 題名の部品は**シーンに出たまま保存されている**（遊んでいないので
+        //   Awake が走らず、TitleView.Hide が効かない）。題名そのものを撮るとき
+        //   以外は名前で消しておかないと、1枚絵に重なって写る。
+        if (fullScreen != "TitleScreen") HideTitleParts();
         foreach (var rt in Object.FindObjectsOfType<RectTransform>(true))
         {
             if (rt.name == "Backdrop") rt.gameObject.SetActive(true);
-            if (rt.name == fullScreen) rt.gameObject.SetActive(true);
+            if (rt.name != fullScreen) continue;
+            rt.gameObject.SetActive(true);
+            // 中の絵と字は、遊んでいるときに FullScreenView が出すもの。
+            // 写しのときは自分で出す（そうしないと真っ黒のまま）。
+            foreach (var im in rt.GetComponentsInChildren<UnityEngine.UI.Image>(true))
+            { im.gameObject.SetActive(true); im.enabled = true; }
+            foreach (var t in rt.GetComponentsInChildren<TMPro.TextMeshProUGUI>(true))
+            { t.gameObject.SetActive(true); t.enabled = true; }
         }
+    }
+
+    /// <summary>題名の絵と字を名前で消す。</summary>
+    static void HideTitleParts()
+    {
+        var title = Object.FindObjectOfType<TitleView>(true);
+        if (title != null) title.Hide();
+        foreach (var t in Object.FindObjectsOfType<TMPro.TextMeshProUGUI>(true))
+            if (t.name.StartsWith("Title")) t.enabled = false;
+        foreach (var im in Object.FindObjectsOfType<UnityEngine.UI.Image>(true))
+            if (im.name.StartsWith("Title")) im.enabled = false;
     }
 
     static void Capture(bool damagePanel)
@@ -257,6 +375,8 @@ public static class TowerScreenshot
 
         FillSample();
         ShowDpad();
+        // 1枚絵でも課金の窓でもないとき（＝ふつうの盤面）も題名は退ける
+        if (string.IsNullOrEmpty(fullScreen) && !shop && !menu && !policy) HideTitleParts();
         ShowFullScreen();
         ShowShop();
         ShowMenu();
