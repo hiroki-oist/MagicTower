@@ -102,6 +102,15 @@ public static class IosBuild
         var team = System.Environment.GetEnvironmentVariable("IOS_TEAM_ID");
         if (!string.IsNullOrEmpty(team)) PlayerSettings.iOS.appleDeveloperTeamID = team;
 
+        // ★**iPhone 専用**（作者の指定）。画面の並べ方（PhoneScreen）は
+        //   縦長の手に持つ画面を前提にしていて、iPad の 4:3 では左右に灰色の余白が
+        //   出るだけになる。iPad 対応を名乗ると
+        //     ・App Store Connect が 13インチ iPad の写しを要求する
+        //     ・審査も iPad で行われる
+        //   ので、名乗らない。iPhone 専用のアプリは iPad でも
+        //   iPhone 互換モードで入れて遊べるので、遊べる人は減らない。
+        PlayerSettings.iOS.targetDevice = iOSTargetDevice.iPhoneOnly;
+
         // **縦画面だけ**。画面の並べ方（PhoneScreen）が縦を前提にしている。
         PlayerSettings.defaultInterfaceOrientation = UIOrientation.Portrait;
         PlayerSettings.allowedAutorotateToPortrait = true;

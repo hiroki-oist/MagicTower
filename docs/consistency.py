@@ -2132,6 +2132,9 @@ chk('"magicTowerGoldFourHundred"' in _ap and '"magicTowerGoldOneThousand"' in _a
     "品目の Product ID が App Store Connect に作ったものと同じ字")
 chk('targetOSVersionString = "15.0"' in _ib,
     "StoreKit 2 に合わせて iOS 15 以上")
+# ★iPhone 専用（作者の指定）。iPad 対応を名乗ると 13インチ iPad の写しが要るうえ、
+#   審査も iPad で行われる。画面の並べ方は縦長の手に持つ画面が前提。
+chk("iOSTargetDevice.iPhoneOnly" in _ib,"iPhone 専用で出す")
 _pb=open("Assets/Editor/IosPostBuild.cs",encoding="utf-8").read()
 chk("SWIFT_VERSION" in _pb,
     "Swift を組み上げる設定を書き出しのあとに入れる")
