@@ -144,6 +144,7 @@
     <Compile Include="Assets/Tests/Editor/EndingTowerTests.cs" />
     <Compile Include="Assets/Tests/Editor/ScreenFlowTests.cs" />
     <Compile Include="Assets/Tests/Editor/TowerSceneTests.cs" />
+    <Compile Include="Assets/Tests/Editor/GoldTicketTests.cs" />
     <Compile Include="Assets/Tests/Editor/ClockDoorsTests.cs" />
     <Compile Include="Assets/Tests/Editor/HiddenOccupantsTests.cs" />
     <Compile Include="Assets/Tests/Editor/UnlockFlagSaveTests.cs" />

@@ -93,6 +93,9 @@ public static class TowerSave
         // 80点以上を取った妖精の階（原典の「妖精回数」。称号がこれで決まる）
         var fairy = new System.Collections.Generic.List<int>(p.FairyScored);
         fairy.Sort();
+        // その冒険でもう引き換えた引換券（課金の品。1回の冒険につき1枚）
+        var tickets = new System.Collections.Generic.List<int>(p.TicketsUsed);
+        tickets.Sort();
         // 地図の差（原典は地図をまるごと書き出している）
         var maps = new System.Collections.Generic.List<string>();
         if (floors != null)
@@ -115,7 +118,8 @@ public static class TowerSave
                                      + "|" + string.Join(",", flags)
                                      + "|" + string.Join("/", maps)
                                      + "|" + (p.Rank ?? "")     // 妖精にもらった称号
-                                     + "|" + string.Join(",", fairy));   // 80点以上だった妖精
+                                     + "|" + string.Join(",", fairy)    // 80点以上だった妖精
+                                     + "|" + string.Join(",", tickets)); // 引き換えた引換券
     }
 
     /// <summary>読み込む。スロットが空なら null（地図の差は捨てる）。</summary>
@@ -167,6 +171,12 @@ public static class TowerSave
             {
                 int f;
                 if (int.TryParse(v.Trim(), out f)) state.FairyScored.Add(f);
+            }
+        if (halves.Length > 6 && halves[6].Trim().Length > 0)    // 引き換えた引換券
+            foreach (var v in halves[6].Split(','))
+            {
+                int g;
+                if (int.TryParse(v.Trim(), out g)) state.TicketsUsed.Add(g);
             }
 
         var snap = new Snapshot { Player = state };

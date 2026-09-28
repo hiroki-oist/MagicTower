@@ -256,6 +256,12 @@ public static class PhoneScreen
     public const string ShopFree = "無料";
 
     /// <summary>
+    /// ★**その周回でもう交換したとき**の知らせ（作者の指定）。
+    /// 引換券は買い切りだが、**1回の冒険につき1枚**しか引き換えられない。
+    /// </summary>
+    public const string ShopUsed = "交換済みの引換券です。";
+
+    /// <summary>
     /// メニューの最後の項目（作者の指定）。原典は「　　ゲーム終了」で DOS へ戻るが、
     /// スマホに「終了」は要らないので**題名画面へ戻る**にした。
     /// </summary>

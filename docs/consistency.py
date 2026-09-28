@@ -2130,6 +2130,19 @@ chk("p.displayPrice" in _sw and "AppleStore.PriceOf(i)" in _gs,
 chk('"magicTowerGoldFourHundred"' in _ap and '"magicTowerGoldOneThousand"' in _ap
     and '"magicTowerGoldFourThousand"' in _ap,
     "品目の Product ID が App Store Connect に作ったものと同じ字")
+# ★引換券は1回の冒険につき1枚（作者の報告「一回買うと、無限に増やせてしまう」）
+_gshop4=open("Assets/Scripts/Items/GoldShop.cs",encoding="utf-8").read()
+chk("player.TicketsUsed.Contains(GoldOf(i))" in _gshop4
+    and "player.TicketsUsed.Add(GoldOf(i))" in _gshop4,
+    "引換券は1回の冒険につき1枚（覚えるのは遊び手の側）")
+chk('ShopUsed = "交換済みの引換券です。"' in open(
+        "Assets/Scripts/UI/PhoneScreen.cs",encoding="utf-8").read(),
+    "二度目は「交換済みの引換券です。」と知らせる")
+chk("TicketsUsed" in open("Assets/Scripts/TowerSave.cs",encoding="utf-8").read(),
+    "交換済みの印はセーブに残る（読み直しでまた引き換えられてしまわないように）")
+chk("if (received) PlaySound(SoundCues.TakeItem);" in _tgm,
+    "何も手に入っていないときは音を鳴らさない")
+chk("GoldTicketTests" in _alltests,"引換券のテストがある")
 chk('targetOSVersionString = "15.0"' in _ib,
     "StoreKit 2 に合わせて iOS 15 以上")
 # ★iPhone 専用（作者の指定）。iPad 対応を名乗ると 13インチ iPad の写しが要るうえ、

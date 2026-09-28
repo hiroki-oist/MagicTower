@@ -11,6 +11,14 @@ using UnityEngine;
 /// 「一度買えば次からは無料」は**端末に覚えておく**（`PlayerPrefs`）。
 /// セーブデータではなく端末に付くので、最初から遊び直しても買い直しにならない。
 ///
+/// ★作者の頼み（2026-09-28。録画中に見つかった不具合）:
+/// 「一回買うと、無限に増やせてしまう。一度増やしたら二回目以上は使えないようにし
+///   （使おうとしたら『交換済みの引換券です』と出す）、新たなゲームを始めた際に
+///   再度押せば一回だけ手に入るようにしてください」
+/// → **引換券は1回の冒険につき1枚**。引き換えたことは<b>遊び手の側</b>に覚える
+///   （<see cref="PlayerState.TicketsUsed"/>）ので、セーブにも入り、最初から
+///   遊び直せばまた1枚引き換えられる。買った事実（端末・App Store の権利）とは別もの。
+///
 /// **支払いは Apple In-App Purchase（StoreKit 2）を通す**（<see cref="AppleStore"/>、
 /// 実体は `Assets/Plugins/iOS/MagicTowerStore.swift`）。Apple の決まりで:
 ///   1. **3.1.1** ゲーム内の物をアプリの外の支払いで売ることはできない。品目は
@@ -150,20 +158,54 @@ public static class GoldShop
     /// </summary>
     public static string Pick(PlayerState player, int i)
     {
+        bool got;
+        return Pick(player, i, out got);
+    }
+
+    /// <param name="received">実際にゴールドを渡したか（音を鳴らすかの判断に使う）。</param>
+    public static string Pick(PlayerState player, int i, out bool received)
+    {
+        received = false;
         if (player == null || i < 0 || i >= Count) return null;
-        if (Bought(i)) return Claim(player, i);
+        if (Bought(i)) return Claim(player, i, out received);
         if (AppleStore.Live) { AppleStore.Buy(i); return null; }
         // エディタで見るときの見本。実機ではここを通らない
         MarkBought(i);
-        return Claim(player, i);
+        return Claim(player, i, out received);
+    }
+
+    /// <summary>
+    /// その冒険でもうこの引換券を使ったか（作者の指定）。
+    /// 覚えているのは遊び手なので、最初から遊び直せば消える。
+    /// </summary>
+    public static bool Used(PlayerState player, int i)
+    {
+        if (player == null || i < 0 || i >= Count) return false;
+        return player.TicketsUsed.Contains(GoldOf(i));
     }
 
     /// <summary>買ってある品目のゴールドを受け取る。</summary>
     public static string Claim(PlayerState player, int i)
     {
+        bool got;
+        return Claim(player, i, out got);
+    }
+
+    /// <summary>
+    /// 買ってある品目のゴールドを受け取る。
+    /// **1回の冒険につき1枚**しか引き換えられない（作者の指定）。
+    /// 二度目は何も渡さずに「交換済みの引換券です。」と知らせる。
+    /// </summary>
+    /// <param name="received">実際にゴールドを渡したか（音を鳴らすかの判断に使う）。</param>
+    public static string Claim(PlayerState player, int i, out bool received)
+    {
+        received = false;
         if (player == null || i < 0 || i >= Count) return null;
+        if (Used(player, i)) return PhoneScreen.ShopUsed;
+        player.TicketsUsed.Add(GoldOf(i));
         player.Gold += GoldOf(i);
         player.ClampStats();
+        received = true;
         return string.Format(PhoneScreen.ShopBought, Wide(GoldOf(i)));
     }
 

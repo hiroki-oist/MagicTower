@@ -1265,10 +1265,12 @@ public class TowerGame
     {
         if (pendingBuy < 0) return;
         if (!GoldShop.Bought(pendingBuy)) return;       // まだ買えていない／やめた
-        var got = GoldShop.Claim(Player, pendingBuy);
+        bool received;
+        var got = GoldShop.Claim(Player, pendingBuy, out received);
         pendingBuy = -1;
         if (string.IsNullOrEmpty(got)) return;
-        PlaySound(SoundCues.TakeItem);
+        // 「交換済みの引換券です。」のときは何も手に入っていないので鳴らさない
+        if (received) PlaySound(SoundCues.TakeItem);
         Note(got);
     }
 
@@ -1527,11 +1529,13 @@ public class TowerGame
             // 買ってあればその場で受け取る。まだなら Apple の購入のシートが出るので、
             // ここでは何も渡さない（渡すのは買えたことが分かってから ClaimBought で）。
             pendingBuy = at;
-            var got = GoldShop.Pick(Player, at);
+            bool received;
+            var got = GoldShop.Pick(Player, at, out received);
             if (!string.IsNullOrEmpty(got))
             {
                 pendingBuy = -1;
-                PlaySound(SoundCues.TakeItem);
+                // 「交換済みの引換券です。」のときは何も手に入っていないので鳴らさない
+                if (received) PlaySound(SoundCues.TakeItem);
                 Note(got);
             }
             return;

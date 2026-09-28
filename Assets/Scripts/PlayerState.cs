@@ -77,6 +77,17 @@ public class PlayerState
     public int FairyCount { get { return FairyScored.Count; } }
 
     /// <summary>
+    /// ★**その冒険でもう引き換えた引換券**（作者の指定。中身はゴールドの額）。
+    ///
+    /// 課金の品は非消耗型なので、一度買えば App Store の権利は残り続ける。
+    /// そのままだと商店で何度でも押せてゴールドが無限に増えてしまった（作者の報告）。
+    /// **引換券は1回の冒険につき1枚**に限り、二度目は
+    /// <see cref="PhoneScreen.ShopUsed"/> を出す。
+    /// 覚えるのは**遊び手の側**なので、最初から遊び直せばまた1枚引き換えられる。
+    /// </summary>
+    public readonly HashSet<int> TicketsUsed = new HashSet<int>();
+
+    /// <summary>
     /// 高速モードの旗。原典もこれをフラグ置き場の **31番**（`es:[0x1f]`）に持っていて、
     /// セーブにもそのまま入る（0xa92d〜0xa956 が切り替える）。
     /// 立っているあいだ、原典は窓の開け閉めの待ち（0x9478 / 0x9546）と
