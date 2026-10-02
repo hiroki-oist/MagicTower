@@ -1494,6 +1494,23 @@ public class TowerGame
         ChoiceIndex = Mathf.Clamp(ChoiceIndex + delta, 0, ChoiceCount - 1);
     }
 
+    /// <summary>
+    /// **行を直接触った**（課金の窓。作者の指定）。
+    /// 1回目はその行を選ぶだけ（その行が白く、ほかが灰色になる）、
+    /// **選んでいる行をもう一度触ったら決める**。決めるべきなら true を返す
+    /// （決めるのは呼ぶ側が <see cref="ConfirmChoice"/> で）。
+    ///
+    /// 審査で「1000と4000は灰色で押せない」と言われた（2.1(b)）。
+    /// 以前は行を触っても選んでいる行で決まるだけで、灰色の行は選べなかった。
+    /// </summary>
+    public bool TapChoice(int row)
+    {
+        if (!IsChoosing || row < 0 || row >= ChoiceCount) return false;
+        if (row == ChoiceIndex) return true;
+        ChoiceIndex = row;
+        return false;
+    }
+
     /// <summary>決める。選んだ結果の一言を積む。</summary>
     public void ConfirmChoice()
     {

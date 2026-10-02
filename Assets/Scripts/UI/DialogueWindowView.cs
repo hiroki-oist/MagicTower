@@ -300,6 +300,29 @@ public class DialogueWindowView : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// 画面のその点が、選択肢を囲む枠の何番目に入っているか。どれにも入っていなければ -1。
+    /// 枠を出している窓（いまは課金の窓だけ）でしか当たらない。
+    /// </summary>
+    public int RowAt(Vector2 screenPoint)
+    {
+        if (!Boxed || panel == null || !panel.gameObject.activeInHierarchy) return -1;
+        for (int i = 0; i < optionEdges.Length; i++)
+        {
+            var e = optionEdges[i];
+            if (e == null || !e.enabled) continue;
+            if (RectTransformUtility.RectangleContainsScreenPoint(e.rectTransform, screenPoint, null))
+                return i;
+        }
+        return -1;
+    }
+
+    /// <summary>枠を出している窓（課金の窓）が出ているか。</summary>
+    public bool ShowingBoxed
+    {
+        get { return Boxed && panel != null && panel.gameObject.activeInHierarchy; }
+    }
+
     static void Box(UnityEngine.UI.Image img, float x, float y, float w, float h, Color c)
     {
         if (img == null) return;

@@ -282,6 +282,7 @@ public class TowerController : MonoBehaviour
         // 取りこぼさない。
         TouchStep = Vector2Int.zero;
         TouchConfirm = false;
+        TouchAt = null;
     }
 
     void Tick()
@@ -385,7 +386,26 @@ public class TowerController : MonoBehaviour
                 // 触りでも動かせるようにしてある（十字キーと、盤面を触ったら決定）。
                 var move = ReadInputOnce();
                 if (move.y == 0) move = TakeStep();
-                if (move.y != 0)
+                // ★**課金の窓は行を直接触って選ぶ**（作者の指定。審査 2.1(b) の指摘）。
+                //   1回目でその行を選び（ほかの行は灰色）、選んでいる行をもう一度
+                //   触ったら決める。**行の外を触っても何もしない**（行と行の隙間を
+                //   触って、選んでいた品の購入のシートが出てしまわないように）。
+                //   十字キーと真ん中の決定ボタンは今までどおり。
+                var tapAt = TouchAt;
+                TouchAt = null;
+                bool boxed = dialogue != null && dialogue.ShowingBoxed;
+                if (move.y == 0 && boxed && tapAt.HasValue && TakeConfirm())
+                {
+                    int row = dialogue.RowAt(tapAt.Value);
+                    if (row < 0) acted = false;
+                    else
+                    {
+                        PlayTap();
+                        if (Game.TapChoice(row)) { Game.ConfirmChoice(); Game.NextPage(); }
+                        acted = true;
+                    }
+                }
+                else if (move.y != 0)
                 { Game.MoveChoice(move.y > 0 ? -1 : 1); PlayTap(); acted = true; }
                 else if (MenuKeyDown() || TakeConfirm())
                 { PlayTap(); Game.ConfirmChoice(); Game.NextPage(); acted = true; }
@@ -503,6 +523,12 @@ public class TowerController : MonoBehaviour
     /// 取り出すと空になる。
     /// </summary>
     public bool TouchConfirm { get; set; }
+
+    /// <summary>
+    /// 盤面のあたりを触った所（画面の画素）。十字の真ん中の決定では入らない（null）。
+    /// 課金の窓で「どの行を触ったか」を見るのに使う。
+    /// </summary>
+    public Vector2? TouchAt { get; set; }
 
     Vector2Int TakeStep() { var d = TouchStep; TouchStep = Vector2Int.zero; return d; }
     bool TakeConfirm() { bool c = TouchConfirm; TouchConfirm = false; return c; }

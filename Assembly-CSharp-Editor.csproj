@@ -86,6 +86,7 @@
     <Compile Include="Assets/Tests/Editor/MenuSlotTests.cs" />
     <Compile Include="Assets/Tests/Editor/EquipIconSceneTests.cs" />
     <Compile Include="Assets/Tests/Editor/PrologueTests.cs" />
+    <Compile Include="Assets/Tests/Editor/GoldShopTapTests.cs" />
     <Compile Include="Assets/Tests/Editor/MonsterAnimationTests.cs" />
     <Compile Include="Assets/Tests/Editor/ArrivalEventTests.cs" />
     <Compile Include="Assets/Tests/Editor/AmbushTests.cs" />

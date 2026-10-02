@@ -69,6 +69,7 @@ public class DPadView : MonoBehaviour
         // 盤面のあたりを触ったときも「決定・送り」。
         if (Inside(topBand, at) || Inside(bottomBand, at)) return;
         controller.TouchConfirm = true;
+        controller.TouchAt = at;          // 課金の窓では、どの行を触ったかを見る
     }
 
     /// <summary>その1枚だけ濃くする。-1 なら全部もとの色に戻す。</summary>
